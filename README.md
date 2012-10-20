@@ -1,5 +1,4 @@
-
-# *Hive*
+# Hive
 ## Functionality
 * Accepting common login protocols
  * POP3, IMAP, SSH, Telnet, SMTP, IRC?
