@@ -27,18 +27,18 @@
 
 
 
-+-----------+             Unencrypted traffic
-|   Feeder  |+--------------------------------------->
-+-----------+         ^                              +
- (Static IP)          |                              v
-                      |Intercept               +------------+
-                      |             Login      |    Hive    |+---------> HPFeeds
-                +-----+--------++------------> +------------+
-                |  Evil dudes  |                (Static ip)
-                +--------------+                     ^
-                      ++------------+Intercept       |
-                                    |                |
-+-----------+    +-------------+    v                |
-|   Feeder  |+-->|TOR Exit Node|+--------------------+
-+-----------+    +-------------+              Unencrypted traffic
- (Using TOR) 
+	+-----------+             Unencrypted traffic
+	|   Feeder  |+--------------------------------------->
+	+-----------+         ^                              +
+	 (Static IP)          |                              v
+	                      |Intercept               +------------+
+	                      |             Login      |    Hive    |+---------> HPFeeds
+	                +-----+--------++------------> +------------+
+	                |  Evil dudes  |                (Static ip)
+	                +--------------+                     ^
+	                      ++------------+Intercept       |
+	                                    |                |
+	+-----------+    +-------------+    v                |
+	|   Feeder  |+-->|TOR Exit Node|+--------------------+
+	+-----------+    +-------------+              Unencrypted traffic
+	 (Using TOR) 
