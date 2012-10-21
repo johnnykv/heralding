@@ -26,7 +26,7 @@
  * Would be interesting to see how much intercepted TOR exit traffic are actually used for malicious purposes
 
 ## Deployment diagram
-
+                                     (honeybees)
 	+-----------+             Unencrypted traffic
 	|   Feeder  |+--------------------------------------------------+
 	+-----------+         ^                                         |
@@ -41,4 +41,4 @@
 	+-----------+    +-------------+    v                           |
 	|   Feeder  |+-->|TOR Exit Node|+-------------------------------+
 	+-----------+    +-------------+         Unencrypted traffic
-	 (Using TOR)
+	 (Using TOR)                                 (honeybees)
