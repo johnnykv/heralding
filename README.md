@@ -11,8 +11,34 @@
 
 # Feeder
 ## Functionality
-* Tries to do login at hive at common intervals
+* Tries to do login at hive with semi-random intervals
 * Logs attempts of MiTM attack. (Only possible with SSH?)
 
 ## Problems
 * Again, communicating feeder logins to Hive
+
+## Deployment
+* One feeder operating with static ip
+* One feeder using the TOR network to connect to Hive
+ * Making detection much harder
+ * Would be interesting to see how much intercepted TOR exit traffic are actually used for Malicious purposes
+
+#Deployment concept
+
+
+
++-----------+             Unencrypted traffic
+|   Feeder  |+--------------------------------------->
++-----------+         ^                              +
+ (Static IP)          |                              v
+                      |Intercept               +------------+
+                      |             Login      |    Hive    |+---------> HPFeeds
+                +-----+--------++------------> +------------+
+                |  Evil dudes  |                (Static ip)
+                +--------------+                     ^
+                      ++------------+Intercept       |
+                                    |                |
++-----------+    +-------------+    v                |
+|   Feeder  |+-->|TOR Exit Node|+--------------------+
++-----------+    +-------------+              Unencrypted traffic
+ (Using TOR)
