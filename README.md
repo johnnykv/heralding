@@ -3,7 +3,7 @@
 * Accepting common login protocols
  * POP3, IMAP, SSH, Telnet, SMTP, IRC?
 * Logs all login attempts
-* Marks login attempts with creds. from Feeder.
+* Marks login attempts with creds. intercepted from Feeder.
 
 ## Problems
 * How do we distinct normal bruteforce attempte from login tries from intercepted credentials
