@@ -41,4 +41,4 @@
 +-----------+    +-------------+    v                |
 |   Feeder  |+-->|TOR Exit Node|+--------------------+
 +-----------+    +-------------+              Unencrypted traffic
- (Using TOR)
+ (Using TOR) 
