@@ -23,7 +23,7 @@
 * One feeder operating with static ip
 * One feeder using the TOR network to connect to Hive
  * Making detection much harder
- * Would be interesting to see how much intercepted TOR exit traffic are actually used for Malicious purposes
+ * Would be interesting to see how much intercepted TOR exit traffic are actually used for malicious purposes
 
 ## Deployment diagram
 
