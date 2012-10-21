@@ -26,19 +26,23 @@
  * Would be interesting to see how much intercepted TOR exit traffic are actually used for malicious purposes
 
 ## Deployment diagram
-                                     (honeybees)
-	+-----------+             Unencrypted traffic
-	|   Feeder  |+--------------------------------------------------+
-	+-----------+         ^                                         |
-   	(Static IP)           |                                         |
-	                      |Intercept creds.                         v
-	                      |             Reuse credentials     +------------+
-	                +-----+--------++------------------------>|    Hive    |+---------> HPFeeds
-	                |  Evil dudes  |                          +------------+
-	                +--------------+                           (Static ip)
-	                      ++------------+Intercept creds.           ^
-	                                    |                           |
-	+-----------+    +-------------+    v                           |
-	|   Feeder  |+-->|TOR Exit Node|+-------------------------------+
-	+-----------+    +-------------+         Unencrypted traffic
-	 (Using TOR)                                 (honeybees)
+                                  (honeybees)
+    +-----------+                   Traffic
+    |   Feeder  |+--------------------------------------------------+
+    +-----------+           ^                                       |
+    (Static IP)             |                                       |
+                            |Intercept creds.                       |
+                            |                                       |
+                            |                                       v
+                    +-------+------+     Reuse credentials    +------------+
+                    |  Evil dudes  |+------------------------>|    Hive    |+---------> HPFeeds
+                    +-------+------+                          +------------+
+                            |                                  (Static ip)
+                            |Operates exit node                     ^
+                            |(and intercepting creds)               |
+                            |                                       |
+                            v                                       |
+    +-----------+    +-------------+                                |
+    |   Feeder  |+-->|TOR Exit Node|+-------------------------------+
+    +-----------+    +-------------+               Traffic
+     (Using TOR)                                 (honeybees)
