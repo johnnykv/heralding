@@ -1,20 +1,23 @@
-# Hive
-## Functionality
+# beeswarm
+A honeypot project which will try to estimate how, where and when credentials are intercepted and reused.
+
+## Hive
+### Functionality
 * Accepting common login protocols
  * POP3, IMAP, SSH, Telnet, SMTP, IRC?
 * Logs all login attempts
 * Marks login attempts with creds. intercepted from Feeder.
 
-## Problems
+### Problems
 * How do we distinct normal bruteforce attempte from login tries from intercepted credentials
 
 
-# Feeder
+## Feeder
 ## Functionality
 * Tries to do login at hive with semi-random intervals
 * Logs attempts of MiTM attack. (Only possible with SSH?)
 
-## Problems
+### Problems
 * Again, communicating feeder logins to Hive
 
 # Deployment
