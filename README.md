@@ -13,7 +13,7 @@ A honeypot project which will try to estimate how, where and when credentials ar
 
 
 ## Feeder
-## Functionality
+### Functionality
 * Tries to do login at hive with semi-random intervals
 * Logs attempts of MiTM attack. (Only possible with SSH?)
 
