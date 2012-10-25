@@ -1,4 +1,5 @@
 from base import HandlerBase
+from datetime import datetime
 import uuid
 
 class pop3(HandlerBase):
@@ -8,6 +9,7 @@ class pop3(HandlerBase):
 	def handle(self, socket, address):
 
 		session = {'id' : uuid.uuid4(),
+				   'timestamp' : datetime.utcnow(),
 				   'state' : 'AUTHORIZATION',
 				   'socket' : socket}
 
