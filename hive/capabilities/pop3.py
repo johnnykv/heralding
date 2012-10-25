@@ -4,14 +4,24 @@ import uuid
 
 class pop3(HandlerBase):
 	port = 2100
+	max_tries = 10
 	#port = 110
+
+	def __init__(self, sessions):
+		self.sessions = sessions
 
 	def handle(self, socket, address):
 
 		session = {'id' : uuid.uuid4(),
 				   'timestamp' : datetime.utcnow(),
+				   'last_activity' : datetime.utcnow(),
 				   'state' : 'AUTHORIZATION',
-				   'socket' : socket}
+				   'socket' : socket,
+				   'address' : address,
+				   'protocol' : 'pop3',
+				   'login_tries' : []}
+
+		self.sessions.append(session)
 
 		#just because of readline... tsk tsk...
 		fileobj = socket.makefile()
@@ -22,6 +32,9 @@ class pop3(HandlerBase):
 		while True:
 			print session
 			raw_msg = fileobj.readline()
+
+			session['last_activity'] = datetime.utcnow()
+
 			if ' ' in raw_msg:
 				cmd, msg = raw_msg.replace('\r\n', '').split(' ', 1)
 			else:
@@ -36,6 +49,7 @@ class pop3(HandlerBase):
 					self.cmd_pass(session, msg)
 				else:
 					socket.sendall('-ERR Unknown command\r\n')
+			#at the moment we dont handle TRANSACTION state...
 			elif session['state'] == 'TRANSACTION':
 				if cmd == 'STAT':
 					self.not_impl(session, msg)
@@ -65,7 +79,6 @@ class pop3(HandlerBase):
 	#+OK Pass accepted
 	#or: "-ERR Authentication failed."
 	#or: "-ERR No username given."
-	
 	def cmd_user(self, session, msg):
 		session['USER'] = msg
 		session['socket'].sendall('+OK User accepted\r\n')

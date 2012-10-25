@@ -4,18 +4,14 @@ from gevent.server import StreamServer
 import gevent
 
 sys.path.append('./capabilities')
-from pop3 import pop3
+from base import HandlerBase
 
 def main():
-
-	capabilities = get_capabilities();
-
-	print capabilities;
-
+	import_capabilities()
 	servers = []
-	for c in capabilities:
-		cap_class = type(c, (pop3,), {})
-		cap = cap_class()
+	sessions = []
+	for c in HandlerBase.__subclasses__():
+		cap = c(sessions)
 		server = StreamServer(('0.0.0.0', cap.get_port()), cap.handle)
 		servers.append(server)
 		print 'Starting ' + str(type(cap))
@@ -28,15 +24,13 @@ def main():
 
 	gevent.joinall(stop_events)
 
-def get_capabilities():
-	capability_names = []
+def import_capabilities():
 	for f in os.listdir('capabilities'):
 		if f == 'base.py' or not f.endswith('.py'):
 			continue
 		module = f.split('.', 1)[0]
-		capability_names.append(module)
+		#capability_names.append(module)
 		__import__(module, globals(), locals(), [], -1)
-	return capability_names;
 
 if __name__ == '__main__':
 	main()
