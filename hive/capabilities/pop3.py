@@ -30,11 +30,9 @@ class pop3(HandlerBase):
 		fileobj = gsocket.makefile()
 		session['fileobj'] = fileobj
 
-		gsocket.sendall('+OK POP3 server ready\r\n')
+		self.send_message(session, '+OK POP3 server ready\r\n')
 
 		while True:
-			#TODO: Catch socket exception here
-			#[Errno 54] Connection reset by peer
 			try:
 				raw_msg = fileobj.readline()
 			except socket.error, (value, message):
@@ -56,7 +54,7 @@ class pop3(HandlerBase):
 				elif cmd == 'PASS':
 					self.cmd_pass(session, msg)
 				else:
-					gsocket.sendall('-ERR Unknown command\r\n')
+					self.send_message(session, '-ERR Unknown command\r\n')
 			#at the moment we dont handle TRANSACTION state...
 			elif state == 'TRANSACTION':
 				if cmd == 'STAT':
@@ -72,7 +70,7 @@ class pop3(HandlerBase):
 				elif cmd == 'RSET':
 					self.not_impl(session, msg)
 				else:
-					gsocket.sendall('-ERR Unknown command\r\n')
+					self.send_message(session, '-ERR Unknown command\r\n')
 			else:
 				raise Exception('Unknown state: ' + session['state'])
 
@@ -89,11 +87,11 @@ class pop3(HandlerBase):
 	#or: "-ERR No username given."
 	def cmd_user(self, session, msg):
 		session['USER'] = msg
-		session['socket'].sendall('+OK User accepted\r\n')
+		self.send_message(session, '+OK User accepted\r\n')
 
 	def cmd_pass(self, session, msg):
 		if 'USER' not in session:
-			session['socket'].sendall('-ERR No username given.\r\n')
+			self.send_message(session, '-ERR No username given.\r\n')
 		else:
 			session['password'] = msg
 		
@@ -102,3 +100,10 @@ class pop3(HandlerBase):
 
 	def not_impl(self, session, msg):
 		raise Exception('Not implemented yet!')
+
+	def send_message(self, session, message):
+		try:
+			session['socket'].sendall(message)
+		except socket.error, (value, message):
+				session['connected'] = False
+
