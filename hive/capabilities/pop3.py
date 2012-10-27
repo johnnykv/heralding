@@ -1,5 +1,6 @@
 from base import HandlerBase
 from datetime import datetime
+import socket
 import uuid
 
 class pop3(HandlerBase):
@@ -10,28 +11,34 @@ class pop3(HandlerBase):
 	def __init__(self, sessions):
 		self.sessions = sessions
 
-	def handle(self, socket, address):
+	def handle(self, gsocket, address):
 
 		session = {'id' : uuid.uuid4(),
 				   'timestamp' : datetime.utcnow(),
 				   'last_activity' : datetime.utcnow(),
 				   'state' : 'AUTHORIZATION',
-				   'socket' : socket,
+				   'socket' : gsocket,
 				   'address' : address,
+				   'connected' : True,
 				   'protocol' : 'pop3',
 				   'login_tries' : []}
 
-		self.sessions.append(session)
+		self.sessions[session['id']] = session
 
 		#just because of readline... tsk tsk...
-		fileobj = socket.makefile()
+		fileobj = gsocket.makefile()
 		session['fileobj'] = fileobj
 
-		socket.sendall('+OK POP3 server ready\r\n')
+		gsocket.sendall('+OK POP3 server ready\r\n')
 
 		while True:
-			print session
-			raw_msg = fileobj.readline()
+			#TODO: Catch socket exception here
+			#[Errno 54] Connection reset by peer
+			try:
+				raw_msg = fileobj.readline()
+			except socket.error, (value, message):
+				session['connected'] = False
+				break
 
 			session['last_activity'] = datetime.utcnow()
 
@@ -48,7 +55,7 @@ class pop3(HandlerBase):
 				elif cmd == 'PASS':
 					self.cmd_pass(session, msg)
 				else:
-					socket.sendall('-ERR Unknown command\r\n')
+					gsocket.sendall('-ERR Unknown command\r\n')
 			#at the moment we dont handle TRANSACTION state...
 			elif session['state'] == 'TRANSACTION':
 				if cmd == 'STAT':
@@ -64,7 +71,7 @@ class pop3(HandlerBase):
 				elif cmd == 'RSET':
 					self.not_impl(session, msg)
 				else:
-					socket.sendall('-ERR Unknown command\r\n')
+					gsocket.sendall('-ERR Unknown command\r\n')
 			else:
 				raise Exception('Unknown state: ' + session['state'])
 
