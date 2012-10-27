@@ -13,10 +13,11 @@ class pop3(HandlerBase):
 
 	def handle(self, gsocket, address):
 
+		state = 'AUTHORIZATION'
+
 		session = {'id' : uuid.uuid4(),
 				   'timestamp' : datetime.utcnow(),
 				   'last_activity' : datetime.utcnow(),
-				   'state' : 'AUTHORIZATION',
 				   'socket' : gsocket,
 				   'address' : address,
 				   'connected' : True,
@@ -47,7 +48,7 @@ class pop3(HandlerBase):
 			else:
 				cmd = raw_msg
 
-			if session['state'] == 'AUTHORIZATION':
+			if state == 'AUTHORIZATION':
 				if cmd == 'APOP':
 					self.auth_apop(session, msg)
 				elif cmd == 'USER':
@@ -57,7 +58,7 @@ class pop3(HandlerBase):
 				else:
 					gsocket.sendall('-ERR Unknown command\r\n')
 			#at the moment we dont handle TRANSACTION state...
-			elif session['state'] == 'TRANSACTION':
+			elif state == 'TRANSACTION':
 				if cmd == 'STAT':
 					self.not_impl(session, msg)
 				elif cmd == 'LIST':
