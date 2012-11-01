@@ -1,9 +1,8 @@
 import gevent
 import os
-import sys
 
-sys.path.append('./consumer/loggers') #TODO: fix this!
-from loggerbase import LoggerBase
+from loggers import loggerbase
+from loggers import consolelogger
 
 class Consumer:
 
@@ -12,7 +11,7 @@ class Consumer:
 		self.sessions = sessions
 
 	def start_handling(self):
-		loggers = self.get_loggers()
+		active_loggers = self.get_loggers()
 
 		while True:
 			print "Current sessions count: %i" % (len(self.sessions),)
@@ -20,7 +19,7 @@ class Consumer:
 				session = self.sessions[session_id]
 				if not session['connected']:
 					#TODO: need to log before removal
-					for logger in loggers:
+					for logger in active_loggers:
 						logger.log(session)
 					del self.sessions[session_id]
 			gevent.sleep(5)
@@ -28,18 +27,9 @@ class Consumer:
 	def stop_handling(self):
 		pass
 
-	def import_loggers(self):
-		for f in os.listdir('./consumer/loggers'): #TODO: fix this!
-			if f == 'loggerbase.py' or not f.endswith('.py'):
-				continue
-			module = f.split('.', 1)[0]
-			__import__(module, globals(), locals(), [], -1)
-
 	def get_loggers(self):
-		self.import_loggers()
-		
 		loggers = []
-		for l in LoggerBase.__subclasses__():
+		for l in loggerbase.LoggerBase.__subclasses__():
 			logger = l()
 			loggers.append(logger)
 		return loggers
