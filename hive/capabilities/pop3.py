@@ -29,7 +29,7 @@ class pop3(HandlerBase):
 		#just because of readline... tsk tsk...
 		fileobj = gsocket.makefile()
 
-		self.send_message(session, '+OK POP3 server ready\r\n')
+		self.send_message(session, '+OK POP3 server ready')
 
 		while True:
 			try:
@@ -53,7 +53,7 @@ class pop3(HandlerBase):
 				elif cmd == 'PASS':
 					self.cmd_pass(session, msg)
 				else:
-					self.send_message(session, '-ERR Unknown command\r\n')
+					self.send_message(session, '-ERR Unknown command')
 			#at the moment we dont handle TRANSACTION state...
 			elif state == 'TRANSACTION':
 				if cmd == 'STAT':
@@ -69,7 +69,7 @@ class pop3(HandlerBase):
 				elif cmd == 'RSET':
 					self.not_impl(session, msg)
 				else:
-					self.send_message(session, '-ERR Unknown command\r\n')
+					self.send_message(session, '-ERR Unknown command')
 			else:
 				raise Exception('Unknown state: ' + session['state'])
 
@@ -86,14 +86,14 @@ class pop3(HandlerBase):
 	#or: "-ERR No username given."
 	def cmd_user(self, session, msg):
 		session['USER'] = msg #TODO: store USER somewhere else
-		self.send_message(session, '+OK User accepted\r\n')
+		self.send_message(session, '+OK User accepted')
 
 	def cmd_pass(self, session, msg):
 		if 'USER' not in session:
-			self.send_message(session, '-ERR No username given.\r\n')
+			self.send_message(session, '-ERR No username given.')
 		else:
 			session['password'] = msg
-			self.send_message(session, "-ERR Authentication failed.\r\n")
+			self.send_message(session, "-ERR Authentication failed.")
 			session['login_tries'].append({'login' : session['USER'], 'password' : msg})
 			del session['USER']
 		
@@ -105,7 +105,7 @@ class pop3(HandlerBase):
 
 	def send_message(self, session, msg):
 		try:
-			session['socket'].sendall(msg)
+			session['socket'].sendall(msg + "\r\n")
 		except socket.error, (value, msg):
 				session['connected'] = False
 
