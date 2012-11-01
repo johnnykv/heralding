@@ -33,7 +33,6 @@ class Consumer:
 			if f == 'loggerbase.py' or not f.endswith('.py'):
 				continue
 			module = f.split('.', 1)[0]
-			#capability_names.append(module)
 			__import__(module, globals(), locals(), [], -1)
 
 	def get_loggers(self):

@@ -28,7 +28,6 @@ class pop3(HandlerBase):
 
 		#just because of readline... tsk tsk...
 		fileobj = gsocket.makefile()
-		session['fileobj'] = fileobj
 
 		self.send_message(session, '+OK POP3 server ready\r\n')
 
@@ -104,9 +103,9 @@ class pop3(HandlerBase):
 	def not_impl(self, session, msg):
 		raise Exception('Not implemented yet!')
 
-	def send_message(self, session, message):
+	def send_message(self, session, msg):
 		try:
-			session['socket'].sendall(message)
-		except socket.error, (value, message):
+			session['socket'].sendall(msg)
+		except socket.error, (value, msg):
 				session['connected'] = False
 
