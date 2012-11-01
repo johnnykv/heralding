@@ -3,10 +3,11 @@ import sys
 from gevent.server import StreamServer
 from gevent import Greenlet
 import gevent
-import Consumer
+sys.path.append('./consumer') #TODO: fix this!
+import consumer
 
-sys.path.append('./capabilities')
-from base import HandlerBase
+sys.path.append('./capabilities') #TODO: fix this!
+from handlerbase import HandlerBase
 
 def main():
 	import_capabilities()
@@ -14,9 +15,10 @@ def main():
 	sessions = {}
 
 	#greenlet to consume and maintain data in sessions list
-	sessions_consumer = Consumer.Consumer(sessions)
+	sessions_consumer = consumer.Consumer(sessions)
 	Greenlet.spawn(sessions_consumer.start_handling)
 
+	#protocol handlers
 	for c in HandlerBase.__subclasses__():
 		cap = c(sessions)
 		server = StreamServer(('0.0.0.0', cap.get_port()), cap.handle)

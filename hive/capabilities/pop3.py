@@ -1,4 +1,4 @@
-from base import HandlerBase
+from handlerbase import HandlerBase
 from datetime import datetime
 import socket
 import uuid
@@ -86,7 +86,7 @@ class pop3(HandlerBase):
 	#or: "-ERR Authentication failed."
 	#or: "-ERR No username given."
 	def cmd_user(self, session, msg):
-		session['USER'] = msg
+		session['USER'] = msg #TODO: store USER somewhere else
 		self.send_message(session, '+OK User accepted\r\n')
 
 	def cmd_pass(self, session, msg):
@@ -94,6 +94,9 @@ class pop3(HandlerBase):
 			self.send_message(session, '-ERR No username given.\r\n')
 		else:
 			session['password'] = msg
+			self.send_message(session, "-ERR Authentication failed.\r\n")
+			session['login_tries'].append({'login' : session['USER'], 'password' : msg})
+			del session['USER']
 		
 	def get_port(self):
 		return pop3.port
