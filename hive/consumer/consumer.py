@@ -3,6 +3,7 @@ import os
 
 from loggers import loggerbase
 from loggers import consolelogger
+from loggers import sqlitelogger
 
 class Consumer:
 
@@ -18,8 +19,8 @@ class Consumer:
 			for session_id in self.sessions.keys():
 				session = self.sessions[session_id]
 				if not session['connected']:
-					#TODO: need to log before removal
 					for logger in active_loggers:
+						print "logging to " + str(logger)
 						logger.log(session)
 					del self.sessions[session_id]
 			gevent.sleep(5)
@@ -30,6 +31,7 @@ class Consumer:
 	def get_loggers(self):
 		loggers = []
 		for l in loggerbase.LoggerBase.__subclasses__():
+			print l
 			logger = l()
 			loggers.append(logger)
 		return loggers

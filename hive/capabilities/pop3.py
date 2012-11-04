@@ -12,15 +12,16 @@ class pop3(HandlerBase):
 		self.sessions = sessions
 
 	def handle(self, gsocket, address):
-
+		print address
 		state = 'AUTHORIZATION'
 
 		session = {'id' : uuid.uuid4(),
 				   'timestamp' : datetime.utcnow(),
 				   'last_activity' : datetime.utcnow(),
-				   'socket' : gsocket,
-				   'address' : address,
+				   'attacker_ip' : address[0],
+				   'attacker_src_port' : address[1],
 				   'connected' : True,
+				   'protocol_port' : pop3.port,
 				   'protocol' : 'pop3',
 				   'login_tries' : []}
 
@@ -29,7 +30,7 @@ class pop3(HandlerBase):
 		#just because of readline... tsk tsk...
 		fileobj = gsocket.makefile()
 
-		self.send_message(session, '+OK POP3 server ready')
+		self.send_message(session, gsocket, '+OK POP3 server ready')
 
 		while True:
 			try:
@@ -47,35 +48,35 @@ class pop3(HandlerBase):
 
 			if state == 'AUTHORIZATION':
 				if cmd == 'APOP':
-					self.auth_apop(session, msg)
+					self.auth_apop(session, gsocket, msg)
 				elif cmd == 'USER':
-					self.cmd_user(session, msg)
+					self.cmd_user(session, gsocket,  msg)
 				elif cmd == 'PASS':
-					self.cmd_pass(session, msg)
+					self.cmd_pass(session, gsocket,  msg)
 				else:
-					self.send_message(session, '-ERR Unknown command')
+					self.send_message(session, gsocket, '-ERR Unknown command')
 			#at the moment we dont handle TRANSACTION state...
 			elif state == 'TRANSACTION':
 				if cmd == 'STAT':
-					self.not_impl(session, msg)
+					self.not_impl(session, gsocket,  msg)
 				elif cmd == 'LIST':
-					self.not_impl(session, msg)
+					self.not_impl(session, gsocket,  msg)
 				elif cmd == 'RETR':
-					self.not_impl(session, msg)
+					self.not_impl(session, gsocket,  msg)
 				elif cmd == 'DELE':
-					self.not_impl(session, msg)
+					self.not_impl(session, gsocket,  msg)
 				elif cmd == 'NOOP':
-					self.not_impl(session, msg)
+					self.not_impl(session, gsocket,  msg)
 				elif cmd == 'RSET':
-					self.not_impl(session, msg)
+					self.not_impl(session, gsocket,  msg)
 				else:
-					self.send_message(session, '-ERR Unknown command')
+					self.send_message(session, gsocket, '-ERR Unknown command')
 			else:
 				raise Exception('Unknown state: ' + session['state'])
 
 	#APOP mrose c4c9334bac560ecc979e58001b3e22fb
 	#+OK mrose's maildrop has 2 messages (320 octets)
-	def auth_apop(self, session, msg):
+	def auth_apop(self, session, gsocket, msg):
 		raise Exception('Not implemented yet!')
 
 	#USER mrose
@@ -84,28 +85,28 @@ class pop3(HandlerBase):
 	#+OK Pass accepted
 	#or: "-ERR Authentication failed."
 	#or: "-ERR No username given."
-	def cmd_user(self, session, msg):
+	def cmd_user(self, session, gsocket, msg):
 		session['USER'] = msg #TODO: store USER somewhere else
-		self.send_message(session, '+OK User accepted')
+		self.send_message(session, gsocket, '+OK User accepted')
 
-	def cmd_pass(self, session, msg):
+	def cmd_pass(self, session, gsocket, msg):
 		if 'USER' not in session:
-			self.send_message(session, '-ERR No username given.')
+			self.send_message(session, gsocket, '-ERR No username given.')
 		else:
 			session['password'] = msg
-			self.send_message(session, "-ERR Authentication failed.")
-			session['login_tries'].append({'login' : session['USER'], 'password' : msg})
+			self.send_message(session, gsocket, "-ERR Authentication failed.")
+			session['login_tries'].append({'login' : session['USER'], 'password' : msg, 'id' : uuid.uuid4(), 'timestamp' : datetime.utcnow() })
 			del session['USER']
 		
 	def get_port(self):
 		return pop3.port
 
-	def not_impl(self, session, msg):
+	def not_impl(self, session, gsocket, msg):
 		raise Exception('Not implemented yet!')
 
-	def send_message(self, session, msg):
+	def send_message(self, session, gsocket, msg):
 		try:
-			session['socket'].sendall(msg + "\r\n")
+			gsocket.sendall(msg + "\r\n")
 		except socket.error, (value, msg):
 				session['connected'] = False
 
