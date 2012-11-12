@@ -31,6 +31,7 @@ class Consumer:
 
 		while True:
 			print "Current sessions count: %i" % (len(self.sessions),)
+			print self.sessions
 			for session_id in self.sessions.keys():
 				session = self.sessions[session_id]
 				if not session['connected']:
