@@ -19,6 +19,7 @@ import gevent
 from consumer import consumer
 from capabilities import handlerbase
 from capabilities import pop3
+from capabilities import telnet
 
 def main():
 	servers = []
