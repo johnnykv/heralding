@@ -27,7 +27,6 @@ class pop3(HandlerBase):
 		self.sessions = sessions
 
 	def handle(self, gsocket, address):
-		print address
 		state = 'AUTHORIZATION'
 
 		session = {'id' : uuid.uuid4(),
