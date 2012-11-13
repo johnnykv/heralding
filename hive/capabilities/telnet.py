@@ -49,8 +49,10 @@ class telnet(HandlerBase):
 		data = []
 		telnet_state = ''
 		prompt_state = 'login'
+		attempts = 0;
 
-		while True:
+		while attempts < telnet.max_tries:
+
 			try:
 				read = gsocket.recv(1)
 			except socket.error, (value, message):
@@ -83,6 +85,8 @@ class telnet(HandlerBase):
 								self.send_message(session, gsocket, 'Invalid username/password.\r\n')
 								self.send_message(session, gsocket, "login: ")
 							data = []
+								if attempts < telnet.max_tries:
+									self.send_message(session, gsocket, "login: ")
 			elif telnet_state == 'negotiation':
 				if ord(read) == 240: #end of negotiation (SE)
 					data.append(read)
