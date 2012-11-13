@@ -81,7 +81,6 @@ class telnet(HandlerBase):
 								print 'state is password'
 								session['login_tries'].append({'login' : login, 'password' : ''.join(data)[:-2], 'id' : uuid.uuid4(), 'timestamp' : datetime.utcnow() })
 								data = []
-								prompt_state = 'login'
 								self.send_message(session, gsocket, 'Invalid username/password.\r\n')
 								self.send_message(session, gsocket, "login: ")
 							data = []
