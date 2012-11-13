@@ -27,3 +27,4 @@ pip-log.txt
 .mr.developer.cfg
 
 .DS_store
+hive_sqlite.db
