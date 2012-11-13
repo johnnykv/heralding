@@ -18,4 +18,6 @@ from loggerbase import LoggerBase
 class ConsoleLogger(LoggerBase):
 
 	def log(self, session):
-		print session
+		print "%s session from %s ended." % (session['protocol'], session['attacker_ip'])
+		for entry in session['login_tries']:
+			print '%s/%s' % (entry['login'], entry['password'])
