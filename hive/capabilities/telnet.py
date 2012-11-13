@@ -78,12 +78,12 @@ class telnet(HandlerBase):
 								data = []
 								prompt_state = 'password'
 							else:
-								print 'state is password'
 								session['login_tries'].append({'login' : login, 'password' : ''.join(data)[:-2], 'id' : uuid.uuid4(), 'timestamp' : datetime.utcnow() })
+								attempts += 1
 								data = []
 								self.send_message(session, gsocket, 'Invalid username/password.\r\n')
-								self.send_message(session, gsocket, "login: ")
-							data = []
+								prompt_state = 'login'
+								data = []
 								if attempts < telnet.max_tries:
 									self.send_message(session, gsocket, "login: ")
 			elif telnet_state == 'negotiation':
@@ -106,6 +106,8 @@ class telnet(HandlerBase):
 				self.parse_cmd(session, gsocket, data)
 				telnet_state = ''
 				data = []
+
+		session['connected'] = False
 		
 	def get_port(self):
 		return telnet.port
