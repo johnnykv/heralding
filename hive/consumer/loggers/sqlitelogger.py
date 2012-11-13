@@ -71,9 +71,6 @@ class SqliteLogger(LoggerBase):
 				""")
 		conn.commit()
 
-		#TODO: Create db
-
-
 		# session = {'id' : uuid.uuid4(),  				#OK
 		# 		   'timestamp' : datetime.utcnow(),		#OK
 		# 		   'last_activity' : datetime.utcnow(),	#OK
