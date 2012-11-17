@@ -17,14 +17,19 @@ from handlerbase import HandlerBase
 from datetime import datetime
 import socket
 import uuid
+import json
 
 class pop3(HandlerBase):
 	port = 2100
 	max_tries = 10
 	#port = 110
+	cmds = {}
 
-	def __init__(self, sessions):
+	def __init__(self, sessions, accounts):
 		self.sessions = sessions
+		#to make the honeypot look legit we need to main a global mainspool state
+		self.mailspools = {}
+		self.accounts = accounts
 
 	def handle(self, gsocket, address):
 		state = 'AUTHORIZATION'
@@ -46,7 +51,7 @@ class pop3(HandlerBase):
 
 		self.send_message(session, gsocket, '+OK POP3 server ready')
 
-		while True:
+		while state != '' and session['connected']:
 			try:
 				raw_msg = fileobj.readline()
 			except socket.error, (value, message):
@@ -55,38 +60,25 @@ class pop3(HandlerBase):
 
 			session['last_activity'] = datetime.utcnow()
 
-			if ' ' in raw_msg:
-				cmd, msg = raw_msg.replace('\r\n', '').split(' ', 1)
-			else:
-				cmd = raw_msg
+			msg = None
 
-			if state == 'AUTHORIZATION':
-				if cmd == 'APOP':
-					self.auth_apop(session, gsocket, msg)
-				elif cmd == 'USER':
-					self.cmd_user(session, gsocket,  msg)
-				elif cmd == 'PASS':
-					self.cmd_pass(session, gsocket,  msg)
-				else:
-					self.send_message(session, gsocket, '-ERR Unknown command')
-			#at the moment we dont handle TRANSACTION state...
-			elif state == 'TRANSACTION':
-				if cmd == 'STAT':
-					self.not_impl(session, gsocket,  msg)
-				elif cmd == 'LIST':
-					self.not_impl(session, gsocket,  msg)
-				elif cmd == 'RETR':
-					self.not_impl(session, gsocket,  msg)
-				elif cmd == 'DELE':
-					self.not_impl(session, gsocket,  msg)
-				elif cmd == 'NOOP':
-					self.not_impl(session, gsocket,  msg)
-				elif cmd == 'RSET':
-					self.not_impl(session, gsocket,  msg)
-				else:
-					self.send_message(session, gsocket, '-ERR Unknown command')
+			if ' ' in raw_msg:
+				cmd, msg = raw_msg.rstrip().split(' ', 1)
 			else:
-				raise Exception('Unknown state: ' + session['state'])
+				cmd = raw_msg.rstrip()
+			cmd = cmd.lower()
+
+			func_to_call = getattr(self, 'cmd_%s' % cmd, None)
+			print func_to_call
+			if func_to_call is None or not self.is_state_valid(state, cmd):
+				self.send_message(session, gsocket, '-ERR Unknown command')
+			else:
+				return_value = func_to_call(session, gsocket, msg)
+				#state changers!
+				if state == 'AUTHORIZATION' or cmd == 'quit':
+					state = return_value
+
+		session['connected'] = False
 
 	#APOP mrose c4c9334bac560ecc979e58001b3e22fb
 	#+OK mrose's maildrop has 2 messages (320 octets)
@@ -102,16 +94,98 @@ class pop3(HandlerBase):
 	def cmd_user(self, session, gsocket, msg):
 		session['USER'] = msg #TODO: store USER somewhere else
 		self.send_message(session, gsocket, '+OK User accepted')
+		return 'AUTHORIZATION'
+
+	def is_state_valid(self, state, cmd):
+		if state == 'AUTHORIZATION':
+			if cmd in ['apop', 'user', 'pass', 'quit']:
+				return True;
+		elif state == 'TRANSACTION':
+			if cmd in ['list', 'retr', 'dele', 'noop', 'stat', 'rset', 'quit']:
+				return True
+		return False
 
 	def cmd_pass(self, session, gsocket, msg):
 		if 'USER' not in session:
 			self.send_message(session, gsocket, '-ERR No username given.')
 		else:
-			session['password'] = msg
-			self.send_message(session, gsocket, "-ERR Authentication failed.")
+			#session['password'] = msg
 			session['login_tries'].append({'login' : session['USER'], 'password' : msg, 'id' : uuid.uuid4(), 'timestamp' : datetime.utcnow() })
-			del session['USER']
+			
+			if session['USER'] in self.accounts: # checking username
+				if self.accounts[session['USER']] == msg: # checking password
+					self.send_message(session, gsocket, "+OK Pass accepted")
+					if session['USER'] not in self.mailspools:
+						self.get_mailspool(session['USER'])
+					return 'TRANSACTION'
+
+		self.send_message(session, gsocket, "-ERR Authentication failed.")
+		del session['USER']
+		return 'AUTHORIZATION'
 		
+	def cmd_noop(self, session, gsocket, msg):
+		self.send_message(session, gsocket, '+OK')
+
+	def cmd_retr(self, session, gsocket, msg):
+
+		user_mailspool = self.mailspools[session['USER']]
+
+		try:
+			index = int(msg) - 1
+		except ValueError:
+			self.send_message(session, gsocket, '-ERR no such message')
+
+		if index < 0 or len(user_mailspool) < index:
+			self.send_message(session, gsocket, '-ERR no such message')
+		else:
+			msg = '+OK %i octets' % (len(user_mailspool[index]))
+			self.send_message(session, gsocket, msg)
+			self.send_data(session, gsocket, user_mailspool[index])
+
+
+	def cmd_stat(self, session, gsocket, msg):
+
+		user_mailspool = self.mailspools[session['USER']]
+		mailspool_bytes_size = 0
+
+		for message in user_mailspool:
+			mailspool_bytes_size += len(message)
+		
+		num_messages = len(user_mailspool)
+
+		msg = '+OK %i %i' % (num_messages, mailspool_bytes_size)
+
+		self.send_message(session, gsocket, msg)
+
+	def cmd_quit(self, session, gsocket, msg):
+		self.send_message(session, gsocket, '+OK Logging out')
+		return ''
+
+	def cmd_list(self, session, gsocket, argument):
+
+		user_mailspool = self.mailspools[session['USER']]
+		
+		if argument is None:
+			mailspool_bytes_size = 0
+
+			for message in user_mailspool:
+				mailspool_bytes_size += len(message)
+			
+			num_messages = len(user_mailspool)
+
+			msg = "+OK %i messages (%i octets)" % (num_messages, mailspool_bytes_size)
+			self.send_message(session, gsocket, msg)
+			for num in range(0, len(user_mailspool)):
+				msg = "%i %i" % (num + 1, len(user_mailspool[num]))
+				self.send_message(session, gsocket, msg)
+		else:
+			index = int(argument) - 1
+			if index < 0 or len(user_mailspool) < index:
+				msg = "-ERR no such message"
+				self.send_message(session, gsocket, msg)
+			else:
+				message = user_mailspool[index]
+
 	def get_port(self):
 		return pop3.port
 
@@ -120,7 +194,17 @@ class pop3(HandlerBase):
 
 	def send_message(self, session, gsocket, msg):
 		try:
-			gsocket.sendall(msg + "\r\n")
+			gsocket.sendall(msg + "\n")
 		except socket.error, (value, msg):
 				session['connected'] = False
 
+	def send_data(self, session, gsocket, data):
+		try:
+			gsocket.sendall(data)
+		except socket.error, (value, msg):
+				session['connected'] = False
+
+	#TODO: Dynamically fetch and modify new content (which looks legit...)
+	def get_mailspool(self, username):
+		user_spool = json.load(open('./capabilities/mails.json')).values()
+		self.mailspools[username] = user_spool
