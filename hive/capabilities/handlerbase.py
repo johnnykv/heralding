@@ -1,6 +1,6 @@
 class HandlerBase(object):
        
-       	def __init__(self, sessions):
+       	def __init__(self, sessions, accounts):
 			pass
 
         def handle(self, socket, address):
