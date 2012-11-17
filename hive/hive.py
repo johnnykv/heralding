@@ -24,6 +24,7 @@ from capabilities import telnet
 def main():
 	servers = []
 	sessions = {}
+	accounts = {'test' : 'test'}
 
 	#greenlet to consume and maintain data in sessions list
 	sessions_consumer = consumer.Consumer(sessions)
@@ -32,7 +33,7 @@ def main():
 	#protocol handlers
 	for c in handlerbase.HandlerBase.__subclasses__():
 		print c
-		cap = c(sessions)
+		cap = c(sessions, accounts)
 		server = StreamServer(('0.0.0.0', cap.get_port()), cap.handle)
 		servers.append(server)
 		print 'Starting ' + str(type(cap))
