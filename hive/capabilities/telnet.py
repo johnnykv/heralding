@@ -23,7 +23,7 @@ class telnet(HandlerBase):
 	#port = 23
 	max_tries = 3
 
-	def __init__(self, sessions):
+	def __init__(self, sessions, accounts):
 		self.sessions = sessions
 
 	def handle(self, gsocket, address):
