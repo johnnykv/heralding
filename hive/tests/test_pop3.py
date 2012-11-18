@@ -65,20 +65,23 @@ class Pop3_Tests(unittest.TestCase):
 		login_sequences = [
 			#valid login. valid password
 			(('USER james', '+OK User accepted'), ('PASS bond', '+OK Pass accepted')),
-			#valid login, invalid password
-			(('USER james', '+OK User accepted'), ('PASS wakkawakka', '-ERR Authentication failed.')),
+			#valid login, invalid password, try to run TRANSACTION state command
+			(('USER james', '+OK User accepted'), ('PASS wakkawakka', '-ERR Authentication failed.'), ('RETR', '-ERR Unknown command')),
 			#invalid login, invalid password
 			(('USER wakkwakk', '+OK User accepted'), ('PASS wakkwakk', '-ERR Authentication failed.')),
 			#PASS without user
 			(('PASS bond', '-ERR No username given.'),),
+			#Try to run a TRANSACITON state command in AUTHORIZATION state
+			(('RETR', '-ERR Unknown command'),),
 		]
-
+		#
 		sessions = {}
 		accounts = {'james' : 'bond'}
 		sut = pop3.pop3(sessions, accounts)
 
 		server = StreamServer(('127.0.0.1', 0), sut.handle)
 		server.start()
+		
 		for sequence in login_sequences:
 			client = gevent.socket.create_connection(('127.0.0.1', server.server_port))
 			
@@ -89,10 +92,10 @@ class Pop3_Tests(unittest.TestCase):
 			for pair in sequence:
 				client.sendall(pair[0] + "\r\n")
 				response = fileobj.readline().rstrip()
-				print pair
 				self.assertEqual(response, pair[1])
 				#assert response == pair[1]
 
+		server.stop()
 		
 if __name__ == '__main__':
 	unittest.main()
