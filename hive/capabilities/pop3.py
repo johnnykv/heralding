@@ -15,6 +15,7 @@
 
 from handlerbase import HandlerBase
 from datetime import datetime
+from gevent.server import StreamServer
 import socket
 import uuid
 import json
@@ -119,7 +120,8 @@ class pop3(HandlerBase):
 					return 'TRANSACTION'
 
 		self.send_message(session, gsocket, "-ERR Authentication failed.")
-		del session['USER']
+		if 'USER' in session:
+			del session['USER']
 		return 'AUTHORIZATION'
 		
 	def cmd_noop(self, session, gsocket, msg):
