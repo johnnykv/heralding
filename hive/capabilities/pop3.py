@@ -69,7 +69,6 @@ class pop3(HandlerBase):
 			cmd = cmd.lower()
 
 			func_to_call = getattr(self, 'cmd_%s' % cmd, None)
-			print func_to_call
 			if func_to_call is None or not self.is_state_valid(state, cmd):
 				self.send_message(session, gsocket, '-ERR Unknown command')
 			else:
