@@ -28,7 +28,8 @@ class Telnet_Tests(unittest.TestCase):
 		"""Tests if the session dicts initially contains the correct keys"""
 
 		sessions = {}
-		sut = telnet.telnet(sessions)
+		accounts = {}
+		sut = telnet.telnet(sessions, accounts)
 
 		#dont really care about the socket at this point (None...)
 		#TODO: mock the socket!
