@@ -32,7 +32,6 @@ def main():
 
 	#protocol handlers
 	for c in handlerbase.HandlerBase.__subclasses__():
-		print c
 		cap = c(sessions, accounts)
 		server = StreamServer(('0.0.0.0', cap.get_port()), cap.handle)
 		servers.append(server)

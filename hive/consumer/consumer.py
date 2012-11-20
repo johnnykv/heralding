@@ -45,7 +45,6 @@ class Consumer:
 	def get_loggers(self):
 		loggers = []
 		for l in loggerbase.LoggerBase.__subclasses__():
-			print l
 			logger = l()
 			loggers.append(logger)
 		return loggers
