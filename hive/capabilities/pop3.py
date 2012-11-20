@@ -28,6 +28,7 @@ class pop3(HandlerBase):
 
 	def __init__(self, sessions, accounts):
 		self.sessions = sessions
+
 		#to make the honeypot look legit we need to main a global mainspool state
 		self.mailspools = {}
 		self.accounts = accounts
@@ -43,7 +44,8 @@ class pop3(HandlerBase):
 				   'connected' : True,
 				   'protocol_port' : pop3.port,
 				   'protocol' : 'pop3',
-				   'login_tries' : []}
+				   'login_tries' : [],
+				   'deleted_index' : []}
 
 		self.sessions[session['id']] = session
 
@@ -135,28 +137,49 @@ class pop3(HandlerBase):
 			index = int(msg) - 1
 		except ValueError:
 			self.send_message(session, gsocket, '-ERR no such message')
+		else:
+			if index < 0 or len(user_mailspool) < index:
+				self.send_message(session, gsocket, '-ERR no such message')
+			else:
+				msg = '+OK %i octets' % (len(user_mailspool[index]))
+				self.send_message(session, gsocket, msg)
+				self.send_data(session, gsocket, user_mailspool[index])
 
-		if index < 0 or len(user_mailspool) < index:
+	def cmd_dele(self, session, gsocket, msg):
+		
+		user_mailspool = self.mailspools[session['USER']]
+
+		try:
+			index = int(msg) - 1
+		except ValueError:
 			self.send_message(session, gsocket, '-ERR no such message')
 		else:
-			msg = '+OK %i octets' % (len(user_mailspool[index]))
-			self.send_message(session, gsocket, msg)
-			self.send_data(session, gsocket, user_mailspool[index])
+			if index < 0 or len(user_mailspool) <= index:
+				self.send_message(session, gsocket, '-ERR no such message')
+			else:
+				if index in session['deleted_index']:
+					reply = '-ERR message %s already deleted' % (msg)
+					self.send_message(session, gsocket, reply)
+				else:
+					session['deleted_index'].append(index)
+					reply = '+OK message %s deleted' % (msg)
+					self.send_message(session, gsocket, reply)
 
 
 	def cmd_stat(self, session, gsocket, msg):
 
 		user_mailspool = self.mailspools[session['USER']]
 		mailspool_bytes_size = 0
+		mailspool_num_messages = 0
 
-		for message in user_mailspool:
-			mailspool_bytes_size += len(message)
-		
-		num_messages = len(user_mailspool)
+		for index, value in enumerate(user_mailspool):
+			if index not in session['deleted_index']: # ignore deleted messages
+				mailspool_bytes_size += len(value)
+				mailspool_num_messages += 1
 
-		msg = '+OK %i %i' % (num_messages, mailspool_bytes_size)
+		reply = '+OK %i %i' % (mailspool_num_messages, mailspool_bytes_size)
 
-		self.send_message(session, gsocket, msg)
+		self.send_message(session, gsocket, reply)
 
 	def cmd_quit(self, session, gsocket, msg):
 		self.send_message(session, gsocket, '+OK Logging out')
@@ -168,24 +191,29 @@ class pop3(HandlerBase):
 		
 		if argument is None:
 			mailspool_bytes_size = 0
+			mailspool_num_messages = 0
 
-			for message in user_mailspool:
-				mailspool_bytes_size += len(message)
+			for index, value in enumerate(user_mailspool):
+				if index not in session['deleted_index']: # ignore deleted messages
+					mailspool_bytes_size += len(value)
+					mailspool_num_messages += 1
 			
-			num_messages = len(user_mailspool)
+			reply = "+OK %i messages (%i octets)" % (mailspool_num_messages, mailspool_bytes_size)
+			self.send_message(session, gsocket, reply)
 
-			msg = "+OK %i messages (%i octets)" % (num_messages, mailspool_bytes_size)
-			self.send_message(session, gsocket, msg)
-			for num in range(0, len(user_mailspool)):
-				msg = "%i %i" % (num + 1, len(user_mailspool[num]))
-				self.send_message(session, gsocket, msg)
+			for index, value in enumerate(user_mailspool):
+				if index not in session['deleted_index']: # ignore deleted messages
+					reply = "%i %i" % (index + 1, len(value))
+					self.send_message(session, gsocket, reply)
 		else:
 			index = int(argument) - 1
-			if index < 0 or len(user_mailspool) < index:
-				msg = "-ERR no such message"
-				self.send_message(session, gsocket, msg)
+			if index < 0 or len(user_mailspool) < index or index in session['deleted_index']:
+				reply = '-ERR no such message'
+				self.send_message(session, gsocket, reply)
 			else:
-				message = user_mailspool[index]
+				mail = user_mailspool[index]
+				reply = '+OK %i %i' % (index + 1, len(mail))
+				self.send_message(session, gsocket, reply)
 
 	def get_port(self):
 		return pop3.port
@@ -207,5 +235,8 @@ class pop3(HandlerBase):
 
 	#TODO: Dynamically fetch and modify new content (which looks legit...)
 	def get_mailspool(self, username):
-		user_spool = json.load(open('./capabilities/mails.json')).values()
-		self.mailspools[username] = user_spool
+		try:
+			user_spool = json.load(open('./capabilities/mails.json')).values()
+			self.mailspools[username] = user_spool
+		except IOError:
+			user_spool = []
