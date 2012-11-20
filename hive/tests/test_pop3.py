@@ -74,7 +74,7 @@ class Pop3_Tests(unittest.TestCase):
 			#Try to run a TRANSACITON state command in AUTHORIZATION state
 			(('RETR', '-ERR Unknown command'),),
 		]
-		#
+
 		sessions = {}
 		accounts = {'james' : 'bond'}
 		sut = pop3.pop3(sessions, accounts)
@@ -89,13 +89,94 @@ class Pop3_Tests(unittest.TestCase):
 
 			#skip banner
 			fileobj.readline()
+
 			for pair in sequence:
 				client.sendall(pair[0] + "\r\n")
 				response = fileobj.readline().rstrip()
 				self.assertEqual(response, pair[1])
-				#assert response == pair[1]
+
+		server.stop()
+
+	def test_dele(self):
+		"""Testing DELE command"""
+
+		sequences = [
+			#[mailspool_initialstate], ((cmd, response), (cmd, response))
+			#Delete message
+			(['mail1', 'mail2'], (('DELE 1', '+OK message 1 deleted'), ('STAT', '+OK 1 5'))),
+			#Delete message twice
+			(['mail1', 'mail2'], (('DELE 1', '+OK message 1 deleted'), ('STAT', '+OK 1 5'))),
+			#Delete non-existing mail
+			(['mail1'], (('DELE 2', '-ERR no such message'),)),
+		]
+
+		sessions = {}
+		accounts = {'james' : 'bond'}
+		sut = pop3.pop3(sessions, accounts)
+
+		server = StreamServer(('127.0.0.1', 0), sut.handle)
+		server.start()
+		
+		for sequence in sequences:
+			client = gevent.socket.create_connection(('127.0.0.1', server.server_port))
+			
+			fileobj = client.makefile()
+
+			#set initial mailstate
+			sut.mailspools['james'] = sequence[0]
+
+			#skip banner and login
+			fileobj.readline()
+			client.sendall('USER james' + "\r\n")
+			fileobj.readline()
+			client.sendall('PASS bond' + "\r\n")
+			fileobj.readline()
+
+			for pair in sequence[1]:
+				client.sendall(pair[0] + "\r\n")
+				response = fileobj.readline().rstrip()
+				self.assertEqual(response, pair[1])
 
 		server.stop()
 		
+	def test_stat(self):
+		"""Testing DELE command"""
+
+		sequences = [
+			#[mailspool_initialstate], ((cmd, response), (cmd, response))
+			#Delete message
+			([], (('STAT', '+OK 0 0'),)),
+			(['mail1'], (('STAT', '+OK 1 5'),)),
+			(['mail1', 'mail2'], (('STAT', '+OK 2 10'),)),
+		]
+
+		sessions = {}
+		accounts = {'james' : 'bond'}
+		sut = pop3.pop3(sessions, accounts)
+
+		server = StreamServer(('127.0.0.1', 0), sut.handle)
+		server.start()
+		
+		for sequence in sequences:
+			client = gevent.socket.create_connection(('127.0.0.1', server.server_port))
+			
+			fileobj = client.makefile()
+
+			#set initial mailstate
+			sut.mailspools['james'] = sequence[0]
+
+			#skip banner and login
+			fileobj.readline()
+			client.sendall('USER james' + "\r\n")
+			fileobj.readline()
+			client.sendall('PASS bond' + "\r\n")
+			fileobj.readline()
+
+			for pair in sequence[1]:
+				client.sendall(pair[0] + "\r\n")
+				response = fileobj.readline().rstrip()
+				self.assertEqual(response, pair[1])
+
+		server.stop()
 if __name__ == '__main__':
 	unittest.main()
