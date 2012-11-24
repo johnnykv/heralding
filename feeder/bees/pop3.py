@@ -17,6 +17,7 @@ import poplib
 from clientbase import ClientBase
 from datetime import datetime
 import uuid
+import logging
 
 class pop3(ClientBase):
 
@@ -36,6 +37,7 @@ class pop3(ClientBase):
 				   'timestamp' : datetime.utcnow(),
 				   'did_connect' : False,
 				   'did_login' : False,
+				   'did_complete' : False,
 				   'protocol_data' : {}
 				   }
 
@@ -51,14 +53,15 @@ class pop3(ClientBase):
 			conn.pass_(password)
 			session['did_login'] = True
 			session['timestamp'] = datetime.utcnow()
-		except poplib.error_proto:
-			pass
+		except poplib.error_proto, err:
+			logging.debug('Caught poplib.error: %s' % (err, ))
 		else:
 			list_entries = conn.list()[1]
 			for entry in list_entries:
 				index, octets = entry.split(' ')
 				conn.retr(index)
 				conn.dele(index)
+			logging.debug('Found and deleted %i messages on %s' % (len(list_entries), server_port))
 			conn.quit()
 			session['did_complete'] = True
 			
