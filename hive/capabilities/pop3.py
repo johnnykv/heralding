@@ -144,6 +144,8 @@ class pop3(HandlerBase):
 				msg = '+OK %i octets' % (len(user_mailspool[index]))
 				self.send_message(session, gsocket, msg)
 				self.send_data(session, gsocket, user_mailspool[index])
+				self.send_message(session, gsocket, '')
+				self.send_message(session, gsocket, '.')
 
 	def cmd_dele(self, session, gsocket, msg):
 		
@@ -183,6 +185,12 @@ class pop3(HandlerBase):
 
 	def cmd_quit(self, session, gsocket, msg):
 		self.send_message(session, gsocket, '+OK Logging out')
+		
+		user_mailspool = self.mailspools[session['USER']]
+
+		session['deleted_index'].sort(reverse=True)
+		for index in session['deleted_index']:
+			del user_mailspool[index]
 		return ''
 
 	def cmd_list(self, session, gsocket, argument):
@@ -205,9 +213,10 @@ class pop3(HandlerBase):
 				if index not in session['deleted_index']: # ignore deleted messages
 					reply = "%i %i" % (index + 1, len(value))
 					self.send_message(session, gsocket, reply)
+			self.send_message(session, gsocket, '.')
 		else:
 			index = int(argument) - 1
-			if index < 0 or len(user_mailspool) < index or index in session['deleted_index']:
+			if index < 0 or len(user_mailspool) <= index or index in session['deleted_index']:
 				reply = '-ERR no such message'
 				self.send_message(session, gsocket, reply)
 			else:
