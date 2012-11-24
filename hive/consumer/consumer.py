@@ -19,22 +19,24 @@ import os
 from loggers import loggerbase
 from loggers import consolelogger
 from loggers import sqlitelogger
+import logging
 
 class Consumer:
 
 	def __init__(self, sessions):
-		print "instance created"
+		logging.debug('Consumer created.')
 		self.sessions = sessions
 
 	def start_handling(self):
 		active_loggers = self.get_loggers()
 
 		while True:
-			print "Current sessions count: %i" % (len(self.sessions),)
 			for session_id in self.sessions.keys():
 				session = self.sessions[session_id]
 				if not session['connected']:
+					logging.debug('Found disconnected session. (session id: %s)' % (session['id']))
 					for logger in active_loggers:
+						logging.debug('Logging session with %s (session id: %s)' % (logger.__class__.__name__, session['id']))
 						logger.log(session)
 					del self.sessions[session_id]
 			gevent.sleep(5)

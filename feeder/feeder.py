@@ -16,6 +16,7 @@
 #hmm... right here?
 from bees import clientbase
 from bees import pop3
+import time
 import logging
 import gevent
 import pprint
@@ -28,36 +29,39 @@ def main():
 	# sessions_consumer = consumer.Consumer(sessions)
 	# Greenlet.spawn(sessions_consumer.start_handling)
 
-	login_combos = get_credentials()
+	targets = get_targets()
 
 	sessions = []
 	honeybees = []
 	for b in clientbase.ClientBase.__subclasses__():
 		bee = b(sessions)
 		honeybees.append(bee)
-
-	 	print 'Found ' + str(type(bee))
-
-	#TODO: mail fetching at regular intervals,
-	#      interactive sessions (ssh, telnet) at random intervals
 		logging.debug('Adding %s as a honeybee' % (bee.__class__.__name__))
+	 	
+	pp = pprint.PrettyPrinter()
+	#TODO: 1. pop3 and imap at regular intervals,
+	#      2. everything else at random intervals
 	while True:
 		for bee in honeybees:
 			class_name = bee.__class__.__name__
-			if class_name in login_combos:
-				bee_info = login_combos[class_name]
+			if class_name in targets:
+				bee_info = targets[class_name]
 				bee.do_session(bee_info['login'], bee_info['password'], 
 					bee_info['server'], bee_info['port'])
-		print sessions
-		gevent.sleep(60)
 		pp.pprint(sessions)
 		time.sleep(60)
 
 
 
-def get_credentials():
+def get_targets():
 	#TODO: Read from file or generate... Needs to be correlated with hive
-	return {'pop3' : {'server' : '127.0.0.1', 'port' : 2100, 'login' : 'test', 'password' : 'test'}}
+	return {'pop3' : 
+					{'server' : '127.0.0.1',
+					 'port' : 2100,
+					 'timing' : 'regular',
+					 'login' : 'test',
+					 'password' : 'test'}
+					 }
 
 if __name__ == '__main__':
 	format_string = '%(asctime)-15s (%(funcName)s) %(message)s'
