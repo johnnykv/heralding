@@ -14,10 +14,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #hmm... right here?
-import gevent.monkey; gevent.monkey.patch_all()
 from bees import clientbase
 from bees import pop3
-from gevent import Greenlet
 import gevent
 
 def main():
