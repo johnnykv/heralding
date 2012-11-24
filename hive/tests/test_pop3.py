@@ -140,7 +140,7 @@ class Pop3_Tests(unittest.TestCase):
 		server.stop()
 		
 	def test_stat(self):
-		"""Testing DELE command"""
+		"""Testing STAT command"""
 
 		sequences = [
 			#[mailspool_initialstate], ((cmd, response), (cmd, response))
@@ -178,5 +178,6 @@ class Pop3_Tests(unittest.TestCase):
 				self.assertEqual(response, pair[1])
 
 		server.stop()
+		
 if __name__ == '__main__':
 	unittest.main()
