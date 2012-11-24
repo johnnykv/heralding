@@ -20,6 +20,7 @@ from consumer import consumer
 from capabilities import handlerbase
 from capabilities import pop3
 from capabilities import telnet
+import logging
 
 def main():
 	servers = []
@@ -35,15 +36,16 @@ def main():
 		cap = c(sessions, accounts)
 		server = StreamServer(('0.0.0.0', cap.get_port()), cap.handle)
 		servers.append(server)
-		print 'Starting ' + str(type(cap))
 		server.start()
-	print 'all started'
+		logging.debug('Found, added and started a %s capability' % ( cap.__class__.__name__ ))
 	
 	stop_events = []
 	for s in servers:
 		stop_events.append(s._stopped_event)
-
+		
 	gevent.joinall(stop_events)
 
 if __name__ == '__main__':
+	format_string = '%(asctime)-15s (%(funcName)s) %(message)s'
+	logging.basicConfig(level=logging.DEBUG, format=format_string)
 	main()
