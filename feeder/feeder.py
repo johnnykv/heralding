@@ -16,7 +16,9 @@
 #hmm... right here?
 from bees import clientbase
 from bees import pop3
+import logging
 import gevent
+import pprint
 
 def main():
 	#TODO: Read this from configuration file or commandline arguments
@@ -38,6 +40,7 @@ def main():
 
 	#TODO: mail fetching at regular intervals,
 	#      interactive sessions (ssh, telnet) at random intervals
+		logging.debug('Adding %s as a honeybee' % (bee.__class__.__name__))
 	while True:
 		for bee in honeybees:
 			class_name = bee.__class__.__name__
@@ -47,6 +50,8 @@ def main():
 					bee_info['server'], bee_info['port'])
 		print sessions
 		gevent.sleep(60)
+		pp.pprint(sessions)
+		time.sleep(60)
 
 
 
@@ -55,4 +60,6 @@ def get_credentials():
 	return {'pop3' : {'server' : '127.0.0.1', 'port' : 2100, 'login' : 'test', 'password' : 'test'}}
 
 if __name__ == '__main__':
+	format_string = '%(asctime)-15s (%(funcName)s) %(message)s'
+	logging.basicConfig(level=logging.DEBUG, format=format_string)
 	main()
