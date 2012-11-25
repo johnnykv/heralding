@@ -17,6 +17,7 @@ import poplib
 from clientbase import ClientBase
 from datetime import datetime
 import uuid
+import socket
 import logging
 
 class pop3(ClientBase):
@@ -24,12 +25,13 @@ class pop3(ClientBase):
 	def __init__(self, sessions):
 		self.sessions = sessions
 
-	def do_session(self, login, password, server_host, server_port):
+	def do_session(self, login, password, server_host, server_port, my_ip):
 		"""Login, RETR and DELE all messages"""
 
 		session = {
 				   'id' : uuid.uuid4(),
 				   'protocol' : 'pop3',
+				   'my_ip' : my_ip,
 				   'login' : login,
 				   'password' : password,
 				   'server_host' : server_host,
@@ -41,27 +43,30 @@ class pop3(ClientBase):
 				   'protocol_data' : {}
 				   }
 
-		self.sessions.append(session)
+		self.sessions[session['id']] = session
 
 		try:
+			logging.debug('Sending %s honeybee to %s:%s. (bee id: %s)' % ('pop3', server_host, server_port, session['id']))
 			conn = poplib.POP3(server_host, server_port)
 			banner = conn.getwelcome()
-			session['protocol_banner'] = banner
+			session['protocol_data']['banner'] = banner
 			session['did_connect'] = True
 			
 			conn.user(login)
 			conn.pass_(password)
 			session['did_login'] = True
 			session['timestamp'] = datetime.utcnow()
-		except poplib.error_proto, err:
-			logging.debug('Caught poplib.error: %s' % (err, ))
+		except (poplib.error_proto, socket.error) as err:
+			logging.debug('Caught exception: %s (%s)' % (err, str(type(err))))
 		else:
 			list_entries = conn.list()[1]
 			for entry in list_entries:
 				index, octets = entry.split(' ')
 				conn.retr(index)
 				conn.dele(index)
-			logging.debug('Found and deleted %i messages on %s' % (len(list_entries), server_port))
+			logging.debug('Found and deleted %i messages on %s' % (len(list_entries), server_host))
 			conn.quit()
 			session['did_complete'] = True
+		finally:
+			session['alldone'] = True
 			

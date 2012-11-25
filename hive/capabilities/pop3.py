@@ -29,7 +29,7 @@ class pop3(HandlerBase):
 	def __init__(self, sessions, accounts):
 		self.sessions = sessions
 
-		#to make the honeypot look legit we need to main a global mainspool state
+		#global mainspool
 		self.mailspools = {}
 		self.accounts = accounts
 
