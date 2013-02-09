@@ -13,39 +13,43 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
+
 from gevent.server import StreamServer
 from gevent import Greenlet
 import gevent
+
 from consumer import consumer
 from capabilities import handlerbase
 from capabilities import pop3
 from capabilities import telnet
-import logging
+
 
 def main():
-	servers = []
-	sessions = {}
-	accounts = {'test' : 'test'}
+    servers = []
+    sessions = {}
+    accounts = {'test': 'test'}
 
-	#greenlet to consume and maintain data in sessions list
-	sessions_consumer = consumer.Consumer(sessions)
-	Greenlet.spawn(sessions_consumer.start_handling)
+    #greenlet to consume and maintain data in sessions list
+    sessions_consumer = consumer.Consumer(sessions)
+    Greenlet.spawn(sessions_consumer.start_handling)
 
-	#protocol handlers
-	for c in handlerbase.HandlerBase.__subclasses__():
-		cap = c(sessions, accounts)
-		server = StreamServer(('0.0.0.0', cap.get_port()), cap.handle)
-		servers.append(server)
-		server.start()
-		logging.debug('Found, added and started a %s capability' % ( cap.__class__.__name__ ))
-	
-	stop_events = []
-	for s in servers:
-		stop_events.append(s._stopped_event)
-		
-	gevent.joinall(stop_events)
+    #protocol handlers
+    for c in handlerbase.HandlerBase.__subclasses__():
+        cap = c(sessions, accounts)
+        server = StreamServer(('0.0.0.0', cap.get_port()), cap.handle)
+        servers.append(server)
+        server.start()
+        logging.debug('Found, added and started a %s capability' % ( cap.__class__.__name__ ))
+
+    stop_events = []
+    for s in servers:
+        stop_events.append(s._stopped_event)
+
+    gevent.joinall(stop_events)
+
 
 if __name__ == '__main__':
-	format_string = '%(asctime)-15s (%(funcName)s) %(message)s'
-	logging.basicConfig(level=logging.DEBUG, format=format_string)
-	main()
+    format_string = '%(asctime)-15s (%(funcName)s) %(message)s'
+    logging.basicConfig(level=logging.DEBUG, format=format_string)
+    main()

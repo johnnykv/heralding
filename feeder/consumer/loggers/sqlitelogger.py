@@ -14,33 +14,35 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sqlite3
-from loggerbase import LoggerBase
 from os import path
 
+from loggerbase import LoggerBase
+
+
 class SqliteLogger(LoggerBase):
-	db_name = 'feeder_sqlite.db'
+    db_name = 'feeder_sqlite.db'
 
-	def log(self, session):
-		if not path.exists(SqliteLogger.db_name):
-			self.create_db()
-		
-		conn = sqlite3.connect(SqliteLogger.db_name)
-		cursor = conn.cursor()
-		
-		session_tuple = (str(session['id']), session['protocol'], session['my_ip'], 
-						 session['login'], session['password'], session['server_host'],
-						 session['server_port'], session['timestamp'], session['did_connect'],
-						 session['did_login'], session['did_complete'])
+    def log(self, session):
+        if not path.exists(SqliteLogger.db_name):
+            self.create_db()
 
-		cursor.execute('INSERT INTO honeybees VALUES (?,?,?,?,?,?,?,?,?,?,?)', session_tuple)
+        conn = sqlite3.connect(SqliteLogger.db_name)
+        cursor = conn.cursor()
 
-		conn.commit()
+        session_tuple = (str(session['id']), session['protocol'], session['my_ip'],
+                         session['login'], session['password'], session['server_host'],
+                         session['server_port'], session['timestamp'], session['did_connect'],
+                         session['did_login'], session['did_complete'])
+
+        cursor.execute('INSERT INTO honeybees VALUES (?,?,?,?,?,?,?,?,?,?,?)', session_tuple)
+
+        conn.commit()
 
 
-	def create_db(self):
-		conn = sqlite3.connect(SqliteLogger.db_name)
-		cursor = conn.cursor()
-		cursor.execute("""
+    def create_db(self):
+        conn = sqlite3.connect(SqliteLogger.db_name)
+        cursor = conn.cursor()
+        cursor.execute("""
 			CREATE TABLE IF NOT EXISTS honeybees(
 				id TEXT PRIMARY KEY NOT NULL,
 				protocol TEXT NOT null,
@@ -55,18 +57,18 @@ class SqliteLogger(LoggerBase):
 				did_complete TEXT NOT null)
 				""")
 
-		conn.commit()
+        conn.commit()
 
-		# session = {
-		# 		   'id' : uuid.uuid4(),
-		# 		   'protocol' : 'pop3',
-		# 		   'my_ip' : my_ip,
-		# 		   'login' : login,
-		# 		   'password' : password,
-		# 		   'server_host' : server_host,
-		# 		   'server_port' : server_port,
-		# 		   'timestamp' : datetime.utcnow(),
-		# 		   'did_connect' : False,
-		# 		   'did_login' : False,
-		# 		   'did_complete' : False,
-		# 		   'protocol_data' : {}
+    # session = {
+    # 		   'id' : uuid.uuid4(),
+    # 		   'protocol' : 'pop3',
+    # 		   'my_ip' : my_ip,
+    # 		   'login' : login,
+    # 		   'password' : password,
+    # 		   'server_host' : server_host,
+    # 		   'server_port' : server_port,
+    # 		   'timestamp' : datetime.utcnow(),
+    # 		   'did_connect' : False,
+    # 		   'did_login' : False,
+    # 		   'did_complete' : False,
+    # 		   'protocol_data' : {}

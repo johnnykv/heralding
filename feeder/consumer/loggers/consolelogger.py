@@ -13,11 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from loggerbase import LoggerBase
 import pprint
 
-class ConsoleLogger(LoggerBase):
+from loggerbase import LoggerBase
 
-	def log(self, session):
-		pp = pprint.PrettyPrinter()
-		#pp.pprint(session)
+
+class ConsoleLogger(LoggerBase):
+    def log(self, session):
+        pp = pprint.PrettyPrinter()
+        #pp.pprint(session)

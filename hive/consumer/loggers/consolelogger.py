@@ -15,7 +15,7 @@
 
 from loggerbase import LoggerBase
 
-class ConsoleLogger(LoggerBase):
 
-	def log(self, session):
-		print "%s session from %s ended." % (session['protocol'], session['attacker_ip'])
+class ConsoleLogger(LoggerBase):
+    def log(self, session):
+        print "%s session from %s ended." % (session['protocol'], session['attacker_ip'])

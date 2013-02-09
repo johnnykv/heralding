@@ -13,40 +13,41 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
+
 import gevent
-import os
 
 from loggers import loggerbase
 from loggers import consolelogger
 from loggers import sqlitelogger
-import logging
+
 
 class Consumer:
+    def __init__(self, sessions):
+        logging.debug('Consumer created.')
+        self.sessions = sessions
 
-	def __init__(self, sessions):
-		logging.debug('Consumer created.')
-		self.sessions = sessions
+    def start_handling(self):
+        active_loggers = self.get_loggers()
 
-	def start_handling(self):
-		active_loggers = self.get_loggers()
+        while True:
+            for session_id in self.sessions.keys():
+                session = self.sessions[session_id]
+                if not session['connected']:
+                    logging.debug('Found disconnected session. (session id: %s)' % (session['id']))
+                    for logger in active_loggers:
+                        logging.debug(
+                            'Logging session with %s (session id: %s)' % (logger.__class__.__name__, session['id']))
+                        logger.log(session)
+                    del self.sessions[session_id]
+            gevent.sleep(5)
 
-		while True:
-			for session_id in self.sessions.keys():
-				session = self.sessions[session_id]
-				if not session['connected']:
-					logging.debug('Found disconnected session. (session id: %s)' % (session['id']))
-					for logger in active_loggers:
-						logging.debug('Logging session with %s (session id: %s)' % (logger.__class__.__name__, session['id']))
-						logger.log(session)
-					del self.sessions[session_id]
-			gevent.sleep(5)
+    def stop_handling(self):
+        pass
 
-	def stop_handling(self):
-		pass
-
-	def get_loggers(self):
-		loggers = []
-		for l in loggerbase.LoggerBase.__subclasses__():
-			logger = l()
-			loggers.append(logger)
-		return loggers
+    def get_loggers(self):
+        loggers = []
+        for l in loggerbase.LoggerBase.__subclasses__():
+            logger = l()
+            loggers.append(logger)
+        return loggers

@@ -14,6 +14,5 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 class LoggerBase(object):
-       
-        def log(self, session):
-        	raise Exception('Do no call base class!')
+    def log(self, session):
+        raise Exception('Do no call base class!')
