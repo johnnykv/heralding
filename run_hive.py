@@ -19,10 +19,10 @@ from gevent.server import StreamServer
 from gevent import Greenlet
 import gevent
 
-from consumer import consumer
-from capabilities import handlerbase
-from capabilities import pop3
-from capabilities import telnet
+from hive.consumer import consumer
+from hive.capabilities import handlerbase
+from hive.capabilities import pop3
+from hive.capabilities import telnet
 
 
 def main():
@@ -40,7 +40,7 @@ def main():
         server = StreamServer(('0.0.0.0', cap.get_port()), cap.handle)
         servers.append(server)
         server.start()
-        logging.debug('Found, added and started a %s capability' % ( cap.__class__.__name__ ))
+        logging.debug('Started {0} capability listening on port {1}'.format( cap.__class__.__name__, cap.get_port()))
 
     stop_events = []
     for s in servers:
@@ -50,6 +50,6 @@ def main():
 
 
 if __name__ == '__main__':
-    format_string = '%(asctime)-15s (%(funcName)s) %(message)s'
+    format_string = '%(asctime)-15s (%(name)s) %(message)s'
     logging.basicConfig(level=logging.DEBUG, format=format_string)
     main()
