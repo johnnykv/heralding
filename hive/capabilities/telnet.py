@@ -26,27 +26,15 @@ class telnet(HandlerBase):
     max_tries = 3
 
     def __init__(self, sessions, accounts):
-        self.sessions = sessions
 
     def handle(self, gsocket, address):
-
-        session = {'id': uuid.uuid4(),
-                   'timestamp': datetime.utcnow(),
-                   'last_activity': datetime.utcnow(),
-                   'attacker_ip': address[0],
-                   'attacker_src_port': address[1],
-                   'connected': True,
-                   'protocol_port': telnet.port,
-                   'protocol': 'telnet',
-                   'login_tries': []}
-
-        self.sessions[session['id']] = session
+        session = Session(address[0], address[1], 'telnet', telnet.port)
 
         banner = ''
 
         self.send_message(session, gsocket, banner)
 
-        self.send_message(session, gsocket, "login: ")
+        self.send_message(session, gsocket, "Login: ")
 
         data = []
         telnet_state = ''
@@ -58,10 +46,10 @@ class telnet(HandlerBase):
             try:
                 read = gsocket.recv(1)
             except socket.error, (value, message):
-                session['connected'] = False
+                session.connected = False
                 break
 
-            session['last_activity'] = datetime.utcnow()
+            session.activity()
 
             if telnet_state == '':
                 if ord(read) == 255:
@@ -80,10 +68,7 @@ class telnet(HandlerBase):
                                 data = []
                                 prompt_state = 'password'
                             else:
-                                session['login_tries'].append(
-                                    {'login': login, 'password': ''.join(data)[:-2], 'id': uuid.uuid4(),
-                                     'timestamp': datetime.utcnow()})
-                                attempts += 1
+                                session.try_login(login, password)
                                 data = []
                                 self.send_message(session, gsocket, 'Invalid username/password.\r\n')
                                 prompt_state = 'login'
@@ -111,7 +96,7 @@ class telnet(HandlerBase):
                 telnet_state = ''
                 data = []
 
-        session['connected'] = False
+        session.connected = False
 
     def get_port(self):
         return telnet.port
