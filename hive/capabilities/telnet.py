@@ -13,12 +13,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import datetime
 import socket
-import uuid
+import logging
+
+from hive.models.session import Session
 
 from handlerbase import HandlerBase
 
+logger = logging.getLogger(__name__)
 
 class telnet(HandlerBase):
     port = 2300
@@ -26,8 +28,10 @@ class telnet(HandlerBase):
     max_tries = 3
 
     def __init__(self, sessions, accounts):
+        super(telnet, self).__init__(sessions, accounts)
 
     def handle(self, gsocket, address):
+        logger.info("Accepted connection from {0}".format(address))
         session = Session(address[0], address[1], 'telnet', telnet.port)
 
         banner = ''
@@ -37,11 +41,11 @@ class telnet(HandlerBase):
         self.send_message(session, gsocket, "Login: ")
 
         data = []
-        telnet_state = ''
-        prompt_state = 'login'
-        attempts = 0;
+        state = ''
+        prompt = 'login'
+        auth_attempts = 0;
 
-        while attempts < telnet.max_tries:
+        while auth_attempts < telnet.max_tries:
 
             try:
                 read = gsocket.recv(1)
@@ -51,49 +55,56 @@ class telnet(HandlerBase):
 
             session.activity()
 
-            if telnet_state == '':
-                if ord(read) == 255:
+            if state == '':
+                if read == IAC:
                     data.append(read)
-                    telnet_state = 'iac'
-                elif ord(read) == 250: #start negotiation (SB)
+                    state = 'iac'
+                #start negotiation (SB)
+                elif read == SB:
                     data.append(read)
-                    telnet_state = 'negotiation'
+                    state = 'negotiation'
                 else:
                     data.append(read)
                     if len(data) > 1:
                         if data[-1] == '\n' and data[-2] == '\r':
-                            if prompt_state == 'login':
+                            if prompt == 'login':
                                 login = ''.join(data)[:-2]
                                 self.send_message(session, gsocket, "Password: ")
                                 data = []
-                                prompt_state = 'password'
+                                #instruct client not to echo
+                                self.send_message(session, gsocket, IAC + WILL + ECHO)
+                                prompt = 'password'
                             else:
+                                password = ''.join(data)[:-2]
                                 session.try_login(login, password)
+                                auth_attempts += 1
+
+                                self.send_message(session, gsocket, '\r\nInvalid username/password.\r\n')
+                                #instruct client to echo again
+                                self.send_message(session, gsocket, IAC + WONT + ECHO)
+                                prompt = 'login'
                                 data = []
-                                self.send_message(session, gsocket, 'Invalid username/password.\r\n')
-                                prompt_state = 'login'
-                                data = []
-                                if attempts < telnet.max_tries:
+                                if auth_attempts < telnet.max_tries:
                                     self.send_message(session, gsocket, "login: ")
-            elif telnet_state == 'negotiation':
-                if ord(read) == 240: #end of negotiation (SE)
+            elif state == 'negotiation':
+                if read == SE:
                     data.append(read)
                     self.parse_cmd(session, gsocket, data)
-                    telnet_state = ''
+                    state = ''
                     data = []
-            elif telnet_state == 'iac':
-                if ord(read) in (241, 242, 243, 244, 245, 246, 247, 248, 249): #single command
+            elif state == 'iac':
+                if read  in (NOP, DM, BRK, IP, AO, AYT, EC, EL, GA):
                     data.append(read)
                     self.parse_cmd(session, gsocket, data)
-                    telnet_state = ''
+                    state = ''
                     data = []
-                elif ord(read) in (251, 252, 253, 254): #will, wont, do, dont
-                    telnet_state = 'command'
+                elif read in (WILL, WONT, DO, DONT):
+                    state = 'command'
                     data.append(read)
-            elif telnet_state == 'command':
+            elif state == 'command':
                 data.append(read)
                 self.parse_cmd(session, gsocket, data)
-                telnet_state = ''
+                state = ''
                 data = []
 
         session.connected = False
@@ -102,12 +113,54 @@ class telnet(HandlerBase):
         return telnet.port
 
     def parse_cmd(self, session, gsocket, data):
-        print "Command received:"
-        print data
+        #TODO: Log comands - these commands can be used to fingerprint attack tool.
+        command = data
 
     def send_message(self, session, gsocket, msg):
         try:
             gsocket.sendall(msg)
         except socket.error, (value, msg):
             session['connected'] = False
+
+
+#telnet commands accordingly to various RFC (857-860, 1091, 1073, 1079, 1372, 1184, 1408)
+ECHO = chr(1)
+SUPPRESS_GO_AHEAD = chr(3)
+STATUS = chr(5)
+TIMING_MARK = chr(6)
+TERMINAL_TYPE = chr(24)
+WINDOW_SIZE = chr(31)
+TERMINAL_SPEED = chr(32)
+REMOTE_FLOW_CONTROL = chr(33)
+LINEMODE = chr(34)
+ENVIRONMENT_VARIABLES = chr(36)
+
+#End of subnegotiation parameters
+SE = chr(240)
+#No operation
+NOP = chr(241)
+#Data mark
+DM = chr(242)
+#Suspend
+BRK = chr(243)
+#Suspend
+IP = chr(244)
+#Abort output
+AO = chr(245)
+#Are you there
+AYT = chr(246)
+#Erase character
+EC = chr(247)
+#Erase line
+EL = chr(248)
+#Go ahead
+GA = chr(249)
+#Start of subnegotiation
+SB = chr(250)
+WILL = chr(251)
+WONT = chr(252)
+DO = chr(253)
+DONT = chr(254)
+#Interpret as a command
+IAC = chr(255)
 
