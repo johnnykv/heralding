@@ -31,10 +31,10 @@ class telnet(HandlerBase):
         self.sessions = sessions
 
     def handle(self, gsocket, address):
-        logger.info("Accepted connection from {0}".format(address))
         session = Session(address[0], address[1], 'telnet', telnet.port)
-        #add session to shares session state
         self.sessions[session.id] = session
+
+        logger.info("Accepted connection from {0}:{1}. ({2})".format(address[0], address[1], session.id))
 
         banner = ''
 

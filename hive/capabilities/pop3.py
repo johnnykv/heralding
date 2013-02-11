@@ -33,11 +33,11 @@ class pop3(HandlerBase):
         self.sessions = sessions
 
     def handle(self, gsocket, address):
-        logger.info("Accepted connection from {0}".format(address))
-        state = 'AUTHORIZATION'
-
         session = Session(address[0], address[1], 'pop3', pop3.port)
         self.sessions[session.id] = session
+
+        logger.info("Accepted connection from {0}:{1}. ({2})".format(address[0], address[1], session.id))
+
         session.vdata['MAILSPOOL'] = {}
         session.vdata['deleted_index'] = []
 
@@ -46,6 +46,7 @@ class pop3(HandlerBase):
 
         self.send_message(session, gsocket, '+OK POP3 server ready')
 
+        state = 'AUTHORIZATION'
         while state != '' and session.is_connected:
             try:
                 raw_msg = fileobj.readline()
