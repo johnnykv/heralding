@@ -15,46 +15,33 @@
 
 import sys
 
-sys.path.append('../') #to be able to import capabilities
-
 import unittest
-from capabilities import telnet
+from hive.capabilities import telnet
 from datetime import datetime
 
 
 class Telnet_Tests(unittest.TestCase):
-    def test_sessionkeys(self):
-        """Tests if the session dicts initially contains the correct keys"""
+    def test_initial_session(self):
+        """Tests if the basic parts of the session is filled correctly"""
 
         sessions = {}
-        accounts = {}
-        sut = telnet.telnet(sessions, accounts)
+
+        sut = telnet.telnet(sessions)
 
         #dont really care about the socket at this point (None...)
         #TODO: mock the socket!
         try:
             sut.handle(None, ['192.168.1.200', 51000])
-        except:
+        except AttributeError:
+            #because socket is not set
             pass
 
-        session = sessions[sessions.keys()[0]]
-        self.assertTrue(len(str(session['id'])) > 20)
-
-        delta = datetime.utcnow() - session['timestamp']
-        self.assertTrue(delta.seconds < 2)
-
-        delta = datetime.utcnow() - session['last_activity']
-        self.assertTrue(delta.seconds < 2)
-
-        self.assertTrue(session['attacker_ip'] == '192.168.1.200')
-        self.assertTrue(session['attacker_src_port'] == 51000)
-
-        #just check that we have the keys
-        self.assertTrue('connected' in session)
-        self.assertTrue('login_tries' in session)
-
-        self.assertEqual(session['protocol'], 'telnet')
-        self.assertEqual(session['protocol_port'], telnet.telnet.port)
+        #expect a single entry in the sessions dict
+        self.assertEqual(1, len(sessions))
+        session = sessions.values()[0]
+        self.assertEqual('telnet', session.protocol)
+        self.assertEquals('192.168.1.200', session.attacker_ip)
+        self.assertEqual(51000, session.attacker_source_port)
 
 
 if __name__ == '__main__':

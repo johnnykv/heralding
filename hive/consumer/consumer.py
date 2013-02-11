@@ -16,11 +16,12 @@
 import logging
 
 import gevent
+import logging
 
 from loggers import loggerbase
-from loggers import consolelogger
-from loggers import sqlitelogger
+from loggers import testlogger
 
+logger = logging.getLogger(__name__)
 
 class Consumer:
     def __init__(self, sessions):
@@ -33,13 +34,13 @@ class Consumer:
         while True:
             for session_id in self.sessions.keys():
                 session = self.sessions[session_id]
-                if not session['connected']:
-                    logging.debug('Found disconnected session. (session id: %s)' % (session['id']))
-                    for logger in active_loggers:
-                        logging.debug(
-                            'Logging session with %s (session id: %s)' % (logger.__class__.__name__, session['id']))
-                        logger.log(session)
+                if not session.is_connected:
+                    for log in active_loggers:
+                        log.log(session)
                     del self.sessions[session_id]
+                    logger.debug('Removed {0} connection from {1}. ({2})'.format(session.protocol,
+                                                                                 session.attacker_ip,
+                                                                                 session.id))
             gevent.sleep(5)
 
     def stop_handling(self):

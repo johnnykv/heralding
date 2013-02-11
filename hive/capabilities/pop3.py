@@ -13,12 +13,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import datetime
 import socket
-import uuid
-import json
 
 from handlerbase import HandlerBase
+from hive.models.session import Session
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class pop3(HandlerBase):
@@ -27,42 +29,31 @@ class pop3(HandlerBase):
     #port = 110
     cmds = {}
 
-    def __init__(self, sessions, accounts):
+    def __init__(self, sessions):
         self.sessions = sessions
 
-        #global mainspool
-        self.mailspools = {}
-        self.accounts = accounts
-
     def handle(self, gsocket, address):
+        logger.info("Accepted connection from {0}".format(address))
         state = 'AUTHORIZATION'
 
-        session = {'id': uuid.uuid4(),
-                   'timestamp': datetime.utcnow(),
-                   'last_activity': datetime.utcnow(),
-                   'attacker_ip': address[0],
-                   'attacker_src_port': address[1],
-                   'connected': True,
-                   'protocol_port': pop3.port,
-                   'protocol': 'pop3',
-                   'login_tries': [],
-                   'deleted_index': []}
-
-        self.sessions[session['id']] = session
+        session = Session(address[0], address[1], 'pop3', pop3.port)
+        self.sessions[session.id] = session
+        session.vdata['MAILSPOOL'] = {}
+        session.vdata['deleted_index'] = []
 
         #just because of readline... tsk tsk...
         fileobj = gsocket.makefile()
 
         self.send_message(session, gsocket, '+OK POP3 server ready')
 
-        while state != '' and session['connected']:
+        while state != '' and session.is_connected:
             try:
                 raw_msg = fileobj.readline()
             except socket.error, (value, message):
-                session['connected'] = False
+                session.is_connected = False
                 break
 
-            session['last_activity'] = datetime.utcnow()
+            session.activity()
 
             msg = None
 
@@ -81,7 +72,7 @@ class pop3(HandlerBase):
                 if state == 'AUTHORIZATION' or cmd == 'quit':
                     state = return_value
 
-        session['connected'] = False
+        session.is_connected = False
 
     #APOP mrose c4c9334bac560ecc979e58001b3e22fb
     #+OK mrose's maildrop has 2 messages (320 octets)
@@ -95,9 +86,9 @@ class pop3(HandlerBase):
     #or: "-ERR Authentication failed."
     #or: "-ERR No username given."
     def cmd_user(self, session, gsocket, msg):
-        session['USER'] = msg #TODO: store USER somewhere else
+        session.vdata['USER'] = msg
         self.send_message(session, gsocket, '+OK User accepted')
-        return 'AUTHORIZATION'
+        return 'AUTHORIZATION'.format(msg)
 
     def is_state_valid(self, state, cmd):
         if state == 'AUTHORIZATION':
@@ -109,23 +100,16 @@ class pop3(HandlerBase):
         return False
 
     def cmd_pass(self, session, gsocket, msg):
-        if 'USER' not in session:
+        if 'USER' not in session.vdata:
             self.send_message(session, gsocket, '-ERR No username given.')
         else:
-            #session['password'] = msg
-            session['login_tries'].append(
-                {'login': session['USER'], 'password': msg, 'id': uuid.uuid4(), 'timestamp': datetime.utcnow()})
-
-            if session['USER'] in self.accounts: # checking username
-                if self.accounts[session['USER']] == msg: # checking password
-                    self.send_message(session, gsocket, "+OK Pass accepted")
-                    if session['USER'] not in self.mailspools:
-                        self.get_mailspool(session['USER'])
-                    return 'TRANSACTION'
+            if session.try_login(session.vdata['USER'], msg):
+                self.send_message(session, gsocket, "+OK Pass accepted")
+                return 'TRANSACTION'
 
         self.send_message(session, gsocket, "-ERR Authentication failed.")
-        if 'USER' in session:
-            del session['USER']
+        if 'USER' in session.vdata:
+            del session.vdata['USER']
         return 'AUTHORIZATION'
 
     def cmd_noop(self, session, gsocket, msg):
@@ -151,7 +135,7 @@ class pop3(HandlerBase):
 
     def cmd_dele(self, session, gsocket, msg):
 
-        user_mailspool = self.mailspools[session['USER']]
+        user_mailspool = session.vdata['MAILSPOOL']
 
         try:
             index = int(msg) - 1
@@ -172,12 +156,12 @@ class pop3(HandlerBase):
 
     def cmd_stat(self, session, gsocket, msg):
 
-        user_mailspool = self.mailspools[session['USER']]
+        user_mailspool = session.vdata['MAILSPOOL']
         mailspool_bytes_size = 0
         mailspool_num_messages = 0
 
         for index, value in enumerate(user_mailspool):
-            if index not in session['deleted_index']: # ignore deleted messages
+            if index not in session.vdata['deleted_index']: # ignore deleted messages
                 mailspool_bytes_size += len(value)
                 mailspool_num_messages += 1
 
@@ -189,16 +173,15 @@ class pop3(HandlerBase):
     def cmd_quit(self, session, gsocket, msg):
         self.send_message(session, gsocket, '+OK Logging out')
 
-        user_mailspool = self.mailspools[session['USER']]
+        user_mailspool = session.vdata['MAILSPOOL']
 
-        session['deleted_index'].sort(reverse=True)
-        for index in session['deleted_index']:
-            del user_mailspool[index]
+        #session['deleted_index'].sort(reverse=True)
+        #for index in session['deleted_index']:
+        #    del user_mailspool[index]
         return ''
 
-
     def cmd_list(self, session, gsocket, argument):
-        user_mailspool = self.mailspools[session['USER']]
+        user_mailspool = session.vdata['MAILSPOOL']
 
         if argument is None:
             mailspool_bytes_size = 0
@@ -237,19 +220,11 @@ class pop3(HandlerBase):
         try:
             gsocket.sendall(msg + "\n")
         except socket.error, (value, msg):
-            session['connected'] = False
+            session.is_connected = False
 
     def send_data(self, session, gsocket, data):
         try:
             gsocket.sendall(data)
         except socket.error, (value, msg):
-            session['connected'] = False
+            session.is_connected = False
 
-            #TODO: Dynamically fetch and modify new content (which looks legit...)
-
-    def get_mailspool(self, username):
-        try:
-            user_spool = json.load(open('./capabilities/mails.json')).values()
-            self.mailspools[username] = user_spool
-        except IOError:
-            user_spool = []

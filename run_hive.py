@@ -23,20 +23,25 @@ from hive.consumer import consumer
 from hive.capabilities import handlerbase
 from hive.capabilities import pop3
 from hive.capabilities import telnet
+from hive.models.session import Session
+from hive.models.authenticator import Authenticator
 
 
 def main():
     servers = []
+    #shared resource
     sessions = {}
-    accounts = {'test': 'test'}
 
-    #greenlet to consume and maintain data in sessions list
+    #greenlet to consume the provided sessions
     sessions_consumer = consumer.Consumer(sessions)
     Greenlet.spawn(sessions_consumer.start_handling)
 
+    #inject authentication mechanism
+    Session.authenticator = Authenticator()
+
     #protocol handlers
     for c in handlerbase.HandlerBase.__subclasses__():
-        cap = c(sessions, accounts)
+        cap = c(sessions)
         server = StreamServer(('0.0.0.0', cap.get_port()), cap.handle)
         servers.append(server)
         server.start()

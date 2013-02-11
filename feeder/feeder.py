@@ -13,11 +13,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#hmm... right here?
 import gevent
 import gevent.monkey
-
 gevent.monkey.patch_all()
+
 from bees import clientbase
 from consumer import consumer
 import logging
@@ -46,7 +45,7 @@ def main():
     for b in clientbase.ClientBase.__subclasses__():
         bee = b(sessions)
         honeybees.append(bee)
-        logging.debug('Adding %s as a honeybee' % (bee.__class__.__name__))
+        logging.debug('Adding {0}s as a honeybee'.format(bee.__class__.__name__))
 
     #TODO: 1. pop3 and imap at regular intervals,
     #      2. everything else at random intervals

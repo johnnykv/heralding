@@ -13,12 +13,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
 class Authenticator(object):
-    def __init__(self):
+    def __init__(self, creds = {}):
 
         #key: username, value: password
         #TODO: Read this from database
-        self.creds = {'james': 'secretpassword'}
+        self.creds = creds
 
     def try_auth(self, username, password):
         if username in self.creds:

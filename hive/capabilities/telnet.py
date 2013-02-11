@@ -27,12 +27,14 @@ class telnet(HandlerBase):
     #port = 23
     max_tries = 3
 
-    def __init__(self, sessions, accounts):
-        super(telnet, self).__init__(sessions, accounts)
+    def __init__(self, sessions):
+        self.sessions = sessions
 
     def handle(self, gsocket, address):
         logger.info("Accepted connection from {0}".format(address))
         session = Session(address[0], address[1], 'telnet', telnet.port)
+        #add session to shares session state
+        self.sessions[session.id] = session
 
         banner = ''
 
@@ -43,14 +45,14 @@ class telnet(HandlerBase):
         data = []
         state = ''
         prompt = 'login'
-        auth_attempts = 0;
+        auth_attempts = 0
 
         while auth_attempts < telnet.max_tries:
 
             try:
                 read = gsocket.recv(1)
             except socket.error, (value, message):
-                session.connected = False
+                session.is_connected = False
                 break
 
             session.activity()
@@ -93,7 +95,7 @@ class telnet(HandlerBase):
                     state = ''
                     data = []
             elif state == 'iac':
-                if read  in (NOP, DM, BRK, IP, AO, AYT, EC, EL, GA):
+                if read in (NOP, DM, BRK, IP, AO, AYT, EC, EL, GA):
                     data.append(read)
                     self.parse_cmd(session, gsocket, data)
                     state = ''
@@ -107,7 +109,7 @@ class telnet(HandlerBase):
                 state = ''
                 data = []
 
-        session.connected = False
+        session.is_connected = False
 
     def get_port(self):
         return telnet.port
@@ -120,7 +122,7 @@ class telnet(HandlerBase):
         try:
             gsocket.sendall(msg)
         except socket.error, (value, msg):
-            session['connected'] = False
+            session['is_connected'] = False
 
 
 #telnet commands accordingly to various RFC (857-860, 1091, 1073, 1079, 1372, 1184, 1408)

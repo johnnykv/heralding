@@ -16,30 +16,36 @@
 import uuid
 import logging
 from datetime import datetime
+
 from hive.models.authenticator import Authenticator
 
 logger = logging.getLogger(__name__)
 
 
 class Session(object):
-    def __init__(self, attacker_ip, attacker_s_port, protocol, honey_port, honey_ip=None):
+
+    authenticator = None
+
+    def __init__(self, attacker_ip, attacker_s_port, protocol, honeypot_port, honeypot_ip=None):
+
+        assert Session.authenticator is not None
+
         self.attacker_ip = attacker_ip
         self.attacker_source_port = attacker_s_port
         self.protocol = protocol
-        self.honey_ip = honey_ip
-        self.honey_port = honey_port
+        self.honey_ip = honeypot_ip
+        self.honey_port = honeypot_port
 
         self.id = uuid.uuid4()
         self.timestamp = datetime.utcnow()
-        self.last_activity = None
-        self.connected = True
+        self.last_activity = datetime.utcnow()
+        self.is_connected = True
         #username != None means that the session is authenticated
         self.user_name = None
+        #for session specific volatile data (will not get logged)
+        self.vdata = {}
 
         self.login_attempts = []
-
-        #TODO: Inject this so that it is shared among all sessions
-        self.auth = Authenticator()
 
     def try_login(self, username, password):
         self.login_attempts.append({'username': username,
@@ -48,9 +54,11 @@ class Session(object):
         logger.info('{0} authentication attempt from {1}. [{2}/{3}]'
         .format(self.protocol, self.attacker_ip, username, password))
 
-        #TODO: Check username/password in db.
-        if self.auth.try_auth(username, password):
+        if Session.authenticator.try_auth(username, password):
             self.user_name = username
+            return True
+        else:
+            return False
 
     def authenticated(self):
         """
