@@ -50,12 +50,14 @@ def main():
         cap_name = cap.__class__.__name__
         #Convention: All capability names which end in 's' will be wrapped in ssl.
         if cap_name.endswith('s'):
-            gen_cmd = "openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 -keyout server.key -out server.crt"
             if not {'server.key', 'server.crt'}.issubset(set(os.listdir('./'))):
+                gen_cmd = "openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 -keyout server.key -out server.crt"
                 logger.error('{0} could not be activated because no SSL cert was found, '
                              'a selfsigned cert kan be generated with the following '
                              'command: "{1}"'.format(cap_name, gen_cmd))
-            server = StreamServer(('0.0.0.0', cap.get_port()), cap.handle, keyfile='server.key', certfile='server.crt')
+            else:
+                server = StreamServer(('0.0.0.0', cap.get_port()), cap.handle,
+                                      keyfile='server.key', certfile='server.crt')
             pass
         else:
             server = StreamServer(('0.0.0.0', cap.get_port()), cap.handle)
