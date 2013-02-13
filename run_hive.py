@@ -26,6 +26,7 @@ from hive.capabilities import handlerbase
 from hive.capabilities import pop3
 from hive.capabilities import pop3s
 from hive.capabilities import telnet
+from hive.capabilities import ftp
 from hive.models.session import Session
 from hive.models.authenticator import Authenticator
 
