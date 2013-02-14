@@ -15,6 +15,8 @@
 
 import unittest
 from hive.capabilities import telnet
+from hive.models.session import Session
+from hive.models.authenticator import Authenticator
 
 
 class Telnet_Tests(unittest.TestCase):
@@ -22,6 +24,10 @@ class Telnet_Tests(unittest.TestCase):
         """Tests if the basic parts of the session is filled correctly"""
 
         sessions = {}
+
+        #provide valid login/pass to authenticator
+        authenticator = Authenticator({'james': 'bond'})
+        Session.authenticator = authenticator
 
         sut = telnet.telnet(sessions)
 
