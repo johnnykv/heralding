@@ -13,13 +13,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import logging
-
+import gevent
+import gevent.monkey
+gevent.monkey.patch_all()
 from gevent.server import StreamServer
 from gevent import Greenlet
+
 import logging
 import os
-import gevent
 
 from hive.consumer import consumer
 from hive.capabilities import handlerbase
