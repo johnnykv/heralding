@@ -21,6 +21,7 @@ from gevent import Greenlet
 
 import logging
 import os
+import ConfigParser
 
 from hive.consumer import consumer
 from hive.capabilities import handlerbase
@@ -35,6 +36,11 @@ logger = logging.getLogger()
 
 
 def main():
+
+    config = ConfigParser.ConfigParser()
+    config.read('hive.cfg')
+
+
     servers = []
     #shared resource
     sessions = {}
@@ -48,8 +54,17 @@ def main():
 
     #protocol handlers
     for c in handlerbase.HandlerBase.__subclasses__():
+        cap_name = c.__name__
+
+        if not config.has_section(cap_name):
+            logger.warning("Not loading {0} capability because it has no option in configuration file.".format(cap_name))
+            continue
+        #skip loading if disabled
+        if not config.getboolean(cap_name, 'Enabled'):
+            continue
+
         cap = c(sessions)
-        cap_name = cap.__class__.__name__
+        port = config.getint(cap_name, 'port')
         #Convention: All capability names which end in 's' will be wrapped in ssl.
         if cap_name.endswith('s'):
             if not {'server.key', 'server.crt'}.issubset(set(os.listdir('./'))):
@@ -58,14 +73,14 @@ def main():
                              'a selfsigned cert kan be generated with the following '
                              'command: "{1}"'.format(cap_name, gen_cmd))
             else:
-                server = StreamServer(('0.0.0.0', cap.get_port()), cap.handle,
+                server = StreamServer(('0.0.0.0', port), cap.handle,
                                       keyfile='server.key', certfile='server.crt')
             pass
         else:
-            server = StreamServer(('0.0.0.0', cap.get_port()), cap.handle)
+            server = StreamServer(('0.0.0.0', port), cap.handle)
         servers.append(server)
         server.start()
-        logging.debug('Started {0} capability listening on port {1}'.format(cap_name , cap.get_port()))
+        logging.debug('Started {0} capability listening on port {1}'.format(cap_name , port))
 
     stop_events = []
     for s in servers:

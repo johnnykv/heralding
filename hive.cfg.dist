@@ -1,0 +1,15 @@
+[ftp]
+enabled = True
+port = 21
+
+[telnet]
+enabled = True
+port = 23
+
+[pop3]
+enabled = True
+port = 110
+
+[pop3s]
+enabled = True
+port = 995

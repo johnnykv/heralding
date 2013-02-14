@@ -25,7 +25,4 @@ logger = logging.getLogger(__name__)
 
 
 class pop3s(pop3, HandlerBase):
-    port = 2105
-
-    def get_port(self):
-        return pop3s.port
+    """pop3s"""

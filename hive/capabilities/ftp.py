@@ -13,40 +13,38 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import socket
 import logging
+import asyncore
 
 from hive.models.session import Session
 from pyftpdlib import ftpserver
-
 
 from handlerbase import HandlerBase
 
 logger = logging.getLogger(__name__)
 
+
 class ftp(HandlerBase):
-    port = 2121
-    #port = 23
-    #max_tries = 3
 
     def __init__(self, sessions):
+        super(ftp, self).__init__(sessions)
         self.sessions = sessions
 
     def handle(self, gsocket, address):
+
         session = Session(address[0], address[1], 'ftp', ftp.port)
-        authorizer = ftp.ftpAuthorizer(session)
-        handler = ftpserver.FTPHandler
-        handler.authorizer = authorizer
-        handler.max_login_attempts = 3
 
-        f = ftpserver.FTPServer(('', '0'), handler)
-
+        f = ftp.BeeSwarmFTPServer(('', 0), ftpserver.FTPHandler)
         ftphandler = ftpserver.FTPHandler(gsocket, f)
+        ftphandler.authorizer = ftp.ftpAuthorizer(session)
+        #TODO: configurable
+        ftphandler.banner = "220 Microsoft FTP Service"
 
-        #send banner to client
+        #Send '200' status and banner
         ftphandler.handle()
         #start command loop, will exit on disconnect.
         f.serve_forever()
+        f.close_all()
 
     def get_port(self):
         return ftp.port
@@ -58,3 +56,22 @@ class ftp(HandlerBase):
 
         def validate_authentication(self, username, password):
             self.session.try_login(username, password)
+
+    class BeeSwarmFTPServer(ftpserver.FTPServer):
+
+        @classmethod
+        def serve_forever(cls, timeout=1.0, use_poll=False, count=None):
+
+            from pyftpdlib.ftpserver import _scheduler
+
+            poll_fun = asyncore.poll
+
+            try:
+                while len(asyncore.socket_map) > 1:
+                    poll_fun(timeout)
+                    _scheduler()
+            except (KeyboardInterrupt, SystemExit, asyncore.ExitNow):
+                pass
+            finally:
+                cls.close_all()
+

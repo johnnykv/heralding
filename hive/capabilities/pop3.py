@@ -24,9 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class pop3(HandlerBase):
-    port = 2100
     max_tries = 10
-    #port = 110
     cmds = {}
 
     def __init__(self, sessions):
@@ -210,9 +208,6 @@ class pop3(HandlerBase):
                 mail = user_mailspool[index]
                 reply = '+OK %i %i' % (index + 1, len(mail))
                 self.send_message(session, gsocket, reply)
-
-    def get_port(self):
-        return pop3.port
 
     def not_impl(self, session, gsocket, msg):
         raise Exception('Not implemented yet!')

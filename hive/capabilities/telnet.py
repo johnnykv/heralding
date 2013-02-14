@@ -23,8 +23,6 @@ from handlerbase import HandlerBase
 logger = logging.getLogger(__name__)
 
 class telnet(HandlerBase):
-    port = 2300
-    #port = 23
     max_tries = 3
 
     def __init__(self, sessions):
@@ -110,9 +108,6 @@ class telnet(HandlerBase):
                 data = []
 
         session.is_connected = False
-
-    def get_port(self):
-        return telnet.port
 
     def parse_cmd(self, session, gsocket, data):
         #TODO: Log comands - these commands can be used to fingerprint attack tool.
