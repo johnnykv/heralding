@@ -34,3 +34,5 @@ hive_sqlite.db
 feeder_sqlite.db
 server.crt
 server.key
+
+hive.cfg
