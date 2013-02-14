@@ -29,7 +29,7 @@ class telnet(HandlerBase):
         self.sessions = sessions
 
     def handle(self, gsocket, address):
-        session = Session(address[0], address[1], 'telnet', telnet.port)
+        session = Session(address[0], address[1], 'telnet')
         self.sessions[session.id] = session
 
         logger.info("Accepted connection from {0}:{1}. ({2})".format(address[0], address[1], session.id))

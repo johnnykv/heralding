@@ -26,7 +26,7 @@ class Session(object):
 
     authenticator = None
 
-    def __init__(self, attacker_ip, attacker_s_port, protocol, honeypot_port, honeypot_ip=None):
+    def __init__(self, attacker_ip, attacker_s_port, protocol, honeypot_port=None, honeypot_ip=None):
 
         assert Session.authenticator is not None
 

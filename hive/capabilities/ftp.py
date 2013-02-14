@@ -32,7 +32,7 @@ class ftp(HandlerBase):
 
     def handle(self, gsocket, address):
 
-        session = Session(address[0], address[1], 'ftp', ftp.port)
+        session = Session(address[0], address[1], 'ftp')
 
         f = ftp.BeeSwarmFTPServer(('', 0), ftpserver.FTPHandler)
         ftphandler = ftpserver.FTPHandler(gsocket, f)

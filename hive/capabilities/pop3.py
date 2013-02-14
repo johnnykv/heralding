@@ -31,7 +31,7 @@ class pop3(HandlerBase):
         self.sessions = sessions
 
     def handle(self, gsocket, address):
-        session = Session(address[0], address[1], 'pop3', pop3.port)
+        session = Session(address[0], address[1], 'pop3')
         self.sessions[session.id] = session
 
         logger.info("Accepted connection from {0}:{1}. ({2})".format(address[0], address[1], session.id))
