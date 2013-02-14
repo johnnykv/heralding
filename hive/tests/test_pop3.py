@@ -13,10 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys
-
-#sys.path.append('../') #to be able to import capabilities
-
 from gevent.server import StreamServer
 import gevent
 import unittest
