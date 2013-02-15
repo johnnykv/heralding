@@ -100,7 +100,7 @@ def drop_privileges(uid_name='nobody', gid_name='nobody'):
 
     wanted_uid = pwd.getpwnam(uid_name)[2]
 
-    #special handling for os x. (getgrname as trouble with gid below 0)
+    #special handling for os x. (getgrname has trouble with gid below 0)
     if platform.mac_ver()[0]:
         wanted_gid = -2
     else:
