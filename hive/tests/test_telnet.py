@@ -29,7 +29,7 @@ class Telnet_Tests(unittest.TestCase):
         authenticator = Authenticator({'james': 'bond'})
         Session.authenticator = authenticator
 
-        sut = telnet.telnet(sessions)
+        sut = telnet.telnet(sessions, 23)
 
         #dont really care about the socket at this point (None...)
         #TODO: mock the socket!
@@ -43,6 +43,7 @@ class Telnet_Tests(unittest.TestCase):
         self.assertEqual(1, len(sessions))
         session = sessions.values()[0]
         self.assertEqual('telnet', session.protocol)
+        self.assertEqual(23, session.honey_port)
         self.assertEquals('192.168.1.200', session.attacker_ip)
         self.assertEqual(51000, session.attacker_source_port)
 

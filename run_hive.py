@@ -70,8 +70,9 @@ def main():
         if not config.getboolean(cap_name, 'Enabled'):
             continue
 
-        cap = c(sessions)
         port = config.getint(cap_name, 'port')
+        cap = c(sessions, port)
+
         #Convention: All capability names which end in 's' will be wrapped in ssl.
         if cap_name.endswith('s'):
             if not {'server.key', 'server.crt'}.issubset(set(os.listdir('./'))):

@@ -27,12 +27,11 @@ class pop3(HandlerBase):
     max_tries = 10
     cmds = {}
 
-    def __init__(self, sessions):
-        self.sessions = sessions
+    def __init__(self, sessions, listenport):
+        super(pop3, self).__init__(sessions, listenport)
 
     def handle(self, gsocket, address):
-        session = Session(address[0], address[1], 'pop3')
-        self.sessions[session.id] = session
+        session = self.create_session(address)
 
         logger.info("Accepted connection from {0}:{1}. ({2})".format(address[0], address[1], session.id))
 

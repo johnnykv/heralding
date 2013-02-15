@@ -26,13 +26,12 @@ logger = logging.getLogger(__name__)
 
 class ftp(HandlerBase):
 
-    def __init__(self, sessions):
-        super(ftp, self).__init__(sessions)
-        self.sessions = sessions
+    def __init__(self, sessions, port):
+        super(ftp, self).__init__(sessions, port)
 
     def handle(self, gsocket, address):
 
-        session = Session(address[0], address[1], 'ftp')
+        session = self.create_session(address)
 
         f = ftp.BeeSwarmFTPServer(('', 0), ftpserver.FTPHandler)
         ftphandler = ftpserver.FTPHandler(gsocket, f)
@@ -45,9 +44,7 @@ class ftp(HandlerBase):
         #start command loop, will exit on disconnect.
         f.serve_forever()
         f.close_all()
-
-    def get_port(self):
-        return ftp.port
+        session.is_connected = False
 
     class ftpAuthorizer(ftpserver.DummyAuthorizer):
         def __init__(self, session):

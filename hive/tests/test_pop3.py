@@ -32,7 +32,7 @@ class Pop3_Tests(unittest.TestCase):
         authenticator = Authenticator({'james': 'bond'})
         Session.authenticator = authenticator
 
-        sut = pop3.pop3(sessions)
+        sut = pop3.pop3(sessions, 110)
 
         #dont really care about the socket at this point (None...)
         #TODO: mock the socket!
@@ -45,6 +45,7 @@ class Pop3_Tests(unittest.TestCase):
         #expect a single entry in the sessions dict
         self.assertEqual(1, len(sessions))
         session = sessions.values()[0]
+        self.assertEqual(110, session.honey_port)
         self.assertEqual('pop3', session.protocol)
         self.assertEquals('192.168.1.200', session.attacker_ip)
         self.assertEqual(12000, session.attacker_source_port)
@@ -72,7 +73,7 @@ class Pop3_Tests(unittest.TestCase):
 
         sessions = {}
 
-        sut = pop3.pop3(sessions)
+        sut = pop3.pop3(sessions, 110)
 
         server = StreamServer(('127.0.0.1', 0), sut.handle)
         server.start()
