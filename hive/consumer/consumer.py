@@ -16,6 +16,8 @@
 import logging
 
 import gevent
+import requests
+from requests.exceptions import Timeout, ConnectionError
 import logging
 
 from loggers import loggerbase
@@ -26,8 +28,21 @@ logger = logging.getLogger(__name__)
 
 
 class Consumer:
-    def __init__(self, sessions):
+    def __init__(self, sessions, public_ip=None, fetch_public_ip=False):
         logging.debug('Consumer created.')
+
+        if fetch_public_ip:
+            try:
+                url = 'http://api-sth01.exip.org/?call=ip'
+                req = requests.get(url)
+                self.public_ip = req.text
+                logging.info('Fetched {0} as external ip for Hive.'.format(self.public_ip))
+            except (Timeout, ConnectionError) as e:
+                logging.warning('Could not fetch public ip: {0}'.format(e))
+
+        else:
+            self.public_ip = None
+
         self.sessions = sessions
 
     def start_handling(self):
@@ -38,6 +53,9 @@ class Consumer:
                 session = self.sessions[session_id]
                 if not session.is_connected:
                     for log in active_loggers:
+                        #set public ip if available
+                        if self.public_ip:
+                            session.honey_ip = self.public_ip
                         log.log(session)
                     del self.sessions[session_id]
                     logger.debug('Removed {0} connection from {1}. ({2})'.format(session.protocol,

@@ -47,8 +47,11 @@ def main():
     #shared resource
     sessions = {}
 
+    public_ip = config.get('public_ip', 'public_ip')
+    fetch_ip = config.getboolean('public_ip', 'fetch_public_ip')
+
     #greenlet to consume the provided sessions
-    sessions_consumer = consumer.Consumer(sessions)
+    sessions_consumer = consumer.Consumer(sessions, public_ip=public_ip, fetch_public_ip=fetch_ip)
     Greenlet.spawn(sessions_consumer.start_handling)
 
     #inject authentication mechanism

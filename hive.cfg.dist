@@ -7,6 +7,12 @@ ident =
 secret =
 chan = beeswarm.hive
 
+#Additional information for logging purposes
+[public_ip]
+#Optional
+public_ip =
+#Get public ip by querying external webservice
+fetch_public_ip = False
 
 # Capabilities
 [ftp]
