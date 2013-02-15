@@ -3,6 +3,7 @@ import socket
 import hashlib
 import logging
 import json
+import uuid
 from datetime import datetime
 from ConfigParser import ConfigParser
 from loggerbase import LoggerBase
