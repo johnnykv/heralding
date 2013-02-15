@@ -1,3 +1,14 @@
+# Logging
+[hpfeed]
+enabled = True
+host = hpfeeds.honeycloud.net
+port = 10000
+ident =
+secret =
+chan = beeswarm.hive
+
+
+# Capabilities
 [ftp]
 enabled = True
 port = 21

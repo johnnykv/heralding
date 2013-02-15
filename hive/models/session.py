@@ -72,5 +72,17 @@ class Session(object):
     def activity(self):
         self.last_activity = datetime.utcnow()
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'timestamp': self.timestamp,
+            'attacker_ip': self.attacker_ip,
+            'attacker_source_port': self.attacker_source_port,
+            'protocol': self.protocol,
+            'honey_ip': self.honey_ip,
+            'honey_port': self.honey_port,
+            'login_attempts': self.login_attempts,
+        }
+
 
 

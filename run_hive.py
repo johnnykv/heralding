@@ -58,6 +58,7 @@ def main():
     for c in handlerbase.HandlerBase.__subclasses__():
         cap_name = c.__name__
 
+        #skip loading if no configuration sections is found
         if not config.has_section(cap_name):
             logger.warning(
                 "Not loading {0} capability because it has no option in configuration file.".format(cap_name))

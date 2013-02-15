@@ -20,8 +20,10 @@ import logging
 
 from loggers import loggerbase
 from loggers import testlogger
+from loggers import hpfeeds
 
 logger = logging.getLogger(__name__)
+
 
 class Consumer:
     def __init__(self, sessions):
