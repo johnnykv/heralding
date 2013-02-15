@@ -15,13 +15,17 @@
 
 import gevent
 import gevent.monkey
+
 gevent.monkey.patch_all()
 from gevent.server import StreamServer
 from gevent import Greenlet
 
 import logging
 import os
+import pwd
+import grp
 import ConfigParser
+import platform
 
 from hive.consumer import consumer
 from hive.capabilities import handlerbase
@@ -36,10 +40,8 @@ logger = logging.getLogger()
 
 
 def main():
-
     config = ConfigParser.ConfigParser()
     config.read('hive.cfg')
-
 
     servers = []
     #shared resource
@@ -57,9 +59,10 @@ def main():
         cap_name = c.__name__
 
         if not config.has_section(cap_name):
-            logger.warning("Not loading {0} capability because it has no option in configuration file.".format(cap_name))
+            logger.warning(
+                "Not loading {0} capability because it has no option in configuration file.".format(cap_name))
             continue
-        #skip loading if disabled
+            #skip loading if disabled
         if not config.getboolean(cap_name, 'Enabled'):
             continue
 
@@ -80,13 +83,37 @@ def main():
             server = StreamServer(('0.0.0.0', port), cap.handle)
         servers.append(server)
         server.start()
-        logging.debug('Started {0} capability listening on port {1}'.format(cap_name , port))
+        logging.debug('Started {0} capability listening on port {1}'.format(cap_name, port))
 
     stop_events = []
     for s in servers:
         stop_events.append(s._stopped_event)
 
+    drop_privileges()
+
     gevent.joinall(stop_events)
+
+
+def drop_privileges(uid_name='nobody', gid_name='nobody'):
+    if os.getuid() != 0:
+        return
+
+    wanted_uid = pwd.getpwnam(uid_name)[2]
+
+    #special handling for os x. (getgrname as trouble with gid below 0)
+    if platform.mac_ver()[0]:
+        wanted_gid = -2
+    else:
+        wanted_gid = grp.getgrnam(gid_name)[2]
+
+    os.setgid(wanted_gid)
+
+    os.setuid(wanted_uid)
+
+    new_uid_name = pwd.getpwuid(os.getuid())[0]
+    new_gid_name = grp.getgrgid(os.getgid())[0]
+
+    logger.info("Privileges dropped, running as {0}/{1}.".format(new_uid_name, new_gid_name))
 
 
 if __name__ == '__main__':
