@@ -1,4 +1,4 @@
-# Copyright (C) 2012 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2013 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,146 +17,51 @@ import socket
 import logging
 
 from hive.models.session import Session
+from telnetsrv.green import TelnetHandler, command
 
 from handlerbase import HandlerBase
 
 logger = logging.getLogger(__name__)
 
-class telnet(HandlerBase):
+
+class telnet(HandlerBase, TelnetHandler):
     max_tries = 3
 
-    def __init__(self, sessions, listenport):
-        super(telnet, self).__init__(sessions, listenport)
+    authNeedUser = True
+    authNeedPass = True
 
-    def handle(self, gsocket, address):
-        session = self.create_session(address)
+    #black voodoo to facilitate parents with different __init__ params
+    def __init__(self, *args, **kwargs):
+        if len(args) == 2:
+            #this is the constructor call for HandlerBase
+            sessions = args[0]
+            telnet.sessions = sessions
+            telnet.port = args[1]
+            super(telnet, self).__init__(sessions, telnet.port)
+        elif len(args) == 3:
+            request = args[0]
+            client_address = args[1]
+            server = args[2]
+            #this session is unique for each connection
+            self.session = self.create_session(client_address)
+            self.auth_count = 0
+            TelnetHandler.__init__(self, request, client_address, server)
 
-        logger.info("Accepted connection from {0}:{1}. ({2})".format(address[0], address[1], session.id))
+    def authCallback(self, username, password):
 
-        banner = ''
+        while self.auth_count < telnet.max_tries:
+            self.session.try_login(username, password)
+            self.writeline('Invalid username/password')
+            self.auth_count += 1
+            self.authentication_ok()
+        raise
 
-        self.send_message(session, gsocket, banner)
+    def session_end(self):
+        self.session.is_connected = False
 
-        self.send_message(session, gsocket, "Login: ")
+    def handle_session(self, gsocket, address):
+        telnet._handle(gsocket, address)
 
-        data = []
-        state = ''
-        prompt = 'login'
-        auth_attempts = 0
-
-        while auth_attempts < telnet.max_tries:
-
-            try:
-                read = gsocket.recv(1)
-            except socket.error, (value, message):
-                session.is_connected = False
-                break
-
-            session.activity()
-
-            if state == '':
-                if read == IAC:
-                    data.append(read)
-                    state = 'iac'
-                #start negotiation (SB)
-                elif read == SB:
-                    data.append(read)
-                    state = 'negotiation'
-                else:
-                    data.append(read)
-                    if len(data) > 1:
-                        if data[-1] == '\n' and data[-2] == '\r':
-                            if prompt == 'login':
-                                login = ''.join(data)[:-2]
-                                self.send_message(session, gsocket, "Password: ")
-                                data = []
-                                #instruct client not to echo
-                                self.send_message(session, gsocket, IAC + WILL + ECHO)
-                                prompt = 'password'
-                            else:
-                                password = ''.join(data)[:-2]
-                                session.try_login(login, password)
-                                auth_attempts += 1
-
-                                self.send_message(session, gsocket, '\r\nInvalid username/password.\r\n')
-                                #instruct client to echo again
-                                self.send_message(session, gsocket, IAC + WONT + ECHO)
-                                prompt = 'login'
-                                data = []
-                                if auth_attempts < telnet.max_tries:
-                                    self.send_message(session, gsocket, "login: ")
-            elif state == 'negotiation':
-                if read == SE:
-                    data.append(read)
-                    self.parse_cmd(session, gsocket, data)
-                    state = ''
-                    data = []
-            elif state == 'iac':
-                if read in (NOP, DM, BRK, IP, AO, AYT, EC, EL, GA):
-                    data.append(read)
-                    self.parse_cmd(session, gsocket, data)
-                    state = ''
-                    data = []
-                elif read in (WILL, WONT, DO, DONT):
-                    state = 'command'
-                    data.append(read)
-            elif state == 'command':
-                data.append(read)
-                self.parse_cmd(session, gsocket, data)
-                state = ''
-                data = []
-
-        session.is_connected = False
-
-    def parse_cmd(self, session, gsocket, data):
-        #TODO: Log comands - these commands can be used to fingerprint attack tool.
-        command = data
-
-    def send_message(self, session, gsocket, msg):
-        try:
-            gsocket.sendall(msg)
-        except socket.error, (value, msg):
-            session['is_connected'] = False
-
-
-#telnet commands accordingly to various RFC (857-860, 1091, 1073, 1079, 1372, 1184, 1408)
-ECHO = chr(1)
-SUPPRESS_GO_AHEAD = chr(3)
-STATUS = chr(5)
-TIMING_MARK = chr(6)
-TERMINAL_TYPE = chr(24)
-WINDOW_SIZE = chr(31)
-TERMINAL_SPEED = chr(32)
-REMOTE_FLOW_CONTROL = chr(33)
-LINEMODE = chr(34)
-ENVIRONMENT_VARIABLES = chr(36)
-
-#End of subnegotiation parameters
-SE = chr(240)
-#No operation
-NOP = chr(241)
-#Data mark
-DM = chr(242)
-#Suspend
-BRK = chr(243)
-#Suspend
-IP = chr(244)
-#Abort output
-AO = chr(245)
-#Are you there
-AYT = chr(246)
-#Erase character
-EC = chr(247)
-#Erase line
-EL = chr(248)
-#Go ahead
-GA = chr(249)
-#Start of subnegotiation
-SB = chr(250)
-WILL = chr(251)
-WONT = chr(252)
-DO = chr(253)
-DONT = chr(254)
-#Interpret as a command
-IAC = chr(255)
-
+    @classmethod
+    def _handle(c, gsocket, address):
+        telnet.streamserver_handle(gsocket, address)

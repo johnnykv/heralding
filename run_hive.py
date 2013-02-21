@@ -81,11 +81,11 @@ def main():
                              'a selfsigned cert kan be generated with the following '
                              'command: "{1}"'.format(cap_name, gen_cmd))
             else:
-                server = StreamServer(('0.0.0.0', port), cap.handle,
+                server = StreamServer(('0.0.0.0', port), cap.handle_session,
                                       keyfile='server.key', certfile='server.crt')
             pass
         else:
-            server = StreamServer(('0.0.0.0', port), cap.handle)
+            server = StreamServer(('0.0.0.0', port), cap.handle_session)
         servers.append(server)
         server.start()
         logging.debug('Started {0} capability listening on port {1}'.format(cap_name, port))

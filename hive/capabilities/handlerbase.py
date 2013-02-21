@@ -29,6 +29,6 @@ class HandlerBase(object):
         self.sessions[session.id] = session
         return session
 
-    def handle(self, socket, address):
+    def handle_session(self, socket, address):
         raise Exception('Do no call base class!')
 

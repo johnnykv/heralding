@@ -29,7 +29,7 @@ class ftp(HandlerBase):
     def __init__(self, sessions, port):
         super(ftp, self).__init__(sessions, port)
 
-    def handle(self, gsocket, address):
+    def handle_session(self, gsocket, address):
 
         session = self.create_session(address)
 

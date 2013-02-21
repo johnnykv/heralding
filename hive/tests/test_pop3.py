@@ -37,7 +37,7 @@ class Pop3_Tests(unittest.TestCase):
         #dont really care about the socket at this point (None...)
         #TODO: mock the socket!
         try:
-            sut.handle(None, ['192.168.1.200', 12000])
+            sut.handle_session(None, ['192.168.1.200', 12000])
         except AttributeError:
             #because socket is not set
             pass
@@ -75,7 +75,7 @@ class Pop3_Tests(unittest.TestCase):
 
         sut = pop3.pop3(sessions, 110)
 
-        server = StreamServer(('127.0.0.1', 0), sut.handle)
+        server = StreamServer(('127.0.0.1', 0), sut.handle_session)
         server.start()
 
         for sequence in login_sequences:
@@ -110,7 +110,7 @@ class Pop3_Tests(unittest.TestCase):
     #     accounts = {'james': 'bond'}
     #     sut = pop3.pop3(sessions, accounts)
     #
-    #     server = StreamServer(('127.0.0.1', 0), sut.handle)
+    #     server = StreamServer(('127.0.0.1', 0), sut.handle_session)
     #     server.start()
     #
     #     for sequence in sequences:
@@ -150,7 +150,7 @@ class Pop3_Tests(unittest.TestCase):
     #     accounts = {'james': 'bond'}
     #     sut = pop3.pop3(sessions, accounts)
     #
-    #     server = StreamServer(('127.0.0.1', 0), sut.handle)
+    #     server = StreamServer(('127.0.0.1', 0), sut.handle_session)
     #     server.start()
     #
     #     for sequence in sequences:
