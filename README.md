@@ -14,13 +14,14 @@ The project consists of two independent parts:
 ## Hive
 ### Installation
 ``` shell
-pip install -r requirements.txt
-openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 -keyout server.key -out server.crt
+$>pip install -r requirements.txt
+$>openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 -keyout server.key -out server.crt
 ```
 
-### Sample output
+### Sample usage
 
 ```
+$>sudo python run_hive.py
 2013-02-21 10:36:05,975 (root) Consumer created.
 2013-02-21 10:36:05,976 (root) Started pop3 capability listening on port 110
 2013-02-21 10:36:05,976 (root) Started pop3s capability listening on port 995
