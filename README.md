@@ -1,4 +1,4 @@
-# beeswarm [![Build Status](https://travis-ci.org/johnnykv/beeswarm.png?branch=master)](https://travis-ci.org/johnnykv/beeswarm)
+# Beeswarm [![Build Status](https://travis-ci.org/johnnykv/beeswarm.png?branch=master)](https://travis-ci.org/johnnykv/beeswarm)
 A honeypot project which will try to estimate how, where and when credentials are intercepted and reused.
 The project consists of two independent parts:
 * Hive
@@ -7,7 +7,6 @@ The project consists of two independent parts:
  * Distributes all login attempts using hpfeeds. (beeswarn.hive)
 * Feeder (currently under initial development)
  * Simulates a normal end-user system by regulary interacting with Hive.
- * Purpose of this is to provide indication about where and when plaintext credentials are intercepted and resued.
  * Distributes all login attempts using hpfeeds. (beeswarn.feeder)
 
 
@@ -37,16 +36,17 @@ $>sudo python run_hive.py
 ```
 
 ## Feeder
-### Functionality
 Still under development.
 
 # Concept for deployment
 
 ## General
-* One feeder operating with static ip
-* One feeder using the TOR network to connect to Hive
- * Making detection much harder
- * Would be interesting to see how much intercepted TOR exit traffic are actually used for malicious purposes
+* One Hive operating with static ip.
+ * Transmits login attempts on HPFeed channel beeswarm.hive
+* Several feeders interacting with Hive services.
+ * Some connect directly, other using various proxies (TOR, VPN providers, etc)
+ * Transmits activity on HPFeed channel beeswarm.feeder
+* [Mnemosyne](https://github.com/johnnykv/mnemosyne) correlates data on beeswarm.hive and beeswarm.feeder to identify malicious usage.
 
 ## Deployment diagram
                                   (honeybees)
