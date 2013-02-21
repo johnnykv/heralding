@@ -26,6 +26,7 @@ import pwd
 import grp
 import ConfigParser
 import platform
+import sys
 
 from hive.consumer import consumer
 from hive.capabilities import handlerbase
@@ -74,17 +75,19 @@ def main():
         port = config.getint(cap_name, 'port')
         cap = c(sessions, port)
 
+        #check cert and key
+        if not {'server.key', 'server.crt'}.issubset(set(os.listdir('./'))):
+            gen_cmd = "openssl req -new -newkey rsa:1024 -days 365 -nodes -x509 -keyout server.key -out server.crt"
+            gen_cmd += ' && openssl rsa -in server.key -text -out server.key'
+            logger.error('No valid key or certificate found, '
+                         'a selfsigned cert and key can be generated with the following '
+                         'command: "{0}"'.format(gen_cmd))
+            sys.exit(1)
+
         #Convention: All capability names which end in 's' will be wrapped in ssl.
         if cap_name.endswith('s'):
-            if not {'server.key', 'server.crt'}.issubset(set(os.listdir('./'))):
-                gen_cmd = "openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 -keyout server.key -out server.crt"
-                logger.error('{0} could not be activated because no SSL cert was found, '
-                             'a selfsigned cert kan be generated with the following '
-                             'command: "{1}"'.format(cap_name, gen_cmd))
-            else:
                 server = StreamServer(('0.0.0.0', port), cap.handle_session,
                                       keyfile='server.key', certfile='server.crt')
-            pass
         else:
             server = StreamServer(('0.0.0.0', port), cap.handle_session)
         servers.append(server)

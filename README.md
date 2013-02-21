@@ -14,7 +14,8 @@ The project consists of two independent parts:
 ### Installation
 ``` shell
 $>pip install -r requirements.txt
-$>openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 -keyout server.key -out server.crt
+$>openssl req -new -newkey rsa:1024 -days 365 -nodes -x509 -keyout server.key -out server.crt
+$>openssl rsa -in server.key -text -out server.key
 ```
 
 ### Sample usage

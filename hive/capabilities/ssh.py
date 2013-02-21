@@ -17,21 +17,22 @@ import logging
 
 from hive.models.session import Session
 from telnetsrv.green import TelnetHandler
-from telnetsrv.paramiko_ssh import SSHHandler, getRsaKeyFile
+from telnetsrv.paramiko_ssh import SSHHandler
+from paramiko import RSAKey
 
 from handlerbase import HandlerBase
 
 logger = logging.getLogger(__name__)
 
-
 class ssh(HandlerBase, SSHHandler):
     WELCOME = '...'
     telnet_handler = TelnetHandler
-    host_key = getRsaKeyFile('server.key')
 
     #black voodoo to facilitate parents with different __init__ params
     def __init__(self, *args, **kwargs):
         logging.getLogger("paramiko").setLevel(logging.WARNING)
+        ssh.host_key = RSAKey(filename='server.key')
+
         if len(args) == 2:
             #this is the constructor call for HandlerBase
             sessions = args[0]
@@ -46,9 +47,6 @@ class ssh(HandlerBase, SSHHandler):
             self.session = self.create_session(client_address)
             self.auth_count = 0
             SSHHandler.__init__(self, request, client_address, server)
-
-    # Instruct this SSH handler to use MyTelnetHandler for any PTY connections
-    #telnet_handler = TelnetHandler
 
     def authCallbackUsername(self, username):
         #make sure no one can logon
