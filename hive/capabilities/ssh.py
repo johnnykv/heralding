@@ -16,27 +16,28 @@
 import logging
 
 from hive.models.session import Session
-from telnetsrv.green import TelnetHandler, command
+from telnetsrv.green import TelnetHandler
+from telnetsrv.paramiko_ssh import SSHHandler, getRsaKeyFile
 
 from handlerbase import HandlerBase
 
 logger = logging.getLogger(__name__)
 
 
-class telnet(HandlerBase, TelnetHandler):
-    max_tries = 3
-
-    authNeedUser = True
-    authNeedPass = True
+class ssh(HandlerBase, SSHHandler):
+    WELCOME = '...'
+    telnet_handler = TelnetHandler
+    host_key = getRsaKeyFile('server.key')
 
     #black voodoo to facilitate parents with different __init__ params
     def __init__(self, *args, **kwargs):
+        logging.getLogger("paramiko").setLevel(logging.WARNING)
         if len(args) == 2:
             #this is the constructor call for HandlerBase
             sessions = args[0]
-            telnet.sessions = sessions
-            telnet.port = args[1]
-            super(telnet, self).__init__(sessions, telnet.port)
+            ssh.sessions = sessions
+            ssh.port = args[1]
+            super(ssh, self).__init__(sessions, ssh.port)
         elif len(args) == 3:
             request = args[0]
             client_address = args[1]
@@ -44,23 +45,26 @@ class telnet(HandlerBase, TelnetHandler):
             #this session is unique for each connection
             self.session = self.create_session(client_address)
             self.auth_count = 0
-            TelnetHandler.__init__(self, request, client_address, server)
+            SSHHandler.__init__(self, request, client_address, server)
 
-    def authCallback(self, username, password):
+    # Instruct this SSH handler to use MyTelnetHandler for any PTY connections
+    #telnet_handler = TelnetHandler
 
-        while self.auth_count < telnet.max_tries:
-            self.session.try_login(username, password)
-            self.writeline('Invalid username/password')
-            self.auth_count += 1
-            self.authentication_ok()
+    def authCallbackUsername(self, username):
+        #make sure no one can logon
         raise
 
-    def session_end(self):
-        self.session.is_connected = False
+    def authCallback(self, username, password):
+        self.session.activity()
+        self.session.try_login(username, password)
+        raise
 
     def handle_session(self, gsocket, address):
-        telnet._handle(gsocket, address)
+            ssh._handle(gsocket, address)
+
+    def finish(self):
+        self.session.is_connected = False
 
     @classmethod
     def _handle(c, gsocket, address):
-        telnet.streamserver_handle(gsocket, address)
+        ssh.streamserver_handle(gsocket, address)
