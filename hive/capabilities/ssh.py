@@ -17,8 +17,10 @@ import logging
 
 from hive.models.session import Session
 from telnetsrv.green import TelnetHandler
+import telnetsrv.paramiko_ssh
 from telnetsrv.paramiko_ssh import SSHHandler
 from paramiko import RSAKey
+
 
 from handlerbase import HandlerBase
 
@@ -30,6 +32,7 @@ class ssh(HandlerBase, SSHHandler):
 
     #black voodoo to facilitate parents with different __init__ params
     def __init__(self, *args, **kwargs):
+        logging.getLogger("telnetsrv.paramiko_ssh ").setLevel(logging.WARNING)
         logging.getLogger("paramiko").setLevel(logging.WARNING)
         ssh.host_key = RSAKey(filename='server.key')
 

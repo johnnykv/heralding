@@ -61,7 +61,7 @@ def main():
 
     #protocol handlers
     for c in handlerbase.HandlerBase.__subclasses__():
-        cap_name = c.__name__
+        cap_name = 'cap_' + c.__name__
 
         #skip loading if no configuration sections is found
         if not config.has_section(cap_name):
@@ -90,6 +90,7 @@ def main():
                                       keyfile='server.key', certfile='server.crt')
         else:
             server = StreamServer(('0.0.0.0', port), cap.handle_session)
+            
         servers.append(server)
         server.start()
         logging.debug('Started {0} capability listening on port {1}'.format(cap_name, port))

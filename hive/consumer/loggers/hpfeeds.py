@@ -64,16 +64,16 @@ class FeedUnpack(object):
         return opcode, data
 
 
-class HPFeedClient(LoggerBase):
+class HPFeeds(LoggerBase):
     def __init__(self, config="hive.cfg"):
         conf_parser = ConfigParser()
         conf_parser.read(config)
 
-        self.host = conf_parser.get("hpfeed", "host")
-        self.port = conf_parser.getint("hpfeed", "port")
-        self.secret = conf_parser.get("hpfeed", "secret").encode('latin1')
-        self.chan = conf_parser.get("hpfeed", "chan").encode('latin1')
-        self.ident = conf_parser.get("hpfeed", "ident").encode('latin1').strip()
+        self.host = conf_parser.get("log_hpfeeds", "host")
+        self.port = conf_parser.getint("log_hpfeeds", "port")
+        self.secret = conf_parser.get("log_hpfeeds", "secret").encode('latin1')
+        self.chan = conf_parser.get("log_hpfeeds", "chan").encode('latin1')
+        self.ident = conf_parser.get("log_hpfeesd", "ident").encode('latin1').strip()
 
         self.connect()
 

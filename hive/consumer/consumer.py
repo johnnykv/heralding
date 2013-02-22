@@ -18,7 +18,9 @@ import logging
 import gevent
 import requests
 from requests.exceptions import Timeout, ConnectionError
+from ConfigParser import ConfigParser
 import logging
+import logging.handlers
 
 from loggers import loggerbase
 from loggers import testlogger
@@ -29,9 +31,9 @@ logger = logging.getLogger(__name__)
 
 
 class Consumer:
-    def __init__(self, sessions, public_ip=None, fetch_public_ip=False):
+    def __init__(self, sessions, config='hive.cfg', public_ip=None, fetch_public_ip=False):
         logging.debug('Consumer created.')
-
+        self.config = config
         if fetch_public_ip:
             try:
                 url = 'http://api-sth01.exip.org/?call=ip'
@@ -62,14 +64,27 @@ class Consumer:
                     logger.debug('Removed {0} connection from {1}. ({2})'.format(session.protocol,
                                                                                  session.attacker_ip,
                                                                                  session.id))
-            gevent.sleep(5)
+            gevent.sleep(1)
 
     def stop_handling(self):
         pass
 
     def get_loggers(self):
         loggers = []
+        parser = ConfigParser()
+        parser.read(self.config)
+        enabled_loggers = []
+
+        for l in parser.sections():
+            type, name = l.split('_')
+            #only interested in logging configurations
+            if type == 'log' and parser.getboolean(l, 'enabled'):
+                enabled_loggers.append(name)
+
         for l in loggerbase.LoggerBase.__subclasses__():
-            logger = l()
-            loggers.append(logger)
+            logger_name = l.__name__.lower()
+            if logger_name in enabled_loggers:
+                logger.debug('{0} consumer started.'.format(logger_name.title()))
+                hive_logger = l()
+                loggers.append(hive_logger)
         return loggers
