@@ -7,6 +7,10 @@ ident =
 secret =
 chan = beeswarm.hive
 
+[syslog]
+enabled = False
+socket = /dev/log
+
 #Additional information for logging purposes
 [public_ip]
 #Optional

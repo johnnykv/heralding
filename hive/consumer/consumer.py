@@ -23,6 +23,7 @@ import logging
 from loggers import loggerbase
 from loggers import testlogger
 from loggers import hpfeeds
+from loggers import syslog
 
 logger = logging.getLogger(__name__)
 
