@@ -3,10 +3,10 @@ A honeypot project which will try to estimate how, where and when credentials ar
 The project consists of two independent parts:
 * Hive
  * Multiprotocol honeypot, comes default with ssh, pop3, pop3s, ssh, ftp and telnet capability.
- * Extendable, both in terms of new protocols but can also be extended to provide shell like feature like Kippo.
+ * Extendable, both in terms of new protocols but can also be extended to provide shell-like feature like Kippo.
  * Distributes all login attempts using hpfeeds. (beeswarn.hive)
 * Feeder (currently under initial development)
- * Simulates a normal end-user system by regulary interacting with Hive.
+ * Simulates end-user interaction by regulary interacting with Hive.
  * Distributes all login attempts using hpfeeds. (beeswarn.feeder)
 
 
@@ -70,3 +70,7 @@ Still under development.
     |   Feeder  |+-->|TOR Exit Node|+-------------------------------+
     +-----------+    +-------------+               Traffic
      (Using TOR)                                 (honeybees)
+
+## Data access
+The Hive part of the system is operational and are currently collecting data. Members of the (The Honynet Project)[http://www.honeynet.org/]
+can gain access to this data by subscribe to the _beeswarm.hive_ hpfeeds channel, of preferably access the data through the (Mnemosyne)[https://github.com/johnnykv/mnemosyne] (REST api)[http://johnnykv.github.com/mnemosyne/WebAPI.html#resources-as-of-version-1].
