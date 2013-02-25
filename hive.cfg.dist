@@ -1,6 +1,6 @@
 # Logging
 [hpfeeds]
-enabled = True
+enabled = False
 host = hpfeeds.honeycloud.net
 port = 10000
 ident =
