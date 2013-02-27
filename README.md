@@ -74,3 +74,6 @@ Still under development.
 ## Data access
 The Hive part of the system is operational and are currently collecting data. Members of the [The Honynet Project](http://www.honeynet.org/)
 can gain access to this data by subscribe to the _beeswarm.hive_ hpfeeds channel, of preferably access the data through the [Mnemosyne](https://github.com/johnnykv/mnemosyne) [REST api](http://johnnykv.github.com/mnemosyne/WebAPI.html#resources-as-of-version-1).
+
+## Development Administrator
+Lead developer and administrator for this project is [Johnny Vestergaard](mailto:jkv@unixcluster.dk).
