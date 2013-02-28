@@ -1,5 +1,5 @@
 # Logging
-[hpfeeds]
+[log_hpfeeds]
 enabled = False
 host = hpfeeds.honeycloud.net
 port = 10000
@@ -7,7 +7,7 @@ ident =
 secret =
 chan = beeswarm.hive
 
-[syslog]
+[log_syslog]
 enabled = False
 socket = /dev/log
 
@@ -19,18 +19,22 @@ public_ip =
 fetch_public_ip = False
 
 # Capabilities
-[ftp]
+[cap_ftp]
 enabled = True
 port = 21
 
-[telnet]
+[cap_telnet]
 enabled = True
 port = 23
 
-[pop3]
+[cap_pop3]
 enabled = True
 port = 110
 
-[pop3s]
+[cap_pop3s]
 enabled = True
 port = 995
+
+[cap_ssh]
+enabled = True
+port = 22
