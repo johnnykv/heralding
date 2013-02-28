@@ -66,7 +66,7 @@ def main():
         #skip loading if no configuration sections is found
         if not config.has_section(cap_name):
             logger.warning(
-                "Not loading {0} capability because it has no option in configuration file.".format(cap_name))
+                "Not loading {0} capability because it has no option in configuration file.".format(c.__name__))
             continue
             #skip loading if disabled
         if not config.getboolean(cap_name, 'Enabled'):
@@ -93,7 +93,7 @@ def main():
             
         servers.append(server)
         server.start()
-        logging.debug('Started {0} capability listening on port {1}'.format(cap_name, port))
+        logging.debug('Started {0} capability listening on port {1}'.format(c.__name__, port))
 
     stop_events = []
     for s in servers:

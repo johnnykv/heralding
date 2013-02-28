@@ -24,7 +24,7 @@ import logging.handlers
 
 from loggers import loggerbase
 from loggers import testlogger
-from loggers import hpfeeds
+from loggers import hpfeed
 from loggers import syslog
 
 logger = logging.getLogger(__name__)
@@ -74,12 +74,12 @@ class Consumer:
         parser = ConfigParser()
         parser.read(self.config)
         enabled_loggers = []
-
         for l in parser.sections():
-            type, name = l.split('_')
-            #only interested in logging configurations
-            if type == 'log' and parser.getboolean(l, 'enabled'):
-                enabled_loggers.append(name)
+            if '_' in l:
+                type, name = l.split('_')
+                #only interested in logging configurations
+                if type == 'log' and parser.getboolean(l, 'enabled'):
+                    enabled_loggers.append(name)
 
         for l in loggerbase.LoggerBase.__subclasses__():
             logger_name = l.__name__.lower()
