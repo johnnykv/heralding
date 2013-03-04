@@ -36,3 +36,5 @@ server.crt
 server.key
 
 hive.cfg
+
+*.log

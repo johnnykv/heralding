@@ -127,6 +127,20 @@ def drop_privileges(uid_name='nobody', gid_name='nobody'):
 
 
 if __name__ == '__main__':
-    format_string = '%(asctime)-15s (%(name)s) %(message)s'
-    logging.basicConfig(level=logging.DEBUG, format=format_string)
+
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)
+
+    formatter = logging.Formatter('%(asctime)-15s (%(name)s) %(message)s')
+    console_log = logging.StreamHandler()
+    console_log.setLevel(logging.INFO)
+    console_log.setFormatter(formatter)
+    root_logger.addHandler(console_log)
+
+    file_log = logging.handlers.TimedRotatingFileHandler(
+        'hive.log')
+    file_log.setLevel(logging.DEBUG)
+    file_log.setFormatter(formatter)
+    root_logger.addHandler(file_log)
+
     main()

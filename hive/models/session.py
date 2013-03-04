@@ -51,7 +51,7 @@ class Session(object):
         self.login_attempts.append({'username': username,
                                     'password': password,
                                     'timestamp': datetime.utcnow()})
-        logger.info('{0} authentication attempt from {1}. [{2}/{3}] ({4})'
+        logger.debug('{0} authentication attempt from {1}. [{2}/{3}] ({4})'
         .format(self.protocol, self.attacker_ip, username, password, self.id))
 
         if Session.authenticator.try_auth(username, password):
