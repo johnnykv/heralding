@@ -49,8 +49,11 @@ def main():
     #shared resource
     sessions = {}
 
-    public_ip = config.get('public_ip', 'public_ip')
-    fetch_ip = config.getboolean('public_ip', 'fetch_public_ip')
+    try:
+        public_ip = config.get('public_ip', 'public_ip')
+        fetch_ip = config.getboolean('public_ip', 'fetch_public_ip')
+    except:
+        print "Problem parsing config file [hive.cfg]. (Does it exist in the proper place?)"
 
     #greenlet to consume the provided sessions
     sessions_consumer = consumer.Consumer(sessions, public_ip=public_ip, fetch_public_ip=fetch_ip)
