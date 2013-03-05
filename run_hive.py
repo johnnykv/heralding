@@ -104,7 +104,7 @@ def main():
     gevent.joinall(stop_events)
 
 
-def drop_privileges(uid_name='nobody', gid_name='nobody'):
+def drop_privileges(uid_name='nobody', gid_name='nogroup'):
     if os.getuid() != 0:
         return
 
@@ -137,7 +137,7 @@ if __name__ == '__main__':
     console_log.setFormatter(formatter)
     root_logger.addHandler(console_log)
 
-    file_log = logging.handlers.TimedRotatingFileHandler(
+    file_log = logging.FileHandler(
         'hive.log')
     file_log.setLevel(logging.DEBUG)
     file_log.setFormatter(formatter)
