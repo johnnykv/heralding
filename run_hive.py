@@ -48,6 +48,7 @@ def main():
         config.read('hive.cfg')
     else:
         logger.error("Config file not found.")
+        sys.exit('Config file not found.')
     servers = []
     #shared resource
     sessions = {}
@@ -56,6 +57,7 @@ def main():
         fetch_ip = config.getboolean('public_ip', 'fetch_public_ip')
     except(ConfigParser.NoSectionError):
         logger.error("Problem parsing config file.")
+        sys.exit("Problem parsing config file.")
 
     #greenlet to consume the provided sessions
     sessions_consumer = consumer.Consumer(sessions, public_ip=public_ip, fetch_public_ip=fetch_ip)
