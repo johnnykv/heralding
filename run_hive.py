@@ -43,17 +43,19 @@ logger = logging.getLogger()
 
 def main():
     config = ConfigParser.ConfigParser()
-    config.read('hive.cfg')
 
+    if os.path.exists('./hive.cfg'):
+        config.read('hive.cfg')
+    else:
+        logger.error("Config file not found.")
     servers = []
     #shared resource
     sessions = {}
-
     try:
         public_ip = config.get('public_ip', 'public_ip')
         fetch_ip = config.getboolean('public_ip', 'fetch_public_ip')
-    except:
-        print "Problem parsing config file [hive.cfg]. (Does it exist in the proper place?)"
+    except(ConfigParser.NoSectionError):
+        logger.error("Problem parsing config file.")
 
     #greenlet to consume the provided sessions
     sessions_consumer = consumer.Consumer(sessions, public_ip=public_ip, fetch_public_ip=fetch_ip)
@@ -95,8 +97,13 @@ def main():
             server = StreamServer(('0.0.0.0', port), cap.handle_session)
             
         servers.append(server)
-        server.start()
-        logging.debug('Started {0} capability listening on port {1}'.format(c.__name__, port))
+        try:
+            server.start()
+        except:
+            logger.error("Could not start server. This usually happens when the port specified\
+                            in the config file is in use.")
+        else:
+            logging.debug('Started {0} capability listening on port {1}'.format(c.__name__, port))
 
     stop_events = []
     for s in servers:
@@ -110,9 +117,8 @@ def main():
 def drop_privileges(uid_name='nobody', gid_name='nogroup'):
     if os.getuid() != 0:
         return
-
+        
     wanted_uid = pwd.getpwnam(uid_name)[2]
-
     #special handling for os x. (getgrname has trouble with gid below 0)
     if platform.mac_ver()[0]:
         wanted_gid = -2
@@ -139,11 +145,9 @@ if __name__ == '__main__':
     console_log.setLevel(logging.INFO)
     console_log.setFormatter(formatter)
     root_logger.addHandler(console_log)
-
     file_log = logging.FileHandler(
         'hive.log')
     file_log.setLevel(logging.DEBUG)
     file_log.setFormatter(formatter)
     root_logger.addHandler(file_log)
-
     main()
