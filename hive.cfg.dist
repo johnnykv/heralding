@@ -1,10 +1,14 @@
 # Logging
+
+#This is the central logging feature of the honeynet project
+#if you enable this feature you accept that your logged data will be shared
+#and analyzed within the honeynet project organization.
 [log_hpfeed]
 enabled = False
-host = hpfeeds.honeycloud.net
-port = 10000
-ident =
-secret =
+host = hpfriends.honeycloud.net
+port = 20000
+ident = 2wtadBoH
+secret = mJPyhNhJmLYGbDCt
 chan = beeswarm.hive
 
 [log_syslog]
