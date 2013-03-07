@@ -4,10 +4,9 @@ The project consists of two independent parts:
 * Hive
  * Multiprotocol honeypot, comes default with ssh, pop3, pop3s, ssh, ftp and telnet capability.
  * Extendable, both in terms of new protocols but can also be extended to provide shell-like feature like Kippo.
- * Distributes all login attempts using hpfeeds. (beeswarn.hive)
+ * Distributes information using a variety of loggers (syslog, file logging, hpfeeds, etc).
 * Feeder (currently under initial development)
- * Simulates end-user interaction by regulary interacting with Hive.
- * Distributes all login attempts using hpfeeds. (beeswarn.feeder)
+ * Simulates a realistic environment using honeybees.
 
 
 ## Hive
