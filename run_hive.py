@@ -105,14 +105,14 @@ def main():
             logger.error("Could not start server. This usually happens when the port specified\
                             in the config file is in use.")
         else:
-            logging.debug('Started {0} capability listening on port {1}'.format(c.__name__, port))
+            logging.info('Started {0} capability listening on port {1}'.format(c.__name__, port))
 
     stop_events = []
     for s in servers:
         stop_events.append(s._stopped_event)
 
     drop_privileges()
-
+    logger.info("Hive running - see log file (hive.log) for attack events.")
     gevent.joinall(stop_events)
 
 
@@ -147,6 +147,7 @@ if __name__ == '__main__':
     console_log.setLevel(logging.INFO)
     console_log.setFormatter(formatter)
     root_logger.addHandler(console_log)
+
     file_log = logging.FileHandler(
         'hive.log')
     file_log.setLevel(logging.DEBUG)
