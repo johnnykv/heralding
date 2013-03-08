@@ -50,12 +50,14 @@ def main():
         logger.error("Config file not found.")
         sys.exit('Config file not found.')
     servers = []
-    #shared resource
+
+    #will contain Session objects
     sessions = {}
+
     try:
         public_ip = config.get('public_ip', 'public_ip')
         fetch_ip = config.getboolean('public_ip', 'fetch_public_ip')
-    except(ConfigParser.NoSectionError):
+    except ConfigParser.NoSectionError:
         logger.error("Problem parsing config file.")
         sys.exit("Problem parsing config file.")
 
@@ -68,9 +70,9 @@ def main():
 
     #protocol handlers
     for c in handlerbase.HandlerBase.__subclasses__():
+
         cap_name = 'cap_' + c.__name__
 
-        #skip loading if no configuration sections is found
         if not config.has_section(cap_name):
             logger.warning(
                 "Not loading {0} capability because it has no option in configuration file.".format(c.__name__))
