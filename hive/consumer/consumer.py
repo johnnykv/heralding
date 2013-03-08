@@ -23,7 +23,6 @@ import logging
 import logging.handlers
 
 from loggers import loggerbase
-from loggers import testlogger
 from loggers import hpfeed
 from loggers import syslog
 
