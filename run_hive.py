@@ -101,22 +101,24 @@ def main():
                          'a selfsigned cert and key can be generated with the following '
                          'command: "{0}"'.format(gen_cmd))
             sys.exit(1)
-        socket = create_socket(('0.0.0.0', port))
-        #Convention: All capability names which end in 's' will be wrapped in ssl.
-        if cap_name.endswith('s'):
-            server = HiveStreamServer(socket, cap.handle_session,
-                                      keyfile='server.key', certfile='server.crt')
-        else:
-            server = HiveStreamServer(socket, cap.handle_session)
 
-        servers.append(server)
-        #try:
-        server.start()
-        #except Exception as ex:
-        #    logger.error("Could not start server. This usually happens when the port specified\
-        #                    in the config file is in use.: {0}".format(ex))
-        #else:
-        logging.info('Started {0} capability listening on port {1}'.format(c.__name__, port))
+        try:
+            socket = create_socket(('0.0.0.0', port))
+            #Convention: All capability names which end in 's' will be wrapped in ssl.
+            if cap_name.endswith('s'):
+                server = HiveStreamServer(socket, cap.handle_session,
+                                          keyfile='server.key', certfile='server.crt')
+            else:
+                server = HiveStreamServer(socket, cap.handle_session)
+
+            servers.append(server)
+
+            server.start()
+        except _socket.error as ex:
+            logger.error("Could not start server. This usually happens when the port specified" +
+                         "in the config file is in use.: {0}".format(ex))
+        else:
+            logging.info('Started {0} capability listening on port {1}'.format(c.__name__, port))
 
     stop_events = []
     for s in servers:
