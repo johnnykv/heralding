@@ -44,7 +44,7 @@ logger = logging.getLogger()
 
 def create_socket(address, backlog=50):
     sock = HiveSocket()
-    sock.bidn(address)
+    sock.bind(address)
     sock.listen(backlog)
     sock.setblocking(0)
     return sock
