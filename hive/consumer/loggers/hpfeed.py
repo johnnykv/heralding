@@ -94,12 +94,12 @@ class HPFeed(LoggerBase):
                 data = self.socket.recv(1024)
             except KeyboardInterrupt:
                 break
-            except h_socket.timeout:
+            except socket.timeout:
                 break
 
     def connect(self):
         logger.info("Connecting to feed broker at {0}:{1}".format(self.host, self.port))
-        self.socket = h_socket.socket(h_socket.AF_INET, h_socket.SOCK_STREAM)
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.settimeout(3)
         try:
             self.socket.connect((self.host, self.port))
