@@ -37,7 +37,7 @@ class telnet(HandlerBase, TelnetHandler):
             telnet.sessions = sessions
             telnet.port = args[1]
             super(telnet, self).__init__(sessions, telnet.port)
-        elif len(args) == 3:
+        elif len(args) == 4:
             request = args[0]
             client_address = args[1]
             server = args[2]
