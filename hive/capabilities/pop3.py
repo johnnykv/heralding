@@ -31,7 +31,7 @@ class pop3(HandlerBase):
         super(pop3, self).__init__(sessions, listenport)
 
     def handle_session(self, gsocket, address):
-        session = self.create_session(address)
+        session = self.create_session(address, gsocket)
 
         logger.info("Accepted connection from {0}:{1}. ({2})".format(address[0], address[1], session.id))
 
@@ -44,11 +44,11 @@ class pop3(HandlerBase):
         self.send_message(session, gsocket, '+OK POP3 server ready')
 
         state = 'AUTHORIZATION'
-        while state != '' and session.is_connected:
+        while state != '' and session.connected:
             try:
                 raw_msg = fileobj.readline()
             except socket.error, (value, message):
-                session.is_connected = False
+                session.connected = False
                 break
 
             session.activity()
@@ -70,7 +70,7 @@ class pop3(HandlerBase):
                 if state == 'AUTHORIZATION' or cmd == 'quit':
                     state = return_value
 
-        session.is_connected = False
+        session.connected = False
 
     #APOP mrose c4c9334bac560ecc979e58001b3e22fb
     #+OK mrose's maildrop has 2 messages (320 octets)
@@ -215,11 +215,11 @@ class pop3(HandlerBase):
         try:
             gsocket.sendall(msg + "\n")
         except socket.error, (value, msg):
-            session.is_connected = False
+            session.connected = False
 
     def send_data(self, session, gsocket, data):
         try:
             gsocket.sendall(data)
         except socket.error, (value, msg):
-            session.is_connected = False
+            session.connected = False
 

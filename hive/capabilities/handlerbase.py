@@ -22,9 +22,9 @@ class HandlerBase(object):
         #serviceport
         self.port = port
 
-    def create_session(self, address):
+    def create_session(self, address, socket):
         protocol = self.__class__.__name__
-        session = Session(address[0], address[1], protocol)
+        session = Session(address[0], address[1], protocol, socket)
         session.honey_port = self.port
         self.sessions[session.id] = session
         return session

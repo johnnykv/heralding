@@ -21,10 +21,10 @@ import telnetsrv.paramiko_ssh
 from telnetsrv.paramiko_ssh import SSHHandler
 from paramiko import RSAKey
 
-
 from handlerbase import HandlerBase
 
 logger = logging.getLogger(__name__)
+
 
 class ssh(HandlerBase, SSHHandler):
     WELCOME = '...'
@@ -42,12 +42,12 @@ class ssh(HandlerBase, SSHHandler):
             ssh.sessions = sessions
             ssh.port = args[1]
             super(ssh, self).__init__(sessions, ssh.port)
-        elif len(args) == 3:
+        elif len(args) == 4:
             request = args[0]
             client_address = args[1]
             server = args[2]
             #this session is unique for each connection
-            self.session = self.create_session(client_address)
+            self.session = self.create_session(client_address, args[3])
             self.auth_count = 0
             SSHHandler.__init__(self, request, client_address, server)
 
@@ -61,11 +61,14 @@ class ssh(HandlerBase, SSHHandler):
         raise
 
     def handle_session(self, gsocket, address):
-            ssh._handle(gsocket, address)
+        ssh._handle(gsocket, address)
 
     def finish(self):
-        self.session.is_connected = False
+        self.session.connected = False
 
     @classmethod
-    def _handle(c, gsocket, address):
-        ssh.streamserver_handle(gsocket, address)
+    def _handle(cls, socket, address):
+        request = cls.dummy_request()
+        request._sock = socket
+        server = None
+        cls(request, address, server, socket)

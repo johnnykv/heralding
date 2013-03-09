@@ -25,8 +25,9 @@ logger = logging.getLogger(__name__)
 class Session(object):
 
     authenticator = None
+    default_timeout = 10
 
-    def __init__(self, attacker_ip, attacker_s_port, protocol, honeypot_port=None, honeypot_ip=None):
+    def __init__(self, attacker_ip, attacker_s_port, protocol, socket, honeypot_port=None, honeypot_ip=None):
 
         assert Session.authenticator is not None
 
@@ -38,14 +39,14 @@ class Session(object):
 
         self.id = uuid.uuid4()
         self.timestamp = datetime.utcnow()
-        self.last_activity = datetime.utcnow()
-        self.is_connected = True
+        self.connected = True
         #username != None means that the session is authenticated
         self.user_name = None
         #for session specific volatile data (will not get logged)
         self.vdata = {}
 
         self.login_attempts = []
+        self.socket = socket
 
     def try_login(self, username, password):
         self.login_attempts.append({'username': username,
@@ -83,6 +84,16 @@ class Session(object):
             'honey_port': self.honey_port,
             'login_attempts': self.login_attempts,
         }
+
+    def last_activity(self):
+        return self.socket.last_update()
+
+    def is_connected(self):
+        if self.socket.last_update() > Session.default_timeout:
+            self.socket.close()
+            self.connected = False
+        return self.connected
+
 
 
 

@@ -17,7 +17,9 @@ import gevent
 import gevent.monkey
 
 gevent.monkey.patch_all()
-from gevent.server import StreamServer
+from hive.helpers.streamserver import HiveStreamServer
+from hive.helpers.h_socket import HiveSocket
+import _socket
 from gevent import Greenlet
 
 import logging
@@ -39,6 +41,13 @@ from hive.models.session import Session
 from hive.models.authenticator import Authenticator
 
 logger = logging.getLogger()
+
+def create_socket(address, backlog=50):
+    sock = HiveSocket()
+    sock.bidn(address)
+    sock.listen(backlog)
+    sock.setblocking(0)
+    return sock
 
 
 def main():
@@ -92,22 +101,22 @@ def main():
                          'a selfsigned cert and key can be generated with the following '
                          'command: "{0}"'.format(gen_cmd))
             sys.exit(1)
-
+        socket = create_socket(('0.0.0.0', port))
         #Convention: All capability names which end in 's' will be wrapped in ssl.
         if cap_name.endswith('s'):
-                server = StreamServer(('0.0.0.0', port), cap.handle_session,
+            server = HiveStreamServer(socket, cap.handle_session,
                                       keyfile='server.key', certfile='server.crt')
         else:
-            server = StreamServer(('0.0.0.0', port), cap.handle_session)
-            
+            server = HiveStreamServer(socket, cap.handle_session)
+
         servers.append(server)
-        try:
-            server.start()
-        except:
-            logger.error("Could not start server. This usually happens when the port specified\
-                            in the config file is in use.")
-        else:
-            logging.info('Started {0} capability listening on port {1}'.format(c.__name__, port))
+        #try:
+        server.start()
+        #except Exception as ex:
+        #    logger.error("Could not start server. This usually happens when the port specified\
+        #                    in the config file is in use.: {0}".format(ex))
+        #else:
+        logging.info('Started {0} capability listening on port {1}'.format(c.__name__, port))
 
     stop_events = []
     for s in servers:
@@ -121,7 +130,7 @@ def main():
 def drop_privileges(uid_name='nobody', gid_name='nogroup'):
     if os.getuid() != 0:
         return
-        
+
     wanted_uid = pwd.getpwnam(uid_name)[2]
     #special handling for os x. (getgrname has trouble with gid below 0)
     if platform.mac_ver()[0]:
@@ -140,7 +149,6 @@ def drop_privileges(uid_name='nobody', gid_name='nogroup'):
 
 
 if __name__ == '__main__':
-
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.DEBUG)
 

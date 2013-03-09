@@ -42,7 +42,7 @@ class telnet(HandlerBase, TelnetHandler):
             client_address = args[1]
             server = args[2]
             #this session is unique for each connection
-            self.session = self.create_session(client_address)
+            self.session = self.create_session(client_address, args[3])
             self.auth_count = 0
             TelnetHandler.__init__(self, request, client_address, server)
 
@@ -56,11 +56,16 @@ class telnet(HandlerBase, TelnetHandler):
         raise
 
     def session_end(self):
-        self.session.is_connected = False
+        self.session.connected = False
 
     def handle_session(self, gsocket, address):
-        telnet._handle(gsocket, address)
+        telnet.streamserver_handle(gsocket, address)
 
     @classmethod
-    def _handle(c, gsocket, address):
-        telnet.streamserver_handle(gsocket, address)
+    def streamserver_handle(cls, socket, address):
+        '''Translate this class for use in a StreamServer'''
+        request = cls.false_request()
+        request._sock = socket
+        server = None
+        cls.logging.debug("Accepted connection, starting telnet session.")
+        cls(request, address, server, socket)

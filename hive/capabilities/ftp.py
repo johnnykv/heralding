@@ -29,8 +29,7 @@ class ftp(HandlerBase):
         super(ftp, self).__init__(sessions, port)
 
     def handle_session(self, gsocket, address):
-
-        session = self.create_session(address)
+        session = self.create_session(address, gsocket)
 
         f = ftp.BeeSwarmFTPServer(('', 0), ftpserver.FTPHandler)
         ftphandler = ftpserver.FTPHandler(gsocket, f)
@@ -43,7 +42,7 @@ class ftp(HandlerBase):
         #start command loop, will exit on disconnect.
         f.serve_forever()
         f.close_all()
-        session.is_connected = False
+        session.connected = False
 
     class ftpAuthorizer(ftpserver.DummyAuthorizer):
         def __init__(self, session):

@@ -16,7 +16,7 @@
 import poplib
 from datetime import datetime
 import uuid
-import socket
+import h_socket
 import logging
 
 from clientbase import ClientBase
@@ -58,7 +58,7 @@ class pop3(ClientBase):
             conn.pass_(password)
             session['did_login'] = True
             session['timestamp'] = datetime.utcnow()
-        except (poplib.error_proto, socket.error) as err:
+        except (poplib.error_proto, h_socket.error) as err:
             logging.debug('Caught exception: %s (%s)' % (err, str(type(err))))
         else:
             list_entries = conn.list()[1]

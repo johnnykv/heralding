@@ -53,7 +53,7 @@ class Consumer:
         while True:
             for session_id in self.sessions.keys():
                 session = self.sessions[session_id]
-                if not session.is_connected:
+                if not session.is_connected():
                     for log in active_loggers:
                         #set public ip if available
                         if self.public_ip:
