@@ -44,6 +44,7 @@ logger = logging.getLogger()
 
 def create_socket(address, backlog=50):
     sock = HiveSocket()
+    sock.setsockopt(_socket.SOL_SOCKET, _socket.SO_REUSEADDR, 1)
     sock.bind(address)
     sock.listen(backlog)
     sock.setblocking(0)
