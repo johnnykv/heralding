@@ -87,12 +87,14 @@ def main():
             logger.warning(
                 "Not loading {0} capability because it has no option in configuration file.".format(c.__name__))
             continue
-            #skip loading if disabled
+        #skip loading if disabled
         if not config.getboolean(cap_name, 'Enabled'):
             continue
 
         port = config.getint(cap_name, 'port')
-        cap = c(sessions, port)
+        #dictionary of options from the config file
+        options = list2dict(config.items(cap_name))
+        cap = c(sessions, options)
 
         #check cert and key
         if not {'server.key', 'server.crt'}.issubset(set(os.listdir('./'))):
@@ -128,6 +130,14 @@ def main():
     drop_privileges()
     logger.info("Hive running - see log file (hive.log) for attack events.")
     gevent.joinall(stop_events)
+
+
+def list2dict(list_of_options):
+    """Transforms a list of 2 element tuples to a dictionary"""
+    d = {}
+    for key, value in list_of_options:
+        d[key] = value
+    return d
 
 
 def drop_privileges(uid_name='nobody', gid_name='nogroup'):
@@ -166,4 +176,5 @@ if __name__ == '__main__':
     file_log.setLevel(logging.DEBUG)
     file_log.setFormatter(formatter)
     root_logger.addHandler(file_log)
+
     main()

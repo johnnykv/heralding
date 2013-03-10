@@ -30,14 +30,17 @@ port = 21
 [cap_telnet]
 enabled = True
 port = 23
+max_attempts = 3
 
 [cap_pop3]
 enabled = True
 port = 110
+max_attempts = 3
 
 [cap_pop3s]
 enabled = True
 port = 995
+max_attempts = 3
 
 [cap_ssh]
 enabled = True

@@ -17,10 +17,16 @@ from hive.models.session import Session
 
 
 class HandlerBase(object):
-    def __init__(self, sessions, port):
+    def __init__(self, sessions, options):
+        """
+
+        :param sessions: a dictionary of Session objects.
+        :param options: a dictionary of configuration options.
+        """
         self.sessions = sessions
+        self.options = options
         #serviceport
-        self.port = port
+        self.port = int(options['port'])
 
     def create_session(self, address, socket):
         protocol = self.__class__.__name__

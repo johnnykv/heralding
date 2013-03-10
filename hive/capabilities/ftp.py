@@ -24,8 +24,8 @@ logger = logging.getLogger(__name__)
 
 
 class ftp(HandlerBase):
-    def __init__(self, sessions, port):
-        super(ftp, self).__init__(sessions, port)
+    def __init__(self, sessions, options):
+        super(ftp, self).__init__(sessions, options)
 
     def handle_session(self, gsocket, address):
         session = self.create_session(address, gsocket)

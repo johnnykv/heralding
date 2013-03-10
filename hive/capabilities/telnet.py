@@ -23,10 +23,11 @@ logger = logging.getLogger(__name__)
 
 
 class telnet(HandlerBase):
-    def __init__(self, sessions, listenport):
-        super(telnet, self).__init__(sessions, listenport)
+    def __init__(self, sessions, options):
+        super(telnet, self).__init__(sessions, options)
 
     def handle_session(self, gsocket, address):
+        telnet_wrapper.max_tries = int(self.options['max_attempts'])
         session = self.create_session(address, gsocket)
         telnet_wrapper(address, None, gsocket, session)
 
@@ -46,7 +47,6 @@ class telnet_wrapper(TelnetHandler):
         request = telnet_wrapper.false_request()
         request._sock = socket
         TelnetHandler.__init__(self, request, client_address, server)
-
 
     def authCallback(self, username, password):
         while self.auth_count < telnet_wrapper.max_tries:
