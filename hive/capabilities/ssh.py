@@ -15,9 +15,7 @@
 
 import logging
 
-from hive.models.session import Session
 from telnetsrv.green import TelnetHandler
-import telnetsrv.paramiko_ssh
 from telnetsrv.paramiko_ssh import SSHHandler
 from paramiko import RSAKey
 
@@ -26,30 +24,33 @@ from handlerbase import HandlerBase
 logger = logging.getLogger(__name__)
 
 
-class ssh(HandlerBase, SSHHandler):
+class ssh(HandlerBase):
+
+    def __init__(self, sessions, listenport):
+        logging.getLogger("telnetsrv.paramiko_ssh ").setLevel(logging.WARNING)
+        logging.getLogger("paramiko").setLevel(logging.WARNING)
+        super(ssh, self).__init__(sessions, listenport)
+
+    def handle_session(self, gsocket, address):
+        session = self.create_session(address, gsocket)
+        ssh_wrapper(address, None, gsocket, session)
+
+
+class ssh_wrapper(SSHHandler):
+    """
+    Wraps the telnetsrv paramiko module to fit the Hive architecture.
+    """
+
     WELCOME = '...'
     telnet_handler = TelnetHandler
 
-    #black voodoo to facilitate parents with different __init__ params
-    def __init__(self, *args, **kwargs):
-        logging.getLogger("telnetsrv.paramiko_ssh ").setLevel(logging.WARNING)
-        logging.getLogger("paramiko").setLevel(logging.WARNING)
-        ssh.host_key = RSAKey(filename='server.key')
-
-        if len(args) == 2:
-            #this is the constructor call for HandlerBase
-            sessions = args[0]
-            ssh.sessions = sessions
-            ssh.port = args[1]
-            super(ssh, self).__init__(sessions, ssh.port)
-        elif len(args) == 4:
-            request = args[0]
-            client_address = args[1]
-            server = args[2]
-            #this session is unique for each connection
-            self.session = self.create_session(client_address, args[3])
-            self.auth_count = 0
-            SSHHandler.__init__(self, request, client_address, server)
+    def __init__(self, client_address, server, socket, session):
+        self.session = session
+        self.auth_count = 0
+        ssh_wrapper.host_key = RSAKey(filename='server.key')
+        request = ssh_wrapper.dummy_request()
+        request._sock = socket
+        SSHHandler.__init__(self, request, client_address, server)
 
     def authCallbackUsername(self, username):
         #make sure no one can logon
@@ -65,10 +66,3 @@ class ssh(HandlerBase, SSHHandler):
 
     def finish(self):
         self.session.connected = False
-
-    @classmethod
-    def _handle(cls, socket, address):
-        request = cls.dummy_request()
-        request._sock = socket
-        server = None
-        cls(request, address, server, socket)
