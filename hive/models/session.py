@@ -90,6 +90,7 @@ class Session(object):
 
     def is_connected(self):
         if self.socket.last_update() > Session.default_timeout:
+            logger.debug('Closing session socket due to timeout. ({0})'.format(self.id))
             self.socket.close()
             self.connected = False
         return self.connected
