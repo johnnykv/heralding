@@ -16,7 +16,6 @@
 import socket
 
 from handlerbase import HandlerBase
-from hive.models.session import Session
 
 import logging
 

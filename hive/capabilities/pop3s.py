@@ -13,11 +13,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import socket
 
 from handlerbase import HandlerBase
 from pop3 import pop3
-from hive.models.session import Session
 
 import logging
 
@@ -25,4 +23,6 @@ logger = logging.getLogger(__name__)
 
 
 class pop3s(pop3, HandlerBase):
-    """pop3s"""
+    """
+    This class will get wrapped in SSL. This is possible because we by convention (in run_hive.py) wrap
+    all capabilities that ends with the letter 's' in SSL."""

@@ -16,7 +16,6 @@
 import logging
 import asyncore
 
-from hive.models.session import Session
 from pyftpdlib import ftpserver
 
 from handlerbase import HandlerBase
