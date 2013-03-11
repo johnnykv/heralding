@@ -13,40 +13,60 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import gevent
+import gevent.monkey
+gevent.monkey.patch_all()
+from gevent.server import StreamServer
+
 import unittest
+import telnetlib
+import tempfile
+import sys
+
 from hive.capabilities import telnet
 from hive.models.session import Session
 from hive.models.authenticator import Authenticator
 
 
-#class Telnet_Tests(unittest.TestCase):
-    # def test_initial_session(self):
-    #     """Tests if the basic parts of the session is filled correctly"""
-    #
-    #     sessions = {}
-    #
-    #     #provide valid login/pass to authenticator
-    #     authenticator = Authenticator({'james': 'bond'})
-    #     Session.authenticator = authenticator
-    #
-    #     sut = telnet.telnet(sessions, 23)
-    #
-    #     #dont really care about the socket at this point (None...)
-    #     #TODO: mock the socket!
-    #     try:
-    #         sut.handle_session(None, ['192.168.1.200', 51000])
-    #     except AttributeError:
-    #         #because socket is not set
-    #         pass
-    #
-    #     #expect a single entry in the sessions dict
-    #     self.assertEqual(1, len(sessions))
-    #     session = sessions.values()[0]
-    #     self.assertEqual('telnet', session.protocol)
-    #     self.assertEqual(23, session.honey_port)
-    #     self.assertEquals('192.168.1.200', session.attacker_ip)
-    #     self.assertEqual(51000, session.attacker_source_port)
 
+class Telnet_Tests(unittest.TestCase):
+    def test_invalid_login(self):
+        """Tests if telnet server responds correctly to a invalid login attempt."""
+
+        #curses dependency in the telnetserver need a STDOUT with file descriptor.
+        sys.stdout = tempfile.TemporaryFile()
+
+        #initialize capability and start tcp server
+        authenticator = Authenticator({})
+        Session.authenticator = authenticator
+        sessions = {}
+        sut = telnet.telnet(sessions, {'port': 23, 'max_attempts': 3})
+        server = StreamServer(('127.0.0.1', 0), sut.handle_session)
+        server.start()
+
+        client = telnetlib.Telnet('localhost', port=server.server_port)
+        #set this to 1 if having problems with this test
+        client.set_debuglevel(0)
+
+        #this disables all command negotiation.
+        client.set_option_negotiation_callback(self.cb)
+
+        #Expect username as first output
+        reply = client.read_until('Username: ', 1)
+        self.assertEquals('Username: ', reply)
+
+        client.write('someuser' + '\n')
+        reply = client.read_until('Password: ', 5)
+        self.assertTrue(reply.endswith('Password: '))
+
+        client.write('somepass' + "\n")
+        reply = client.read_until('Invalid username/password\r\nUsername: ')
+        self.assertTrue(reply.endswith('Invalid username/password\r\nUsername: '))
+
+        server.stop()
+
+    def cb(self, socket, command, option):
+        return
 
 if __name__ == '__main__':
     unittest.main()
