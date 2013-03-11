@@ -1,4 +1,4 @@
-# Beeswarm [![Build Status](https://travis-ci.org/johnnykv/beeswarm.png?branch=master)](https://travis-ci.org/johnnykv/beeswarm)
+# Beeswarm [![Build Status](https://travis-ci.org/honeynet/beeswarm.png?branch=master)](https://travis-ci.org/honeynet/beeswarm)
 A honeypot project which will try to estimate how, where and when credentials are intercepted and reused.
 The project consists of two independent parts:
 * Hive
