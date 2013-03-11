@@ -16,7 +16,9 @@
 import logging
 import asyncore
 
-from pyftpdlib import ftpserver
+from pyftpdlib.servers import FTPServer
+from pyftpdlib.authorizers import DummyAuthorizer
+from pyftpdlib.handlers import FTPHandler
 
 from handlerbase import HandlerBase
 
