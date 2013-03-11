@@ -33,7 +33,7 @@ class ssh(HandlerBase):
 
     def handle_session(self, gsocket, address):
         session = self.create_session(address, gsocket)
-        ssh_wrapper(address, None, gsocket, session)
+        ssh_wrapper(address, None, gsocket, session, self.options)
 
 
 class ssh_wrapper(SSHHandler):
@@ -44,10 +44,11 @@ class ssh_wrapper(SSHHandler):
     WELCOME = '...'
     telnet_handler = TelnetHandler
 
-    def __init__(self, client_address, server, socket, session):
+    def __init__(self, client_address, server, socket, session, options):
         self.session = session
         self.auth_count = 0
-        ssh_wrapper.host_key = RSAKey(filename='server.key')
+        server_key = options['key']
+        ssh_wrapper.host_key = RSAKey(filename=server_key)
         request = ssh_wrapper.dummy_request()
         request._sock = socket
         SSHHandler.__init__(self, request, client_address, server)

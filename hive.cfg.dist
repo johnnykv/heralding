@@ -45,3 +45,4 @@ max_attempts = 3
 [cap_ssh]
 enabled = True
 port = 22
+key = 'server.key'

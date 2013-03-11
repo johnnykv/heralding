@@ -32,7 +32,7 @@ class Telnet_Tests(unittest.TestCase):
         authenticator = Authenticator({})
         Session.authenticator = authenticator
 
-        sut = ssh.ssh({}, {'port': 22})
+        sut = ssh.ssh({}, {'port': 22, 'key': 'hive/tests/dummy_key.key'})
         server = StreamServer(('127.0.0.1', 0), sut.handle_session)
         server.start()
         print server
