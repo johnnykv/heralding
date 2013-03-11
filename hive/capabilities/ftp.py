@@ -57,19 +57,3 @@ class ftp(HandlerBase):
 
     class BeeSwarmFTPServer(FTPServer):
         pass
-        #~ @classmethod
-        #~ def serve_forever(cls, timeout=1.0, use_poll=False, count=None):
-#~ 
-            #~ from pyftpdlib.ftpserver import _scheduler
-#~ 
-            #~ poll_fun = asyncore.poll
-#~ 
-            #~ try:
-                #~ while len(asyncore.socket_map) > 1:
-                    #~ poll_fun(timeout)
-                    #~ _scheduler()
-            #~ except (KeyboardInterrupt, SystemExit, asyncore.ExitNow):
-                #~ pass
-            #~ finally:
-                #~ cls.close_all()
-#~ 
