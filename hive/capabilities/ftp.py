@@ -18,6 +18,7 @@ import asyncore
 
 from pyftpdlib.servers import FTPServer
 from pyftpdlib.authorizers import DummyAuthorizer
+from pyftpdlib.authorizers import AuthenticationFailed
 from pyftpdlib.handlers import FTPHandler
 
 from handlerbase import HandlerBase
@@ -32,8 +33,8 @@ class ftp(HandlerBase):
     def handle_session(self, gsocket, address):
         session = self.create_session(address, gsocket)
 
-        f = ftp.BeeSwarmFTPServer(('', 0), ftpserver.FTPHandler)
-        ftphandler = ftpserver.FTPHandler(gsocket, f)
+        f = ftp.BeeSwarmFTPServer(('', 0), FTPHandler)
+        ftphandler = FTPHandler(gsocket, f)
         ftphandler.authorizer = ftp.ftpAuthorizer(session)
         #TODO: configurable
         ftphandler.banner = "220 Microsoft FTP Service"
@@ -45,29 +46,30 @@ class ftp(HandlerBase):
         f.close_all()
         session.connected = False
 
-    class ftpAuthorizer(ftpserver.DummyAuthorizer):
+    class ftpAuthorizer(DummyAuthorizer):
         def __init__(self, session):
             super(ftp.ftpAuthorizer, self).__init__()
             self.session = session
 
-        def validate_authentication(self, username, password):
-            self.session.try_login(username, password)
+        def validate_authentication(self, username, password, handler):
+            if not self.session.try_login(username, password):
+                raise AuthenticationFailed
 
-    class BeeSwarmFTPServer(ftpserver.FTPServer):
-
-        @classmethod
-        def serve_forever(cls, timeout=1.0, use_poll=False, count=None):
-
-            from pyftpdlib.ftpserver import _scheduler
-
-            poll_fun = asyncore.poll
-
-            try:
-                while len(asyncore.socket_map) > 1:
-                    poll_fun(timeout)
-                    _scheduler()
-            except (KeyboardInterrupt, SystemExit, asyncore.ExitNow):
-                pass
-            finally:
-                cls.close_all()
-
+    class BeeSwarmFTPServer(FTPServer):
+        pass
+        #~ @classmethod
+        #~ def serve_forever(cls, timeout=1.0, use_poll=False, count=None):
+#~ 
+            #~ from pyftpdlib.ftpserver import _scheduler
+#~ 
+            #~ poll_fun = asyncore.poll
+#~ 
+            #~ try:
+                #~ while len(asyncore.socket_map) > 1:
+                    #~ poll_fun(timeout)
+                    #~ _scheduler()
+            #~ except (KeyboardInterrupt, SystemExit, asyncore.ExitNow):
+                #~ pass
+            #~ finally:
+                #~ cls.close_all()
+#~ 
