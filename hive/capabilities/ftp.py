@@ -41,7 +41,7 @@ class ftp(HandlerBase):
             ftphandler.banner = self._options['banner']
         else:
             ftphandler.banner = "Microsoft FTP Server"
-        if self._options.has_key('max_attemps'):
+        if self._options.has_key('max_attempts'):
             ftphandler.max_login_attemps = self._options['max_attempts']
 
         #Send '200' status and banner
