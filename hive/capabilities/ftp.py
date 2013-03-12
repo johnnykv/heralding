@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 class ftp(HandlerBase):
     def __init__(self, sessions, options):
         super(ftp, self).__init__(sessions, options)
+        self._options = options
 
     def handle_session(self, gsocket, address):
         session = self.create_session(address, gsocket)
@@ -36,8 +37,12 @@ class ftp(HandlerBase):
         f = ftp.BeeSwarmFTPServer(('', 0), FTPHandler)
         ftphandler = FTPHandler(gsocket, f)
         ftphandler.authorizer = ftp.ftpAuthorizer(session)
-        #TODO: configurable
-        ftphandler.banner = "220 Microsoft FTP Service"
+        if self._options.has_key('banner'):
+            ftphandler.banner = self._options['banner']
+        else:
+            ftphandler.banner = "Microsoft FTP Server"
+        if self._options.has_key('max_attemps'):
+            ftphandler.max_login_attemps = self._options['max_attempts']
 
         #Send '200' status and banner
         ftphandler.handle()
