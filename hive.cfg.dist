@@ -26,6 +26,8 @@ fetch_public_ip = False
 [cap_ftp]
 enabled = True
 port = 21
+max_attempts = 3
+banner = Microsoft FTP Server
 
 [cap_telnet]
 enabled = True
