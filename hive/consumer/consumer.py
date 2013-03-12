@@ -33,6 +33,7 @@ class Consumer:
     def __init__(self, sessions, config='hive.cfg', public_ip=None, fetch_public_ip=False):
         logging.debug('Consumer created.')
         self.config = config
+        self.enabled = True
         if fetch_public_ip:
             try:
                 url = 'http://api-sth01.exip.org/?call=ip'
@@ -47,10 +48,11 @@ class Consumer:
 
         self.sessions = sessions
 
-    def start_handling(self):
+    def start(self):
+        self.enabled = True
         active_loggers = self.get_loggers()
 
-        while True:
+        while self.enabled:
             for session_id in self.sessions.keys():
                 session = self.sessions[session_id]
                 if not session.is_connected():
@@ -65,8 +67,8 @@ class Consumer:
                                                                                  session.id))
             gevent.sleep(1)
 
-    def stop_handling(self):
-        pass
+    def stop(self):
+        self.enabled = False
 
     def get_loggers(self):
         loggers = []
