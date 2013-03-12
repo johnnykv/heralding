@@ -37,7 +37,7 @@ class ftp_Tests(unittest.TestCase):
         Session.authenticator = authenticator
 
         #sut = pop3.pop3(sessions, 110)
-        sut = ftp.ftp(sessions, {'port': 21, 'max_attempts': 3})
+        sut = ftp.ftp(sessions, {'port': 21, 'max_attempts': 3, 'banner':'Test Banner', 'enabled':'True'})
 
         #dont really care about the socket at this point (None...)
         #TODO: mock the socket!
@@ -64,7 +64,7 @@ class ftp_Tests(unittest.TestCase):
         Session.authenticator = authenticator
 
         sessions = {}
-        sut = ftp.ftp(sessions, {'port': 21, 'max_attempts': 3})
+        sut = ftp.ftp(sessions, {'port': 21, 'max_attempts': 3, 'banner':'Test Banner', 'enabled':'True'})
 
         server = StreamServer(('127.0.0.1', 0), sut.handle_session)
         server.start()
