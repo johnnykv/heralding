@@ -2,8 +2,8 @@
 A honeypot project which will try to estimate how, where and when credentials are intercepted and reused.
 The project consists of two independent parts:
 * Hive
- * Multiprotocol honeypot, comes default with ssh, pop3, pop3s, ssh, ftp and telnet capability.
- * Extendable, both in terms of new protocols but can also be extended to provide shell-like feature like Kippo.
+ * Multiprotocol credentials catching honeypot, comes default with ssh, pop3, pop3s, ssh, ftp, http and telnet capability.
+ * Extendable, both in terms of new protocols but can also be extended to provide shell-like features like Kippo.
  * Distributes information using a variety of loggers (syslog, file logging, hpfeeds, etc).
 * Feeder (currently under initial development)
  * Simulates a realistic environment using honeybees.
