@@ -34,6 +34,7 @@ from capabilities import pop3
 from capabilities import pop3s
 from capabilities import telnet
 from capabilities import ssh
+from capabilities import http
 from capabilities import ftp
 
 logger = logging.getLogger(__name__)
@@ -72,8 +73,6 @@ class Hive(object):
         self.server_greenlets = []
         #will contain Session objects
         self.sessions = {}
-
-
 
         self.public_ip = self.config.get('public_ip', 'public_ip')
         self.fetch_ip = self.config.getboolean('public_ip', 'fetch_public_ip')
