@@ -35,6 +35,7 @@ from capabilities import pop3s
 from capabilities import telnet
 from capabilities import ssh
 from capabilities import http
+from capabilities import https
 from capabilities import ftp
 
 logger = logging.getLogger(__name__)
@@ -113,9 +114,9 @@ class Hive(object):
                 self.server_greenlets.append(server_greenlet)
 
             except _socket.error as ex:
-                logger.error("Could not start {0} server on port {1}. Error: {2}".format(c.__name__ , server.server_port, ex))
+                logger.error("Could not start {0} server on port {1}. Error: {2}".format(c.__name__ , port, ex))
             else:
-                logger.info('Started {0} capability listening on port {1}'.format(c.__name__, server.server_port))
+                logger.info('Started {0} capability listening on port {1}'.format(c.__name__, port))
 
         drop_privileges()
         logger.info("Hive running - see log file (hive.log) for attack events.")

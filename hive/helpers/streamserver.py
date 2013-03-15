@@ -1,15 +1,26 @@
-from gevent.server import StreamServer
-from hive.helpers.h_socket import HiveSocket
-from gevent import core
-from gevent.socket import EWOULDBLOCK
 from socket import *
-
+from ssl import CERT_NONE, PROTOCOL_SSLv23
 import sys
 import traceback
+
+from gevent.server import StreamServer
+from gevent import core
+from gevent.socket import EWOULDBLOCK
+
+from hive.helpers.h_socket import HiveSocket
+from hive.helpers.h_ssl_socket import HiveSSLSocket
+
 
 class HiveStreamServer(StreamServer):
     def __init__(self, listener, handle=None, backlog=None, spawn='default', **ssl_args):
         super(HiveStreamServer, self).__init__(listener, handle, backlog, spawn, **ssl_args)
+        if ssl_args:
+            ssl_args.setdefault('server_side', True)
+            self.wrap_socket = wrap_socket
+            self.ssl_args = ssl_args
+            self.ssl_enabled = True
+        else:
+            self.ssl_enabled = False
 
     #only difference from gevent.server.py is that socket is replaced by HiveSocket.
     def _do_accept(self, event, _evtype):
@@ -52,3 +63,8 @@ class HiveStreamServer(StreamServer):
                     self._start_accepting_timer = core.timer(self.delay, self.start_accepting)
                     self.delay = min(self.max_delay, self.delay * 2)
                 return
+
+
+def wrap_socket(*args, **kwargs):
+    """Create a new :class:`SSLSocket` instance."""
+    return HiveSSLSocket(*args, **kwargs)
