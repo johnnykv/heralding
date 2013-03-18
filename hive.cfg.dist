@@ -53,3 +53,8 @@ key = 'server.key'
 enabled = True
 port = 80
 banner = Microsoft-IIS/5.0
+
+[cap_https]
+enabled = True
+port = 443
+banner = Microsoft-IIS/5.0
