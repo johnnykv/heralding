@@ -51,5 +51,5 @@ key = 'server.key'
 
 [cap_http]
 enabled = True
-port = 8080
+port = 80
 banner = Microsoft-IIS/5.0
