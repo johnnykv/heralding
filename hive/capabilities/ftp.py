@@ -16,10 +16,7 @@
 import logging
 import asyncore
 
-from pyftpdlib.servers import FTPServer
-from pyftpdlib.authorizers import DummyAuthorizer
-from pyftpdlib.authorizers import AuthenticationFailed
-from pyftpdlib.handlers import FTPHandler
+from pyftpdlib import ftpserver
 
 from handlerbase import HandlerBase
 
@@ -29,36 +26,46 @@ logger = logging.getLogger(__name__)
 class ftp(HandlerBase):
     def __init__(self, sessions, options):
         super(ftp, self).__init__(sessions, options)
-        self._options = options
+        ftpserver.FTPHandler.banner = self.options['banner']
+        ftpserver.FTPHandler.max_login_attempts = self.options['max_attempts']
 
     def handle_session(self, gsocket, address):
         session = self.create_session(address, gsocket)
 
-        f = ftp.BeeSwarmFTPServer(('', 0), FTPHandler)
-        ftphandler = FTPHandler(gsocket, f)
+        server = ftp.BeeSwarmFTPServer(('', 0), ftpserver.FTPHandler)
+        ftphandler = ftpserver.FTPHandler(gsocket, server)
         ftphandler.authorizer = ftp.ftpAuthorizer(session)
-        if self._options.has_key('banner'):
-            ftphandler.banner = self._options['banner']
-        else:
-            ftphandler.banner = "Microsoft FTP Server"
-        if self._options.has_key('max_attempts'):
-            ftphandler.max_login_attemps = self._options['max_attempts']
 
         #Send '200' status and banner
         ftphandler.handle()
         #start command loop, will exit on disconnect.
-        f.serve_forever()
-        f.close_all()
+        server.serve_forever()
+        server.close_all()
         session.connected = False
 
-    class ftpAuthorizer(DummyAuthorizer):
+    class ftpAuthorizer(ftpserver.DummyAuthorizer):
         def __init__(self, session):
             super(ftp.ftpAuthorizer, self).__init__()
             self.session = session
 
-        def validate_authentication(self, username, password, handler):
-            if not self.session.try_login(username, password):
-                raise AuthenticationFailed
+        def validate_authentication(self, username, password):
+            self.session.try_login(username, password)
 
-    class BeeSwarmFTPServer(FTPServer):
-        pass
+    class BeeSwarmFTPServer(ftpserver.FTPServer):
+
+        @classmethod
+        def serve_forever(cls, timeout=1.0, use_poll=False, count=None):
+
+            from pyftpdlib.ftpserver import _scheduler
+
+            poll_fun = asyncore.poll
+
+            try:
+                while len(asyncore.socket_map) > 1:
+                    poll_fun(timeout)
+                    _scheduler()
+            except (KeyboardInterrupt, SystemExit, asyncore.ExitNow):
+                pass
+            finally:
+                cls.close_all()
+

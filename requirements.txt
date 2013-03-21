@@ -1,5 +1,5 @@
 gevent
-pyftpdlib>=1.0.1
+pyftpdlib==0.7.0
 requests
 telnetsrv
 paramiko

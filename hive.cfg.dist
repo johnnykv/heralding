@@ -24,7 +24,7 @@ fetch_public_ip = False
 
 # Capabilities
 [cap_ftp]
-enabled = False
+enabled = True
 port = 21
 max_attempts = 3
 banner = Microsoft FTP Server
