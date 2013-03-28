@@ -8,21 +8,41 @@ from smtpd import NEWLINE, EMPTYSTRING
 
 class SMTPChannel(smtpd.SMTPChannel):
     def __init__(self, smtp_server, newsocket, fromaddr,
-                 require_authentication=False, credential_validator=None,
-                 map=None, session=None):
+                    map=None, session=None, opts=None):
+        self.options = opts
+        
+        # A sad hack because SMTPChannel doesn't 
+        # allow custom banners, sends it's own through its
+        # __init__() method. When the initflag is False,
+        # the push() method is effectively disabled, so the 
+        # superclass banner is not sent.
+        self._initflag = False
+        self.banner = self.options['banner']
         smtpd.SMTPChannel.__init__(self, smtp_server, newsocket, fromaddr)
         asynchat.async_chat.__init__(self, newsocket, map=map)
 
-        self.require_authentication = require_authentication
+        # Now we set the initflag, so that push() will work again.
+        # And we push.
+        self._initflag = True
+        self.push("220 %s" %(self.banner))        
+
+        # States
         self.login_pass_authenticating = False
         self.login_uname_authenticating = False
         self.plain_authenticating = False
         self.authenticated = False
+
         self.username = None
         self.password = None
+        
         self.session = session
-        self.credential_validator = credential_validator
+        self.options = opts
 
+    def push(self, msg):
+        # Only send data after superclass initialization
+        if self._initflag:
+            asynchat.async_chat.push(self, msg + '\r\n')
+        
     def close_quit(self):
         self.close_when_done()
         self.handle_close()
@@ -37,13 +57,13 @@ class SMTPChannel(smtpd.SMTPChannel):
 
     def smtp_EHLO(self, arg):
         if not arg:
-            self.push('501 Syntax: HELO hostname')
+            self.push('501 Syntax: HELO/EHLO hostname')
             return
         if self.__greeting:
             self.push('503 Duplicate HELO/EHLO')
         else:
-            self.push('250-%s Hello %s' % (self.__fqdn, arg))
-            self.push('250-AUTH LOGIN')
+            self.push('250-%s Hello %s' % (self.banner, arg))
+            self.push('250-AUTH PLAIN LOGIN')
             self.push('250 EHLO')
 
     def smtp_AUTH(self, arg):
@@ -61,27 +81,27 @@ class SMTPChannel(smtpd.SMTPChannel):
             self.push('535 authentication failed')
             self.close_quit()
 
-        if self.plain_authenticating:
+        elif self.plain_authenticating:
             self.plain_authenticating = False
             # Our arg will ideally be the username/password
             self.username, _, self.password = base64.b64decode(arg).split('\x00')
             self.session.try_login(self.username, self.password)
-            self.push('535 authentication failed')
+            self.push('535 Authentication Failed')
             self.close_quit()
             
-        if 'PLAIN' in arg:
+        elif 'PLAIN' in arg:
             self.plain_authenticating = True
             try:
                 _, param = arg.split()
             except:
                 # We need to get the credentials now since client has not sent
-                # them
+                # them. The space after the 334 is important as said in the RFC
                 self.push("334 ")
                 return
             self.username, _, self.password = base64.b64decode(param).split('\x00')
             self.session.try_login(self.username, self.password)
             #for now all authentications will fail
-            self.push('535 authentication failed')
+            self.push('535 Authentication Failed')
             self.close_quit()
         
         elif 'LOGIN' in arg:
@@ -129,8 +149,10 @@ class SMTPChannel(smtpd.SMTPChannel):
 
             # White list of operations that are allowed prior to AUTH.
             if not command in ['AUTH', 'EHLO', 'HELO', 'NOOP', 'RSET', 'QUIT']:
-                if self.require_authentication and not self.authenticated:
+                if not self.authenticated:
                     self.push('530 Authentication required')
+                    self.close_quit()
+                    return
 
             method = getattr(self, 'smtp_' + command, None)
             if not method:
@@ -171,7 +193,6 @@ class DummySMTPServer(object):
         # Maybe this data should be logged, it might be interesting
         print peer, mailfrom, rcpttos, data
     
-
 class smtp(HandlerBase):
 
     def __init__(self, sessions, options):
@@ -179,6 +200,8 @@ class smtp(HandlerBase):
         self._options = options
 
     def handle_session(self, gsocket, address):
-        self.session = self.create_session(address, gsocket)
-        SMTPChannel(DummySMTPServer(), gsocket, address, session=self.session)
-        asyncore.loop()
+        session_ = self.create_session(address, gsocket)
+        local_map = {}
+        SMTPChannel(DummySMTPServer(), gsocket, address, session=session_, 
+                    map=local_map, opts=self._options)
+        asyncore.loop(map=local_map)
