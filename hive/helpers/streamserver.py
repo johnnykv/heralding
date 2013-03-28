@@ -1,7 +1,7 @@
 from socket import *
-from ssl import CERT_NONE, PROTOCOL_SSLv23
 import sys
 import traceback
+import logging
 
 from gevent.server import StreamServer
 from gevent import core
@@ -9,6 +9,8 @@ from gevent.socket import EWOULDBLOCK
 
 from hive.helpers.h_socket import HiveSocket
 from hive.helpers.h_ssl_socket import HiveSSLSocket
+
+logger = logging.getLogger(__name__)
 
 
 class HiveStreamServer(StreamServer):
@@ -21,6 +23,11 @@ class HiveStreamServer(StreamServer):
             self.ssl_enabled = True
         else:
             self.ssl_enabled = False
+
+    def exception_logger(self, greenlet):
+
+        logger.exception('Unhandled "{0}" exception caused a greenlet to crash: {1}'
+        .format(greenlet.exception, greenlet))
 
     #only difference from gevent.server.py is that socket is replaced by HiveSocket.
     def _do_accept(self, event, _evtype):
@@ -43,7 +50,7 @@ class HiveStreamServer(StreamServer):
                 if spawn is None:
                     self._handle(client_socket, address)
                 else:
-                    spawn(self._handle, client_socket, address)
+                    spawn(self._handle, client_socket, address).link_exception(receiver=self.exception_logger)
             except:
                 traceback.print_exc()
                 ex = sys.exc_info()[1]
