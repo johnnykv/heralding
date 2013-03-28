@@ -37,6 +37,7 @@ from capabilities import ssh
 from capabilities import http
 from capabilities import https
 from capabilities import ftp
+from capabilities import smtp
 
 logger = logging.getLogger(__name__)
 

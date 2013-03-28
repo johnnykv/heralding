@@ -58,3 +58,8 @@ banner = Microsoft-IIS/5.0
 enabled = True
 port = 443
 banner = Microsoft-IIS/5.0
+
+[cap_smtp]
+enabled = True
+banner = Microsoft ESMTP MAIL service ready
+port = 25
