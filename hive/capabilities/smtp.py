@@ -12,7 +12,7 @@ class SMTPChannel(smtpd.SMTPChannel):
         self.options = opts
         
         # A sad hack because SMTPChannel doesn't 
-        # allow custom banners, sends it's own through its
+        # allow custom banners, and sends it's own through its
         # __init__() method. When the initflag is False,
         # the push() method is effectively disabled, so the 
         # superclass banner is not sent.
@@ -191,7 +191,8 @@ class SMTPChannel(smtpd.SMTPChannel):
 class DummySMTPServer(object):
     def process_message(self, peer, mailfrom, rcpttos, data):
         # Maybe this data should be logged, it might be interesting
-        print peer, mailfrom, rcpttos, data
+        # print peer, mailfrom, rcpttos, data
+        pass
     
 class smtp(HandlerBase):
 

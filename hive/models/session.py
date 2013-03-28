@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 class Session(object):
 
     authenticator = None
-    default_timeout = 1000
+    default_timeout = 25
 
     def __init__(self, attacker_ip, attacker_s_port, protocol, socket, honeypot_port=None, honeypot_ip=None):
 
