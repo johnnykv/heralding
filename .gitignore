@@ -38,3 +38,7 @@ server.key
 hive.cfg
 
 *.log
+
+#pydev
+.project
+.pydevproject
