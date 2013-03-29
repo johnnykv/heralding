@@ -15,7 +15,7 @@
 
 
 class Authenticator(object):
-    def __init__(self, creds = {}):
+    def __init__(self, creds={}):
 
         #key: username, value: password
         #TODO: Read this from database

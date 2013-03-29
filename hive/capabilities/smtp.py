@@ -2,15 +2,16 @@ import base64
 import smtpd
 import asyncore
 import asynchat
+from smtpd import NEWLINE, EMPTYSTRING
 
 from handlerbase import HandlerBase
-from smtpd import NEWLINE, EMPTYSTRING
+
 
 class SMTPChannel(smtpd.SMTPChannel):
     def __init__(self, smtp_server, newsocket, fromaddr,
-                    map=None, session=None, opts=None):
+                 map=None, session=None, opts=None):
         self.options = opts
-        
+
         # A sad hack because SMTPChannel doesn't 
         # allow custom banners, and sends it's own through its
         # __init__() method. When the initflag is False,
@@ -24,7 +25,7 @@ class SMTPChannel(smtpd.SMTPChannel):
         # Now we set the initflag, so that push() will work again.
         # And we push.
         self._initflag = True
-        self.push("220 %s" %(self.banner))        
+        self.push("220 %s" % (self.banner))
 
         # States
         self.login_pass_authenticating = False
@@ -34,7 +35,7 @@ class SMTPChannel(smtpd.SMTPChannel):
 
         self.username = None
         self.password = None
-        
+
         self.session = session
         self.options = opts
 
@@ -42,7 +43,7 @@ class SMTPChannel(smtpd.SMTPChannel):
         # Only send data after superclass initialization
         if self._initflag:
             asynchat.async_chat.push(self, msg + '\r\n')
-        
+
     def close_quit(self):
         self.close_when_done()
         self.handle_close()
@@ -88,7 +89,7 @@ class SMTPChannel(smtpd.SMTPChannel):
             self.session.try_login(self.username, self.password)
             self.push('535 Authentication Failed')
             self.close_quit()
-            
+
         elif 'PLAIN' in arg:
             self.plain_authenticating = True
             try:
@@ -103,7 +104,7 @@ class SMTPChannel(smtpd.SMTPChannel):
             #for now all authentications will fail
             self.push('535 Authentication Failed')
             self.close_quit()
-        
+
         elif 'LOGIN' in arg:
             param = arg.split()
             if len(param) > 1:
@@ -164,7 +165,7 @@ class SMTPChannel(smtpd.SMTPChannel):
             if self.__state != self.DATA:
                 self.push('451 Internal confusion')
                 return
-            # Remove extraneous carriage returns and de-transparency according
+                # Remove extraneous carriage returns and de-transparency according
             # to RFC 821, Section 4.5.2.
             data = []
             for text in line.split('\r\n'):
@@ -188,14 +189,15 @@ class SMTPChannel(smtpd.SMTPChannel):
             else:
                 self.push(status)
 
+
 class DummySMTPServer(object):
     def process_message(self, peer, mailfrom, rcpttos, data):
         # Maybe this data should be logged, it might be interesting
         # print peer, mailfrom, rcpttos, data
         pass
-    
-class smtp(HandlerBase):
 
+
+class smtp(HandlerBase):
     def __init__(self, sessions, options):
         super(smtp, self).__init__(sessions, options)
         self._options = options
@@ -203,6 +205,6 @@ class smtp(HandlerBase):
     def handle_session(self, gsocket, address):
         session_ = self.create_session(address, gsocket)
         local_map = {}
-        SMTPChannel(DummySMTPServer(), gsocket, address, session=session_, 
+        SMTPChannel(DummySMTPServer(), gsocket, address, session=session_,
                     map=local_map, opts=self._options)
         asyncore.loop(map=local_map)

@@ -1,4 +1,4 @@
-# Copyright (C) 2012 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2013 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,17 +13,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import sys
+import logging
+from argparse import ArgumentParser
+
 import gevent
 import gevent.monkey
-import sys
+
 from hive.hive import Hive, ConfigNotFound
-from argparse import ArgumentParser
+
 
 gevent.monkey.patch_all()
 
-import logging
-
 logger = logging.getLogger()
+
 
 def setuplogging(logfile, verbose):
     root_logger = logging.getLogger()
@@ -46,6 +49,7 @@ def setuplogging(logfile, verbose):
     file_log.setFormatter(formatter)
     root_logger.addHandler(file_log)
 
+
 if __name__ == '__main__':
     parser = ArgumentParser(description='Beeswarm Hive')
     parser.add_argument('--config', dest='config_file', default='hive.cfg')
@@ -53,7 +57,6 @@ if __name__ == '__main__':
     parser.add_argument('-v', action='store_true', default=False,
                         help='Output more verbose information to console. This will include usernames and passwords.')
     args = parser.parse_args()
-    print "end"
 
     try:
         setuplogging(args.logfile, args.v)

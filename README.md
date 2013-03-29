@@ -20,7 +20,7 @@ $>openssl rsa -in server.key -text -out server.key
 ### Sample usage
 
 ```
-$>sudo python run_hive.py
+$>sudo python run_hive.py -v
 2013-02-21 10:36:05,975 (root) Consumer created.
 2013-02-21 10:36:05,976 (root) Started pop3 capability listening on port 110
 2013-02-21 10:36:05,976 (root) Started pop3s capability listening on port 995

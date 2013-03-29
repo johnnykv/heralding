@@ -29,7 +29,7 @@ class Syslog(LoggerBase):
         self.options = {
             "enabled": conf_parser.get("log_syslog", "enabled"),
             "socket": conf_parser.get("log_syslog", "socket"),
-            }
+        }
 
         #Make sure we only have one logger
         try:
@@ -47,7 +47,7 @@ class Syslog(LoggerBase):
             username = attempt['username']
             password = attempt['password']
             message = 'Beeswarm-Hive: Unauthorized {0} logon attempt on port {1}. ' \
-                      'Source: {2}:{3}, Username: [{4}], Password: [{5}]. (Session Id: {6})'\
-                      .format(session.protocol, session.honey_port, session.attacker_ip,
-                              session.attacker_source_port, username, password, session.id)
+                      'Source: {2}:{3}, Username: [{4}], Password: [{5}]. (Session Id: {6})' \
+                .format(session.protocol, session.honey_port, session.attacker_ip,
+                        session.attacker_source_port, username, password, session.id)
             Syslog.logger.info(message)

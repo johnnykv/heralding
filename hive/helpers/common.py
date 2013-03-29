@@ -3,9 +3,10 @@ import os
 import pwd
 import grp
 import platform
+import _socket
 
 from hive.helpers.h_socket import HiveSocket
-import _socket
+
 
 logger = logging.getLogger(__name__)
 

@@ -17,13 +17,11 @@ import uuid
 import logging
 from datetime import datetime
 
-from hive.models.authenticator import Authenticator
 
 logger = logging.getLogger(__name__)
 
 
 class Session(object):
-
     authenticator = None
     default_timeout = 25
 

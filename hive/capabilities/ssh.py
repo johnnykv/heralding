@@ -25,7 +25,6 @@ logger = logging.getLogger(__name__)
 
 
 class ssh(HandlerBase):
-
     def __init__(self, sessions, options):
         logging.getLogger("telnetsrv.paramiko_ssh ").setLevel(logging.WARNING)
         logging.getLogger("paramiko").setLevel(logging.WARNING)

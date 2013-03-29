@@ -19,6 +19,7 @@ from hive.models.session import Session
 class HandlerBase(object):
     def __init__(self, sessions, options):
         """
+        Base class that all capabilities must inherit from.
 
         :param sessions: a dictionary of Session objects.
         :param options: a dictionary of configuration options.

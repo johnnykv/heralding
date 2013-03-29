@@ -14,10 +14,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import socket
+import logging
 
 from handlerbase import HandlerBase
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +37,6 @@ class pop3(HandlerBase):
         session.vdata['MAILSPOOL'] = {}
         session.vdata['deleted_index'] = []
 
-        #just because of readline... tsk tsk...
         fileobj = gsocket.makefile()
 
         self.send_message(session, gsocket, '+OK POP3 server ready')
@@ -47,7 +45,7 @@ class pop3(HandlerBase):
         while state != '' and session.connected:
             try:
                 raw_msg = fileobj.readline()
-            except socket.error, (value, message):
+            except socket.error:
                 session.connected = False
                 break
 

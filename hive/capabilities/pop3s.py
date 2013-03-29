@@ -14,10 +14,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import logging
+
 from handlerbase import HandlerBase
 from pop3 import pop3
 
-import logging
 
 logger = logging.getLogger(__name__)
 

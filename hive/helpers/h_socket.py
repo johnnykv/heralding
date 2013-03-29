@@ -1,6 +1,8 @@
-import gevent.socket
 from datetime import datetime
 from socket import *
+
+import gevent.socket
+
 
 class HiveSocket(gevent.socket.socket):
     """

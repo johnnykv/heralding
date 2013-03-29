@@ -14,10 +14,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from handlerbase import HandlerBase
-from http import http
-
 import logging
+
+from handlerbase import HandlerBase
+
+from http import http
 
 logger = logging.getLogger(__name__)
 

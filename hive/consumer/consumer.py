@@ -14,17 +14,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+from ConfigParser import ConfigParser
 
 import gevent
 import requests
 from requests.exceptions import Timeout, ConnectionError
-from ConfigParser import ConfigParser
-import logging
-import logging.handlers
 
 from loggers import loggerbase
 from loggers import hpfeed
 from loggers import syslog
+
 
 logger = logging.getLogger(__name__)
 

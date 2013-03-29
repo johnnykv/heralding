@@ -1,20 +1,17 @@
-import logging
-import SimpleHTTPServer
-import SocketServer
 import base64
-
-from handlerbase import HandlerBase
 from BaseHTTPServer import BaseHTTPRequestHandler
 
-class BeeHTTPHandler(BaseHTTPRequestHandler):
+from handlerbase import HandlerBase
 
+
+class BeeHTTPHandler(BaseHTTPRequestHandler):
     def __init__(self, request, client_address, server, httpsession, options):
 
         # Had to call parent initializer later, because the methods used
         # in BaseHTTPRequestHandler.__init__() call handle_one_request()
         # which calls the do_* methods here. If _banner, _session and _options
         # are not set, we get a bunch of errors (Undefined reference blah blah)
-        
+
         self._options = options
         if self._options.has_key('banner'):
             self._banner = self._options['banner']
@@ -22,7 +19,7 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
             self._banner = "Microsoft-IIS/5.0"
         self._session = httpsession
         BaseHTTPRequestHandler.__init__(self, request, client_address, server)
-        
+
     def do_HEAD(self):
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
@@ -62,6 +59,7 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         pass
 
+
 class http(HandlerBase):
     def __init__(self, sessions, options):
         super(http, self).__init__(sessions, options)
@@ -69,5 +67,5 @@ class http(HandlerBase):
 
     def handle_session(self, gsocket, address):
         session = self.create_session(address, gsocket)
-        handler = BeeHTTPHandler(gsocket, address, None, httpsession = session,
-                                    options = self._options)
+        handler = BeeHTTPHandler(gsocket, address, None, httpsession=session,
+                                 options=self._options)
