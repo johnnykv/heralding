@@ -18,6 +18,7 @@ import logging
 from telnetsrv.green import TelnetHandler
 from telnetsrv.paramiko_ssh import SSHHandler
 from paramiko import RSAKey
+from paramiko.ssh_exception import SSHException
 
 from handlerbase import HandlerBase
 
@@ -32,7 +33,12 @@ class ssh(HandlerBase):
 
     def handle_session(self, gsocket, address):
         session = self.create_session(address, gsocket)
-        ssh_wrapper(address, None, gsocket, session, self.options)
+        try:
+            ssh_wrapper(address, None, gsocket, session, self.options)
+        except SSHException as ex:
+            logger.debug('Unexpected end of ssh session: {0}. (1)'.format(ex, session.id))
+
+        session.connected = False
 
 
 class ssh_wrapper(SSHHandler):

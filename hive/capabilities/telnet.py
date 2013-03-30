@@ -14,6 +14,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+import socket
+import errno
 
 from telnetsrv.green import TelnetHandler
 
@@ -29,7 +31,12 @@ class telnet(HandlerBase):
     def handle_session(self, gsocket, address):
         telnet_wrapper.max_tries = int(self.options['max_attempts'])
         session = self.create_session(address, gsocket)
-        telnet_wrapper(address, None, gsocket, session)
+        try:
+            telnet_wrapper(address, None, gsocket, session)
+        except socket.error as err:
+            logger.debug('Unexpected end of telnet session: {0}, errno: {1}. (2)'.format(err, err.errno, session.id))
+
+        session.connected = False
 
 
 class telnet_wrapper(TelnetHandler):
