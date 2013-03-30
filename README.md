@@ -2,7 +2,7 @@
 A honeypot project which will try to estimate how, where and when credentials are intercepted and reused.
 The project consists of two independent parts:
 * Hive
- * Multiprotocol credentials catching honeypot, comes default with ssh, pop3, pop3s, ssh, ftp, http and telnet capability.
+ * Multiprotocol credentials catching honeypot, comes default with ssh, pop3, pop3s, ssh, smtp, ftp, http and telnet capability.
  * Extendable, both in terms of new protocols but can also be extended to provide shell-like features like Kippo.
  * Distributes information using a variety of loggers (syslog, file logging, hpfeeds, etc).
 * Feeder (currently under initial development)
@@ -38,17 +38,7 @@ $>sudo python run_hive.py -v
 ## Feeder
 Still under development.
 
-# Concept for deployment
-
-## General
-* One Hive operating with static ip.
- * Transmits login attempts on HPFeed channel beeswarm.hive
-* Several feeders interacting with Hive services.
- * Some connect directly, other using various proxies (TOR, VPN providers, etc)
- * Transmits activity on HPFeed channel beeswarm.feeder
-* [Mnemosyne](https://github.com/johnnykv/mnemosyne) correlates data on beeswarm.hive and beeswarm.feeder to identify malicious usage.
-
-## Deployment diagram
+# Deployment diagram
                                   (honeybees)
     +-----------+                   Traffic
     |   Feeder  |+--------------------------------------------------+
@@ -58,7 +48,7 @@ Still under development.
                             |                                       |
                             |                                       v
                     +-------+------+     Reuse credentials    +------------+
-                    |  Evil dudes  |+------------------------>|    Hive    |+---------> HPFeeds
+                    |  Evil dudes  |+------------------------>|    Hive    |
                     +-------+------+                          +------------+
                             |                                  (Static ip)
                             |Operates exit node                     ^
