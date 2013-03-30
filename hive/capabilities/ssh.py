@@ -72,3 +72,23 @@ class ssh_wrapper(SSHHandler):
 
     def finish(self):
         self.session.connected = False
+
+    def setup(self):
+
+        self.transport.load_server_moduli()
+
+        self.transport.add_server_key(self.host_key)
+
+        self.transport.start_server(server=self)
+
+        while True:
+            channel = self.transport.accept(20)
+            if channel is None:
+                # check to see if any thread is running
+                any_running = False
+                for c, thread in self.channels.items():
+                    if thread.is_alive():
+                        any_running = True
+                        break
+                if not any_running:
+                    break
