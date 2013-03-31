@@ -34,7 +34,7 @@ class telnet(HandlerBase):
         try:
             telnet_wrapper(address, None, gsocket, session)
         except socket.error as err:
-            logger.debug('Unexpected end of telnet session: {0}, errno: {1}. (2)'.format(err, err.errno, session.id))
+            logger.debug('Unexpected end of telnet session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
 
         session.connected = False
 
