@@ -13,9 +13,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys
 import logging
 from argparse import ArgumentParser
+import sys
 
 import gevent
 import gevent.monkey
@@ -29,6 +29,7 @@ logger = logging.getLogger()
 
 
 def setuplogging(logfile, verbose):
+
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.DEBUG)
 
@@ -40,6 +41,7 @@ def setuplogging(logfile, verbose):
     else:
         loglevel = logging.INFO
 
+    console_log.addFilter(LogFilter())
     console_log.setLevel(loglevel)
     console_log.setFormatter(formatter)
     root_logger.addHandler(console_log)
@@ -49,6 +51,13 @@ def setuplogging(logfile, verbose):
     file_log.setFormatter(formatter)
     root_logger.addHandler(file_log)
 
+
+class LogFilter(logging.Filter):
+    def filter(self, rec):
+        if rec.name == 'paramiko.transport':
+            return False
+        else:
+            return True
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Beeswarm Hive')
