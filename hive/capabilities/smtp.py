@@ -1,4 +1,23 @@
+# Copyright (C) 2013 Aniket Panse <contact@aniketpanse.in>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Parts of this code are from secure-smtpd (https://github.com/bcoe/secure-smtpd)
+
 import base64
+import time
+import random
 import smtpd
 import asyncore
 import asynchat
@@ -31,10 +50,12 @@ class SMTPChannel(smtpd.SMTPChannel):
         self.login_pass_authenticating = False
         self.login_uname_authenticating = False
         self.plain_authenticating = False
+        self.cram_authenticating = False
         self.authenticated = False
 
         self.username = None
         self.password = None
+        self.digest = None
 
         self.session = session
         self.options = opts
@@ -69,13 +90,27 @@ class SMTPChannel(smtpd.SMTPChannel):
 
     def smtp_AUTH(self, arg):
 
-        if self.login_uname_authenticating:
+        if (self.plain_authenticating and self.login_pass_authenticating and
+            self.cram_authenticating):
+            self.push('503 Bad sequence of commands')
+            self.close_quit()
+        
+        if self.cram_authenticating:
+            self.cram_authenticating = False
+            cred = base64.b64decode(arg)
+            self.username, self.digest = cred.split()
+            #TODO: Add digest support to Session's try_login()
+            self.session.try_login(self.username, self.digest)
+            self.push('535 authentication failed')
+            self.close_quit()
+            
+        elif self.login_uname_authenticating:
             self.login_uname_authenticating = False
             self.username = base64.b64decode(arg)
             self.login_pass_authenticating = True
             return
 
-        if self.login_pass_authenticating:
+        elif self.login_pass_authenticating:
             self.login_pass_authenticating = False
             self.password = base64.b64decode(arg)
             self.session.try_login(self.username, self.password)
@@ -116,7 +151,14 @@ class SMTPChannel(smtpd.SMTPChannel):
                 self.push('334 ' + base64.b64encode('Username:'))
                 self.login_uname_authenticating = True
                 return
-
+        
+        elif 'CRAM-MD5' in arg:
+            self.cram_authenticating = True
+            r = random.randint(5000, 20000)
+            t = int(time.time())
+            challenge = "<"+str(r)+"."+str(t)+"@"+self.__fqdn+">"
+            self.push("334 " + base64.b64encode(challenge))
+            return
 
     # This code is taken directly from the underlying smtpd.SMTPChannel
     # support for AUTH is added.
@@ -136,7 +178,8 @@ class SMTPChannel(smtpd.SMTPChannel):
 
             if (self.login_uname_authenticating or
                     self.login_pass_authenticating or
-                    self.plain_authenticating):
+                    self.plain_authenticating or
+                    self.cram_authenticating):
                 # If we are in an authenticating state, call the
                 # method smtp_AUTH.
                 arg = line.strip()
