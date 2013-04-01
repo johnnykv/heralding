@@ -1,12 +1,17 @@
 # Beeswarm [![Build Status](https://travis-ci.org/honeynet/beeswarm.png?branch=master)](https://travis-ci.org/honeynet/beeswarm)
 A honeypot project which will try to estimate how, where and when credentials are intercepted and reused.
-The project consists of two independent parts:
+The project will eventually consist of three parts:
 * Hive
  * Multiprotocol credentials catching honeypot, comes default with ssh, pop3, pop3s, ssh, smtp, ftp, http and telnet capability.
- * Extendable, both in terms of new protocols but can also be extended to provide shell-like features like Kippo.
- * Distributes information using a variety of loggers (syslog, file logging, hpfeeds, etc).
-* Feeder (currently under initial development)
+ * Extendable, both in terms of new protocols but can also be extended to provide shell-like features.
+ * Supports a variety of loggers (syslog, file logging, hpfeeds, etc).
+ * Can be deployed independently or as part of the full beeswarm setup.
+* Feeder
  * Simulates a realistic environment using honeybees.
+* Correlator
+ * Processes log data from Hive and Feeder.
+ * Reports malicious activity.
+ * Generates configuration and crypto keys for a full beeswarm setup. Potentially Correlator could also generate bootable Hive and Feeder VM's.
 
 
 ## Hive
@@ -39,26 +44,33 @@ $>sudo python run_hive.py -v
 Still under development.
 
 # Deployment diagram
-                                  (honeybees)
-    +-----------+                   Traffic
-    |   Feeder  |+--------------------------------------------------+
-    +-----------+           ^                                       |
-    (Static IP)             |                                       |
-                            |Intercept creds.                       |
-                            |                                       |
-                            |                                       v
-                    +-------+------+     Reuse credentials    +------------+
-                    |  Evil dudes  |+------------------------>|    Hive    |
-                    +-------+------+                          +------------+
-                            |                                  (Static ip)
-                            |Operates exit node                     ^
-                            |(and intercepting creds)               |
-                            |                                       |
-                            v                                       |
-    +-----------+    +-------------+                                |
-    |   Feeder  |+-->|TOR Exit Node|+-------------------------------+
-    +-----------+    +-------------+               Traffic
-     (Using TOR)                                 (honeybees)
+
+               +- - - - - - - - - - - - - L O G  D A T A- - - - - - - - - - - - - >>>+------------+
+               |                                                                     | Correlator |
+                                                                                     +------------+
+               |                        (honeybees)                                        ^   ^
+          +----+------+                   Traffic                                              |
+          |   Feeder  |+--------------------------------------------------+                |
+          +-----------+           ^                                       |                    |
+          (Static IP)             |                                       |         L O G  |
+                                  |Intercept creds.                       |         D A T A    |
+                                  |                                       |                |
+                                  |                                       v                    |
+                          +-------+------+     Reuse credentials    +------------+         |
+                          |  Evil dudes  |+------------------------>|    Hive    |+ - - - -+   |
+                          +-------+------+                          +------------+
+                                  |                                  (Static ip)               |
+                                  |Operates exit node                     ^
+                                  |(and intercepting creds)               |                    |
+                                  |                                       |
+                                  v                                       |                    |
+          +-----------+    +-------------+                                |
+          |   Feeder  |+-->|TOR Exit Node|+-------------------------------+                    |
+          +-----+-----+    +-------------+               Traffic
+                |                                      (honeybees)                             |
+
+                |                                                                              |
+                +- - - - - - - - - - - - - L O G  D A T A- - - - - - - - - - - - - - - - - - - -
 
 ## Data access
 The Hive part of the system is operational and are currently collecting data. Members of the [The Honynet Project](http://www.honeynet.org/)
