@@ -13,6 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# Parts of this code are from secure-smtpd (https://github.com/bcoe/secure-smtpd)
+
 import base64
 import time
 import random
