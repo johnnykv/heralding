@@ -49,7 +49,8 @@ class Consumer:
 
     def start(self):
         self.enabled = True
-        active_loggers = self.get_loggers()
+
+        active_loggers = self.start_loggers(self.get_enabled_loggers())
 
         while self.enabled:
             for session_id in self.sessions.keys():
@@ -65,12 +66,23 @@ class Consumer:
                                                                                  session.attacker_ip,
                                                                                  session.id))
             gevent.sleep(1)
+        self.stop_loggers(active_loggers)
 
     def stop(self):
         self.enabled = False
 
-    def get_loggers(self):
-        loggers = []
+    def stop_loggers(self, loggers):
+        """Execute stop method in all logging classes which implement it."""
+        for l in loggers:
+            stop_method = getattr(l, 'stop', None)
+            if callable(stop_method):
+                stop_method()
+
+    def get_enabled_loggers(self):
+        """Extracts names of enabled loggers from configuration file.
+
+        :return: a list of enabled loggers (strings)
+        """
         parser = ConfigParser()
         parser.read(self.config)
         enabled_loggers = []
@@ -80,10 +92,18 @@ class Consumer:
                 #only interested in logging configurations
                 if type == 'log' and parser.getboolean(l, 'enabled'):
                     enabled_loggers.append(name)
+        return enabled_loggers
 
+    def start_loggers(self, enabled_logger_classes):
+        """Starts loggers.
+
+        :param enabled_logger_classes: list of names (string) of loggers to activate.
+        :return: a list of instantiated loggers
+        """
+        loggers = []
         for l in loggerbase.LoggerBase.__subclasses__():
             logger_name = l.__name__.lower()
-            if logger_name in enabled_loggers:
+            if logger_name in enabled_logger_classes:
                 logger.debug('{0} consumer started.'.format(logger_name.title()))
                 hive_logger = l()
                 loggers.append(hive_logger)

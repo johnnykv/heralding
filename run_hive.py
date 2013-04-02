@@ -19,6 +19,7 @@ import sys
 
 import gevent
 import gevent.monkey
+from gevent import Greenlet
 
 from hive.hive import Hive, ConfigNotFound
 
@@ -69,12 +70,16 @@ if __name__ == '__main__':
 
     try:
         setuplogging(args.logfile, args.v)
-        main_hive = Hive('hive.cfg')
+        the_hive = Hive('hive.cfg')
     except ConfigNotFound as ex:
         logger.error(ex)
         sys.exit(ex)
 
+    hive_greenlet = Greenlet.spawn(the_hive.start_serving)
+
     try:
-        main_hive.start_serving()
+        gevent.joinall([hive_greenlet])
     except KeyboardInterrupt as ex:
-        main_hive.stop_serving()
+        the_hive.stop_serving()
+
+    gevent.joinall([hive_greenlet], 5)

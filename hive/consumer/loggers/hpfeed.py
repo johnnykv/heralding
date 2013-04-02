@@ -4,6 +4,10 @@ import hashlib
 import logging
 import json
 import uuid
+import time
+from gevent import Greenlet
+
+
 from datetime import datetime
 from ConfigParser import ConfigParser
 from loggerbase import LoggerBase
@@ -74,8 +78,9 @@ class HPFeed(LoggerBase):
         self.secret = conf_parser.get("log_hpfeed", "secret").encode('latin1')
         self.chan = conf_parser.get("log_hpfeed", "chan").encode('latin1')
         self.ident = conf_parser.get("log_hpfeed", "ident").encode('latin1').strip()
+        self.enabled = True
 
-        self.connect()
+        Greenlet.spawn(self._start)
 
     def broker_read(self):
         self.unpacker = FeedUnpack()
@@ -90,25 +95,30 @@ class HPFeed(LoggerBase):
                     self.socket.send(msgauth(rand, self.ident, self.secret))
                 elif opcode == OP_ERROR:
                     logger.error("Error from server: {0}".format(data))
-            try:
-                data = self.socket.recv(1024)
-            except KeyboardInterrupt:
-                break
-            except socket.timeout:
-                break
+            data = self.socket.recv(1024)
 
-    def connect(self):
-        logger.info("Connecting to feed broker at {0}:{1}".format(self.host, self.port))
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.settimeout(3)
-        try:
-            self.socket.connect((self.host, self.port))
-        except:
-            logger.exception("Could not connect to hpfeed broker.")
-            self.socket.close()
-        else:
-            logger.info("Connected to hpfeed broker.")
-            self.broker_read()
+    def stop(self):
+        self.enabled = False
+
+    def _start(self):
+        while self.enabled:
+            try:
+                logger.info("Connecting to feed broker at {0}:{1}".format(self.host, self.port))
+                self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.socket.connect((self.host, self.port))
+                self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+            except Exception as ex:
+                logger.warning('Could not connect to hpfeed broker: {0}'.format(ex))
+                self.socket.close()
+                time.sleep(5)
+            else:
+                logger.info("Connected to hpfeed broker.")
+                try:
+                    self.broker_read()
+                except Exception as ex:
+                    logger.warning('Connection lost to hpfeed broker: {0}'.format(ex))
+
+        logger.info("HPFeeds logger stopped.")
 
     def log(self, session):
         data = json.dumps(session.to_dict(), default=self.json_default)
@@ -116,7 +126,7 @@ class HPFeed(LoggerBase):
             self.socket.send(msgpublish(self.ident, self.chan, data))
         except Exception as e:
             logger.exception("Connection error: {0}".format(e))
-            self.connect()
+            self._start()
             self.socket.send(msgpublish(self.ident, self.chan, data))
 
     def json_default(self, obj):

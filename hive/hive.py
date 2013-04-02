@@ -54,7 +54,6 @@ class Hive(object):
 
         self.config.read(config_file)
 
-
         #check cert and key
         if not (os.path.isfile(self.key) and os.path.isfile(self.cert)):
             gen_cmd = "openssl req -new -newkey rsa:1024 -days 365 -nodes -x509 -keyout server.key -out server.crt"
@@ -80,8 +79,8 @@ class Hive(object):
         self.fetch_ip = self.config.getboolean('public_ip', 'fetch_public_ip')
 
         #greenlet to consume the provided sessions
-        self.consumer_greenlet = consumer.Consumer(self.sessions, public_ip=self.public_ip, fetch_public_ip=self.fetch_ip)
-        Greenlet.spawn(self.consumer_greenlet.start)
+        self.session_consumer = consumer.Consumer(self.sessions, public_ip=self.public_ip, fetch_public_ip=self.fetch_ip)
+        Greenlet.spawn(self.session_consumer.start)
 
         #protocol handlers
         for c in handlerbase.HandlerBase.__subclasses__():
@@ -128,7 +127,10 @@ class Hive(object):
         for s in self.servers:
             s.stop()
 
-        self.consumer_greenlet.stop()
+        for g in self.server_greenlets:
+            g.kill()
+
+        self.session_consumer.stop()
         logger.info('All servers stopped.')
 
 
