@@ -80,6 +80,7 @@ class HPFeed(LoggerBase):
         self.ident = conf_parser.get("log_hpfeed", "ident").encode('latin1').strip()
         self.enabled = True
 
+        #Used for authentication and handling of socket errors
         Greenlet.spawn(self._start)
 
     def broker_read(self):
@@ -99,8 +100,10 @@ class HPFeed(LoggerBase):
 
     def stop(self):
         self.enabled = False
+        self.socket.close()
 
     def _start(self):
+        """Connect and reconnect to the hpfeeds broker. (blocks)"""
         while self.enabled:
             try:
                 logger.info("Connecting to feed broker at {0}:{1}".format(self.host, self.port))
