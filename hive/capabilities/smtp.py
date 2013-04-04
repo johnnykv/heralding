@@ -85,7 +85,7 @@ class SMTPChannel(smtpd.SMTPChannel):
             self.push('503 Duplicate HELO/EHLO')
         else:
             self.push('250-%s Hello %s' % (self.banner, arg))
-            self.push('250-AUTH PLAIN LOGIN')
+            self.push('250-AUTH PLAIN LOGIN CRAM-MD5')
             self.push('250 EHLO')
 
     def smtp_AUTH(self, arg):
