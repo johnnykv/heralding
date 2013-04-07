@@ -35,7 +35,7 @@ class ssh(HandlerBase):
         session = self.create_session(address, gsocket)
         try:
             ssh_wrapper(address, None, gsocket, session, self.options)
-        except SSHException as ex:
+        except (SSHException, EOFError) as ex:
             logger.debug('Unexpected end of ssh session: {0}. ({1})'.format(ex, session.id))
 
         session.connected = False
