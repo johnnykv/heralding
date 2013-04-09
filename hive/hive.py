@@ -29,18 +29,9 @@ from models.authenticator import Authenticator
 from helpers.streamserver import HiveStreamServer
 from helpers.common import drop_privileges, list2dict, create_socket
 
-#TODO: Autodetect capabilities
-from capabilities import pop3
-from capabilities import pop3s
-from capabilities import telnet
-from capabilities import ssh
-from capabilities import http
-from capabilities import https
-from capabilities import ftp
-from capabilities import smtp
+from capabilities import *
 
 logger = logging.getLogger(__name__)
-
 
 class Hive(object):
     def __init__(self, config_file='hive.cfg', key='server.key', cert='server.crt'):
