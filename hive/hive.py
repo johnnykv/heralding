@@ -59,6 +59,10 @@ class Hive(object):
 
         #inject authentication mechanism
         Session.authenticator = Authenticator()
+
+        #spawning time checker
+        if self.config.getboolean('timecheck', 'Enabled'):
+            Greenlet.spawn(self.checktime)
         
     #function to check the time offset
     def checktime(self):
@@ -127,11 +131,7 @@ class Hive(object):
                 logger.info('Started {0} capability listening on port {1}'.format(c.__name__, port))
 
         drop_privileges()
-        
-        #spawning time checker
-        if self.config.getboolean('timecheck', 'Enabled'):
-            Greenlet.spawn(self.checktime)
-        
+
         logger.info("Hive running - see log file (hive.log) for attack events.")
         gevent.joinall(self.server_greenlets)
 

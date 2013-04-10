@@ -22,6 +22,7 @@ import gevent.monkey
 from gevent import Greenlet
 
 from hive.hive import Hive, ConfigNotFound
+from ConfigParser import NoSectionError, NoOptionError
 
 
 gevent.monkey.patch_all()
@@ -73,6 +74,10 @@ if __name__ == '__main__':
         the_hive = Hive('hive.cfg')
     except ConfigNotFound as ex:
         logger.error(ex)
+        sys.exit(ex)
+    except (NoSectionError, NoOptionError) as ex:
+        logger.error('Error while parsing config file. Please check hive.cfg.dist to see if any '
+                     'options has changed since last update. ({0})'.format(ex))
         sys.exit(ex)
 
     hive_greenlet = Greenlet.spawn(the_hive.start_serving)
