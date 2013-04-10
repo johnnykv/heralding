@@ -19,14 +19,6 @@ import random
 from handlerbase import HandlerBase
 
 
-def get_random_challenge():
-    challenge = []
-    for i in range(0, 16):
-        temp = random.randint(0, 255)
-        challenge.append(chr(temp))
-    return "".join(challenge)
-
-
 class BeeVNCHandler(SocketServer.StreamRequestHandler):
 
     """
@@ -78,3 +70,11 @@ class vnc(HandlerBase):
     def handle_session(self, gsocket, address):
         session = self.create_session(address, gsocket)
         handler = BeeVNCHandler(gsocket, address, None, session)
+
+
+def get_random_challenge():
+    challenge = []
+    for i in range(0, 16):
+        temp = random.randint(0, 255)
+        challenge.append(chr(temp))
+    return "".join(challenge)
