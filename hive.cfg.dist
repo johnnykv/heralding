@@ -64,6 +64,10 @@ enabled = True
 banner = Microsoft ESMTP MAIL service ready
 port = 25
 
+[cap_vnc]
+enabled = True
+port = 5900
+
 [timecheck]
 enabled = False
 poll = 5
