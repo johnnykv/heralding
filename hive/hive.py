@@ -18,6 +18,8 @@ import ConfigParser
 import os
 import sys
 import _socket
+import ntplib 
+from time import ctime
 
 import gevent
 from gevent import Greenlet
@@ -57,6 +59,22 @@ class Hive(object):
 
         #inject authentication mechanism
         Session.authenticator = Authenticator()
+        
+        #function to check the time offset 
+    def fun_checktime(self):
+    	if self.config.has_section('timecheck'):
+            if self.config.getboolean('timecheck', 'Enabled'):
+                Poll = self.config.getint('timecheck', 'poll')
+                Ntp_pool = self.config.get('timecheck', 'ntp_pool')
+                while True:
+		            gevent.sleep(Poll*60*60)
+		            clnt = ntplib.NTPClient()
+		            response = clnt.request(Ntp_pool, version = 3)
+		            foo = response.offset
+		            if abs(foo) >= 5 :
+			            logger.error('Timings found to be far off.')
+			            sys.exit(1)
+
 
     def start_serving(self):
         """ Starts services. """
@@ -111,8 +129,16 @@ class Hive(object):
                 logger.info('Started {0} capability listening on port {1}'.format(c.__name__, port))
 
         drop_privileges()
+        
+        #function call for fun_checktime
+    	thread_new = Greenlet.spawn(fun_checktime,self)
+    	#appending newly created thread into list 
+    	self.server_greenlets.append(thread_new)
+
+    	
         logger.info("Hive running - see log file (hive.log) for attack events.")
         gevent.joinall(self.server_greenlets)
+
 
     def stop_serving(self):
         """Stops services"""
