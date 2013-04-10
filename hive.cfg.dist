@@ -63,3 +63,8 @@ banner = Microsoft-IIS/5.0
 enabled = True
 banner = Microsoft ESMTP MAIL service ready
 port = 25
+
+[cap_timecheck]
+enabled = False
+poll = 5
+ntp_pool = pool.ntp.org
