@@ -18,6 +18,8 @@ import ConfigParser
 import os
 import sys
 import _socket
+import ntplib 
+from time import ctime
 
 import gevent
 from gevent import Greenlet
@@ -113,6 +115,21 @@ class Hive(object):
         drop_privileges()
         logger.info("Hive running - see log file (hive.log) for attack events.")
         gevent.joinall(self.server_greenlets)
+        
+        cap_name='cap_timecheck'
+        
+        if self.config.has_section(cap_name):
+            if self.config.getboolean(cap_name, 'Enabled'):
+                Poll = self.config.getint(cap_name, 'poll')
+                Ntp_pool = self.config.get(cap_name, 'ntp_pool')
+                while True:
+		            gevent.sleep(Poll*60*60)
+		            clnt = ntplib.NTPClient()
+		            response = clnt.request(Ntp_pool, version=3)
+		            _offset=response.offset
+		            if abs(_offset) >= 5 :
+			            logger.error('Timings found to be far off.')
+			            sys.exit(1)
 
     def stop_serving(self):
         """Stops services"""
