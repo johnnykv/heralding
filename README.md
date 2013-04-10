@@ -2,7 +2,7 @@
 A honeypot project which will try to estimate how, where and when credentials are intercepted and reused.
 The project will eventually consist of three parts:
 * Hive
- * Multiprotocol credentials catching honeypot, comes default with ssh, pop3, pop3s, ssh, smtp, ftp, http and telnet capability.
+ * Multiprotocol credentials catching honeypot, comes default with ssh, vnc, pop3, pop3s, ssh, smtp, ftp, http and telnet capability.
  * Extendable, both in terms of new protocols but can also be extended to provide shell-like features.
  * Supports a variety of loggers (syslog, file logging, hpfeeds, etc).
  * Can be deployed independently or as part of the full beeswarm setup.
@@ -32,6 +32,7 @@ $>sudo python run_hive.py -v
 2013-02-21 10:36:05,976 (root) Started telnet capability listening on port 23
 2013-02-21 10:36:05,976 (root) Started ssh capability listening on port 2222
 2013-02-21 10:36:05,976 (root) Started ftp capability listening on port 21
+2013-02-21 10:36:05,976 (root) Started vnc capability listening on port 5900
 2013-02-21 10:36:05,980 (root) Privileges dropped, running as nobody/nobody.
 2013-02-21 10:36:05,982 (hive.consumer.loggers.hpfeeds) Connecting to feed broker at hpfeeds.honeycloud.net:10000
 2013-02-21 10:36:06,012 (hive.consumer.loggers.hpfeeds) Connected to hpfeed broker.
