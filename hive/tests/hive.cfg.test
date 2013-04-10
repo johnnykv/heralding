@@ -49,3 +49,8 @@ max_attempts = 3
 enabled = True
 port = 0
 key = 'server.key'
+
+[timecheck]
+enabled = False
+poll = 5
+ntp_pool = pool.ntp.org
