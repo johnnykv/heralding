@@ -44,7 +44,7 @@ class SMTPChannel(smtpd.SMTPChannel):
         # Now we set the initflag, so that push() will work again.
         # And we push.
         self._initflag = True
-        self.push("220 %s" % (self.banner))
+        self.push("220 %s" % self.banner)
 
         # States
         self.login_pass_authenticating = False
@@ -91,7 +91,8 @@ class SMTPChannel(smtpd.SMTPChannel):
     def smtp_AUTH(self, arg):
 
         if (self.plain_authenticating and self.login_pass_authenticating and
-            self.cram_authenticating):
+                self.cram_authenticating):
+
             self.push('503 Bad sequence of commands')
             self.close_quit()
         
