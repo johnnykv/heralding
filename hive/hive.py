@@ -62,18 +62,18 @@ class Hive(object):
         
         #function to check the time offset 
     def fun_checktime(self):
-    	if self.config.has_section('timecheck'):
+        if self.config.has_section('timecheck'):
             if self.config.getboolean('timecheck', 'Enabled'):
                 Poll = self.config.getint('timecheck', 'poll')
                 Ntp_pool = self.config.get('timecheck', 'ntp_pool')
                 while True:
-		            gevent.sleep(Poll*60*60)
-		            clnt = ntplib.NTPClient()
-		            response = clnt.request(Ntp_pool, version = 3)
-		            foo = response.offset
-		            if abs(foo) >= 5 :
-			            logger.error('Timings found to be far off.')
-			            sys.exit(1)
+                    gevent.sleep(Poll*60*60)
+                    clnt = ntplib.NTPClient()
+                    response = clnt.request(Ntp_pool, version = 3)
+                    foo = response.offset
+                    if abs(foo) >= 5 :
+                        logger.error('Timings found to be far off.')
+                        sys.exit(1)
 
 
     def start_serving(self):
@@ -131,11 +131,11 @@ class Hive(object):
         drop_privileges()
         
         #function call for fun_checktime
-    	thread_new = Greenlet.spawn(fun_checktime,self)
-    	#appending newly created thread into list 
-    	self.server_greenlets.append(thread_new)
+        thread_new = Greenlet.spawn(self.fun_checktime)
+        #appending newly created thread into list 
+        self.server_greenlets.append(thread_new)
 
-    	
+        
         logger.info("Hive running - see log file (hive.log) for attack events.")
         gevent.joinall(self.server_greenlets)
 
