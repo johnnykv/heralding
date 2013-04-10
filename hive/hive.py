@@ -29,7 +29,8 @@ from models.authenticator import Authenticator
 from helpers.streamserver import HiveStreamServer
 from helpers.common import drop_privileges, list2dict, create_socket
 
-from capabilities import *
+# See capabilities/__init__.py to see how the auto detect works
+import capabilities
 
 logger = logging.getLogger(__name__)
 
