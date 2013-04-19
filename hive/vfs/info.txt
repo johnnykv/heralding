@@ -1,3 +1,0 @@
-This file is useless because it was added only so that git would
-track the vfs folder. It will probably be replaced by more useful
-files in a few days.
