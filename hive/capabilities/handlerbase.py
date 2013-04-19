@@ -29,7 +29,6 @@ class HandlerBase(object):
         self.options = options
         #virtual file system shared by all capabilities
         self.vfsystem = OSFS('./hive/data/vfs')
-        print "------------->", self.vfsystem
         #serviceport
         self.port = int(options['port'])
 
