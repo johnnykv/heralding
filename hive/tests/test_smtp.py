@@ -22,13 +22,18 @@ from gevent.server import StreamServer
 from hive.capabilities import smtp
 gevent.monkey.patch_all()
 
-
-
 import unittest
+from hive.models.authenticator import Authenticator
+from hive.models.session import Session
+
+authenticator = Authenticator()
+Session.authenticator = authenticator
+
 
 class SMTP_Test(unittest.TestCase):
     
     def test_connection(self):
+
         sessions = {}
         cap = smtp.smtp(sessions, {'enabled': 'True', 'port': 2525, 'banner': 'Test'})
         socket = create_socket(("0.0.0.0", 2525))
@@ -58,4 +63,5 @@ class SMTP_Test(unittest.TestCase):
         self.assertEqual(code, 535)
             
 if __name__ == '__main__':
+    print "SMSMASMAS"
     unittest.main()

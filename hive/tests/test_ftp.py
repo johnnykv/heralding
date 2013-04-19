@@ -18,69 +18,41 @@ import gevent.monkey
 gevent.monkey.patch_all()
 
 import ftplib
+import unittest
+
+
 from ftplib import FTP
 from gevent.server import StreamServer
-import unittest
+from hive.helpers.common import create_socket
 from hive.capabilities import ftp
-from hive.models.session import Session
 from hive.models.authenticator import Authenticator
+from hive.models.session import Session
 
 
 class ftp_Tests(unittest.TestCase):
-    def test_initial_session(self):
-        """Tests if the basic parts of the session is filled correctly"""
-
-        sessions = {}
-
-        #provide valid login/pass to authenticator
-        authenticator = Authenticator({'james': 'bond'})
-        Session.authenticator = authenticator
-
-        #sut = pop3.pop3(sessions, 110)
-        sut = ftp.ftp(sessions, {'port': 21, 'max_attempts': 3, 'banner':'Test Banner', 'enabled':'True'})
-
-        #dont really care about the socket at this point (None...)
-        #TODO: mock the socket!
-        try:
-            sut.handle_session(None, ['192.168.1.200', 12000])
-        except AttributeError:
-            #because socket is not set
-            pass
-
-        #expect a single entry in the sessions dict
-        self.assertEqual(1, len(sessions))
-        session = sessions.values()[0]
-        self.assertEqual(21, session.honey_port)
-        self.assertEqual('ftp', session.protocol)
-        self.assertEquals('192.168.1.200', session.attacker_ip)
-        self.assertEqual(12000, session.attacker_source_port)
 
     def test_login(self):
         """Testing different login combinations"""
 
-        #provide valid login/pass to authenticator
-        #current implementation does allow actual logon.
-        authenticator = Authenticator({})
+        authenticator = Authenticator()
         Session.authenticator = authenticator
-
         sessions = {}
-        sut = ftp.ftp(sessions, {'port': 21, 'max_attempts': 3, 'banner':'Test Banner', 'enabled':'True'})
-
-        server = StreamServer(('127.0.0.1', 0), sut.handle_session)
-        server.start()
+        cap = ftp.ftp(sessions, {'enabled': 'True', 'port': 2122, 'banner': 'Test Banner', 'max_attempts': 3})
+        socket = create_socket(("0.0.0.0", 2122))
+        srv = StreamServer(socket, cap.handle_session)
+        srv.start()
 
         ftp_client = FTP()
-        ftp_client.connect('127.0.0.1', server.server_port, 1)
+        ftp_client.connect('127.0.0.1', 2122, 1)
 
         #expect perm exception
         try:
             ftp_client.login('james', 'bond')
             response = ftp_client.getresp()
+            print response
         except ftplib.error_perm:
             pass
-
-        server.stop()
-
+        srv.stop()
 
 if __name__ == '__main__':
     unittest.main()
