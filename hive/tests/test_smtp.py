@@ -63,5 +63,4 @@ class SMTP_Test(unittest.TestCase):
         self.assertEqual(code, 535)
             
 if __name__ == '__main__':
-    print "SMSMASMAS"
     unittest.main()

@@ -49,7 +49,6 @@ class ftp_Tests(unittest.TestCase):
         try:
             ftp_client.login('james', 'bond')
             response = ftp_client.getresp()
-            print response
         except ftplib.error_perm:
             pass
         srv.stop()
