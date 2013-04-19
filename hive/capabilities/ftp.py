@@ -21,7 +21,7 @@ from handlerbase import HandlerBase
 
 logger = logging.getLogger(__name__)
 
-TERMINATOR = "\r\n"
+TERMINATOR = '\r\n'
 
 
 class BeeFTPHandler(object):
