@@ -24,12 +24,19 @@ from hive.capabilities import http
 
 import unittest
 import httplib
+from hive.models.authenticator import Authenticator
+from hive.models.session import Session
+
+authenticator = Authenticator()
+Session.authenticator = authenticator
+
 
 class HTTP_Test(unittest.TestCase):
     def test_connection(self):
         """ Tests if the capability is up, and sending
             HTTP 401 (Unauthorized) headers.
         """
+        
         sessions = {}
         cap = http.http(sessions, {'enabled': 'True', 'port': 8080})
         socket = create_socket(("0.0.0.0", 8080))

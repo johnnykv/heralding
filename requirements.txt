@@ -1,6 +1,7 @@
 gevent
-pyftpdlib==0.7.0
 requests
 telnetsrv
 paramiko
 ntplib
+fs
+pysendfile

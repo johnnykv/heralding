@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from fs.osfs import OSFS
 from hive.models.session import Session
 
 
@@ -26,6 +27,9 @@ class HandlerBase(object):
         """
         self.sessions = sessions
         self.options = options
+        #virtual file system shared by all capabilities
+        self.vfsystem = OSFS('./hive/data/vfs')
+        print "------------->", self.vfsystem
         #serviceport
         self.port = int(options['port'])
 
