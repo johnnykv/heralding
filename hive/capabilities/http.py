@@ -14,14 +14,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import base64
-from BaseHTTPServer import BaseHTTPRequestHandler
 
+from BaseHTTPServer import BaseHTTPRequestHandler
+from sendfile import sendfile
 from handlerbase import HandlerBase
 
 
 class BeeHTTPHandler(BaseHTTPRequestHandler):
-    def __init__(self, request, client_address, server, httpsession, options):
+    def __init__(self, request, client_address, vfs, server, httpsession, options):
 
+        self.vfs = vfs
         # Had to call parent initializer later, because the methods used
         # in BaseHTTPRequestHandler.__init__() call handle_one_request()
         # which calls the do_* methods here. If _banner, _session and _options
@@ -31,7 +33,7 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
         if 'banner' in self._options:
                 self._banner = self._options['banner']
         else:
-            self._banner = "Microsoft-IIS/5.0"
+            self._banner = 'Microsoft-IIS/5.0'
         self._session = httpsession
         BaseHTTPRequestHandler.__init__(self, request, client_address, server)
 
@@ -49,23 +51,25 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.headers.getheader('Authorization') is None:
             self.do_AUTHHEAD()
-            self.wfile.write('<html><b>Unauthorized</b></html>\r\n')
-            pass
-
-        # Test Username/password == test/test
-        elif self.headers.getheader('Authorization') == 'Basic dGVzdDp0ZXN00':
-            self.do_HEAD()
-            self.wfile.write('<html><b>Authenticated!</b></html>\r\n')
-            pass
+            self.send_html('please_auth.html')
         else:
             hdr = self.headers.getheader('Authorization')
             _, enc_uname_pwd = hdr.split(' ')
             dec_uname_pwd = base64.b64decode(enc_uname_pwd)
             uname, pwd = dec_uname_pwd.split(':')
-            self._session.try_login(uname, pwd)
-            self.do_AUTHHEAD()
-            self.wfile.write('<html><b>Access Denied.</b></html>\r\n')
-            pass
+            if not self._session.try_login(uname, pwd):
+                self.do_AUTHHEAD()
+                self.send_html('please_auth.html')
+            else:
+                self.do_HEAD()
+                self.send_html('index.html')
+        self.request.close()
+
+    def send_html(self, filename):
+
+        file = self.vfs.open(filename)
+        sendfile(self.request.fileno(), file.fileno(), 0, 65536)
+        file.close()
 
     def version_string(self):
         return self._banner
@@ -82,5 +86,7 @@ class http(HandlerBase):
 
     def handle_session(self, gsocket, address):
         session = self.create_session(address, gsocket)
-        handler = BeeHTTPHandler(gsocket, address, None, httpsession=session,
-                                 options=self._options)
+        # The third argument ensures that the BeeHTTPHandler will access
+        # only the data in vfs/var/www
+        BeeHTTPHandler(gsocket, address, self.vfsystem.opendir('/var/www'), None, httpsession=session,
+                       options=self._options)
