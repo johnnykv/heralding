@@ -1,0 +1,3 @@
+#Additional information for logging purposes
+[public_ip]
+fetch_ip = True
