@@ -1,4 +1,4 @@
-# Copyright (C) 2012 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2013 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -71,4 +71,3 @@ class pop3(ClientBase):
             session['did_complete'] = True
         finally:
             session['alldone'] = True
-			
