@@ -26,15 +26,15 @@ import unittest
 from hive.models.authenticator import Authenticator
 from hive.models.session import Session
 
-authenticator = Authenticator()
-Session.authenticator = authenticator
-
 
 class SMTP_Test(unittest.TestCase):
     
     def test_connection(self):
         """ Tries to connect and run a EHLO command. Very basic test.
         """
+
+        authenticator = Authenticator()
+        Session.authenticator = authenticator
 
         sessions = {}
         # Use uncommon port so that we can run test even if the Hive is running.
@@ -52,6 +52,8 @@ class SMTP_Test(unittest.TestCase):
         """ Makes sure the server rejects all login attempts that use the
             CRAM-MD5 Authentication method.
         """
+        authenticator = Authenticator()
+        Session.authenticator = authenticator
 
         sessions = {}
         cap = smtp.smtp(sessions, {'enabled': 'True', 'port': 2500, 'banner': 'Test'})
@@ -74,6 +76,10 @@ class SMTP_Test(unittest.TestCase):
     def test_AUTH_PLAIN(self):
         """ Makes sure the server rejects all login attempts that use the PLAIN Authentication method.
         """
+
+        authenticator = Authenticator()
+        Session.authenticator = authenticator
+
         sessions = {}
         cap = smtp.smtp(sessions, {'enabled': 'True', 'port': 2500, 'banner': 'Test'})
         socket = create_socket(('0.0.0.0', 2500))
@@ -89,6 +95,9 @@ class SMTP_Test(unittest.TestCase):
     def test_AUTH_LOGIN(self):
         """ Makes sure the server rejects all login attempts that use the LOGIN Authentication method.
         """
+
+        authenticator = Authenticator()
+        Session.authenticator = authenticator
 
         sessions = {}
         cap = smtp.smtp(sessions, {'enabled': 'True', 'port': 2501, 'banner': 'Test'})

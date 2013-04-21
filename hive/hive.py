@@ -62,7 +62,7 @@ class Hive(object):
             sys.exit(1)
 
         #inject authentication mechanism
-        Session.authenticator = Authenticator({'test': 'test'})
+        Session.authenticator = Authenticator()
 
         #spawning time checker
         if self.config.getboolean('timecheck', 'Enabled'):

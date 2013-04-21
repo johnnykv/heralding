@@ -16,11 +16,9 @@
 import gevent.monkey
 gevent.monkey.patch_all()
 
-
 from gevent.server import StreamServer
 from hive.helpers.common import create_socket
 from hive.capabilities import http
-
 
 import unittest
 import httplib
@@ -28,21 +26,21 @@ import base64
 from hive.models.authenticator import Authenticator
 from hive.models.session import Session
 
-authenticator = Authenticator({'test': 'test'})
-Session.authenticator = authenticator
-
 
 class HTTP_Test(unittest.TestCase):
     def test_connection(self):
         """ Tests if the capability is up, and sending
             HTTP 401 (Unauthorized) headers.
         """
-        
+
+        authenticator = Authenticator({'test': 'test'})
+        Session.authenticator = authenticator
+
         sessions = {}
         # Use uncommon port so that you can run the test even if the Hive
         # is running.
         cap = http.http(sessions, {'enabled': 'True', 'port': 8081})
-        socket = create_socket(("0.0.0.0", 8081))
+        socket = create_socket(('0.0.0.0', 8081))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()
 
@@ -55,10 +53,12 @@ class HTTP_Test(unittest.TestCase):
     def test_login(self):
         """ Tries to login using the username/password as test/test.
         """
+        authenticator = Authenticator({'test': 'test'})
+        Session.authenticator = authenticator
 
         sessions = {}
         cap = http.http(sessions, {'enabled': 'True', 'port': 8081})
-        socket = create_socket(("0.0.0.0", 8081))
+        socket = create_socket(('0.0.0.0', 8081))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()
 
