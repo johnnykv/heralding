@@ -108,6 +108,7 @@ class SMTPChannel(smtpd.SMTPChannel):
         elif self.login_uname_authenticating:
             self.login_uname_authenticating = False
             self.username = base64.b64decode(arg)
+            self.push('334 ' + base64.b64encode('Password:'))
             self.login_pass_authenticating = True
             return
 
