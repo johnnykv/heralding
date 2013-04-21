@@ -42,3 +42,5 @@ hive.cfg
 #pydev
 .project
 .pydevproject
+
+feeder.cfg
