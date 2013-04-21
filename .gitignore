@@ -42,3 +42,6 @@ hive.cfg
 #pydev
 .project
 .pydevproject
+
+# exceptions for vfs files
+!hive/data/vfs/*

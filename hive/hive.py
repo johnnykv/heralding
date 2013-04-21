@@ -19,7 +19,6 @@ import os
 import sys
 import _socket
 import ntplib 
-from time import ctime
 
 import gevent
 from gevent import Greenlet
@@ -31,12 +30,17 @@ from models.authenticator import Authenticator
 from helpers.streamserver import HiveStreamServer
 from helpers.common import drop_privileges, list2dict, create_socket
 
+# Do not remove this import, it is required for auto detect.
 # See capabilities/__init__.py to see how the auto detect works
 import capabilities
 
 logger = logging.getLogger(__name__)
 
+
 class Hive(object):
+
+    """ This is the main class, which starts up all the capabilities. """
+
     def __init__(self, config_file='hive.cfg', key='server.key', cert='server.crt'):
         self.key = key
         self.cert = cert
@@ -58,7 +62,7 @@ class Hive(object):
             sys.exit(1)
 
         #inject authentication mechanism
-        Session.authenticator = Authenticator()
+        Session.authenticator = Authenticator({'test': 'test'})
 
         #spawning time checker
         if self.config.getboolean('timecheck', 'Enabled'):
@@ -66,17 +70,19 @@ class Hive(object):
         
     #function to check the time offset
     def checktime(self):
+        """ Make sure our Hive time is consistent, and not too far off
+        from the actual time. """
+
         poll = self.config.getint('timecheck', 'poll')
         ntp_poll = self.config.get('timecheck', 'ntp_pool')
         while True:
             clnt = ntplib.NTPClient()
             response = clnt.request(ntp_poll, version=3)
             diff = response.offset
-            if abs(diff) >= 5 :
+            if abs(diff) >= 5:
                 logger.error('Timings found to be far off. ({0})'.format(diff))
                 sys.exit(1)
-            gevent.sleep(poll*60*60)
-
+            gevent.sleep(poll * 60 * 60)
 
     def start_serving(self):
         """ Starts services. """
@@ -126,7 +132,7 @@ class Hive(object):
                 self.server_greenlets.append(server_greenlet)
 
             except _socket.error as ex:
-                logger.error("Could not start {0} server on port {1}. Error: {2}".format(c.__name__ , port, ex))
+                logger.error("Could not start {0} server on port {1}. Error: {2}".format(c.__name__, port, ex))
             else:
                 logger.info('Started {0} capability listening on port {1}'.format(c.__name__, port))
 
@@ -134,7 +140,6 @@ class Hive(object):
 
         logger.info("Hive running - see log file (hive.log) for attack events.")
         gevent.joinall(self.server_greenlets)
-
 
     def stop_serving(self):
         """Stops services"""
