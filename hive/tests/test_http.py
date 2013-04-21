@@ -24,10 +24,11 @@ from hive.capabilities import http
 
 import unittest
 import httplib
+import base64
 from hive.models.authenticator import Authenticator
 from hive.models.session import Session
 
-authenticator = Authenticator()
+authenticator = Authenticator({'test': 'test'})
 Session.authenticator = authenticator
 
 
@@ -38,15 +39,36 @@ class HTTP_Test(unittest.TestCase):
         """
         
         sessions = {}
-        cap = http.http(sessions, {'enabled': 'True', 'port': 8080})
-        socket = create_socket(("0.0.0.0", 8080))
+        # Use uncommon port so that you can run the test even if the Hive
+        # is running.
+        cap = http.http(sessions, {'enabled': 'True', 'port': 8081})
+        socket = create_socket(("0.0.0.0", 8081))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()
 
-        client = httplib.HTTPConnection('127.0.0.1', 8080)
-        client.request("GET", "/")
+        client = httplib.HTTPConnection('127.0.0.1', 8081)
+        client.request('GET', '/')
         response = client.getresponse()
-        self.assertEquals(response.status, 401)
-        
+        self.assertEqual(response.status, 401)
+        srv.stop()
+
+    def test_login(self):
+        """ Tries to login using the username/password as test/test.
+        """
+
+        sessions = {}
+        cap = http.http(sessions, {'enabled': 'True', 'port': 8081})
+        socket = create_socket(("0.0.0.0", 8081))
+        srv = StreamServer(socket, cap.handle_session)
+        srv.start()
+
+        client = httplib.HTTPConnection('127.0.0.1', 8081)
+        client.putrequest('GET', '/')
+        client.putheader('Authorization', 'Basic ' + base64.b64encode('test:test'))
+        client.endheaders()
+        response = client.getresponse()
+        self.assertEqual(response.status, 200)
+        srv.stop()
+
 if __name__ == '__main__':
     unittest.main()
