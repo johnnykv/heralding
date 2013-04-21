@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
     try:
         setuplogging(args.logfile, args.v)
-        the_hive = Hive('hive.cfg')
+        the_hive = Hive(args.config_file)
     except ConfigNotFound as ex:
         logger.error(ex)
         sys.exit(ex)
