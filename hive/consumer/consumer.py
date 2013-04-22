@@ -65,6 +65,9 @@ class Consumer:
                     logger.debug('Removed {0} connection from {1}. ({2})'.format(session.protocol,
                                                                                  session.attacker_ip,
                                                                                  session.id))
+                    #make sure the socket is closed
+                    session.socket.close()
+
             gevent.sleep(1)
         self.stop_loggers(active_loggers)
 
