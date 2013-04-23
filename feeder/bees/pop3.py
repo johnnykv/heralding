@@ -23,8 +23,10 @@ from clientbase import ClientBase
 
 
 class pop3(ClientBase):
+
     def __init__(self, sessions):
-        self.sessions = sessions
+        super(pop3, self).__init__(self, sessions)
+
 
     def do_session(self, login, password, server_host, server_port, my_ip):
         """Login, RETR and DELE all messages"""
