@@ -38,32 +38,35 @@ class Session(object):
         self.id = uuid.uuid4()
         self.timestamp = datetime.utcnow()
         self.connected = True
-        #username != None means that the session is authenticated
-        self.user_name = None
+
+        self.authenticated = False
         #for session specific volatile data (will not get logged)
         self.vdata = {}
 
         self.login_attempts = []
         self.socket = socket
 
-    def try_login(self, username, password):
-        self.login_attempts.append({'username': username,
-                                    'password': password,
-                                    'timestamp': datetime.utcnow()})
-        logger.debug('{0} authentication attempt from {1}. [{2}/{3}] ({4})'
-        .format(self.protocol, self.attacker_ip, username, password, self.id))
+    def try_auth(self, type, **kwargs):
 
-        if Session.authenticator.try_auth(username, password):
-            self.user_name = username
-            return True
-        else:
-            return False
+        """
 
-    def authenticated(self):
+        :param username:
+        :param password:
+        :param auth_type: possible values:
+                                plain: plaintext username/password
+        :return:
         """
-        Returns true if the current session is authenticated
-        """
-        if self.user_name:
+        log_dict ={'timestamp': datetime.utcnow(),
+                   'type': type}
+        for key, value in kwargs.iteritems():
+            log_dict[key] = value
+
+        self.login_attempts.append(log_dict)
+        logger.debug('{0} authentication attempt from {1}. [{2}] ({3})'
+        .format(self.protocol, self.attacker_ip, kwargs.items(), self.id))
+
+        if Session.authenticator.try_auth(type, **kwargs):
+            self.authenticated = True
             return True
         else:
             return False

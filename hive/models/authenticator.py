@@ -21,9 +21,9 @@ class Authenticator(object):
         #TODO: Read this from database
         self.creds = creds
 
-    def try_auth(self, username, password):
-        if username in self.creds:
-            if self.creds[username] == password:
-                return True
-        else:
-            return False
+    def try_auth(self, type, **kwargs):
+        if type == 'plaintext':
+            if kwargs.get('username') in self.creds:
+                if self.creds[kwargs.get('username')] == kwargs.get('password'):
+                    return True
+        return False

@@ -64,7 +64,7 @@ class ssh_wrapper(SSHHandler):
 
     def authCallback(self, username, password):
         self.session.activity()
-        self.session.try_login(username, password)
+        self.session.try_auth('plaintext', username=username, password=password)
         raise
 
     def handle_session(self, gsocket, address):

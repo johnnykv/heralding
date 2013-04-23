@@ -57,7 +57,7 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
             _, enc_uname_pwd = hdr.split(' ')
             dec_uname_pwd = base64.b64decode(enc_uname_pwd)
             uname, pwd = dec_uname_pwd.split(':')
-            if not self._session.try_login(uname, pwd):
+            if not self._session.try_auth('plaintext', username=uname, password=pwd):
                 self.do_AUTHHEAD()
                 self.send_html('please_auth.html')
             else:

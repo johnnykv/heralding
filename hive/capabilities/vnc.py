@@ -50,10 +50,10 @@ class BeeVNCHandler(SocketServer.StreamRequestHandler):
     def do_vnc_authentication(self):
         challenge = get_random_challenge()
         self.request.send(challenge)
-        des_challenge = self.request.recv(1024)
+        client_response_ = self.request.recv(1024)
 
         # This could result in an ugly log file, since the des_challenge is just an array of 4 bytes
-        self.session.try_login("", des_challenge)
+        self.session.try_auth('des_challenge', challenge=repr(challenge), response=repr(client_response_))
         self.terminate()
 
     def terminate(self):

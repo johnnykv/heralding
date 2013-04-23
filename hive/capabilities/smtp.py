@@ -101,7 +101,7 @@ class SMTPChannel(smtpd.SMTPChannel):
             cred = base64.b64decode(arg)
             self.username, self.digest = cred.split()
             #TODO: Add digest support to Session's try_login()
-            self.session.try_login(self.username, self.digest)
+            self.session.try_auth('cram_md5', username=self.username, digest=self.digest)
             self.push('535 authentication failed')
             self.close_quit()
             
@@ -115,7 +115,7 @@ class SMTPChannel(smtpd.SMTPChannel):
         elif self.login_pass_authenticating:
             self.login_pass_authenticating = False
             self.password = base64.b64decode(arg)
-            self.session.try_login(self.username, self.password)
+            self.session.try_auth('plaintext', username=self.username, password=self.password)
             self.push('535 authentication failed')
             self.close_quit()
 
@@ -123,7 +123,7 @@ class SMTPChannel(smtpd.SMTPChannel):
             self.plain_authenticating = False
             # Our arg will ideally be the username/password
             self.username, _, self.password = base64.b64decode(arg).split('\x00')
-            self.session.try_login(self.username, self.password)
+            self.session.try_auth('plaintext', username=self.username, password=self.password)
             self.push('535 Authentication Failed')
             self.close_quit()
 
@@ -137,7 +137,7 @@ class SMTPChannel(smtpd.SMTPChannel):
                 self.push("334 ")
                 return
             self.username, _, self.password = base64.b64decode(param).split('\x00')
-            self.session.try_login(self.username, self.password)
+            self.session.try_auth('plaintext', username=self.username, password=self.password)
             #for now all authentications will fail
             self.push('535 Authentication Failed')
             self.close_quit()

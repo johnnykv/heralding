@@ -72,7 +72,7 @@ class BeeFTPHandler(object):
             return
         self.curr_logins += 1
         self.passwd = arg
-        self.session.try_login(self.user, self.passwd)
+        self.session.try_auth('plaintext', username=self.user, password=self.passwd)
         self.respond("530 Authentication Failed.")
         if self.curr_logins >= self.max_logins:
             self.stop()

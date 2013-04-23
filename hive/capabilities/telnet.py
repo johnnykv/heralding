@@ -57,7 +57,7 @@ class telnet_wrapper(TelnetHandler):
 
     def authCallback(self, username, password):
         while self.auth_count < telnet_wrapper.max_tries:
-            self.session.try_login(username, password)
+            self.session.try_auth(type='plaintext', username=username, password=password)
             self.writeline('Invalid username/password')
             self.auth_count += 1
             self.authentication_ok()
