@@ -15,5 +15,9 @@
 
 
 class ClientBase(object):
+
+    def __init__(self, sessions):
+        self.sessions = sessions
+
     def do_session(self, login, password, server_host, server_port, my_ip):
         raise Exception('Do not call base class!')
