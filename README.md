@@ -8,10 +8,10 @@ The project will eventually consist of three parts:
  * Can be deployed independently or as part of the full beeswarm setup.
 * Feeder
  * Simulates a realistic environment using honeybees.
-* Correlator
- * Processes log data from Hive and Feeder.
+* Beekeeper
+ * Processes data from Hive and Feeder.
  * Reports malicious activity.
- * Generates configuration and crypto keys for a full beeswarm setup. Potentially Correlator could also generate bootable Hive and Feeder VM's.
+ * Generates configuration and crypto keys for a full beeswarm setup.
 
 
 ## Hive
@@ -47,7 +47,7 @@ Still under development.
 # Deployment diagram
 
                +- - - - - - - - - - - - - L O G  D A T A- - - - - - - - - - - - - >>>+------------+
-               |                                                                     | Correlator |
+               |                                                                     | Beekeeper |
                                                                                      +------------+
                |                        (honeybees)                                        ^   ^
           +----+------+                   Traffic                                              |
