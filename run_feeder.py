@@ -61,7 +61,7 @@ if __name__ == '__main__':
         logger.error(ex)
         sys.exit(ex)
     except (NoSectionError, NoOptionError) as ex:
-        logger.error('Error while parsing config file. Please check hive.cfg.dist to see if any '
+        logger.error('Error while parsing config file. Please check feeder.cfg.dist to see if any '
                      'options has changed since last update. ({0})'.format(ex))
         sys.exit(ex)
 
