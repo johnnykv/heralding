@@ -48,7 +48,7 @@ class SMTP_Test(unittest.TestCase):
         smtp_.quit()
         srv.stop()
         
-    def test_AUTH_CRAM_MD5(self):
+    def test_AUTH_CRAM_MD5_reject(self):
         """ Makes sure the server rejects all login attempts that use the
             CRAM-MD5 Authentication method.
         """
@@ -73,7 +73,7 @@ class SMTP_Test(unittest.TestCase):
         self.assertEqual(code, 535)
         srv.stop()
 
-    def test_AUTH_PLAIN(self):
+    def test_AUTH_PLAIN_reject(self):
         """ Makes sure the server rejects all login attempts that use the PLAIN Authentication method.
         """
 
@@ -81,18 +81,18 @@ class SMTP_Test(unittest.TestCase):
         Session.authenticator = authenticator
 
         sessions = {}
-        cap = smtp.smtp(sessions, {'enabled': 'True', 'port': 2500, 'banner': 'Test'})
-        socket = create_socket(('0.0.0.0', 2500))
+        cap = smtp.smtp(sessions, {'enabled': 'True', 'port': 2502, 'banner': 'Test'})
+        socket = create_socket(('0.0.0.0', 2502))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()
 
-        smtp_ = smtplib.SMTP('127.0.0.1', 2500, local_hostname='localhost', timeout=15)
+        smtp_ = smtplib.SMTP('127.0.0.1', 2502, local_hostname='localhost', timeout=15)
         arg = '\0%s\0%s' % ('test', 'test')
         code, resp = smtp_.docmd('AUTH', 'PLAIN ' + base64.b64encode(arg))
         self.assertEqual(code, 535)
         srv.stop()
 
-    def test_AUTH_LOGIN(self):
+    def test_AUTH_LOGIN_reject(self):
         """ Makes sure the server rejects all login attempts that use the LOGIN Authentication method.
         """
 
@@ -111,6 +111,70 @@ class SMTP_Test(unittest.TestCase):
         code, resp = smtp_.docmd(base64.b64encode('test'))
         self.assertEqual(code, 535)
         srv.stop()
+
+    def test_AUTH_CRAM_MD5(self):
+        """ Makes sure the server accepts valid login attempts that use the CRAM-MD5 Authentication method.
+        """
+        authenticator = Authenticator({'test': 'test'})
+        Session.authenticator = authenticator
+
+        sessions = {}
+        cap = smtp.smtp(sessions, {'enabled': 'True', 'port': 2503, 'banner': 'Test'})
+        socket = create_socket(('0.0.0.0', 2503))
+        srv = StreamServer(socket, cap.handle_session)
+        srv.start()
+
+        def encode_cram_md5(challenge, user, password):
+            challenge = base64.decodestring(challenge)
+            response = user + ' ' + hmac.HMAC(password, challenge).hexdigest()
+            return base64.b64encode(response)
+
+        smtp_ = smtplib.SMTP('127.0.0.1', 2503, local_hostname='localhost', timeout=15)
+        _, resp = smtp_.docmd('AUTH', 'CRAM-MD5')
+        code, resp = smtp_.docmd(encode_cram_md5(resp, 'test', 'test'))
+        # For now, the server's going to return a 535 code.
+        self.assertEqual(code, 235)
+        srv.stop()
+
+    def test_AUTH_PLAIN(self):
+        """ Makes sure the server accepts valid login attempts that use the PLAIN Authentication method.
+        """
+
+        authenticator = Authenticator({'test': 'test'})
+        Session.authenticator = authenticator
+
+        sessions = {}
+        cap = smtp.smtp(sessions, {'enabled': 'True', 'port': 2504, 'banner': 'Test'})
+        socket = create_socket(('0.0.0.0', 2504))
+        srv = StreamServer(socket, cap.handle_session)
+        srv.start()
+
+        smtp_ = smtplib.SMTP('127.0.0.1', 2504, local_hostname='localhost', timeout=15)
+        arg = '\0%s\0%s' % ('test', 'test')
+        code, resp = smtp_.docmd('AUTH', 'PLAIN ' + base64.b64encode(arg))
+        self.assertEqual(code, 235)
+        srv.stop()
+
+    def test_AUTH_LOGIN(self):
+        """ Makes sure the server accepts valid login attempts that use the LOGIN Authentication method.
+        """
+
+        authenticator = Authenticator({'test': 'test'})
+        Session.authenticator = authenticator
+
+        sessions = {}
+        cap = smtp.smtp(sessions, {'enabled': 'True', 'port': 2505, 'banner': 'Test'})
+        socket = create_socket(('0.0.0.0', 2505))
+        srv = StreamServer(socket, cap.handle_session)
+        srv.start()
+
+        smtp_ = smtplib.SMTP('127.0.0.1', 2505, local_hostname='localhost', timeout=15)
+        smtp_.docmd('AUTH', 'LOGIN')
+        smtp_.docmd(base64.b64encode('test'))
+        code, resp = smtp_.docmd(base64.b64encode('test'))
+        self.assertEqual(code, 235)
+        srv.stop()
+
 
 if __name__ == '__main__':
     unittest.main()

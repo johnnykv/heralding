@@ -13,6 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import hmac
+
 
 class Authenticator(object):
     def __init__(self, creds={}):
@@ -26,4 +28,19 @@ class Authenticator(object):
             if kwargs.get('username') in self.creds:
                 if self.creds[kwargs.get('username')] == kwargs.get('password'):
                     return True
+
+        elif type == 'cram_md5':
+            def encode_cram_md5(challenge, user, password):
+                response = user + ' ' + hmac.HMAC(password, challenge).hexdigest()
+                return response
+            if kwargs.get('username') in self.creds:
+                uname = kwargs.get('username')
+                digest = kwargs.get('digest')
+                s_pass = self.creds[uname]
+                challenge = kwargs.get('challenge')
+                ideal_response = encode_cram_md5(challenge, uname, s_pass)
+                _, ideal_digest = ideal_response.split()
+                if ideal_digest == digest:
+                    return True
+
         return False
