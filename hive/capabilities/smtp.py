@@ -57,6 +57,8 @@ class SMTPChannel(smtpd.SMTPChannel):
         self.password = None
         self.digest = None
 
+        self.sent_cram_challenge = None
+
         self.session = session
         self.options = opts
 
@@ -100,10 +102,18 @@ class SMTPChannel(smtpd.SMTPChannel):
             self.cram_authenticating = False
             cred = base64.b64decode(arg)
             self.username, self.digest = cred.split()
-            #TODO: Add digest support to Session's try_login()
-            self.session.try_auth('cram_md5', username=self.username, digest=self.digest)
-            self.push('535 authentication failed')
-            self.close_quit()
+            if self.sent_cram_challenge is None:
+                self.push('451 Internal confusion')
+                return
+            authbool = self.session.try_auth('cram_md5', username=self.username, digest=self.digest,
+                                             challenge=self.sent_cram_challenge)
+            if authbool:
+                self.push('235 Authentication Successful')
+                self.authenticated = True
+                return
+            else:
+                self.push('535 authentication failed')
+                self.close_quit()
             
         elif self.login_uname_authenticating:
             self.login_uname_authenticating = False
@@ -115,32 +125,50 @@ class SMTPChannel(smtpd.SMTPChannel):
         elif self.login_pass_authenticating:
             self.login_pass_authenticating = False
             self.password = base64.b64decode(arg)
-            self.session.try_auth('plaintext', username=self.username, password=self.password)
+            authbool = self.session.try_auth('plaintext', username=self.username, password=self.password)
+
+            if authbool:
+                self.push('235 Authentication Successful')
+                self.authenticated = True
+                return
+            else:
+                self.push('535 authentication failed')
+                self.close_quit()
+
             self.push('535 authentication failed')
             self.close_quit()
 
         elif self.plain_authenticating:
             self.plain_authenticating = False
             # Our arg will ideally be the username/password
-            self.username, _, self.password = base64.b64decode(arg).split('\x00')
-            self.session.try_auth('plaintext', username=self.username, password=self.password)
-            self.push('535 Authentication Failed')
-            self.close_quit()
+            _, self.username, self.password = base64.b64decode(arg).split('\x00')
+            authbool = self.session.try_auth('plaintext', username=self.username, password=self.password)
+            if authbool:
+                self.push('235 Authentication Successful')
+                self.authenticated = True
+                return
+            else:
+                self.push('535 authentication failed')
+                self.close_quit()
 
         elif 'PLAIN' in arg:
             self.plain_authenticating = True
             try:
                 _, param = arg.split()
-            except:
+            except ValueError:
                 # We need to get the credentials now since client has not sent
                 # them. The space after the 334 is important as said in the RFC
                 self.push("334 ")
                 return
-            self.username, _, self.password = base64.b64decode(param).split('\x00')
-            self.session.try_auth('plaintext', username=self.username, password=self.password)
-            #for now all authentications will fail
-            self.push('535 Authentication Failed')
-            self.close_quit()
+            _, self.username, self.password = base64.b64decode(param).split('\x00')
+            authbool = self.session.try_auth('plaintext', username=self.username, password=self.password)
+            if authbool:
+                self.push('235 Authentication Successful')
+                self.authenticated = True
+                return
+            else:
+                self.push('535 authentication failed')
+                self.close_quit()
 
         elif 'LOGIN' in arg:
             param = arg.split()
@@ -158,8 +186,10 @@ class SMTPChannel(smtpd.SMTPChannel):
             self.cram_authenticating = True
             r = random.randint(5000, 20000)
             t = int(time.time())
-            challenge = "<"+str(r)+"."+str(t)+"@"+self.__fqdn+">"
-            self.push("334 " + base64.b64encode(challenge))
+
+            # challenge is of the form '<24609.1047914046@awesome.host.com>'
+            self.sent_cram_challenge = "<" + str(r) + "." + str(t) + "@" + self.__fqdn + ">"
+            self.push("334 " + base64.b64encode(self.sent_cram_challenge))
             return
 
     # This code is taken directly from the underlying smtpd.SMTPChannel
