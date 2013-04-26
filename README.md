@@ -9,6 +9,7 @@ The project will eventually consist of three parts:
 * Feeder
  * Simulates a realistic environment using honeybees.
 * Beekeeper
+ * Provides managment interface. 
  * Processes data from Hive and Feeder.
  * Reports malicious activity.
  * Generates configuration and crypto keys for a full beeswarm setup.
