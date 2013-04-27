@@ -1,6 +1,6 @@
 #Additional information for logging purposes
 [public_ip]
-fetch_ip = False
+fetch_ip = True
 
 [bee_http]
 server = 127.0.0.1
