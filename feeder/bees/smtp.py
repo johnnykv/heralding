@@ -25,6 +25,10 @@ class smtp(ClientBase):
 
     def do_session(self, login, password, server_host, server_port, my_ip):
 
+        from_addr = 'ned@stark.com'
+        to_addr = 'jon@snow.com'
+        mail_body = 'Winter is coming!'
+
         session = self.create_session(login, password, server_host, server_port)
 
         logging.debug(
@@ -39,7 +43,7 @@ class smtp(ClientBase):
         except smtplib.SMTPException as error:
             logging.debug('Caught exception: %s (%s)' % (error, str(type(error))))
         else:
-            smtp_.sendmail('ned@stark.com', 'jon@snow.com', 'Winter is coming!')
+            smtp_.sendmail(from_addr, to_addr, mail_body)
             smtp_.quit()
             session.did_complete = True
         finally:
