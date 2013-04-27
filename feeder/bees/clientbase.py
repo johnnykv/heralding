@@ -13,6 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from feeder.models.session import BeeSession
+
 
 class ClientBase(object):
 
@@ -21,3 +23,9 @@ class ClientBase(object):
 
     def do_session(self, login, password, server_host, server_port, my_ip):
         raise Exception('Do not call base class!')
+
+    def create_session(self, login, password, server_host, server_port):
+        protocol = self.__class__.__name__
+        session = BeeSession(protocol, login, password, server_host, server_port)
+        self.sessions[session.id] = session
+        return session
