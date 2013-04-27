@@ -29,46 +29,31 @@ class SqliteLogger(LoggerBase):
         conn = sqlite3.connect(SqliteLogger.db_name)
         cursor = conn.cursor()
 
-        session_tuple = (str(session['id']), session['protocol'], session['my_ip'],
-                         session['login'], session['password'], session['server_host'],
-                         session['server_port'], session['timestamp'], session['did_connect'],
-                         session['did_login'], session['did_complete'])
+        session_tuple = (str(session.id), session.protocol, session.my_ip,
+                         session.login, session.password, session.server_host,
+                         session.server_port, session.timestamp, session.did_connect,
+                         session.did_login, session.did_complete)
 
         cursor.execute('INSERT INTO honeybees VALUES (?,?,?,?,?,?,?,?,?,?,?)', session_tuple)
 
         conn.commit()
 
-
     def create_db(self):
         conn = sqlite3.connect(SqliteLogger.db_name)
         cursor = conn.cursor()
         cursor.execute("""
-			CREATE TABLE IF NOT EXISTS honeybees(
-				id TEXT PRIMARY KEY NOT NULL,
-				protocol TEXT NOT null,
-				my_ip TEXT NOT null,
-				login TEXT NOT null,
-				password TEXT NOT null,
-				server_host TEXT NOT null,
-				server_port TEXT NOT null,
-				timestamp TEXT NOT null,
-				did_connect TEXT NOT null,
-				did_login TEXT NOT null,
-				did_complete TEXT NOT null)
-				""")
+            CREATE TABLE IF NOT EXISTS honeybees(
+                id TEXT PRIMARY KEY NOT NULL,
+                protocol TEXT NOT null,
+                my_ip TEXT NOT null,
+                login TEXT NOT null,
+                password TEXT NOT null,
+                server_host TEXT NOT null,
+                server_port TEXT NOT null,
+                timestamp TEXT NOT null,
+                did_connect TEXT NOT null,
+                did_login TEXT NOT null,
+                did_complete TEXT NOT null)
+                """)
 
         conn.commit()
-
-    # session = {
-    # 		   'id' : uuid.uuid4(),
-    # 		   'protocol' : 'pop3',
-    # 		   'my_ip' : my_ip,
-    # 		   'login' : login,
-    # 		   'password' : password,
-    # 		   'server_host' : server_host,
-    # 		   'server_port' : server_port,
-    # 		   'timestamp' : datetime.utcnow(),
-    # 		   'did_connect' : False,
-    # 		   'did_login' : False,
-    # 		   'did_complete' : False,
-    # 		   'protocol_data' : {}

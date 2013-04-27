@@ -26,24 +26,25 @@ class Consumer:
     def __init__(self, sessions):
         logging.debug('Consumer created.')
         self.sessions = sessions
+        self.enabled = True
 
     def start_handling(self):
         active_loggers = self.get_loggers()
 
-        while True:
+        while self.enabled:
             for session_id in self.sessions.keys():
                 session = self.sessions[session_id]
-                if session['alldone']:
-                    logging.debug('Found finished honeybee. (bee id: %s)' % (session['id']))
+                if session.alldone:
+                    logging.debug('Found finished honeybee. (bee id: %s)' % session.id)
                     for logger in active_loggers:
                         logging.debug(
-                            'Logging honeybee with %s (session id: %s)' % (logger.__class__.__name__, session['id']))
+                            'Logging honeybee with %s (session id: %s)' % (logger.__class__.__name__, session.id))
                         logger.log(session)
                     del self.sessions[session_id]
             gevent.sleep(5)
 
     def stop_handling(self):
-        pass
+        self.enabled = False
 
     def get_loggers(self):
         loggers = []
