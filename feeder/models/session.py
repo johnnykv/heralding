@@ -19,29 +19,30 @@ from datetime import datetime
 
 class BeeSession(object):
 
-    def __init__(self, protocol, username, password, hive_host, hive_port):
+    def __init__(self, protocol, login, password, hive_host, hive_port, my_ip):
 
         self.id = uuid.uuid4()
         self.protocol = protocol
-        self.username = username
+        self.login = login
         self.password = password
-        self.hive_host = hive_host
-        self.hive_port = hive_port
+        self.server_host = hive_host
+        self.server_port = hive_port
         self.timestamp = datetime.utcnow()
         self.did_connect = False
         self.did_login = False
         self.alldone = False
         self.did_complete = False
         self.protocol_data = {}
+        self.my_ip = my_ip
 
     def to_dict(self):
         selfdict = {
             'id': self.id,
             'protocol': self.protocol,
-            'login': self.username,
+            'login': self.login,
             'password': self.password,
-            'server_host': self.hive_host,
-            'server_port': self.hive_port,
+            'server_host': self.server_host,
+            'server_port': self.server_port,
             'timestamp': self.timestamp,
             'did_connect': self.did_connect,
             'did_login': self.did_login,

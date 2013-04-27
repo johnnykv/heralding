@@ -19,11 +19,16 @@ gevent.monkey.patch_all()
 
 import ConfigParser
 import os
-
+import sys
 from bees import clientbase
 from consumer import consumer
 import logging
 import urllib2
+
+# TODO: Autodetect
+from bees import http
+from bees import smtp
+from bees import pop3
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +37,7 @@ class Feeder(object):
     def __init__(self, config_file='feeder.cfg'):
 
         self.config = ConfigParser.ConfigParser()
-
+        self.run_flag = True
         if not os.path.exists(config_file):
             raise ConfigNotFound('Configuration file could not be found. ({0})'.format(config_file))
 
@@ -41,6 +46,8 @@ class Feeder(object):
         if self.config.getboolean('public_ip', 'fetch_ip'):
             self.my_ip = urllib2.urlopen('http://api-sth01.exip.org/?call=ip').read()
             logging.info('Fetched {0} as my external ip.'.format(self.my_ip))
+        else:
+            self.my_ip = '127.0.0.1'
 
     def start_feeding(self):
         logging.info('Starting feeder.')
@@ -50,16 +57,16 @@ class Feeder(object):
         sessions = {}
 
         #greenlet to consume and maintain data in sessions list
-        sessions_consumer = consumer.Consumer(sessions)
-        gevent.spawn(sessions_consumer.start_handling)
+        self.sessions_consumer = consumer.Consumer(sessions)
+        gevent.spawn(self.sessions_consumer.start_handling)
 
         honeybees = []
         for b in clientbase.ClientBase.__subclasses__():
             bee = b(sessions)
             honeybees.append(bee)
-            logging.debug('Adding {0}s as a honeybee'.format(bee.__class__.__name__))
+            logging.debug('Adding {0} as a honeybee'.format(bee.__class__.__name__))
 
-        while True:
+        while self.run_flag:
             for bee in honeybees:
                 class_name = bee.__class__.__name__
                 if class_name in targets:
@@ -68,17 +75,33 @@ class Feeder(object):
                                  bee_info['server'], bee_info['port'], self.my_ip)
             gevent.sleep(60)
 
-
     def get_targets(self):
-        #TODO: Read from file or generate... Needs to be correlated with hive
-        return {'pop3':
-                    {'server': '127.0.0.1',
-                     'port': 2100,
-                     'timing': 'regular',
-                     'login': 'test',
-                     'password': 'test'}
-        }
+        enabled_bees = self.config.sections()
+        #TODO: Needs to be correlated with hive
+        # Maybe correlation can be done when the webapp initializes a new hive/feeder pair
+        targets = {}
+        for bee in enabled_bees:
+            if bee.startswith('bee_'):
+                bee_name = bee[4:]  # discard the 'bee_' prefix
+                targets[bee_name] = list2dict(self.config.items(bee))
+            else:
+                targets[bee] = list2dict(self.config.items(bee))
+        return targets
+
+    def stop_serving(self):
+        self.run_flag = False
+        self.sessions_consumer.stop_handling()
+        logger.info('All clients stopped')
+        sys.exit(0)
+
+
+def list2dict(list_of_options):
+    """Transforms a list of 2 element tuples to a dictionary"""
+    d = {}
+    for key, value in list_of_options:
+        d[key] = value
+    return d
+
 
 class ConfigNotFound(Exception):
     pass
-

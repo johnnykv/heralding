@@ -21,7 +21,7 @@ from clientbase import ClientBase
 class smtp(ClientBase):
 
     def __init__(self, sessions):
-        super(self, smtp).__init__(self, sessions)
+        super(smtp, self).__init__(sessions)
 
     def do_session(self, login, password, server_host, server_port, my_ip):
 
@@ -29,10 +29,10 @@ class smtp(ClientBase):
         to_addr = 'jon@snow.com'
         mail_body = 'Winter is coming!'
 
-        session = self.create_session(login, password, server_host, server_port)
+        session = self.create_session(login, password, server_host, server_port, my_ip)
 
         logging.debug(
-            'Sending %s honeybee to %s:%s. (bee id: %s)' % ('smtp', server_host, server_port, session[id]))
+            'Sending %s honeybee to %s:%s. (bee id: %s)' % ('smtp', server_host, server_port, session.id))
 
         try:
             #TODO local_hostname could be made configurable, from the config file

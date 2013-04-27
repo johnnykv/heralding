@@ -14,7 +14,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import random
-import uuid
 import httplib
 import base64
 import logging
@@ -25,29 +24,16 @@ from datetime import datetime
 class http(ClientBase):
 
     def __init__(self, sessions):
-        super(http, self).__init__(self, sessions)
+        super(http, self).__init__(sessions)
 
     def do_session(self, login, password, server_host, server_port, my_ip):
 
-        session = {
-            'id': uuid.uuid4(),
-            'protocol': 'http',
-            'my_ip': my_ip,
-            'login': login,
-            'password': password,
-            'server_host': server_host,
-            'server_port': server_port,
-            'timestamp': datetime.utcnow(),
-            'did_connect': False,
-            'did_login': False,
-            'did_complete': False,
-            'protocol_data': {}
-        }
+        session = self.create_session(login, password, server_host, server_port, my_ip)
 
-        self.sessions[session['id']] = session
+        self.sessions[session.id] = session
 
         logging.debug(
-            'Sending %s honeybee to %s:%s. (bee id: %s)' % ('http', server_host, server_port, session[id]))
+            'Sending %s honeybee to %s:%s. (bee id: %s)' % ('http', server_host, server_port, session.id))
 
         # TODO: Automatically detect files in the Hive VFS
         url_list = ['/index.html']  # List of valid URLs in the Hive
@@ -58,14 +44,14 @@ class http(ClientBase):
             auth_string = login + ':' + password
             client.putheader('Authorization', 'Basic ' + base64.b64encode(auth_string))
             client.endheaders()
-            session['did_connect'] = True
+            session.did_connect = True
             response = client.getresponse()
         except:
             logging.debug('Caught exception, unable to connect.')
         else:
             if response.status == 200:
-                session['did_login'] = True
-            session['timestamp'] = datetime.now()
+                session.did_login = True
+            session.timestamp = datetime.now()
         finally:
-            session['alldone'] = True
+            session.alldone = True
 

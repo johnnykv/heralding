@@ -24,8 +24,8 @@ class ClientBase(object):
     def do_session(self, login, password, server_host, server_port, my_ip):
         raise Exception('Do not call base class!')
 
-    def create_session(self, login, password, server_host, server_port):
+    def create_session(self, login, password, server_host, server_port, my_ip):
         protocol = self.__class__.__name__
-        session = BeeSession(protocol, login, password, server_host, server_port)
+        session = BeeSession(protocol, login, password, server_host, server_port, my_ip)
         self.sessions[session.id] = session
         return session
