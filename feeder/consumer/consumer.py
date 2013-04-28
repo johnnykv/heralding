@@ -18,8 +18,6 @@ import logging
 import gevent
 
 from loggers import loggerbase
-from loggers import consolelogger
-from loggers import sqlitelogger
 from loggers import beekeeper
 
 
