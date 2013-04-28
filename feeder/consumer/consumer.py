@@ -20,12 +20,14 @@ import gevent
 from loggers import loggerbase
 from loggers import consolelogger
 from loggers import sqlitelogger
+from loggers import beekeeper
 
 
 class Consumer:
-    def __init__(self, sessions):
+    def __init__(self, sessions, config):
         logging.debug('Consumer created.')
         self.sessions = sessions
+        self.config = config
         self.enabled = True
 
     def start_handling(self):
@@ -49,6 +51,6 @@ class Consumer:
     def get_loggers(self):
         loggers = []
         for l in loggerbase.LoggerBase.__subclasses__():
-            logger = l()
+            logger = l(self.config)
             loggers.append(logger)
         return loggers

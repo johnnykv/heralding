@@ -3,6 +3,9 @@
 #Every feeder must have a unique id.
 feeder_id = f51171df-c8f6-4af4-86c0-f4e163cf69e8
 
+[beekeeper]
+beekeeper_url = http://127.0.0.1:5000/ws/feeder_data
+
 [public_ip]
 fetch_ip = True
 

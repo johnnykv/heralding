@@ -60,7 +60,7 @@ class Feeder(object):
         sessions = {}
 
         #greenlet to consume and maintain data in sessions list
-        self.sessions_consumer = consumer.Consumer(sessions)
+        self.sessions_consumer = consumer.Consumer(sessions, self.config)
         gevent.spawn(self.sessions_consumer.start_handling)
 
         honeybees = []
