@@ -55,3 +55,6 @@ class POP3_Test(unittest.TestCase):
         current_bee.do_session(bee_info['login'], bee_info['password'], bee_info['server'],
                                bee_info['port'], '127.0.0.1')
         srv.stop()
+
+if __name__ == '__main__':
+    unittest.main()
