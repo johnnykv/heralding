@@ -14,10 +14,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+import os
 
 from gevent.wsgi import WSGIServer
-from webapp import app
 
+import db
+db.setup_db(os.path.join(os.getcwd(), 'beekeeper_sqlite.db'))
+
+from webapp import app
 
 logger = logging.getLogger(__name__)
 

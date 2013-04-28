@@ -32,6 +32,7 @@ pip-log.txt
 .DS_store
 hive_sqlite.db
 feeder_sqlite.db
+beekeeper_sqlite.db
 server.crt
 server.key
 

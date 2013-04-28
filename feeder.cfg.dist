@@ -1,4 +1,8 @@
 #Additional information for logging purposes
+[general]
+#Every feeder must have a unique id.
+feeder_id = f51171df-c8f6-4af4-86c0-f4e163cf69e8
+
 [public_ip]
 fetch_ip = True
 

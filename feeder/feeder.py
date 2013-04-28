@@ -22,6 +22,7 @@ import os
 import sys
 from bees import clientbase
 from consumer import consumer
+from models.session import BeeSession
 import logging
 import urllib2
 
@@ -42,6 +43,8 @@ class Feeder(object):
             raise ConfigNotFound('Configuration file could not be found. ({0})'.format(config_file))
 
         self.config.read(config_file)
+
+        BeeSession.feeder_id = self.config.get('general', 'feeder_id')
 
         if self.config.getboolean('public_ip', 'fetch_ip'):
             self.my_ip = urllib2.urlopen('http://api-sth01.exip.org/?call=ip').read()

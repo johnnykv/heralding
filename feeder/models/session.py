@@ -19,9 +19,13 @@ from datetime import datetime
 
 class BeeSession(object):
 
+    feeder_id = ''
+
     def __init__(self, protocol, login, password, hive_host, hive_port, my_ip):
+        assert BeeSession.feeder_id
 
         self.id = uuid.uuid4()
+        self.feeder_id = BeeSession.feeder_id
         self.protocol = protocol
         self.login = login
         self.password = password
@@ -38,6 +42,7 @@ class BeeSession(object):
     def to_dict(self):
         selfdict = {
             'id': self.id,
+            'feeder_id': BeeSession.feeder_id,
             'protocol': self.protocol,
             'login': self.login,
             'password': self.password,
