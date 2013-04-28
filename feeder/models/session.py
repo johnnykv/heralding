@@ -40,18 +40,4 @@ class BeeSession(object):
         self.my_ip = my_ip
 
     def to_dict(self):
-        selfdict = {
-            'id': self.id,
-            'feeder_id': BeeSession.feeder_id,
-            'protocol': self.protocol,
-            'login': self.login,
-            'password': self.password,
-            'server_host': self.server_host,
-            'server_port': self.server_port,
-            'timestamp': self.timestamp,
-            'did_connect': self.did_connect,
-            'did_login': self.did_login,
-            'did_complete': self.did_complete,
-            'protocol_data': self.protocol_data
-        }
-        return selfdict
+        return vars(self)
