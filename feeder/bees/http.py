@@ -36,7 +36,7 @@ class http(ClientBase):
             'Sending %s honeybee to %s:%s. (bee id: %s)' % ('http', server_host, server_port, session.id))
 
         # TODO: Automatically detect files in the Hive VFS
-        url_list = ['/index.html']  # List of valid URLs in the Hive
+        url_list = ['/base.html']  # List of valid URLs in the Hive
 
         try:
             client = httplib.HTTPConnection(server_host, server_port)

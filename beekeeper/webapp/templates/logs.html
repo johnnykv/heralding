@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>Logs</h3>
+
+<table class="table table-striped table-condensed table-hover">
+<thead>
+<tr>
+    <th><i class="icon-calendar"></i> Time</th>
+    <th><i class="icon-envelope"></i> Protocol</th>
+    <th><i class="icon-user"></i> Username</th>
+    <th><i class="icon-bullhorn"></i> Password</th>
+    <th><i class="icon-comment"></i> IP</th>
+</tr>
+</thead>
+<tbody>
+ {% for session in sessions %}
+ {%  if session.feeder and session.hive %}
+ {%   set class_name = "success" %}
+ {%  elif session.feeder and not session.hive %}
+ {%   set class_name = "warning" %}
+ {%  elif session.hive and not session.feeder %}
+ {%   set class_name = "error" %}
+ {%  else %}
+ {%   set class_name = "info" %}
+ {% endif %}
+<tr class="{{ class_name }}">
+    <td>{{ session.timestamp }}</td>
+    <td>{{ session.protocol }}</td>
+    <td>{{ session.username }}</td>
+    <td>{{ session.password }}</td>
+    <td>{{ session.source_ip }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% endblock %}

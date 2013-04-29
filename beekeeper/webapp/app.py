@@ -16,8 +16,9 @@
 from datetime import datetime
 import json
 from flask import Flask, render_template, request
-from pony.orm import commit
-from beekeeper.database import feeder, honeybee, session
+from pony.orm import commit, select
+from beekeeper.database import feeder, honeybee
+from beekeeper.database import session as Session
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
@@ -26,6 +27,13 @@ app.config['DEBUG'] = True
 @app.route('/')
 def home():
     return render_template('index.html')
+
+@app.route('/logs')
+def logs():
+    sessions = select(s for s in Session)
+    for s in sessions:
+        print s.classtype
+    return render_template('logs.html', sessions=sessions)
 
 
 @app.route('/ws/feeder_data', methods=['POST'])

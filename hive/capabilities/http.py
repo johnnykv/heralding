@@ -62,7 +62,7 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
                 self.send_html('please_auth.html')
             else:
                 self.do_HEAD()
-                self.send_html('index.html')
+                self.send_html('base.html')
         self.request.close()
 
     def send_html(self, filename):
