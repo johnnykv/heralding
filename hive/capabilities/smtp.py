@@ -21,8 +21,10 @@ import random
 import smtpd
 import asyncore
 import asynchat
-from smtpd import NEWLINE, EMPTYSTRING
+import fs
+import mailbox
 
+from smtpd import NEWLINE, EMPTYSTRING
 from handlerbase import HandlerBase
 
 
@@ -266,10 +268,20 @@ class SMTPChannel(smtpd.SMTPChannel):
 
 
 class DummySMTPServer(object):
+
+    def __init__(self, mail_vfs):
+        self.mail_vfs = mail_vfs
+        try:
+            self.mboxpath = self.mail_vfs.getsyspath('mailbox')
+        except fs.errors.ResourceNotFoundError:
+            print "Errroorr"
+            self.mboxpath = self.mail_vfs.getsyspath('.')
+            print self.mboxpath, "-------------------"
+
     def process_message(self, peer, mailfrom, rcpttos, data):
-        # Maybe this data should be logged, it might be interesting
-        # print peer, mailfrom, rcpttos, data
-        pass
+        if self.mboxpath is not None:
+            mbox = mailbox.mbox(self.mboxpath)
+            mbox.add(data)
 
 
 class smtp(HandlerBase):
@@ -280,6 +292,9 @@ class smtp(HandlerBase):
     def handle_session(self, gsocket, address):
         session_ = self.create_session(address, gsocket)
         local_map = {}
-        SMTPChannel(DummySMTPServer(), gsocket, address, session=session_,
+        # We need a new server object for each session to avoid
+        # concurrency issues
+        server = DummySMTPServer(self.vfsystem.opendir('/var/mail'))
+        SMTPChannel(server, gsocket, address, session=session_,
                     map=local_map, opts=self._options)
         asyncore.loop(map=local_map)
