@@ -9,6 +9,15 @@ footer{}
 footer p{text-align:center;background:#1c1c1c;padding-top:20px;padding-bottom:20px;font-size:12px;color:#999}
 footer p img{margin-left:20px}.mono{font-family:monospace}
 
+.btn-group.btn {
+    border: 0;
+    padding: 0;
+}
+
+.btn-group.btn > .btn {
+    border-radius: 0
+}
+
 
 
 

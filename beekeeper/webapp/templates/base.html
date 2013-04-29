@@ -38,41 +38,46 @@
 <div class="container" style="padding-top: 0px; padding-bottom: 10px;">
 
     <div class="btn-group">
-        <a class="btn" href="/"><i class="icon-home"></i> Home</a>
-       <button class="btn dropdown-toggle" data-toggle="dropdown"><i class="icon-tasks"></i>Sessions <span class="caret"></span></button>
-                <ul class="dropdown-menu">
-                  <li><a href="/sessions">All</a></li>
-                  <li><a href="/sessions/attacks">Attacks</a></li>
-                  <li><a href="/sessions/honeybees">Honeybees</a></li>
-                </ul>
+        <button class="btn" href="/"><i class="icon-home"></i> Home</button>
+        <button class="btn btn-group">
+            <a class="btn dropdown-toggle" data-toggle="dropdown" href="/sessions">
+                <i class="icon-tasks"></i> Sessions
+                <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu">
+                <li><a href="/sessions">All</a></li>
+                <li><a href="/sessions/attacks">Attacks</a></li>
+                <li><a href="/sessions/honeybees">Honeybees</a></li>
+            </ul>
+        </button>
         <a class="btn" href="/"><i class="icon-plus"></i> Add hive</a>
         <a class="btn" href="/"><i class="icon-wrench"></i> Settings</a>
     </div>
 
 
-<div class="navbar navbar-inverse navbar-fixed-top">
-    <div class="navbar-inner">
-        <div class="container container-fluid">
-            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </a>
-            <a class="brand" href="#">Beeswarm</a>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+        <div class="navbar-inner">
+            <div class="container container-fluid">
+                <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </a>
+                <a class="brand" href="#">Beeswarm</a>
 
-            <div class="nav-collapse collapse">
-                <form class="navbar-form pull-right">
-                    <input class="span2" type="text" placeholder="Email">
-                    <input class="span2" type="password" placeholder="Password">
-                    <button type="submit" class="btn">Sign in</button>
-                </form>
+                <div class="nav-collapse collapse">
+                    <form class="navbar-form pull-right">
+                        <input class="span2" type="text" placeholder="Email">
+                        <input class="span2" type="password" placeholder="Password">
+                        <button type="submit" class="btn">Sign in</button>
+                    </form>
+                </div>
+                <!--/.nav-collapse -->
             </div>
-            <!--/.nav-collapse -->
         </div>
     </div>
+    {% block content %}{% endblock %}
 </div>
-{% block content %}{% endblock %}
-    </div>
 <footer>
     <p>
         ©2013, <a href="http://www.honeynet.org/">The Honeynet Project</a> <img src="../static/img/hp_logo_s.png"
