@@ -28,13 +28,23 @@ app.config['DEBUG'] = True
 def home():
     return render_template('index.html')
 
-@app.route('/logs')
-def logs():
+
+@app.route('/sessions')
+def sessions_all():
     sessions = select(s for s in Session)
-    for s in sessions:
-        print s.classtype
     return render_template('logs.html', sessions=sessions)
 
+
+@app.route('/sessions/honeybees')
+def sessions_honeybees():
+    honeybees = select(h for h in honeybee)
+    return render_template('logs.html', sessions=honeybees)
+
+@app.route('/sessions/attacks')
+def sessions_attacks():
+    #TODO: Figure out the correct way to do this with PonyORM
+    attacks = select(a for a in Session if a.classtype is None)
+    return render_template('logs.html', sessions=attacks)
 
 @app.route('/ws/feeder_data', methods=['POST'])
 def feeder_data():

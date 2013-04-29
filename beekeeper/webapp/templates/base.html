@@ -39,7 +39,12 @@
 
     <div class="btn-group">
         <a class="btn" href="/"><i class="icon-home"></i> Home</a>
-        <a class="btn" href="/logs"><i class="icon-arrow-up"></i> Logs</a>
+       <button class="btn dropdown-toggle" data-toggle="dropdown"><i class="icon-tasks"></i>Sessions <span class="caret"></span></button>
+                <ul class="dropdown-menu">
+                  <li><a href="/sessions">All</a></li>
+                  <li><a href="/sessions/attacks">Attacks</a></li>
+                  <li><a href="/sessions/honeybees">Honeybees</a></li>
+                </ul>
         <a class="btn" href="/"><i class="icon-plus"></i> Add hive</a>
         <a class="btn" href="/"><i class="icon-wrench"></i> Settings</a>
     </div>
