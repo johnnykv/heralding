@@ -271,16 +271,11 @@ class DummySMTPServer(object):
 
     def __init__(self, mail_vfs):
         self.mail_vfs = mail_vfs
-        try:
-            self.mboxpath = self.mail_vfs.getsyspath('mailbox')
-        except fs.errors.ResourceNotFoundError:
-            print "Errroorr"
-            self.mboxpath = self.mail_vfs.getsyspath('.')
-            print self.mboxpath, "-------------------"
+        self.mboxpath = self.mail_vfs.getsyspath('mailbox')
 
     def process_message(self, peer, mailfrom, rcpttos, data):
         if self.mboxpath is not None:
-            mbox = mailbox.mbox(self.mboxpath)
+            mbox = mailbox.mbox(self.mboxpath, create=True)
             mbox.add(data)
 
 
@@ -292,8 +287,6 @@ class smtp(HandlerBase):
     def handle_session(self, gsocket, address):
         session_ = self.create_session(address, gsocket)
         local_map = {}
-        # We need a new server object for each session to avoid
-        # concurrency issues
         server = DummySMTPServer(self.vfsystem.opendir('/var/mail'))
         SMTPChannel(server, gsocket, address, session=session_,
                     map=local_map, opts=self._options)
