@@ -24,7 +24,7 @@
  {%   set class_name = "info" %}
  {% endif %}
 <tr class="{{ class_name }}">
-    <td>{{ session.timestamp }}</td>
+    <td>{{ session.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
     <td>{{ session.protocol }}</td>
     <td>{{ session.username }}</td>
     <td>{{ session.password }}</td>
