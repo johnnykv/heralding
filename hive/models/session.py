@@ -58,12 +58,15 @@ class Session(object):
         """
         log_dict = {'timestamp': datetime.utcnow(),
                     'type': type}
+
+        log_string = ''
         for key, value in kwargs.iteritems():
             log_dict[key] = value
+            log_string += '{0}:{1}, '.format(key, value)
 
         self.login_attempts.append(log_dict)
         logger.debug('{0} authentication attempt from {1}. [{2}] ({3})'
-                     .format(self.protocol, self.attacker_ip, kwargs.items(), self.id))
+                     .format(self.protocol, self.attacker_ip, log_string.rstrip(', '), self.id))
 
         if Session.authenticator.try_auth(type, **kwargs):
             self.authenticated = True
