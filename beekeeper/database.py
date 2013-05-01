@@ -1,13 +1,12 @@
 from datetime import datetime
 from pony.orm import *
 from pony.orm.core import Discriminator
-from db import db
+from database_config import db
 
-from datetime import datetime
-from pony.orm import *
+#db = Database("sqlite", "beekeeper.sqlite", create_db=True)
 
-db = Database("sqlite", "beekeeper.sqlite", create_db=True)
-
+if db is None:
+    raise OperationalError('Please setup database before importing this module.')
 
 class Feeder(db.Entity):
     id = PrimaryKey(str)

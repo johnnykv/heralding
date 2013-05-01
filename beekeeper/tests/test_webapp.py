@@ -4,8 +4,8 @@ import unittest
 from datetime import datetime
 
 #find better way to do this!
-from beekeeper import db
-db.setup_db(':memory:')
+from beekeeper import database_config
+database_config.setup_db(':memory:')
 
 from beekeeper.webapp import app
 

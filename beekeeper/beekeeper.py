@@ -18,8 +18,8 @@ import os
 
 from gevent.wsgi import WSGIServer
 
-import db
-db.setup_db(os.path.join(os.getcwd(), 'beekeeper_sqlite.db'))
+import database_config
+database_config.setup_db(os.path.join(os.getcwd(), 'beekeeper_sqlite.db'))
 
 from webapp import app
 
