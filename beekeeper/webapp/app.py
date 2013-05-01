@@ -17,8 +17,7 @@ from datetime import datetime
 import json
 from flask import Flask, render_template, request
 from pony.orm import commit, select
-from beekeeper.database import feeder, honeybee
-from beekeeper.database import session as Session
+from beekeeper.database import Feeder, Honeybee, Session
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
@@ -37,7 +36,7 @@ def sessions_all():
 
 @app.route('/sessions/honeybees')
 def sessions_honeybees():
-    honeybees = select(h for h in honeybee)
+    honeybees = select(h for h in Honeybee)
     return render_template('logs.html', sessions=honeybees)
 
 @app.route('/sessions/attacks')
@@ -55,12 +54,12 @@ def feeder_data():
     source_ip = 'a'
     source_port = 0
 
-    _feeder = feeder.get(id=data['feeder_id'])
+    _feeder = Feeder.get(id=data['feeder_id'])
     #create if not found in the database
     if not _feeder:
-        _feeder = feeder(id=data['feeder_id'])
+        _feeder = Feeder(id=data['feeder_id'])
 
-    _honeybee = honeybee(id=data['id'],
+    _honeybee = Honeybee(id=data['id'],
                          timestamp=datetime.strptime(data['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
                          protocol=data['protocol'],
                          username=data['login'],

@@ -47,3 +47,5 @@ feeder.cfg
 
 # exceptions for vfs files
 !hive/data/vfs/*
+
+beekeeper/beekeeper.sqlite

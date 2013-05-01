@@ -13,15 +13,13 @@ from beekeeper.webapp import app
 class WebappTests(unittest.TestCase):
     def setUp(self):
         self.app = app.app.test_client()
-        from pony.orm import Database, sql_debug
-        sql_debug(True)
 
     def tearDown(self):
         pass
 
     def test_basic_feeder_post(self):
         """
-        Tests if a sessionbee dict can be posted without exceptions.
+        Tests if a honeybee dict can be posted without exceptions.
         """
         data_dict = {
             'id': str(uuid.uuid4()),

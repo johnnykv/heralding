@@ -3,12 +3,18 @@ from pony.orm import *
 from pony.orm.core import Discriminator
 from db import db
 
-class feeder(db.Entity):
+from datetime import datetime
+from pony.orm import *
+
+db = Database("sqlite", "beekeeper.sqlite", create_db=True)
+
+
+class Feeder(db.Entity):
     id = PrimaryKey(str)
-    honeybees = Set("honeybee")
+    honeybees = Set("Honeybee")
 
 
-class session(db.Entity):
+class Session(db.Entity):
     classtype = Discriminator(int)
     id = PrimaryKey(str)
     timestamp = Required(datetime)
@@ -19,19 +25,21 @@ class session(db.Entity):
     source_port = Required(int)
     destination_ip = Required(str)
     destination_port = Required(int)
-    hive = Optional("hive")
+    hive = Optional("Hive")
 
 
-class hive(db.Entity):
+class Hive(db.Entity):
     id = PrimaryKey(str)
-    sessions = Set(session)
+    sessions = Set(Session)
 
 
-class honeybee(db.session):
-    feeder = Required(feeder)
+class Honeybee(db.Session):
+    feeder = Required(Feeder)
     did_connect = Optional(bool)
     did_login = Optional(bool)
     did_complete = Optional(bool)
 
+
 sql_debug(True)
 db.generate_mapping(create_tables=True)
+# db.generate_mapping(check_tables=True)
