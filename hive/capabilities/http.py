@@ -65,7 +65,7 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
                 self.send_html('please_auth.html')
             else:
                 self.do_HEAD()
-                self.send_html('base.html')
+                self.send_html('index.html')
         self.request.close()
 
     def send_html(self, filename):
@@ -96,4 +96,3 @@ class http(HandlerBase):
                            options=self._options)
         except socket.error as err:
             logger.debug('Unexpected end of http session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
-
