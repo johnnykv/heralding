@@ -14,11 +14,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import base64
+import socket
+import logging
 
 from BaseHTTPServer import BaseHTTPRequestHandler
 from sendfile import sendfile
 from handlerbase import HandlerBase
 
+logger = logging.getLogger(__name__)
 
 class BeeHTTPHandler(BaseHTTPRequestHandler):
     def __init__(self, request, client_address, vfs, server, httpsession, options):
@@ -86,7 +89,11 @@ class http(HandlerBase):
 
     def handle_session(self, gsocket, address):
         session = self.create_session(address, gsocket)
-        # The third argument ensures that the BeeHTTPHandler will access
-        # only the data in vfs/var/www
-        BeeHTTPHandler(gsocket, address, self.vfsystem.opendir('/var/www'), None, httpsession=session,
-                       options=self._options)
+        try:
+            # The third argument ensures that the BeeHTTPHandler will access
+            # only the data in vfs/var/www
+            BeeHTTPHandler(gsocket, address, self.vfsystem.opendir('/var/www'), None, httpsession=session,
+                           options=self._options)
+        except socket.error as err:
+            logger.debug('Unexpected end of http session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
+
