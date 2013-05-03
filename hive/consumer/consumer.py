@@ -60,7 +60,15 @@ class Consumer:
                         #set public ip if available
                         if self.public_ip:
                             session.honey_ip = self.public_ip
-                        log.log(session)
+                            try:
+                                log.log(session)
+                            #make sure this greenlet does not crash on errors while calling loggers
+                            except Exception as ex:
+                                logger.exception('Error ({0}) while using {1} logger on a {2} session. ({3})'
+                                                 .format(ex,
+                                                         log.__class__.__name__,
+                                                         session.protocol,
+                                                         session.id))
                     del self.sessions[session_id]
                     logger.debug('Removed {0} connection from {1}. ({2})'.format(session.protocol,
                                                                                  session.attacker_ip,
