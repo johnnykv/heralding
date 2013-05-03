@@ -51,12 +51,16 @@ class pop3(HandlerBase):
 
             session.activity()
 
-            msg = None
-
-            if ' ' in raw_msg:
-                cmd, msg = raw_msg.rstrip().split(' ', 1)
+            cmd_msg = raw_msg.rstrip().split(' ', 1)
+            if len(cmd_msg) == 0:
+                continue
+            elif len(cmd_msg) == 1:
+                cmd = cmd_msg[0]
+                msg = ''
             else:
-                cmd = raw_msg.rstrip()
+                cmd = cmd_msg[0]
+                msg = cmd_msg[1]
+
             cmd = cmd.lower()
 
             func_to_call = getattr(self, 'cmd_%s' % cmd, None)
