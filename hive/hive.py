@@ -29,6 +29,7 @@ from models.session import Session
 from models.authenticator import Authenticator
 from helpers.streamserver import HiveStreamServer
 from helpers.common import drop_privileges, list2dict, create_socket
+from models.user import HiveUser
 
 # Do not remove this import, it is required for auto detect.
 # See capabilities/__init__.py to see how the auto detect works
@@ -92,6 +93,9 @@ class Hive(object):
         self.server_greenlets = []
         #will contain Session objects
         self.sessions = {}
+
+        #will contain HiveUser objects
+        self.users = {}
 
         self.public_ip = self.config.get('public_ip', 'public_ip')
         self.fetch_ip = self.config.getboolean('public_ip', 'fetch_public_ip')
