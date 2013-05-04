@@ -23,6 +23,7 @@ from handlerbase import HandlerBase
 
 logger = logging.getLogger(__name__)
 
+
 class BeeHTTPHandler(BaseHTTPRequestHandler):
     def __init__(self, request, client_address, vfs, server, httpsession, options):
 
@@ -70,15 +71,15 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
 
     def send_html(self, filename):
 
-        file = self.vfs.open(filename)
-        sendfile(self.request.fileno(), file.fileno(), 0, 65536)
-        file.close()
+        file_ = self.vfs.open(filename)
+        sendfile(self.request.fileno(), file_.fileno(), 0, 65536)
+        file_.close()
 
     def version_string(self):
         return self._banner
 
     #Disable logging provided by BaseHTTPServer
-    def log_message(self, format, *args):
+    def log_message(self, format_, *args):
         pass
 
 
