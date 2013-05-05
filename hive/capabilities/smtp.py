@@ -280,8 +280,8 @@ class DummySMTPServer(object):
 
 
 class smtp(HandlerBase):
-    def __init__(self, sessions, options):
-        super(smtp, self).__init__(sessions, options)
+    def __init__(self, sessions, options, users=None):
+        super(smtp, self).__init__(sessions, options, users)
         self._options = options
 
     def handle_session(self, gsocket, address):

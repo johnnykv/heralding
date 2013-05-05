@@ -120,7 +120,7 @@ class Hive(object):
             port = self.config.getint(cap_name, 'port')
             #carve out the options for this specific service
             options = list2dict(self.config.items(cap_name))
-            cap = c(self.sessions, options, self.users)
+            cap = c(self.sessions, options, users=self.users)
 
             try:
                 socket = create_socket(('0.0.0.0', port))

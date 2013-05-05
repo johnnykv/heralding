@@ -18,7 +18,7 @@ from hive.models.session import Session
 
 
 class HandlerBase(object):
-    def __init__(self, sessions, options, users):
+    def __init__(self, sessions, options, users=None):
         """
         Base class that all capabilities must inherit from.
 

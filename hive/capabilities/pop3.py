@@ -25,8 +25,8 @@ class pop3(HandlerBase):
     max_tries = 10
     cmds = {}
 
-    def __init__(self, sessions, options):
-        super(pop3, self).__init__(sessions, options)
+    def __init__(self, sessions, options, users=None):
+        super(pop3, self).__init__(sessions, options, users)
         pop3.max_tries = int(self.options['max_attempts'])
 
     def handle_session(self, gsocket, address):

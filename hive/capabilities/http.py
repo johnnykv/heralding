@@ -68,7 +68,6 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
                 self.do_AUTHHEAD()
                 self.send_html('please_auth.html')
             else:
-                self.current_user = self.users['uname']
                 self.do_HEAD()
                 self.send_html('index.html')
         self.request.close()
@@ -88,8 +87,8 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
 
 
 class http(HandlerBase):
-    def __init__(self, sessions, options):
-        super(http, self).__init__(sessions, options)
+    def __init__(self, sessions, options, users=None):
+        super(http, self).__init__(sessions, options, users)
         self._options = options
 
     def handle_session(self, gsocket, address):
