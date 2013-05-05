@@ -91,7 +91,7 @@ class BeeFTPHandler(object):
 
 class ftp(HandlerBase):
 
-    def __init__(self, sessions, options, users=None):
+    def __init__(self, sessions, options, users):
         super(ftp, self).__init__(sessions, options, users)
         self._options = options
 

@@ -15,16 +15,15 @@
 
 import gevent.monkey
 import socket
+import unittest
 gevent.monkey.patch_all()
 
 
 from gevent.server import StreamServer
 from hive.helpers.common import create_socket
 from hive.capabilities import vnc
+from hive.models.user import HiveUser
 
-
-
-import unittest
 
 class VNC_Test(unittest.TestCase):
 
@@ -33,7 +32,8 @@ class VNC_Test(unittest.TestCase):
             HTTP 401 (Unauthorized) headers.
         """
         sessions = {}
-        cap = vnc.vnc(sessions, {'enabled': 'True', 'port': 5902})
+        users = {'test': HiveUser('test', 'test')}
+        cap = vnc.vnc(sessions, {'enabled': 'True', 'port': 5902}, users)
         s = create_socket(("0.0.0.0", 5902))
         srv = StreamServer(s, cap.handle_session)
         srv.start()

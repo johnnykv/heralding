@@ -63,7 +63,7 @@ class BeeVNCHandler(SocketServer.StreamRequestHandler):
 
 
 class vnc(HandlerBase):
-    def __init__(self, sessions, options, users=None):
+    def __init__(self, sessions, options, users):
         super(vnc, self).__init__(sessions, options, users)
         self._options = options
 

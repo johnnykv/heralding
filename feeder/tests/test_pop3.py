@@ -14,6 +14,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import gevent.monkey
+from hive.models.user import HiveUser
+
 gevent.monkey.patch_all()
 from gevent.server import StreamServer
 from hive.helpers.common import create_socket
@@ -26,6 +28,7 @@ from feeder.models.session import BeeSession
 from hive.models.authenticator import Authenticator
 from hive.models.session import Session
 
+
 class POP3_Test(unittest.TestCase):
 
     def test_pop3(self):
@@ -35,7 +38,8 @@ class POP3_Test(unittest.TestCase):
         Session.authenticator = authenticator
 
         sessions = {}
-        cap = hive_pop3.pop3(sessions, {'enabled': 'True', 'port': 8081, 'max_attempts': 3})
+        users = {'test': HiveUser('test', 'test')}
+        cap = hive_pop3.pop3(sessions, {'enabled': 'True', 'port': 8081, 'max_attempts': 3}, users)
         socket = create_socket(('0.0.0.0', 8081))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()

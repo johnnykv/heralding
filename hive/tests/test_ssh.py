@@ -23,16 +23,17 @@ import unittest
 from hive.capabilities import ssh
 from hive.models.session import Session
 from hive.models.authenticator import Authenticator
-
+from hive.models.user import HiveUser
 from paramiko import SSHClient, AutoAddPolicy, AuthenticationException
+
 
 class Telnet_Tests(unittest.TestCase):
     def test_basic_login(self):
 
         authenticator = Authenticator({})
         Session.authenticator = authenticator
-
-        sut = ssh.ssh({}, {'port': 22, 'key': 'hive/tests/dummy_key.key'})
+        users = {'test': HiveUser('test', 'test')}
+        sut = ssh.ssh({}, {'port': 22, 'key': 'hive/tests/dummy_key.key'}, users)
         server = StreamServer(('127.0.0.1', 0), sut.handle_session)
         server.start()
         print server

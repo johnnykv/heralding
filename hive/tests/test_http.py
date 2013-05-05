@@ -14,6 +14,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import gevent.monkey
+from hive.models.user import HiveUser
+
 gevent.monkey.patch_all()
 
 from gevent.server import StreamServer
@@ -37,9 +39,10 @@ class HTTP_Test(unittest.TestCase):
         Session.authenticator = authenticator
 
         sessions = {}
+        users = {'test': HiveUser('test', 'test')}
         # Use uncommon port so that you can run the test even if the Hive
         # is running.
-        cap = http.http(sessions, {'enabled': 'True', 'port': 8081})
+        cap = http.http(sessions, {'enabled': 'True', 'port': 8081}, users)
         socket = create_socket(('0.0.0.0', 8081))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()
@@ -57,7 +60,8 @@ class HTTP_Test(unittest.TestCase):
         Session.authenticator = authenticator
 
         sessions = {}
-        cap = http.http(sessions, {'enabled': 'True', 'port': 8081})
+        users = {'test': HiveUser('test', 'test')}
+        cap = http.http(sessions, {'enabled': 'True', 'port': 8081}, users)
         socket = create_socket(('0.0.0.0', 8081))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()
