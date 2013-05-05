@@ -25,9 +25,12 @@ logger = logging.getLogger(__name__)
 
 
 class BeeHTTPHandler(BaseHTTPRequestHandler):
-    def __init__(self, request, client_address, vfs, server, httpsession, options):
+    def __init__(self, request, client_address, vfs, server, httpsession, options, users):
 
         self.vfs = vfs
+        self.users = users
+        self.current_user = None  # This is set if a login attempt is successful
+
         # Had to call parent initializer later, because the methods used
         # in BaseHTTPRequestHandler.__init__() call handle_one_request()
         # which calls the do_* methods here. If _banner, _session and _options
@@ -65,6 +68,7 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
                 self.do_AUTHHEAD()
                 self.send_html('please_auth.html')
             else:
+                self.current_user = self.users['uname']
                 self.do_HEAD()
                 self.send_html('index.html')
         self.request.close()
@@ -94,6 +98,6 @@ class http(HandlerBase):
             # The third argument ensures that the BeeHTTPHandler will access
             # only the data in vfs/var/www
             BeeHTTPHandler(gsocket, address, self.vfsystem.opendir('/var/www'), None, httpsession=session,
-                           options=self._options)
+                           options=self._options, users=self.users)
         except socket.error as err:
             logger.debug('Unexpected end of http session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
