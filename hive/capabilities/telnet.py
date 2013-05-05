@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 class telnet(HandlerBase):
-    def __init__(self, sessions, options, users=None):
+    def __init__(self, sessions, options, users):
         super(telnet, self).__init__(sessions, options, users)
 
     def handle_session(self, gsocket, address):

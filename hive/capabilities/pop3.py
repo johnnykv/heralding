@@ -25,7 +25,7 @@ class pop3(HandlerBase):
     max_tries = 10
     cmds = {}
 
-    def __init__(self, sessions, options, users=None):
+    def __init__(self, sessions, options, users):
         super(pop3, self).__init__(sessions, options, users)
         pop3.max_tries = int(self.options['max_attempts'])
 

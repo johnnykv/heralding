@@ -20,6 +20,8 @@ import hmac
 from hive.helpers.common import create_socket
 from gevent.server import StreamServer
 from hive.capabilities import smtp
+from hive.models.user import HiveUser
+
 gevent.monkey.patch_all()
 
 import unittest
@@ -37,8 +39,9 @@ class SMTP_Test(unittest.TestCase):
         Session.authenticator = authenticator
 
         sessions = {}
+        users = {'test': HiveUser('test', 'test')}
         # Use uncommon port so that we can run test even if the Hive is running.
-        cap = smtp.smtp(sessions, {'enabled': 'True', 'port': 2526, 'banner': 'Test'})
+        cap = smtp.smtp(sessions, {'enabled': 'True', 'port': 2526, 'banner': 'Test'}, users)
         socket = create_socket(('0.0.0.0', 2526))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()
@@ -56,7 +59,8 @@ class SMTP_Test(unittest.TestCase):
         Session.authenticator = authenticator
 
         sessions = {}
-        cap = smtp.smtp(sessions, {'enabled': 'True', 'port': 2500, 'banner': 'Test'})
+        users = {'test': HiveUser('test', 'test')}
+        cap = smtp.smtp(sessions, {'enabled': 'True', 'port': 2500, 'banner': 'Test'}, users)
         socket = create_socket(('0.0.0.0', 2500))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()
@@ -81,7 +85,8 @@ class SMTP_Test(unittest.TestCase):
         Session.authenticator = authenticator
 
         sessions = {}
-        cap = smtp.smtp(sessions, {'enabled': 'True', 'port': 2502, 'banner': 'Test'})
+        users = {'test': HiveUser('test', 'test')}
+        cap = smtp.smtp(sessions, {'enabled': 'True', 'port': 2500, 'banner': 'Test'}, users)
         socket = create_socket(('0.0.0.0', 2502))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()
@@ -100,7 +105,8 @@ class SMTP_Test(unittest.TestCase):
         Session.authenticator = authenticator
 
         sessions = {}
-        cap = smtp.smtp(sessions, {'enabled': 'True', 'port': 2501, 'banner': 'Test'})
+        users = {'test': HiveUser('test', 'test')}
+        cap = smtp.smtp(sessions, {'enabled': 'True', 'port': 2500, 'banner': 'Test'}, users)
         socket = create_socket(('0.0.0.0', 2501))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()
@@ -119,7 +125,8 @@ class SMTP_Test(unittest.TestCase):
         Session.authenticator = authenticator
 
         sessions = {}
-        cap = smtp.smtp(sessions, {'enabled': 'True', 'port': 2503, 'banner': 'Test'})
+        users = {'test': HiveUser('test', 'test')}
+        cap = smtp.smtp(sessions, {'enabled': 'True', 'port': 2500, 'banner': 'Test'}, users)
         socket = create_socket(('0.0.0.0', 2503))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()
@@ -144,7 +151,8 @@ class SMTP_Test(unittest.TestCase):
         Session.authenticator = authenticator
 
         sessions = {}
-        cap = smtp.smtp(sessions, {'enabled': 'True', 'port': 2504, 'banner': 'Test'})
+        users = {'test': HiveUser('test', 'test')}
+        cap = smtp.smtp(sessions, {'enabled': 'True', 'port': 2500, 'banner': 'Test'}, users)
         socket = create_socket(('0.0.0.0', 2504))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()
@@ -163,7 +171,8 @@ class SMTP_Test(unittest.TestCase):
         Session.authenticator = authenticator
 
         sessions = {}
-        cap = smtp.smtp(sessions, {'enabled': 'True', 'port': 2505, 'banner': 'Test'})
+        users = {'test': HiveUser('test', 'test')}
+        cap = smtp.smtp(sessions, {'enabled': 'True', 'port': 2500, 'banner': 'Test'}, users)
         socket = create_socket(('0.0.0.0', 2505))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()

@@ -19,6 +19,7 @@ import unittest
 from hive.capabilities import pop3
 from hive.models.session import Session
 from hive.models.authenticator import Authenticator
+from hive.models.user import HiveUser
 
 
 class Pop3_Tests(unittest.TestCase):
@@ -32,7 +33,8 @@ class Pop3_Tests(unittest.TestCase):
         authenticator = Authenticator({'james': 'bond'})
         Session.authenticator = authenticator
 
-        sut = pop3.pop3(sessions, {'port': 110, 'max_attempts': 3})
+        users = {'test': HiveUser('test', 'test')}
+        sut = pop3.pop3(sessions, {'port': 110, 'max_attempts': 3}, users)
 
         #dont really care about the socket at this point (None...)
         #TODO: mock the socket!
@@ -73,7 +75,8 @@ class Pop3_Tests(unittest.TestCase):
 
         sessions = {}
 
-        sut = pop3.pop3(sessions, {'port': 110, 'max_attempts': 3})
+        users = {'test': HiveUser('test', 'test')}
+        sut = pop3.pop3(sessions, {'port': 110, 'max_attempts': 3}, users)
 
         server = StreamServer(('127.0.0.1', 0), sut.handle_session)
         server.start()

@@ -14,6 +14,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import gevent.monkey
+from hive.models.user import HiveUser
+
 gevent.monkey.patch_all()
 from gevent.server import StreamServer
 from hive.helpers.common import create_socket
@@ -36,7 +38,8 @@ class SMTP_Test(unittest.TestCase):
         Session.authenticator = authenticator
 
         sessions = {}
-        cap = hive_smtp.smtp(sessions, {'enabled': 'True', 'port': 8081})
+        users = {'test': HiveUser('test', 'test')}
+        cap = hive_smtp.smtp(sessions, {'enabled': 'True', 'port': 8081}, users)
         socket = create_socket(('0.0.0.0', 8081))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()

@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import gevent
 import gevent.monkey
+from hive.models.user import HiveUser
 
 gevent.monkey.patch_all()
 
@@ -37,7 +38,8 @@ class ftp_Tests(unittest.TestCase):
         authenticator = Authenticator()
         Session.authenticator = authenticator
         sessions = {}
-        cap = ftp.ftp(sessions, {'enabled': 'True', 'port': 2122, 'banner': 'Test Banner', 'max_attempts': 3})
+        users = {'test': HiveUser('test', 'test')}
+        cap = ftp.ftp(sessions, {'enabled': 'True', 'port': 2122, 'banner': 'Test Banner', 'max_attempts': 3}, users)
         socket = create_socket(('0.0.0.0', 2122))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()

@@ -15,6 +15,8 @@
 
 import gevent
 import gevent.monkey
+from hive.models.user import HiveUser
+
 gevent.monkey.patch_all()
 from gevent.server import StreamServer
 
@@ -28,7 +30,6 @@ from hive.models.session import Session
 from hive.models.authenticator import Authenticator
 
 
-
 class Telnet_Tests(unittest.TestCase):
     def test_invalid_login(self):
         """Tests if telnet server responds correctly to a invalid login attempt."""
@@ -40,7 +41,8 @@ class Telnet_Tests(unittest.TestCase):
         authenticator = Authenticator({})
         Session.authenticator = authenticator
         sessions = {}
-        sut = telnet.telnet(sessions, {'port': 23, 'max_attempts': 3})
+        users = {'test': HiveUser('test', 'test')}
+        sut = telnet.telnet(sessions, {'port': 23, 'max_attempts': 3}, users)
         server = StreamServer(('127.0.0.1', 0), sut.handle_session)
         server.start()
 
