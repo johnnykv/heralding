@@ -18,7 +18,7 @@ from hive.models.session import Session
 
 
 class HandlerBase(object):
-    def __init__(self, sessions, options):
+    def __init__(self, sessions, options, users=None):
         """
         Base class that all capabilities must inherit from.
 
@@ -27,6 +27,7 @@ class HandlerBase(object):
         """
         self.sessions = sessions
         self.options = options
+        self.users = users
         #virtual file system shared by all capabilities
         self.vfsystem = OSFS('./hive/data/vfs')
         #serviceport
@@ -41,4 +42,3 @@ class HandlerBase(object):
 
     def handle_session(self, socket, address):
         raise Exception('Do no call base class!')
-

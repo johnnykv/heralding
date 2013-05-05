@@ -91,8 +91,8 @@ class BeeFTPHandler(object):
 
 class ftp(HandlerBase):
 
-    def __init__(self, sessions, options):
-        super(ftp, self).__init__(sessions, options)
+    def __init__(self, sessions, options, users=None):
+        super(ftp, self).__init__(sessions, options, users)
         self._options = options
 
     def handle_session(self, gsocket, address):

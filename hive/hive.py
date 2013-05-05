@@ -29,6 +29,7 @@ from models.session import Session
 from models.authenticator import Authenticator
 from helpers.streamserver import HiveStreamServer
 from helpers.common import drop_privileges, list2dict, create_socket
+from models.user import HiveUser
 
 # Do not remove this import, it is required for auto detect.
 # See capabilities/__init__.py to see how the auto detect works
@@ -93,6 +94,9 @@ class Hive(object):
         #will contain Session objects
         self.sessions = {}
 
+        #will contain HiveUser objects
+        self.users = create_users()
+
         self.public_ip = self.config.get('public_ip', 'public_ip')
         self.fetch_ip = self.config.getboolean('public_ip', 'fetch_public_ip')
 
@@ -116,7 +120,7 @@ class Hive(object):
             port = self.config.getint(cap_name, 'port')
             #carve out the options for this specific service
             options = list2dict(self.config.items(cap_name))
-            cap = c(self.sessions, options)
+            cap = c(self.sessions, options, users=self.users)
 
             try:
                 socket = create_socket(('0.0.0.0', port))
@@ -155,3 +159,14 @@ class Hive(object):
 
 class ConfigNotFound(Exception):
     pass
+
+
+def create_users():
+    """Creates the users for the Hive."""
+
+    users = {}
+    #TODO: Read from database or file
+    username = 'test'
+    password = 'test'
+    users[username] = HiveUser(username, password)
+    return users

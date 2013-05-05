@@ -23,10 +23,14 @@ from handlerbase import HandlerBase
 
 logger = logging.getLogger(__name__)
 
+
 class BeeHTTPHandler(BaseHTTPRequestHandler):
-    def __init__(self, request, client_address, vfs, server, httpsession, options):
+    def __init__(self, request, client_address, vfs, server, httpsession, options, users):
 
         self.vfs = vfs
+        self.users = users
+        self.current_user = None  # This is set if a login attempt is successful
+
         # Had to call parent initializer later, because the methods used
         # in BaseHTTPRequestHandler.__init__() call handle_one_request()
         # which calls the do_* methods here. If _banner, _session and _options
@@ -70,21 +74,21 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
 
     def send_html(self, filename):
 
-        file = self.vfs.open(filename)
-        sendfile(self.request.fileno(), file.fileno(), 0, 65536)
-        file.close()
+        file_ = self.vfs.open(filename)
+        sendfile(self.request.fileno(), file_.fileno(), 0, 65536)
+        file_.close()
 
     def version_string(self):
         return self._banner
 
     #Disable logging provided by BaseHTTPServer
-    def log_message(self, format, *args):
+    def log_message(self, format_, *args):
         pass
 
 
 class http(HandlerBase):
-    def __init__(self, sessions, options):
-        super(http, self).__init__(sessions, options)
+    def __init__(self, sessions, options, users=None):
+        super(http, self).__init__(sessions, options, users)
         self._options = options
 
     def handle_session(self, gsocket, address):
@@ -93,6 +97,6 @@ class http(HandlerBase):
             # The third argument ensures that the BeeHTTPHandler will access
             # only the data in vfs/var/www
             BeeHTTPHandler(gsocket, address, self.vfsystem.opendir('/var/www'), None, httpsession=session,
-                           options=self._options)
+                           options=self._options, users=self.users)
         except socket.error as err:
             logger.debug('Unexpected end of http session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
