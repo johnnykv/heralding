@@ -6,7 +6,6 @@ import json
 import uuid
 import time
 from datetime import datetime
-from ConfigParser import ConfigParser
 
 from gevent import Greenlet
 
@@ -70,15 +69,14 @@ class FeedUnpack(object):
 
 
 class HPFeed(LoggerBase):
-    def __init__(self, config="hive.cfg.dist"):
-        conf_parser = ConfigParser()
-        conf_parser.read(config)
+    def __init__(self, config="hive.cfg"):
+        super(Beekeeper, self).__init__(config)
 
-        self.host = conf_parser.get("log_hpfeed", "host")
-        self.port = conf_parser.getint("log_hpfeed", "port")
-        self.secret = conf_parser.get("log_hpfeed", "secret").encode('latin1')
-        self.chan = conf_parser.get("log_hpfeed", "chan").encode('latin1')
-        self.ident = conf_parser.get("log_hpfeed", "ident").encode('latin1').strip()
+        self.host = self.config.get("log_hpfeed", "host")
+        self.port = self.config.getint("log_hpfeed", "port")
+        self.secret = self.config.get("log_hpfeed", "secret").encode('latin1')
+        self.chan = self.config.get("log_hpfeed", "chan").encode('latin1')
+        self.ident = self.config.get("log_hpfeed", "ident").encode('latin1').strip()
         self.enabled = True
 
         #Used for authentication and handling of socket errors

@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 class Session(object):
     authenticator = None
     default_timeout = 25
+    hive_id = None
 
     def __init__(self, attacker_ip, attacker_s_port, protocol, socket, honeypot_port=None, honeypot_ip=None):
 
@@ -47,7 +48,6 @@ class Session(object):
         self.socket = socket
 
     def try_auth(self, type, **kwargs):
-
         """
 
         :param username:
@@ -57,7 +57,8 @@ class Session(object):
         :return:
         """
         log_dict = {'timestamp': datetime.utcnow(),
-                    'type': type}
+                    'type': type,
+                    'id': uuid.uuid4()}
 
         log_string = ''
         for key, value in kwargs.iteritems():
@@ -79,6 +80,7 @@ class Session(object):
 
     def to_dict(self):
         return {
+            'hive_id': Session.hive_id,
             'id': self.id,
             'timestamp': self.timestamp,
             'attacker_ip': self.attacker_ip,

@@ -37,6 +37,8 @@ from beeswarm.hive.helpers.streamserver import HiveStreamServer
 from beeswarm.hive.helpers.common import drop_privileges, list2dict, create_socket
 from beeswarm.hive.models.user import HiveUser
 from beeswarm.errors import ConfigNotFound
+import requests
+from requests.exceptions import Timeout, ConnectionError
 
 logger = logging.getLogger(__name__)
 
@@ -52,10 +54,12 @@ class Hive(object):
 
         self.config = ConfigParser.ConfigParser()
 
+
         if not os.path.exists(config_file):
             raise ConfigNotFound('Configuration file could not be found. ({0})'.format(config_file))
 
         self.config.read(config_file)
+        Session.hive_id = self.config.get('general', 'hive_id')
 
         #check cert and key
         if not (os.path.isfile(self.key) and os.path.isfile(self.cert)):
@@ -101,11 +105,20 @@ class Hive(object):
         #will contain HiveUser objects
         self.users = create_users()
 
-        self.public_ip = self.config.get('public_ip', 'public_ip')
-        self.fetch_ip = self.config.getboolean('public_ip', 'fetch_public_ip')
+        if self.config.getboolean('general', 'fetch_ip'):
+            try:
+                url = 'http://api-sth01.exip.org/?call=ip'
+                req = requests.get(url)
+                self.hive_ip = req.text
+                logging.info('Fetched {0} as external ip for Hive.'.format(self.public_ip))
+            except (Timeout, ConnectionError) as e:
+                logging.warning('Could not fetch public ip: {0}'.format(e))
+
+        else:
+            self.hive_ip = self.config.get('general', 'hive_ip')
 
         #greenlet to consume the provided sessions
-        self.session_consumer = consumer.Consumer(self.sessions, public_ip=self.public_ip, fetch_public_ip=self.fetch_ip)
+        self.session_consumer = consumer.Consumer(self.sessions, self.hive_ip)
         Greenlet.spawn(self.session_consumer.start)
 
         #protocol handlers

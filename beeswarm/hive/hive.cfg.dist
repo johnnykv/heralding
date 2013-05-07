@@ -1,4 +1,9 @@
-# Logging
+[general]
+#Every hive must have a unique id.
+hive_id = h11141df-b2f6-baf4-86c0-f4e163cf69aa
+hive_ip = 192.168.1.1
+#use internet service to detect the public ip of the honeypot (this will override hive_ip)
+fetch_ip = False
 
 #This is the central logging feature of the honeynet project
 #if you enable this feature you accept that your logged data will be shared
@@ -11,6 +16,10 @@ ident = 2wtadBoH
 secret = mJPyhNhJmLYGbDCt
 chan = beeswarm.hive
 
+[log_beekeeper]
+enabled = True
+beekeeper_url = http://127.0.0.1:5000/ws/hive_data
+
 [log_syslog]
 enabled = False
 socket = /dev/log
@@ -20,7 +29,7 @@ socket = /dev/log
 #Optional
 public_ip =
 #Get public ip by querying external webservice
-fetch_public_ip = False
+fetch_ip = False
 
 # Capabilities
 [cap_ftp]

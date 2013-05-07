@@ -20,27 +20,19 @@ import gevent
 import requests
 from requests.exceptions import Timeout, ConnectionError
 from beeswarm.hive.consumer.loggers import loggerbase
+from beeswarm.hive.consumer.loggers.hpfeed import HPFeed
+from beeswarm.hive.consumer.loggers.beekeeper import Beekeeper
 
 
 logger = logging.getLogger(__name__)
 
 
 class Consumer:
-    def __init__(self, sessions, config='hive.cfg.dist', public_ip=None, fetch_public_ip=False):
+    def __init__(self, sessions,  hive_ip, config='hive.cfg'):
         logging.debug('Consumer created.')
         self.config = config
         self.enabled = True
-        if fetch_public_ip:
-            try:
-                url = 'http://api-sth01.exip.org/?call=ip'
-                req = requests.get(url)
-                self.public_ip = req.text
-                logging.info('Fetched {0} as external ip for Hive.'.format(self.public_ip))
-            except (Timeout, ConnectionError) as e:
-                logging.warning('Could not fetch public ip: {0}'.format(e))
-
-        else:
-            self.public_ip = None
+        self.hive_ip = hive_ip
 
         self.sessions = sessions
 
@@ -54,18 +46,16 @@ class Consumer:
                 session = self.sessions[session_id]
                 if not session.is_connected():
                     for log in active_loggers:
-                        #set public ip if available
-                        if self.public_ip:
-                            session.honey_ip = self.public_ip
-                            try:
-                                log.log(session)
-                            #make sure this greenlet does not crash on errors while calling loggers
-                            except Exception as ex:
-                                logger.exception('Error ({0}) while using {1} logger on a {2} session. ({3})'
-                                                 .format(ex,
-                                                         log.__class__.__name__,
-                                                         session.protocol,
-                                                         session.id))
+                        session.honey_ip = self.hive_ip
+                        try:
+                            log.log(session)
+                        #make sure this greenlet does not crash on errors while calling loggers
+                        except Exception as ex:
+                            logger.exception('Error ({0}) while using {1} logger on a {2} session. ({3})'
+                                             .format(ex,
+                                                     log.__class__.__name__,
+                                                     session.protocol,
+                                                     session.id))
                     del self.sessions[session_id]
                     logger.debug('Removed {0} connection from {1}. ({2})'.format(session.protocol,
                                                                                  session.attacker_ip,
@@ -112,7 +102,7 @@ class Consumer:
         for l in loggerbase.LoggerBase.__subclasses__():
             logger_name = l.__name__.lower()
             if logger_name in enabled_logger_classes:
-                logger.debug('{0} consumer started.'.format(logger_name.title()))
                 hive_logger = l()
+                logger.debug('{0} logger initialized.'.format(logger_name.title()))
                 loggers.append(hive_logger)
         return loggers
