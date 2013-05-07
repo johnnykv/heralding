@@ -30,7 +30,6 @@ class HandlerBase(object):
         self.options = options
         self.users = users
         #virtual file system shared by all capabilities
-        print workdir
         self.vfsystem = OSFS(os.path.join(workdir, 'data/vfs'))
         #serviceport
         self.port = int(options['port'])

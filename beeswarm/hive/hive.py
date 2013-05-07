@@ -23,6 +23,7 @@ import ntplib
 
 import gevent
 from gevent import Greenlet
+from OpenSSL import crypto
 from beeswarm.hive.consumer import consumer
 
 import beeswarm
@@ -44,7 +45,7 @@ class Hive(object):
 
     """ This is the main class, which starts up all the capabilities. """
 
-    def __init__(self, work_dir, config_file='hive.cfg.dist', key='server.key', cert='server.crt'):
+    def __init__(self, work_dir, config_file='hive.cfg', key='server.key', cert='server.crt'):
         self.work_dir = work_dir
         self.key = key
         self.cert = cert
@@ -167,19 +168,49 @@ class Hive(object):
         if not os.path.isfile(config_file):
             logging.info('Copying configuration file to workdir.')
             shutil.copyfile(os.path.join(package_directory, 'hive/hive.cfg.dist'),
-                os.path.join(work_dir, 'hive.cfg.dist'))
+                            os.path.join(work_dir, 'hive.cfg'))
 
         logging.info('Copying data files to workdir.')
         shutil.copytree(os.path.join(package_directory, 'hive/data'), os.path.join(work_dir, 'data/'),
                         ignore=Hive._ignore_copy_files)
 
+        logging.info('Creating SSL Certificate and Key.')
+        pk = crypto.PKey()
+        pk.generate_key(crypto.TYPE_RSA, 1024)
+
+        cert = crypto.X509()
+        sub = cert.get_subject()
+
+        # Later, we'll get these fields from the BeeKeeper
+        sub.C = 'US'
+        sub.ST = 'Default'
+        sub.L = 'Default'
+        sub.O = 'Default Company'
+        sub.OU = 'Default Org'
+        sub.CN = _socket.gethostname()
+        cert.set_serial_number(1000)
+        cert.gmtime_adj_notBefore(0)
+        cert.gmtime_adj_notAfter(365 * 24 * 60 * 60)  # Valid for a year
+        cert.set_issuer(sub)
+        cert.set_pubkey(pk)
+        cert.sign(pk, 'sha1')
+
+        certpath = os.path.join(work_dir, 'server.crt')
+        keypath = os.path.join(work_dir, 'server.key')
+
+        with open(certpath, 'w') as certfile:
+            certfile.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
+        with open(keypath, 'w') as keyfile:
+            keyfile.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, pk))
+
     @staticmethod
     def _ignore_copy_files(path, content):
         to_ignore = []
-        for file in content:
-            if file in ('.placeholder', '.git'):
-                to_ignore.append(file)
+        for file_ in content:
+            if file_ in ('.placeholder', '.git'):
+                to_ignore.append(file_)
         return to_ignore
+
 
 def create_users():
     """Creates the users for the Hive."""
@@ -190,4 +221,3 @@ def create_users():
     password = 'test'
     users[username] = HiveUser(username, password)
     return users
-
