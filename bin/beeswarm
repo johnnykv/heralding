@@ -111,6 +111,6 @@ if __name__ == '__main__':
     try:
         gevent.joinall([mode_greenlet])
     except KeyboardInterrupt as ex:
-        mode_greenlet.stop()
+        m.stop()
 
     gevent.joinall([mode_greenlet], 5)

@@ -33,8 +33,9 @@ class Beekeeper(object):
     def __init__(self, work_dir, config_file='beekeeper.cfg'):
         pass
 
-    def start(self):
+    def start(self, port=5000):
         #management interface
+        logger.info('Starting Beekeeper listning on port {0}'.format(port))
         self.http_server = WSGIServer(('', 5000), app.app)
         self.http_server.serve_forever()
 
