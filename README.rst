@@ -21,7 +21,7 @@ The project will eventually consist of three parts:
 
 * Beekeeper
 
-  * Provides managment interface. 
+  * Provides management interface.
   * Processes data from Hive and Feeder.
   * Reports malicious activity.
   * Generates configuration and crypto keys for a full beeswarm setup.
