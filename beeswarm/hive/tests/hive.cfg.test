@@ -1,0 +1,74 @@
+# Logging
+
+#This is the central logging feature of the honeynet project
+#if you enable this feature you accept that your logged data will be shared
+#and analyzed within the honeynet project organization.
+[log_hpfeed]
+enabled = False
+host = hpfriends.honeycloud.net
+port = 20000
+ident = 2wtadBoH
+secret = mJPyhNhJmLYGbDCt
+chan = beeswarm.hive
+
+[log_syslog]
+enabled = False
+socket = /dev/log
+
+#Additional information for logging purposes
+[public_ip]
+#Optional
+public_ip =
+#Get public ip by querying external webservice
+fetch_public_ip = False
+
+# Capabilities
+[cap_ftp]
+enabled = True
+port = 0
+max_attempts = 3
+banner = Microsoft FTP Server
+
+[cap_telnet]
+enabled = True
+port = 0
+max_attempts = 3
+
+[cap_pop3]
+enabled = True
+port = 0
+max_attempts = 3
+
+[cap_pop3s]
+enabled = True
+port = 0
+max_attempts = 3
+
+[cap_ssh]
+enabled = True
+port = 0
+key = server.key
+
+[cap_http]
+enabled = True
+port = 0
+banner = Microsoft-IIS/5.0
+
+[cap_https]
+enabled = True
+port = 0
+banner = Microsoft-IIS/5.0
+
+[cap_smtp]
+enabled = True
+banner = Microsoft ESMTP MAIL service ready
+port = 0
+
+[cap_vnc]
+enabled = True
+port = 0
+
+[timecheck]
+enabled = False
+poll = 5
+ntp_pool = pool.ntp.org

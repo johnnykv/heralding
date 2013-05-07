@@ -15,12 +15,26 @@ The project will eventually consist of three parts:
  * Generates configuration and crypto keys for a full beeswarm setup.
 
 
-## Hive
 ### Installation
+
+Beeswarm is packaged as a regular python module, and follows normal installation methodology:
+
+```
+$>python setup.py install
+```
+Developers are encouraged to use the ```develop``` feature from distribute:
+```
+$>python setup.py develop
+```
+
+## Hive
+### Preparation
 ``` shell
-$>pip install -r requirements.txt
+$>mkdir workdir
+$>cd workdir
 $>openssl req -new -newkey rsa:1024 -days 365 -nodes -x509 -keyout server.key -out server.crt
 $>openssl rsa -in server.key -text -out server.key
+$>sudo beeswarm -hi --prepare
 ```
 
 ### Sample usage
@@ -41,9 +55,6 @@ $>sudo python run_hive.py -v
 2013-02-21 10:37:49,787 (hive.models.session) ssh authentication attempt from 192.168.1.123. [root/toor] (6cda8971-aefd-41a6-9a96-caf4c7407028)
 2013-02-21 10:37:50,113 (hive.models.session) ssh authentication attempt from 192.168.1.123. [root/qwerty] (6cda8971-aefd-41a6-9a96-caf4c7407028)
 ```
-
-## Feeder
-Still under development.
 
 # Deployment diagram
 
