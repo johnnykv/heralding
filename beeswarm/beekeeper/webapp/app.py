@@ -15,13 +15,15 @@
 
 from datetime import datetime
 import json
+import logging
 from flask import Flask, render_template, request
 from pony.orm import commit, select
-from beeswarm.beekeeper.database import Feeder, Honeybee, Session
+from beeswarm.beekeeper.database import Feeder, Honeybee, Session, Hive
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
 
+logger = logging.getLogger(__name__)
 
 @app.route('/')
 def home():
@@ -42,7 +44,7 @@ def sessions_honeybees():
 @app.route('/sessions/attacks')
 def sessions_attacks():
     #TODO: Figure out the correct way to do this with PonyORM
-    attacks = select(a for a in Session if a.classtype is None)
+    attacks = select(a for a in Session if a.classtype == 'Session')
     return render_template('logs.html', sessions=attacks)
 
 @app.route('/ws/feeder_data', methods=['POST'])
@@ -54,6 +56,7 @@ def feeder_data():
     source_ip = 'a'
     source_port = 0
 
+    #in the final version it will be guaranteed that the feeder exists in the database
     _feeder = Feeder.get(id=data['feeder_id'])
     #create if not found in the database
     if not _feeder:
@@ -77,6 +80,33 @@ def feeder_data():
 
     return ''
 
+@app.route('/ws/hive_data', methods=['POST'])
+def hive_data():
+    #TODO: investigate why the flask provided request.json returns None.
+    data = json.loads(request.data)
+    logger.debug('Received: {0}'.format(data))
+
+    #in the final version it will be guaranteed that hive exists in the database
+    _hive = Hive.get(id=data['hive_id'])
+    #create if not found in the database
+    if not _hive:
+        _hive = Hive(id=data['hive_id'])
+
+    for login_attempt in data['login_attempts']:
+        _session = Session(id=login_attempt['id'],
+                           timestamp=datetime.strptime(login_attempt['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
+                           protocol=data['protocol'],
+                           #TODO: not all capabilities delivers login/passwords. This needs to be subclasses...
+                           username=login_attempt['username'],
+                           password=login_attempt['password'],
+                           destination_ip='aaa',
+                           destination_port=data['honey_port'],
+                           source_ip=data['attacker_ip'],
+                           source_port=data['attacker_source_port'],
+                           hive=_hive)
+
+    commit()
+    return ''
 
 if __name__ == '__main__':
     app.run()
