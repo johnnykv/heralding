@@ -54,8 +54,6 @@ Preparation
 
     $>mkdir workdir
     $>cd workdir
-    $>openssl req -new -newkey rsa:1024 -days 365 -nodes -x509 -keyout server.key -out server.crt
-    $>openssl rsa -in server.key -text -out server.key
     $>sudo beeswarm -hi --prepare
 
 

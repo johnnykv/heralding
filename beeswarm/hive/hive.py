@@ -61,15 +61,6 @@ class Hive(object):
         self.config.read(config_file)
         Session.hive_id = self.config.get('general', 'hive_id')
 
-        #check cert and key
-        if not (os.path.isfile(self.key) and os.path.isfile(self.cert)):
-            gen_cmd = "openssl req -new -newkey rsa:1024 -days 365 -nodes -x509 -keyout server.key -out server.crt"
-            gen_cmd += ' && openssl rsa -in server.key -text -out server.key'
-            logger.error('No valid key or certificate found, '
-                         'a selfsigned cert and key can be generated with the following '
-                         'command: "{0}"'.format(gen_cmd))
-            sys.exit(1)
-
         #inject authentication mechanism
         Session.authenticator = Authenticator()
 
