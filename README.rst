@@ -4,7 +4,7 @@ Beeswarm |Build Status|
 .. |Build Status| image:: https://travis-ci.org/honeynet/beeswarm.png?branch=master
                        :target: https://travis-ci.org/honeynet/beeswarm
 
-A honeypot project which will try to estimate how, where and when credentials are intercepted and reused.
+A honeytoken project which will try to estimate how, where and when credentials are intercepted and reused.
 The project will eventually consist of three parts:
 
 
@@ -83,7 +83,7 @@ Sample usage
 The grand scheme
 ================
 
-The following deployment diagram shows concept of Beeswarm when fully operational:
+The following deployment diagram shows the Beeswarm concept when fully operational:
 
 .. code-block::
 
