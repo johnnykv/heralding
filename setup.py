@@ -13,7 +13,7 @@ setup(
     author='Johnny Vestergaard, The Honeynet Project',
     author_email='jkv@unixcluster.dk',
     include_package_data=True,
-    #long_description=open('README.rst').read(),
+    long_description=open('README.rst').read(),
     description='Honeytoken transmission, reception and analysis.',
     test_suite='nose.collector',
     install_requires=open('requirements.txt').read().splitlines(),
