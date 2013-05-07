@@ -32,8 +32,6 @@ class pop3(HandlerBase):
     def handle_session(self, gsocket, address):
         session = self.create_session(address, gsocket)
 
-        logger.info("Accepted connection from {0}:{1}. ({2})".format(address[0], address[1], session.id))
-
         session.vdata['MAILSPOOL'] = {}
         session.vdata['deleted_index'] = []
 
