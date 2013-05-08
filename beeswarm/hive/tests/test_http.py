@@ -47,14 +47,14 @@ class HTTP_Test(unittest.TestCase):
             HTTP 401 (Unauthorized) headers.
         """
 
-        authenticator = Authenticator({'test': 'test'})
-        Session.authenticator = authenticator
-
         sessions = {}
         users = {'test': HiveUser('test', 'test')}
+        authenticator = Authenticator(users)
+        Session.authenticator = authenticator
+
         # Use uncommon port so that you can run the test even if the Hive
         # is running.
-        options =  {'enabled': 'True', 'port': 8081}
+        options = {'enabled': 'True', 'port': 8081}
         cap = http.http(sessions, options, users, self.work_dir)
         socket = create_socket(('0.0.0.0', 8081))
         srv = StreamServer(socket, cap.handle_session)
@@ -69,7 +69,7 @@ class HTTP_Test(unittest.TestCase):
     def test_login(self):
         """ Tries to login using the username/password as test/test.
         """
-        authenticator = Authenticator({'test': 'test'})
+        authenticator = Authenticator({'test': HiveUser('test', 'test')})
         Session.authenticator = authenticator
 
         sessions = {}

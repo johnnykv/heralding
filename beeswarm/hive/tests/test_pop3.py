@@ -41,12 +41,12 @@ class Pop3_Tests(unittest.TestCase):
         """Tests if the basic parts of the session is filled correctly"""
 
         sessions = {}
+        users = {'test': HiveUser('test', 'test')}
 
         #provide valid login/pass to authenticator
-        authenticator = Authenticator({'james': 'bond'})
+        authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        users = {'test': HiveUser('test', 'test')}
         sut = pop3.pop3(sessions, {'port': 110, 'max_attempts': 3}, users, self.work_dir)
 
         #dont really care about the socket at this point (None...)
@@ -68,8 +68,10 @@ class Pop3_Tests(unittest.TestCase):
     def test_login(self):
         """Testing different login combinations"""
 
+        users = {'james': HiveUser('james', 'bond')}
+
         #provide valid login/pass to authenticator
-        authenticator = Authenticator({'james': 'bond'})
+        authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
         login_sequences = [
@@ -87,8 +89,6 @@ class Pop3_Tests(unittest.TestCase):
         ]
 
         sessions = {}
-
-        users = {'test': HiveUser('test', 'test')}
         sut = pop3.pop3(sessions, {'port': 110, 'max_attempts': 3}, users, self.work_dir)
 
         server = StreamServer(('127.0.0.1', 0), sut.handle_session)

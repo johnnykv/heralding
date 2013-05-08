@@ -61,8 +61,12 @@ class Hive(object):
         self.config.read(config_file)
         Session.hive_id = self.config.get('general', 'hive_id')
 
+        #will contain HiveUser objects
+        self.users = create_users()
+        print "users:", self.users
+
         #inject authentication mechanism
-        Session.authenticator = Authenticator()
+        Session.authenticator = Authenticator(self.users)
 
         #spawning time checker
         if self.config.getboolean('timecheck', 'Enabled'):
@@ -92,9 +96,6 @@ class Hive(object):
         self.server_greenlets = []
         #will contain Session objects
         self.sessions = {}
-
-        #will contain HiveUser objects
-        self.users = create_users()
 
         if self.config.getboolean('general', 'fetch_ip'):
             try:

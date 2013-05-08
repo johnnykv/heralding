@@ -32,6 +32,7 @@ from beeswarm.hive.helpers.common import create_socket
 from beeswarm.feeder.bees import smtp as bee_smtp
 from beeswarm.feeder.models.session import BeeSession
 
+
 class SMTP_Test(unittest.TestCase):
     def setUp(self):
         self.work_dir = tempfile.mkdtemp()
@@ -44,11 +45,11 @@ class SMTP_Test(unittest.TestCase):
     def test_login(self):
         """Tests if the SMTP bee can login to the SMTP capability"""
 
-        authenticator = Authenticator({'test': 'test'})
-        Session.authenticator = authenticator
-
         sessions = {}
         users = {'test': HiveUser('test', 'test')}
+        authenticator = Authenticator(users)
+        Session.authenticator = authenticator
+
         cap = hive_smtp.smtp(sessions, {'enabled': 'True', 'port': 8081}, users, self.work_dir)
         socket = create_socket(('0.0.0.0', 8081))
         srv = StreamServer(socket, cap.handle_session)

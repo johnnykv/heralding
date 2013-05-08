@@ -44,15 +44,15 @@ class Telnet_Tests(unittest.TestCase):
     def tearDown(self):
         if os.path.isdir(self.work_dir):
             shutil.rmtree(self.work_dir)
+
     def test_basic_login(self):
 
-        authenticator = Authenticator({})
-        Session.authenticator = authenticator
         users = {'test': HiveUser('test', 'test')}
+        authenticator = Authenticator(users)
+        Session.authenticator = authenticator
         sut = ssh.ssh({}, {'port': 22, 'key': self.key}, users, self.work_dir)
         server = StreamServer(('127.0.0.1', 0), sut.handle_session)
         server.start()
-        print server
 
         client = SSHClient()
         client.set_missing_host_key_policy(AutoAddPolicy())
