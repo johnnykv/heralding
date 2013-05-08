@@ -21,7 +21,6 @@ from ConfigParser import ConfigParser
 from gevent.wsgi import WSGIServer
 import beeswarm
 from beeswarm.beekeeper import database_config
-app = None
 
 logger = logging.getLogger(__name__)
 
@@ -31,16 +30,15 @@ class Beekeeper(object):
         self.config = ConfigParser()
         self.config.read(config_file)
 
-        #TODO: Next 5 lines makes me sad - fix it!
         database_config.setup_db(os.path.join(os.getcwd(), self.config.get('sqlite', 'db_file')))
-        from beeswarm.beekeeper.webapp import app as l_app
-        global app
-        app = l_app
+        from beeswarm.beekeeper.webapp import app
+
+        self.app = app.app
 
     def start(self, port=5000):
         #management interface
         logger.info('Starting Beekeeper listening on port {0}'.format(port))
-        self.http_server = WSGIServer(('', 5000), app.app)
+        self.http_server = WSGIServer(('', 5000), self.app)
         self.http_server.serve_forever()
 
     def stop(self):
