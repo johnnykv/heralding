@@ -44,11 +44,10 @@ class HTTP_Test(unittest.TestCase):
     def test_login(self):
         """ Tests if HTTP bee can login to the http capability.
         """
-        authenticator = Authenticator({'test': 'test'})
-        Session.authenticator = authenticator
-
         sessions = {}
         users = {'test': HiveUser('test', 'test')}
+        authenticator = Authenticator(users)
+        Session.authenticator = authenticator
         options = {'enabled': 'True', 'port': 8081}
         cap = hive_http.http(sessions, options, users, self.work_dir)
         socket = create_socket(('0.0.0.0', 8081))

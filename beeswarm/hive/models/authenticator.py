@@ -17,26 +17,25 @@ import hmac
 
 
 class Authenticator(object):
-    def __init__(self, creds={}):
+    def __init__(self, users={}):
 
-        #key: username, value: password
-        #TODO: Read this from database
-        self.creds = creds
+        #key: username, value: HiveUser object
+        self.users = users
 
     def try_auth(self, type, **kwargs):
         if type == 'plaintext':
-            if kwargs.get('username') in self.creds:
-                if self.creds[kwargs.get('username')] == kwargs.get('password'):
+            if kwargs.get('username') in self.users:
+                if self.users[kwargs.get('username')].password == kwargs.get('password'):
                     return True
 
         elif type == 'cram_md5':
             def encode_cram_md5(challenge, user, password):
                 response = user + ' ' + hmac.HMAC(password, challenge).hexdigest()
                 return response
-            if kwargs.get('username') in self.creds:
+            if kwargs.get('username') in self.users:
                 uname = kwargs.get('username')
                 digest = kwargs.get('digest')
-                s_pass = self.creds[uname]
+                s_pass = self.users[uname].password
                 challenge = kwargs.get('challenge')
                 ideal_response = encode_cram_md5(challenge, uname, s_pass)
                 _, ideal_digest = ideal_response.split()

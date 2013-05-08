@@ -33,8 +33,6 @@ from beeswarm.feeder.models.session import BeeSession
 from beeswarm.feeder.bees import pop3 as bee_pop3
 
 
-
-
 class POP3_Test(unittest.TestCase):
     def setUp(self):
         self.work_dir = tempfile.mkdtemp()
@@ -47,11 +45,11 @@ class POP3_Test(unittest.TestCase):
     def test_pop3(self):
         """Tests if the POP3 bee can login to the POP3 capability"""
 
-        authenticator = Authenticator({'test': 'test'})
-        Session.authenticator = authenticator
-
         sessions = {}
         users = {'test': HiveUser('test', 'test')}
+        authenticator = Authenticator(users)
+        Session.authenticator = authenticator
+
         cap = hive_pop3.pop3(sessions, {'enabled': 'True', 'port': 8081, 'max_attempts': 3}, users, self.work_dir)
         socket = create_socket(('0.0.0.0', 8081))
         srv = StreamServer(socket, cap.handle_session)

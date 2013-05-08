@@ -78,6 +78,9 @@ class BeeFTPHandler(object):
             self.stop()
         return
 
+    def do_NOOP(self, arg):
+        self.respond('200 Command Successful.')
+
     def getcmd(self):
         return self.conn.recv(512)
 

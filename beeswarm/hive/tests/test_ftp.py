@@ -46,10 +46,12 @@ class ftp_Tests(unittest.TestCase):
     def test_login(self):
         """Testing different login combinations"""
 
-        authenticator = Authenticator()
-        Session.authenticator = authenticator
         sessions = {}
         users = {'test': HiveUser('test', 'test')}
+
+        authenticator = Authenticator()
+        Session.authenticator = authenticator
+
         options = {'enabled': 'True', 'port': 2122, 'banner': 'Test Banner', 'max_attempts': 3}
         cap = ftp.ftp(sessions, options, users, self.work_dir)
         socket = create_socket(('0.0.0.0', 2122))

@@ -49,11 +49,13 @@ class SMTP_Test(unittest.TestCase):
         """ Tries to connect and run a EHLO command. Very basic test.
         """
 
-        authenticator = Authenticator()
+        users = {'test': HiveUser('test', 'test')}
+
+        #provide valid login/pass to authenticator
+        authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
         # Use uncommon port so that we can run test even if the Hive is running.
         options = {'enabled': 'True', 'port': 2526, 'banner': 'Test'}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
@@ -70,11 +72,14 @@ class SMTP_Test(unittest.TestCase):
         """ Makes sure the server rejects all login attempts that use the
             CRAM-MD5 Authentication method.
         """
-        authenticator = Authenticator()
-        Session.authenticator = authenticator
 
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {}
+
+        #provide valid login/pass to authenticator
+        authenticator = Authenticator(users)
+        Session.authenticator = authenticator
+
         options = {'enabled': 'True', 'port': 2500, 'banner': 'Test'}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
         socket = create_socket(('0.0.0.0', 2500))
@@ -96,12 +101,13 @@ class SMTP_Test(unittest.TestCase):
     def test_AUTH_PLAIN_reject(self):
         """ Makes sure the server rejects all login attempts that use the PLAIN Authentication method.
         """
+        sessions = {}
 
-        authenticator = Authenticator()
+        users = {}
+        #provide valid login/pass to authenticator
+        authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        sessions = {}
-        users = {'test': HiveUser('test', 'test')}
         options = {'enabled': 'True', 'port': 2500, 'banner': 'Test'}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
         socket = create_socket(('0.0.0.0', 2502))
@@ -118,11 +124,13 @@ class SMTP_Test(unittest.TestCase):
         """ Makes sure the server rejects all login attempts that use the LOGIN Authentication method.
         """
 
-        authenticator = Authenticator()
+        sessions = {}
+        users = {}
+
+        #provide valid login/pass to authenticator
+        authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        sessions = {}
-        users = {'test': HiveUser('test', 'test')}
         options = {'enabled': 'True', 'port': 2500, 'banner': 'Test'}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
         socket = create_socket(('0.0.0.0', 2501))
@@ -139,11 +147,14 @@ class SMTP_Test(unittest.TestCase):
     def test_AUTH_CRAM_MD5(self):
         """ Makes sure the server accepts valid login attempts that use the CRAM-MD5 Authentication method.
         """
-        authenticator = Authenticator({'test': 'test'})
-        Session.authenticator = authenticator
 
         sessions = {}
         users = {'test': HiveUser('test', 'test')}
+
+        #provide valid login/pass to authenticator
+        authenticator = Authenticator(users)
+        Session.authenticator = authenticator
+
         options = {'enabled': 'True', 'port': 2500, 'banner': 'Test'}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
         socket = create_socket(('0.0.0.0', 2503))
@@ -166,11 +177,13 @@ class SMTP_Test(unittest.TestCase):
         """ Makes sure the server accepts valid login attempts that use the PLAIN Authentication method.
         """
 
-        authenticator = Authenticator({'test': 'test'})
-        Session.authenticator = authenticator
-
         sessions = {}
         users = {'test': HiveUser('test', 'test')}
+
+        #provide valid login/pass to authenticator
+        authenticator = Authenticator(users)
+        Session.authenticator = authenticator
+
         options = {'enabled': 'True', 'port': 2500, 'banner': 'Test'}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
         socket = create_socket(('0.0.0.0', 2504))
@@ -187,11 +200,12 @@ class SMTP_Test(unittest.TestCase):
         """ Makes sure the server accepts valid login attempts that use the LOGIN Authentication method.
         """
 
-        authenticator = Authenticator({'test': 'test'})
-        Session.authenticator = authenticator
-
         sessions = {}
         users = {'test': HiveUser('test', 'test')}
+
+        #provide valid login/pass to authenticator
+        authenticator = Authenticator(users)
+        Session.authenticator = authenticator
         options = {'enabled': 'True', 'port': 2500, 'banner': 'Test'}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
         socket = create_socket(('0.0.0.0', 2505))

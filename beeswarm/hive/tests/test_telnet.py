@@ -49,7 +49,8 @@ class Telnet_Tests(unittest.TestCase):
         sys.stdout = tempfile.TemporaryFile()
 
         #initialize capability and start tcp server
-        authenticator = Authenticator({})
+        users = {}
+        authenticator = Authenticator(users)
         Session.authenticator = authenticator
         sessions = {}
         users = {'test': HiveUser('test', 'test')}
