@@ -63,7 +63,6 @@ class Hive(object):
 
         #will contain HiveUser objects
         self.users = create_users()
-        print "users:", self.users
 
         #inject authentication mechanism
         Session.authenticator = Authenticator(self.users)
