@@ -1,0 +1,2 @@
+[sqlite]
+db_file = beekeeper_sqlite.db

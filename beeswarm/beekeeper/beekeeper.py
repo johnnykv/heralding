@@ -15,23 +15,27 @@
 
 import logging
 import os
-import tempfile
 import shutil
+from ConfigParser import ConfigParser
 
 from gevent.wsgi import WSGIServer
 import beeswarm
 from beeswarm.beekeeper import database_config
-
-database_config.setup_db(os.path.join(os.getcwd(), 'beekeeper_sqlite.db'))
-
-from beeswarm.beekeeper.webapp import app
+app = None
 
 logger = logging.getLogger(__name__)
 
 
 class Beekeeper(object):
     def __init__(self, work_dir, config_file='beekeeper.cfg'):
-        pass
+        self.config = ConfigParser()
+        self.config.read(config_file)
+
+        #TODO: Next 5 lines makes me sad - fix it!
+        database_config.setup_db(os.path.join(os.getcwd(), self.config.get('sqlite', 'db_file')))
+        from beeswarm.beekeeper.webapp import app as l_app
+        global app
+        app = l_app
 
     def start(self, port=5000):
         #management interface
@@ -46,4 +50,9 @@ class Beekeeper(object):
     def prepare_environment(work_dir):
         package_directory = os.path.dirname(os.path.abspath(beeswarm.__file__))
         #no preparation needed as of yet
+        config_file = os.path.join(work_dir, 'beekeeper.cfg.dist')
+        if not os.path.isfile(config_file):
+            logging.info('Copying configuration file to workdir.')
+            shutil.copyfile(os.path.join(package_directory, 'beekeeper/beekeeper.cfg.dist'),
+                            os.path.join(work_dir, 'beekeeper.cfg'))
 
