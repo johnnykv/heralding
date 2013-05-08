@@ -49,3 +49,5 @@ feeder.cfg
 beekeeper/beekeeper.sqlite
 
 *.gz
+
+beekeeper.cfg
