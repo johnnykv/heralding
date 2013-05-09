@@ -25,6 +25,9 @@ class HandlerBase(object):
 
         :param sessions: a dictionary of Session objects.
         :param options: a dictionary of configuration options.
+        :param users: a dictionary of valid users.
+        :param workdir: the directory which contains files for this
+                        particular instance of Beeswarm
         """
         self.sessions = sessions
         self.options = options
