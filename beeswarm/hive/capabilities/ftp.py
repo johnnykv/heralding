@@ -16,8 +16,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+import socket
+import os
+import time
 
 from beeswarm.hive.capabilities.handlerbase import HandlerBase
+from beeswarm.hive.helpers.h_socket import HiveSocket
+
+from fs.path import dirname
 
 logger = logging.getLogger(__name__)
 
@@ -27,62 +33,159 @@ TERMINATOR = '\r\n'
 class BeeFTPHandler(object):
     """Handles a single FTP connection"""
 
-    def __init__(self, conn, session, options):
+    def __init__(self, conn, session, vfs, options):
         self.banner = options['banner']
         self.max_logins = int(options['max_attempts'])
         self.curr_logins = 0
         self.authenticated = False
         self.conn = conn
+        self.serve_flag = True
         self.session = session
-        self.respond("200 " + self.banner)
+        self.respond('200 ' + self.banner)
+        self.vfs = vfs
+        self.local_ip = socket.gethostbyname(socket.gethostname())
+
+        # These are set and used if the user is authenticated.
         self.state = None
+        self.mode = None
+        self.client_sock = None
+        self.serv_sock = None
+
+        self.client_addr = None  # data connection
+        self.client_port = None  #
+        self.working_dir = None
         self.serve()
 
     def serve(self):
-        while True:
+        while self.serve_flag:
             resp = self.getcmd()
             if not resp:
                 self.stop()
                 break
             else:
                 try:
-                    cmd, args = resp.split(" ", 1)
+                    cmd, args = resp.split(' ', 1)
                 except ValueError:
                     cmd = resp
                     args = None
+                else:
+                    args = args.strip('\r\n')
+                cmd = cmd.strip('\r\n')
                 cmd = cmd.upper()
+                # List of commands allowed before a login
+                unauth_cmds = ['USER', 'PASS', 'QUIT', 'SYST']
                 meth = getattr(self, 'do_' + cmd, None)
                 if not meth:
-                    self.respond("500 Unknown Command.")
+                    self.respond('500 Unknown Command.')
                 else:
+                    if not self.authenticated:
+                        if cmd not in unauth_cmds:
+                            self.respond('503 Login with USER first.')
+                            continue
                     meth(args)
                     self.state = cmd
 
     def do_USER(self, arg):
         if self.authenticated:
-            self.respond("530 Cannot switch to another user.")
+            self.respond('530 Cannot switch to another user.')
             return
         self.user = arg
-        self.respond("331 Now specify the Password.")
-        return
+        self.respond('331 Now specify the Password.')
 
     def do_PASS(self, arg):
         if self.state != 'USER':
-            self.respond("503 Login with USER first.")
+            self.respond('503 Login with USER first.')
             return
         self.curr_logins += 1
         self.passwd = arg
-        self.session.try_auth('plaintext', username=self.user, password=self.passwd)
-        self.respond("530 Authentication Failed.")
-        if self.curr_logins >= self.max_logins:
-            self.stop()
-        return
+        if self.session.try_auth('plaintext', username=self.user, password=self.passwd):
+            self.authenticated = True
+            self.working_dir = '/'
+            self.respond('230 Login Successful.')
+        else:
+            self.authenticated = False
+            self.respond('530 Authentication Failed.')
+            if self.curr_logins >= self.max_logins:
+                self.stop()
+
+    def do_PORT(self, arg):
+        if self.mode == 'PASV':
+            self.client_sock.close()
+            self.mode = 'PORT'
+        try:
+            portlist = arg.split(',')
+        except ValueError:
+            self.respond('501 Bad syntax for PORT.')
+            return
+        if len(portlist) != 6:
+            self.respond('501 Bad syntax for PORT.')
+            return
+        self.cli_ip = '.'.join(portlist[:4])
+        self.cli_port = (int(portlist[4]) << 8) + int(portlist[5])
+        self.respond('200 PORT Command Successful')
+
+    def do_LIST(self, arg):
+        self.respond('150 Listing Files.')
+        self.start_data_conn()
+
+        file_names = self.vfs.listdir(self.working_dir)
+        for fname in file_names:
+            abspath = self.vfs.getsyspath(self.working_dir + '/' + fname)
+            self.client_sock.send(path_to_ls(abspath) + '\r\n')
+        self.stop_data_conn()
+        self.respond('226 File listing successful.')
+
+    def do_CWD(self, arg):
+        newdir = self.working_dir[:]
+        while arg.startswith('..'):
+            if newdir.endswith('/'):
+                newdir = newdir[:-1]
+            newdir = dirname(newdir)
+            arg = arg[3:]
+        newdir = os.path.join(newdir, arg)
+        print self.vfs.isdir(newdir)
+        print newdir
+        if self.vfs.isdir(newdir):
+            self.working_dir = newdir[:]
+            self.respond('250 Directory Changed.')
+        else:
+            self.respond('550 The system cannot find the path specified.')
+
+    def do_PASV(self, arg):
+        self.mode = 'PASV'
+        self.serv_sock = HiveSocket()
+        self.serv_sock.bind((self.local_ip, 0))
+        self.serv_sock.listen(1)
+        ip, port = self.serv_sock.getsockname()
+        self.respond('227 Entering Passive Mode (%s,%u,%u).' % (','.join(ip.split('.')),
+                                                                port >> 8 & 0xFF, port & 0xFF))
 
     def do_NOOP(self, arg):
         self.respond('200 Command Successful.')
 
+    def do_SYST(self, arg):
+        #TODO: Make the SYST type configurable
+        self.respond('215 WINDOWS-NT-3.5')
+
+    def do_QUIT(self, arg):
+        self.respond('221 Bye.')
+        self.serve_flag = False
+        self.stop()
+
     def getcmd(self):
         return self.conn.recv(512)
+
+    def start_data_conn(self):
+        if self.mode == 'PASV':
+            self.client_sock, (self.cli_ip, self.cli_port) = self.serv_sock.accept()
+        else:
+            self.client_sock = HiveSocket()
+            self.client_sock.connect((self.cli_ip, self.cli_port))
+
+    def stop_data_conn(self):
+        self.client_sock.close()
+        if self.mode == 'PASV':
+            self.serv_sock.close()
 
     def respond(self, msg):
         msg += TERMINATOR
@@ -100,4 +203,18 @@ class ftp(HandlerBase):
 
     def handle_session(self, gsocket, address):
         session = self.create_session(address, gsocket)
-        BeeFTPHandler(gsocket, session, self._options)
+        BeeFTPHandler(gsocket, session, self.vfsystem.opendir('/pub/ftp'), self._options)
+
+
+def path_to_ls(fn):
+    """ Converts an absolute path to an entry resembling the output of
+        the ls command on most UNIX systems."""
+    st = os.stat(fn)
+    fullmode = 'rwxrwxrwx'
+    mode = ''
+    ftime = ''
+    for i in range(9):
+        mode += ((st.st_mode >> (8-i)) & 1) and fullmode[i] or '-'
+        d = (os.path.isdir(fn)) and 'd' or '-'
+        ftime = time.strftime(' %b %d %H:%M ', time.gmtime(st.st_mtime))
+    return d+mode+' 1 ftp ftp '+str(st.st_size)+'\t'+ftime+os.path.basename(fn)
