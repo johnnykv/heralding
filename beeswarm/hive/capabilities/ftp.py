@@ -22,7 +22,7 @@ import time
 
 from beeswarm.hive.capabilities.handlerbase import HandlerBase
 from beeswarm.hive.helpers.h_socket import HiveSocket
-
+from sendfile import sendfile
 from fs.path import dirname
 
 logger = logging.getLogger(__name__)
@@ -48,6 +48,7 @@ class BeeFTPHandler(object):
         # These are set and used if the user is authenticated.
         self.state = None
         self.mode = None
+        self.transfer_mode = None
         self.client_sock = None
         self.serv_sock = None
 
@@ -143,8 +144,6 @@ class BeeFTPHandler(object):
             newdir = dirname(newdir)
             arg = arg[3:]
         newdir = os.path.join(newdir, arg)
-        print self.vfs.isdir(newdir)
-        print newdir
         if self.vfs.isdir(newdir):
             self.working_dir = newdir[:]
             self.respond('250 Directory Changed.')
@@ -171,6 +170,23 @@ class BeeFTPHandler(object):
         self.respond('221 Bye.')
         self.serve_flag = False
         self.stop()
+
+    def do_RETR(self, arg):
+        filename = os.path.join(self.working_dir, arg)
+        if self.vfs.isfile(filename):
+            self.respond('150 Initiating transfer.')
+            self.start_data_conn()
+            file_ = self.vfs.open(filename)
+            sendfile(self.client_sock.fileno(), file_.fileno(), 0, 65536)
+            file_.close()
+            self.stop_data_conn()
+            self.respond('226 Transfer complete.')
+        else:
+            self.respond('550 The system cannot find the file specified.')
+
+    def do_TYPE(self, arg):
+        self.transfer_mode = arg
+        self.respond('200 Transfer type set to:'+self.transfer_mode)
 
     def getcmd(self):
         return self.conn.recv(512)
@@ -213,6 +229,7 @@ def path_to_ls(fn):
     fullmode = 'rwxrwxrwx'
     mode = ''
     ftime = ''
+    d = ''
     for i in range(9):
         mode += ((st.st_mode >> (8-i)) & 1) and fullmode[i] or '-'
         d = (os.path.isdir(fn)) and 'd' or '-'
