@@ -43,7 +43,7 @@ class BeeFTPHandler(object):
         self.session = session
         self.respond('200 ' + self.banner)
         self.vfs = vfs
-        self.local_ip = socket.gethostbyname(socket.gethostname())
+        self.local_ip = '127.0.0.1'
 
         # These are set and used if the user is authenticated.
         self.state = None
