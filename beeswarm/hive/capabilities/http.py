@@ -18,8 +18,8 @@ import socket
 import logging
 
 from BaseHTTPServer import BaseHTTPRequestHandler
-from sendfile import sendfile
 from beeswarm.hive.capabilities.handlerbase import HandlerBase
+from beeswarm.hive.helpers.common import send_whole_file
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
     def send_html(self, filename):
 
         file_ = self.vfs.open(filename)
-        sendfile(self.request.fileno(), file_.fileno(), 0, 65536)
+        send_whole_file(self.request.fileno(), file_.fileno())
         file_.close()
 
     def version_string(self):
