@@ -32,12 +32,16 @@ import logging
 import urllib2
 
 # TODO: Autodetect
+import beeswarm.feeder.bees.ftp
+import beeswarm.feeder.bees.smtp
+import beeswarm.feeder.bees.pop3
+import beeswarm.feeder.bees.http
 
 logger = logging.getLogger(__name__)
 
 
 class Feeder(object):
-    def __init__(self, work_dir, config_file='feeder.cfg.dist'):
+    def __init__(self, work_dir, config_file='feeder.cfg'):
 
         self.config = ConfigParser.ConfigParser()
         self.run_flag = True
@@ -58,7 +62,6 @@ class Feeder(object):
         logging.info('Starting feeder.')
 
         targets = self.get_targets()
-
         sessions = {}
 
         #greenlet to consume and maintain data in sessions list
@@ -107,7 +110,7 @@ class Feeder(object):
         if not os.path.isfile(config_file):
             logging.info('Copying configuration file to current directory.')
             shutil.copyfile(os.path.join(package_directory, 'feeder/feeder.cfg.dist'),
-                                         os.path.join(work_dir, 'feeder.cfg.dist'))
+                            os.path.join(work_dir, 'feeder.cfg'))
 
 def list2dict(list_of_options):
     """Transforms a list of 2 element tuples to a dictionary"""

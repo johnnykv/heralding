@@ -44,7 +44,7 @@ class ftp(ClientBase):
             ftp_client.login(login, password)
             session.did_login = True
             session.timestamp = datetime.utcnow()
-            resp = ftp_client.retrbinary('RETR ' + random.choice(file_list), None)
+            resp = ftp_client.retrbinary('RETR ' + random.choice(file_list), self.save_file)
             if resp.startswith('226'):
                 session.did_complete = True
         except ftplib.error_perm as err:
@@ -52,3 +52,6 @@ class ftp(ClientBase):
         finally:
             session.alldone = True
 
+    def save_file(self, data):
+        """ Dummy function since FTP.retrbinary() needs a callback """
+        pass
