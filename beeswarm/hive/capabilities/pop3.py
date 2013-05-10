@@ -181,7 +181,7 @@ class pop3(HandlerBase):
     def cmd_list(self, session, gsocket, argument):
         user_mailspool = session.vdata['MAILSPOOL']
 
-        if argument is None:
+        if not argument:
             mailspool_bytes_size = 0
             mailspool_num_messages = 0
 
