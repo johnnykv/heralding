@@ -1,4 +1,4 @@
-# Copyright (C) 2013 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2013 Aniket Panse <contact@aniketpanse.in>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,46 +13,45 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import poplib
-from datetime import datetime
 import logging
+import ftplib
+import random
+from datetime import datetime
 
+from ftplib import FTP
 from beeswarm.feeder.bees.clientbase import ClientBase
 
 
-class pop3(ClientBase):
+class ftp(ClientBase):
 
     def __init__(self, sessions):
-        super(pop3, self).__init__(sessions)
+        super(ftp, self).__init__(sessions)
 
     def do_session(self, login, password, server_host, server_port, my_ip):
-        """Login, RETR and DELE all messages"""
-
         session = self.create_session(login, password, server_host, server_port, my_ip)
 
-        try:
-            logging.debug(
-                'Sending %s honeybee to %s:%s. (bee id: %s)' % ('pop3', server_host, server_port, session.id))
-            conn = poplib.POP3(server_host, server_port)
-            banner = conn.getwelcome()
-            session.protocol_data['banner'] = banner
-            session.did_connect = True
+        self.sessions[session.id] = session
 
-            conn.user(login)
-            conn.pass_(password)
+        logging.debug(
+            'Sending %s honeybee to %s:%s. (bee id: %s)' % ('ftp', server_host, server_port, session.id))
+
+        # TODO: Autodetect files in Hive VFS.
+        file_list = ['testftp.txt']
+        ftp_client = FTP()
+        try:
+            ftp_client.connect(server_host, server_port)
+            session.did_connect = True
+            ftp_client.login(login, password)
             session.did_login = True
             session.timestamp = datetime.utcnow()
-        # except (poplib.error_proto, h_socket.error) as err:
-        except Exception as err:
+            resp = ftp_client.retrbinary('RETR ' + random.choice(file_list), self.save_file)
+            if resp.startswith('226'):
+                session.did_complete = True
+        except ftplib.error_perm as err:
             logging.debug('Caught exception: %s (%s)' % (err, str(type(err))))
-        else:
-            list_entries = conn.list()[1]
-            for entry in list_entries:
-                index, octets = entry.split(' ')
-                conn.retr(index)
-                conn.dele(index)
-            logging.debug('Found and deleted %i messages on %s' % (len(list_entries), server_host))
-            conn.quit()
-            session.did_complete = True
         finally:
             session.alldone = True
+
+    def save_file(self, data):
+        """ Dummy function since FTP.retrbinary() needs a callback """
+        pass

@@ -5,6 +5,7 @@ import grp
 import platform
 import _socket
 
+from sendfile import sendfile
 from beeswarm.hive.helpers.h_socket import HiveSocket
 
 
@@ -38,6 +39,15 @@ def list2dict(list_of_options):
     for key, value in list_of_options:
         d[key] = value
     return d
+
+
+def send_whole_file(sockfd, filefd):
+    offset = 0
+    while True:
+        sent = sendfile(sockfd, filefd, offset, 65536)
+        if sent == 0:
+            break
+        offset += sent
 
 
 def create_socket(address, backlog=50):

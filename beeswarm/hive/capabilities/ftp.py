@@ -22,7 +22,7 @@ import time
 
 from beeswarm.hive.capabilities.handlerbase import HandlerBase
 from beeswarm.hive.helpers.h_socket import HiveSocket
-from sendfile import sendfile
+from beeswarm.hive.helpers.common import send_whole_file
 from fs.path import dirname
 
 logger = logging.getLogger(__name__)
@@ -177,7 +177,7 @@ class BeeFTPHandler(object):
             self.respond('150 Initiating transfer.')
             self.start_data_conn()
             file_ = self.vfs.open(filename)
-            sendfile(self.client_sock.fileno(), file_.fileno(), 0, 65536)
+            send_whole_file(self.client_sock.fileno(), file_.fileno())
             file_.close()
             self.stop_data_conn()
             self.respond('226 Transfer complete.')
