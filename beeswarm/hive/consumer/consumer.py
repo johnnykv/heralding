@@ -20,7 +20,7 @@ import gevent
 import requests
 from requests.exceptions import Timeout, ConnectionError
 from beeswarm.hive.consumer.loggers import loggerbase
-from beeswarm.hive.consumer.loggers.hpfeed import HPFeed
+from beeswarm.hive.consumer.loggers.hpfeedslogger import HPFeedsLogger
 from beeswarm.hive.consumer.loggers.beekeeper import Beekeeper
 
 
@@ -40,7 +40,7 @@ class Consumer:
         self.enabled = True
 
         active_loggers = self.start_loggers(self.get_enabled_loggers())
-
+        
         while self.enabled:
             for session_id in self.sessions.keys():
                 session = self.sessions[session_id]

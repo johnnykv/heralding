@@ -8,7 +8,7 @@ fetch_ip = False
 #This is the central logging feature of the honeynet project
 #if you enable this feature you accept that your logged data will be shared
 #and analyzed within the honeynet project organization.
-[log_hpfeed]
+[log_hpfeedslogger]
 enabled = False
 host = hpfriends.honeycloud.net
 port = 20000
