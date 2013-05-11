@@ -10,6 +10,7 @@ before_install:
  - "sudo apt-get install python-dev libevent-dev"
 # command to install dependencies
 install:
+  - "sudo pip install -e git+https://github.com/rep/hpfeeds.git#egg=hpfeeds"
   - "sudo pip install -r requirements.txt --use-mirrors"
 # command to run tests
 script:
