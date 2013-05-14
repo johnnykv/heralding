@@ -35,8 +35,7 @@ class ftp(ClientBase):
         logging.debug(
             'Sending %s honeybee to %s:%s. (bee id: %s)' % ('ftp', server_host, server_port, session.id))
 
-        # TODO: Autodetect files in Hive VFS.
-        file_list = ['testftp.txt']
+        self.file_list = ['testftp.txt']
         ftp_client = FTP()
         try:
             ftp_client.connect(server_host, server_port)
@@ -44,7 +43,9 @@ class ftp(ClientBase):
             ftp_client.login(login, password)
             session.did_login = True
             session.timestamp = datetime.utcnow()
-            resp = ftp_client.retrbinary('RETR ' + random.choice(file_list), self.save_file)
+            ftp_client.retrlines('LIST', self.create_list)
+            resp = ftp_client.retrbinary('RETR ' + random.choice(self.file_list), self.save_file)
+
             if resp.startswith('226'):
                 session.did_complete = True
         except ftplib.error_perm as err:
@@ -54,4 +55,9 @@ class ftp(ClientBase):
 
     def save_file(self, data):
         """ Dummy function since FTP.retrbinary() needs a callback """
-        pass
+
+    def create_list(self, list_line):
+        # -rw-r--r-- 1 ftp ftp 68	 May 09 19:37 testftp.txt
+        res = list_line.split(' ', 8)
+        if res[0].startswith('-'):
+            self.file_list.append(res[-1])
