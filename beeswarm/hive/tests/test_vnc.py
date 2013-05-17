@@ -1,4 +1,4 @@
-# Copyright (C) 2012 Aniket Panse <contact@aniketpanse.in
+# Copyright (C) 2013 Aniket Panse <contact@aniketpanse.in
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -41,14 +41,13 @@ class VNC_Test(unittest.TestCase):
             shutil.rmtree(self.work_dir)
 
     def test_connection(self):
-        """ Tests if the capability is up, and sending
-            HTTP 401 (Unauthorized) headers.
+        """ Tests if the VNC capability is up, and tries login.
         """
         sessions = {}
         users = {'test': HiveUser('test', 'test')}
         options = {'enabled': 'True', 'port': 5902}
         cap = vnc.vnc(sessions, options, users, self.work_dir)
-        s = create_socket(("0.0.0.0", 0))
+        s = create_socket(('0.0.0.0', 0))
         srv = StreamServer(s, cap.handle_session)
         srv.start()
         
@@ -56,20 +55,20 @@ class VNC_Test(unittest.TestCase):
         client_socket.connect(('127.0.0.1', srv.server_port))
 
         protocol_version = client_socket.recv(1024)
-        self.assertEquals(protocol_version, "RFB 003.007\n")
+        self.assertEquals(protocol_version, 'RFB 003.007\n')
 
-        client_socket.send("RFB 003.007\n")
+        client_socket.send('RFB 003.007\n')
         supported_auth_methods = client_socket.recv(1024)
-        self.assertEquals(supported_auth_methods, "\x01\x02")
+        self.assertEquals(supported_auth_methods, '\x01\x02')
 
-        client_socket.send("\x02")
+        client_socket.send('\x02')
         challenge = client_socket.recv(1024)
 
         # Send 16 bytes because server expects them. Don't care what they
         # are
-        client_socket.send("\x00"*16)
+        client_socket.send('\x00'*16)
         auth_status = client_socket.recv(1024)
-        self.assertEquals(auth_status, "\x00\x00\x00\x01")
+        self.assertEquals(auth_status, '\x00\x00\x00\x01')
         
 if __name__ == '__main__':
     unittest.main()
