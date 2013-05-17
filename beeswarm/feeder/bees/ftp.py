@@ -35,7 +35,7 @@ class ftp(ClientBase):
         logging.debug(
             'Sending %s honeybee to %s:%s. (bee id: %s)' % ('ftp', server_host, server_port, session.id))
 
-        self.file_list = ['testftp.txt']
+        self.file_list = []
         ftp_client = FTP()
         try:
             ftp_client.connect(server_host, server_port)
