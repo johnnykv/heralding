@@ -50,7 +50,7 @@ class SMTP_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        cap = hive_smtp.smtp(sessions, {'enabled': 'True', 'port': 8081}, users, self.work_dir)
+        cap = hive_smtp.smtp(sessions, {'enabled': 'True', 'port': 8081, 'banner': 'Test'}, users, self.work_dir)
         socket = create_socket(('0.0.0.0', 8081))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()
@@ -59,7 +59,7 @@ class SMTP_Test(unittest.TestCase):
             'timing': 'regular',
             'login': 'test',
             'password': 'test',
-            'port': '8080',
+            'port': '8081',
             'server': '127.0.0.1'
         }
         beesessions = {}
