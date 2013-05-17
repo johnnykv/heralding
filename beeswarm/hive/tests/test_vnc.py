@@ -1,4 +1,4 @@
-# Copyright (C) 2013 Aniket Panse <contact@aniketpanse.in
+# Copyright (C) 2013 Aniket Panse <contact@aniketpanse.in>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ from beeswarm.hive.hive import Hive
 from beeswarm.hive.helpers.common import create_socket
 from beeswarm.hive.capabilities import vnc
 from beeswarm.hive.models.user import HiveUser
+from beeswarm.shared.vnc_constants import *
 
 
 class VNC_Test(unittest.TestCase):
@@ -57,18 +58,18 @@ class VNC_Test(unittest.TestCase):
         protocol_version = client_socket.recv(1024)
         self.assertEquals(protocol_version, 'RFB 003.007\n')
 
-        client_socket.send('RFB 003.007\n')
+        client_socket.send(RFB_VERSION)
         supported_auth_methods = client_socket.recv(1024)
-        self.assertEquals(supported_auth_methods, '\x01\x02')
+        self.assertEquals(supported_auth_methods, SUPPORTED_AUTH_METHODS)
 
-        client_socket.send('\x02')
+        client_socket.send(VNC_AUTH)
         challenge = client_socket.recv(1024)
 
         # Send 16 bytes because server expects them. Don't care what they
         # are
-        client_socket.send('\x00'*16)
+        client_socket.send('\x00' * 16)
         auth_status = client_socket.recv(1024)
-        self.assertEquals(auth_status, '\x00\x00\x00\x01')
+        self.assertEquals(auth_status, AUTH_FAILED)
         
 if __name__ == '__main__':
     unittest.main()

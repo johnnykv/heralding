@@ -18,6 +18,9 @@ import random
 
 from beeswarm.hive.capabilities.handlerbase import HandlerBase
 
+# Import the constants defined for the VNC protocol
+from beeswarm.shared.vnc_constants import *
+
 
 class BeeVNCHandler(SocketServer.StreamRequestHandler):
 
@@ -25,24 +28,22 @@ class BeeVNCHandler(SocketServer.StreamRequestHandler):
         Handler of VNC Connections. This is a rather primitive state machine.
     """
 
-    RFB_VERSION = "RFB 003.007\n"
-
     def __init__(self, request, client_address, server, session):
         self.session = session
         SocketServer.StreamRequestHandler.__init__(self, request, client_address, server)
 
     def handle(self):
-        self.request.send(self.RFB_VERSION)
+        self.request.send(RFB_VERSION)
         client_version = self.request.recv(1024)
-        if client_version == self.RFB_VERSION:
+        if client_version == RFB_VERSION:
             self.security_handshake()
         else:
             self.finish()
 
     def security_handshake(self):
-        self.request.send('\x01\x02')
+        self.request.send(SUPPORTED_AUTH_METHODS)
         sec_method = self.request.recv(1024)
-        if sec_method == "\x02":
+        if sec_method == VNC_AUTH:
             self.do_vnc_authentication()
         else:
             self.finish()
@@ -58,7 +59,7 @@ class BeeVNCHandler(SocketServer.StreamRequestHandler):
 
     def terminate(self):
         # Sends authentication failed to the client
-        self.request.send("\x00\x00\x00\x01")
+        self.request.send(AUTH_FAILED)
         self.finish()
 
 
