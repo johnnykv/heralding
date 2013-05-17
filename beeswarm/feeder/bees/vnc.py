@@ -24,6 +24,9 @@ class vnc(ClientBase):
             protocol_version = client_socket.recv(1024)
             client_socket.send(protocol_version)
             supported_auth_methods = client_socket.recv(1024)
+
+            # \x02 implies that VNC authentication method is to be used
+            # Refer to http://tools.ietf.org/html/rfc6143#section-7.1.2 for more info.
             if '\x02' in supported_auth_methods:
                 client_socket.send('\x02')
             challenge = client_socket.recv(1024)
