@@ -58,7 +58,7 @@ class HTTP_Test(unittest.TestCase):
             'timing': 'regular',
             'login': 'test',
             'password': 'test',
-            'port': '8080',
+            'port': '8081',
             'server': '127.0.0.1'
         }
         beesessions = {}

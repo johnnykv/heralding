@@ -31,11 +31,8 @@ from beeswarm.errors import ConfigNotFound
 import logging
 import urllib2
 
-# TODO: Autodetect
-import beeswarm.feeder.bees.ftp
-import beeswarm.feeder.bees.smtp
-import beeswarm.feeder.bees.pop3
-import beeswarm.feeder.bees.http
+# Do not remove this import, it is used to autodetect the bees.
+import beeswarm.feeder.bees
 
 logger = logging.getLogger(__name__)
 
@@ -111,6 +108,7 @@ class Feeder(object):
             logging.info('Copying configuration file to current directory.')
             shutil.copyfile(os.path.join(package_directory, 'feeder/feeder.cfg.dist'),
                             os.path.join(work_dir, 'feeder.cfg'))
+
 
 def list2dict(list_of_options):
     """Transforms a list of 2 element tuples to a dictionary"""
