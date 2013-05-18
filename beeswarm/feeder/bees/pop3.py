@@ -34,6 +34,8 @@ class pop3(ClientBase):
             logging.debug(
                 'Sending %s honeybee to %s:%s. (bee id: %s)' % ('pop3', server_host, server_port, session.id))
             conn = poplib.POP3(server_host, server_port)
+            session.source_port = conn.sock.getsockname()[1]
+
             banner = conn.getwelcome()
             session.protocol_data['banner'] = banner
             session.did_connect = True

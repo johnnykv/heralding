@@ -52,10 +52,6 @@ def feeder_data():
     #TODO: investigate why the flask provided request.json returns None.
     data = json.loads(request.data)
 
-    #the passed json dict will include these items in the future. (issue #51)
-    source_ip = 'a'
-    source_port = 0
-
     #in the final version it will be guaranteed that the feeder exists in the database
     _feeder = Feeder.get(id=data['feeder_id'])
     #create if not found in the database
@@ -69,8 +65,8 @@ def feeder_data():
                          password=data['password'],
                          destination_ip=data['server_host'],
                          destination_port=data['server_port'],
-                         source_ip=source_ip,
-                         source_port=source_port,
+                         source_ip=data['source_ip'],
+                         source_port=data['source_port'],
                          did_connect=data['did_connect'],
                          did_login=data['did_login'],
                          did_complete=data['did_complete'],

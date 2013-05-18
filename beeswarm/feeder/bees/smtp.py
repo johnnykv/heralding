@@ -37,6 +37,7 @@ class smtp(ClientBase):
         try:
             #TODO local_hostname could be made configurable, from the config file
             smtp_ = smtplib.SMTP(server_host, server_port, local_hostname='localhost', timeout=15)
+            session.source_port = smtp_.sock.getsockname()[1]
             session.did_connect = True
             smtp_.login(login, password)
             session.did_login = True

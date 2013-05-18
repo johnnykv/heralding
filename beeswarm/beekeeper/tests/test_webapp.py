@@ -34,6 +34,8 @@ class WebappTests(unittest.TestCase):
             'password': 'bond',
             'server_host': '127.0.0.1',
             'server_port': '110',
+            'source_ip': '123.123.123.123',
+            'source_port': 12345,
             'timestamp': datetime.utcnow().isoformat(),
             'did_connect': True,
             'did_login': True,

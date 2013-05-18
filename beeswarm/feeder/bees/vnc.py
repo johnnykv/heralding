@@ -33,6 +33,8 @@ class vnc(ClientBase):
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             client_socket.connect((server_host, int(server_port)))
+            session.source_port = client_socket.getsockname()[1]
+
         except socket.error as e:
             logging.debug('Caught exception: %s (%s)' % (e, str(type(e))))
         else:

@@ -42,6 +42,7 @@ class http(ClientBase):
         try:
             client = httplib.HTTPConnection(server_host, server_port)
             client.putrequest('GET', random.choice(url_list))
+            session.source_port = client.sock.getsockname()[1]
             auth_string = login + ':' + password
             client.putheader('Authorization', 'Basic ' + base64.b64encode(auth_string))
             client.endheaders()

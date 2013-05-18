@@ -37,7 +37,8 @@ class BeeSession(object):
         self.alldone = False
         self.did_complete = False
         self.protocol_data = {}
-        self.my_ip = my_ip
+        self.source_ip = my_ip
+        self.source_port = None
 
     def to_dict(self):
         return vars(self)
