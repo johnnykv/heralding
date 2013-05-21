@@ -16,13 +16,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import socket
 import os
-import time
 
 from beeswarm.hive.capabilities.handlerbase import HandlerBase
 from beeswarm.hive.helpers.h_socket import HiveSocket
-from beeswarm.hive.helpers.common import send_whole_file
+from beeswarm.hive.helpers.common import send_whole_file, path_to_ls
 from fs.path import dirname
 
 logger = logging.getLogger(__name__)
@@ -220,18 +218,3 @@ class ftp(HandlerBase):
     def handle_session(self, gsocket, address):
         session = self.create_session(address, gsocket)
         BeeFTPHandler(gsocket, session, self.vfsystem.opendir('/pub/ftp'), self._options)
-
-
-def path_to_ls(fn):
-    """ Converts an absolute path to an entry resembling the output of
-        the ls command on most UNIX systems."""
-    st = os.stat(fn)
-    fullmode = 'rwxrwxrwx'
-    mode = ''
-    ftime = ''
-    d = ''
-    for i in range(9):
-        mode += ((st.st_mode >> (8-i)) & 1) and fullmode[i] or '-'
-        d = (os.path.isdir(fn)) and 'd' or '-'
-        ftime = time.strftime(' %b %d %H:%M ', time.gmtime(st.st_mtime))
-    return d+mode+' 1 ftp ftp '+str(st.st_size)+'\t'+ftime+os.path.basename(fn)

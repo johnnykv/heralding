@@ -1,4 +1,5 @@
 import logging
+import time
 import os
 import pwd
 import grp
@@ -57,3 +58,18 @@ def create_socket(address, backlog=50):
     sock.listen(backlog)
     sock.setblocking(0)
     return sock
+
+
+def path_to_ls(fn):
+    """ Converts an absolute path to an entry resembling the output of
+        the ls command on most UNIX systems."""
+    st = os.stat(fn)
+    fullmode = 'rwxrwxrwx'
+    mode = ''
+    ftime = ''
+    d = ''
+    for i in range(9):
+        mode += ((st.st_mode >> (8-i)) & 1) and fullmode[i] or '-'
+        d = (os.path.isdir(fn)) and 'd' or '-'
+        ftime = time.strftime(' %b %d %H:%M ', time.gmtime(st.st_mtime))
+    return d+mode+' 1 ftp ftp '+str(st.st_size)+'\t'+ftime+os.path.basename(fn)
