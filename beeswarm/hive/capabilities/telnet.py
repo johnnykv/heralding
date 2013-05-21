@@ -86,7 +86,7 @@ class telnet_wrapper(TelnetHandler):
             self.writeline(path_to_ls(abspath))
 
     @command('echo')
-    def command_uname(self, params):
+    def command_echo(self, params):
         if not params:
             self.writeline('')
             return
