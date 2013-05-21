@@ -99,7 +99,7 @@ class telnet_wrapper(TelnetHandler):
     def command_cd(self, params):
         newdir = self.working_dir[:]
         if len(params) > 1:
-            self.writeline('cd:6: string not in pwd: ' + params[0])
+            self.writeline('cd: string not in pwd: {0}'.format(params[0]))
             return
         arg = params[0]
         while arg.startswith('..'):
@@ -112,7 +112,7 @@ class telnet_wrapper(TelnetHandler):
             self.working_dir = newdir[:]
             self.PROMPT = '[{0}@{1} {2}]$ '.format(self.username, self.HOSTNAME, self.working_dir)
         else:
-            self.writeline('cd:6: no such file or directory.') + fs.path.basename(newdir)
+            self.writeline('cd: no such file or directory: {0}'.format(params[0]))
 
     def session_end(self):
         self.session.connected = False
