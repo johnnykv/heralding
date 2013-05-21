@@ -15,6 +15,7 @@
 
 import logging
 import os
+import random
 import socket
 import fs
 from fs.path import dirname
@@ -61,6 +62,7 @@ class telnet_wrapper(TelnetHandler):
 
         self.vfs = vfs
         self.working_dir = None
+        self.total_file_size = str(random.randint(588, 22870))
         TelnetHandler.__init__(self, request, client_address, server)
 
     def authCallback(self, username, password):
@@ -77,10 +79,21 @@ class telnet_wrapper(TelnetHandler):
 
     @command('ls')
     def command_ls(self, params):
+        self.writeline('total ' + self.total_file_size)  # report a fake random file size
         file_names = self.vfs.listdir(self.working_dir)
         for fname in file_names:
             abspath = self.vfs.getsyspath(self.working_dir + '/' + fname)
             self.writeline(path_to_ls(abspath))
+
+    @command('echo')
+    def command_uname(self, params):
+        if not params:
+            self.writeline('')
+            return
+        elif '*' in params:
+            params.remove('*')
+            params.extend(self.vfs.listdir())
+        self.writeline(' '.join(params))
 
     @command('cd')
     def command_cd(self, params):
