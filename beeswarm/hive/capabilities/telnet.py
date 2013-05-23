@@ -17,7 +17,6 @@ import logging
 import os
 import random
 import socket
-from telnetlib import ECHO, WONT, DONT, NEW_ENVIRON, DO, LINEMODE, TTYPE, NAWS, SGA, WILL
 from fs.path import dirname
 
 from telnetsrv.green import TelnetHandler, command
