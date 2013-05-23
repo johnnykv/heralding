@@ -53,6 +53,7 @@ class telnet_wrapper(TelnetHandler):
     authNeedUser = True
     authNeedPass = True
 
+    # Making these empty will disable option negotiations, so less headache for us.
     DOACK = {}
     WILLACK = {}
 
