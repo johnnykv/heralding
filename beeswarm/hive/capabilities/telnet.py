@@ -17,7 +17,7 @@ import logging
 import os
 import random
 import socket
-import fs
+from telnetlib import ECHO, WONT, DONT, NEW_ENVIRON, DO, LINEMODE, TTYPE, NAWS, SGA, WILL
 from fs.path import dirname
 
 from telnetsrv.green import TelnetHandler, command
@@ -53,6 +53,9 @@ class telnet_wrapper(TelnetHandler):
     HOSTNAME = 'host'
     authNeedUser = True
     authNeedPass = True
+
+    DOACK = {}
+    WILLACK = {}
 
     def __init__(self, client_address, server, socket, session, vfs):
         self.session = session
