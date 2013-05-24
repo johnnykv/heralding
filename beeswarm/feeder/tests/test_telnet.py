@@ -25,15 +25,15 @@ from gevent.server import StreamServer
 from beeswarm.hive.hive import Hive
 from beeswarm.hive.models.authenticator import Authenticator
 from beeswarm.hive.models.session import Session
-from beeswarm.hive.capabilities import vnc as hive_vnc
+from beeswarm.hive.capabilities import telnet as hive_telnet
 from beeswarm.hive.models.user import HiveUser
 from beeswarm.hive.helpers.common import create_socket
 
-from beeswarm.feeder.bees import vnc as bee_vnc
+from beeswarm.feeder.bees import telnet as bee_telnet
 from beeswarm.feeder.models.session import BeeSession
 
 
-class VNC_Test(unittest.TestCase):
+class Telnet_Test(unittest.TestCase):
     def setUp(self):
         self.work_dir = tempfile.mkdtemp()
         Hive.prepare_environment(self.work_dir)
@@ -43,14 +43,14 @@ class VNC_Test(unittest.TestCase):
             shutil.rmtree(self.work_dir)
 
     def test_login(self):
-        """Tests if the VNC bee can connect to the VNC capability"""
+        """Tests if the Telnet bee can Login to the Telnet capability"""
 
         sessions = {}
         users = {'test': HiveUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        cap = hive_vnc.vnc(sessions, {'enabled': 'True', 'port': 8081}, users, self.work_dir)
+        cap = hive_telnet.telnet(sessions, {'enabled': 'True', 'port': 8081, 'max_attempts': 3}, users, self.work_dir)
         socket = create_socket(('0.0.0.0', 8081))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()
@@ -65,9 +65,17 @@ class VNC_Test(unittest.TestCase):
         beesessions = {}
 
         BeeSession.feeder_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bee = bee_vnc.vnc(beesessions)
+        current_bee = bee_telnet.telnet(beesessions)
         current_bee.do_session(bee_info['login'], bee_info['password'], bee_info['server'],
                                bee_info['port'], '127.0.0.1')
+        session_id, session = beesessions.popitem()
+
+        # Make sure we only spawned one session.
+        self.assertEquals(beesessions, {})
+
+        # Make sure we were able to log in.
+        self.assertEquals(session.did_login, True)
+
         srv.stop()
 
 if __name__ == '__main__':
