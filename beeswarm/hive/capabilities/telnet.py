@@ -124,7 +124,9 @@ class telnet_wrapper(TelnetHandler):
 
     def setterm(self, term):
 
-        curses.setupterm()  # This will raise if the termtype is not supported
+        # Dummy file for the purpose of tests.
+        f = open('/dev/null', 'w')
+        curses.setupterm(term, f.fileno())  # This will raise if the termtype is not supported
         self.TERM = term
         self.ESCSEQ = {}
         for k in self.KEYS.keys():

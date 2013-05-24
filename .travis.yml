@@ -14,5 +14,4 @@ install:
   - "sudo pip install -r requirements.txt --use-mirrors"
 # command to run tests
 script:
- - "export TERM=xterm"
  - nosetests
