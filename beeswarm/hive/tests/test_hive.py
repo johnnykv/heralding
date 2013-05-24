@@ -39,7 +39,6 @@ class hive_tests(unittest.TestCase):
 
     def test_init(self):
         """Tests if the Hive class can be instantiated successfully using the default configuration file"""
-        print self.test_config_file
         sut = Hive(self.work_dir, config_file=self.test_config_file, key=self.key, cert=self.cert)
 
 
