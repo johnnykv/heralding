@@ -12,12 +12,12 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import curses
 
 import logging
 import os
 import random
 import socket
-import fs
 from fs.path import dirname
 
 from telnetsrv.green import TelnetHandler, command
@@ -53,6 +53,11 @@ class telnet_wrapper(TelnetHandler):
     HOSTNAME = 'host'
     authNeedUser = True
     authNeedPass = True
+    TERM = 'ansi'
+
+    # Making these empty will disable option negotiations, so less headache for us.
+    DOACK = {}
+    WILLACK = {}
 
     def __init__(self, client_address, server, socket, session, vfs):
         self.session = session
@@ -116,3 +121,20 @@ class telnet_wrapper(TelnetHandler):
 
     def session_end(self):
         self.session.connected = False
+
+    def setterm(self, term):
+
+        # Dummy file for the purpose of tests.
+        f = open('/dev/null', 'w')
+        curses.setupterm(term, f.fileno())  # This will raise if the termtype is not supported
+        self.TERM = term
+        self.ESCSEQ = {}
+        for k in self.KEYS.keys():
+            str = curses.tigetstr(curses.has_key._capability_names[k])
+            if str:
+                self.ESCSEQ[str] = k
+        self.CODES['DEOL'] = curses.tigetstr('el')
+        self.CODES['DEL'] = curses.tigetstr('dch1')
+        self.CODES['INS'] = curses.tigetstr('ich1')
+        self.CODES['CSRLEFT'] = curses.tigetstr('cub1')
+        self.CODES['CSRRIGHT'] = curses.tigetstr('cuf1')

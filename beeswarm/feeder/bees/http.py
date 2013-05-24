@@ -42,14 +42,14 @@ class http(ClientBase):
         try:
             client = httplib.HTTPConnection(server_host, server_port)
             client.putrequest('GET', random.choice(url_list))
-            session.source_port = client.sock.getsockname()[1]
             auth_string = login + ':' + password
             client.putheader('Authorization', 'Basic ' + base64.b64encode(auth_string))
             client.endheaders()
+            session.source_port = client.sock.getsockname()[1]
             session.did_connect = True
             response = client.getresponse()
-        except:
-            logging.debug('Caught exception, unable to connect.')
+        except Exception as err:
+            logging.debug('Caught exception: %s (%s)' % (err, str(type(err))))
         else:
             if response.status == 200:
                 session.did_login = True
