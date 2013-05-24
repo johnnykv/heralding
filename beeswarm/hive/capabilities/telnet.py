@@ -124,8 +124,7 @@ class telnet_wrapper(TelnetHandler):
 
     def setterm(self, term):
 
-        logging.debug("Setting termtype to %s" % (term, ))
-        curses.setupterm(term)  # This will raise if the termtype is not supported
+        curses.setupterm()  # This will raise if the termtype is not supported
         self.TERM = term
         self.ESCSEQ = {}
         for k in self.KEYS.keys():

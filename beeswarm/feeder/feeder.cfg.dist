@@ -36,3 +36,10 @@ port = 5900
 timing = regular
 login = test
 password = test
+
+[bee_telnet]
+server = 127.0.0.1
+port = 23
+timing = regular
+login = test
+password = test
