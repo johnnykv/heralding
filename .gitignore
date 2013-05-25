@@ -51,3 +51,4 @@ beekeeper/beekeeper.sqlite
 *.gz
 
 beekeeper.cfg
+docs/_build
