@@ -18,6 +18,7 @@ import json
 import logging
 from flask import Flask, render_template, request
 from pony.orm import commit, select
+from beeswarm.beekeeper.db.database import Feeder, Honeybee, Session, Hive, Classification
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
@@ -57,8 +58,12 @@ def feeder_data():
     if not _feeder:
         _feeder = Feeder(id=data['feeder_id'])
 
+    classification = Classification.get(type='dummy')
+
     _honeybee = Honeybee(id=data['id'],
                          timestamp=datetime.strptime(data['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
+                         classification=classification,
+                         received=datetime.utcnow(),
                          protocol=data['protocol'],
                          username=data['login'],
                          password=data['password'],
@@ -87,9 +92,13 @@ def hive_data():
     if not _hive:
         _hive = Hive(id=data['hive_id'])
 
+    classification = Classification.get(type='dummy')
+
     for login_attempt in data['login_attempts']:
         _session = Session(id=login_attempt['id'],
                            timestamp=datetime.strptime(login_attempt['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
+                           classification=classification,
+                           received=datetime.utcnow(),
                            protocol=data['protocol'],
                            #TODO: not all capabilities delivers login/passwords. This needs to be subclasses...
                            username=login_attempt['username'],
