@@ -18,7 +18,6 @@ import json
 import logging
 from flask import Flask, render_template, request
 from pony.orm import commit, select
-from beeswarm.beekeeper.database import Feeder, Honeybee, Session, Hive
 
 app = Flask(__name__)
 app.config['DEBUG'] = True

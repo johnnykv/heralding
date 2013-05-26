@@ -1,7 +1,7 @@
 from datetime import datetime
 from pony.orm import *
 from pony.orm.core import Discriminator
-from beeswarm.beekeeper.database_config import db
+from beeswarm.beekeeper.db.database_config import db
 
 #db = Database("sqlite", "beekeeper.sqlite", create_db=True)
 
@@ -16,6 +16,7 @@ class Feeder(db.Entity):
 class Session(db.Entity):
     classtype = Discriminator(int)
     id = PrimaryKey(str)
+    received = Required(datetime)
     timestamp = Required(datetime)
     protocol = Required(str)
     username = Optional(unicode)
@@ -25,6 +26,7 @@ class Session(db.Entity):
     destination_ip = Required(str)
     destination_port = Required(int)
     hive = Optional("Hive")
+    classification = Required("Classification")
 
 
 class Hive(db.Entity):
@@ -37,6 +39,13 @@ class Honeybee(db.Session):
     did_connect = Optional(bool)
     did_login = Optional(bool)
     did_complete = Optional(bool)
+
+
+class Classification(db.Entity):
+    type = PrimaryKey(str)
+    sessions = Set(Session)
+    description_long = Required(str)
+    description_short = Required(str)
 
 
 #sql_debug(True)

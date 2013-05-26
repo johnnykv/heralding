@@ -4,11 +4,11 @@ import unittest
 from datetime import datetime
 
 import gevent.monkey
+from beeswarm.beekeeper.db import database_config
 
 gevent.monkey.patch_all()
 
 #find better way to do this!
-from beeswarm.beekeeper import database_config
 
 database_config.setup_db(':memory:')
 
