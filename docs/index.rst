@@ -9,7 +9,7 @@ Beeswarm: Honeytokens made easy
 ===============================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    quickstart
    hive
