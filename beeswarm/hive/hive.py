@@ -101,7 +101,7 @@ class Hive(object):
                 url = 'http://api-sth01.exip.org/?call=ip'
                 req = requests.get(url)
                 self.hive_ip = req.text
-                logging.info('Fetched {0} as external ip for Hive.'.format(self.public_ip))
+                logging.info('Fetched {0} as external ip for Hive.'.format(self.hive_ip))
             except (Timeout, ConnectionError) as e:
                 logging.warning('Could not fetch public ip: {0}'.format(e))
 
