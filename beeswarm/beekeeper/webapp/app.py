@@ -16,7 +16,7 @@
 from datetime import datetime
 import json
 import logging
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, abort
 from pony.orm import commit, select
 from beeswarm.beekeeper.db.database import Feeder, Honeybee, Session, Hive, Classification
 
@@ -52,12 +52,7 @@ def feeder_data():
     #TODO: investigate why the flask provided request.json returns None.
     data = json.loads(request.data)
 
-    #in the final version it will be guaranteed that the feeder exists in the database
     _feeder = Feeder.get(id=data['feeder_id'])
-    #create if not found in the database
-    if not _feeder:
-        _feeder = Feeder(id=data['feeder_id'])
-
 
     _honeybee = Honeybee(id=data['id'],
                          timestamp=datetime.strptime(data['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
@@ -84,12 +79,8 @@ def hive_data():
     data = json.loads(request.data)
     logger.debug('Received: {0}'.format(data))
 
-    #in the final version it will be guaranteed that hive exists in the database
     _hive = Hive.get(id=data['hive_id'])
     #create if not found in the database
-    if not _hive:
-        _hive = Hive(id=data['hive_id'])
-
 
     for login_attempt in data['login_attempts']:
         _session = Session(id=login_attempt['id'],
