@@ -24,6 +24,19 @@ Deployment overview
     nsm [label="NSM", style="dashed"]
     }
 
+Supported protocols
+-------------------
+
+==========  ====  =========== ======
+ Protocol   Auth  Interaction Notes
+==========  ====  =========== ======
+ssh         Yes   No          xx
+vnc         Yes   No          xx
+ftp         Yes   Yes         xx
+telnet      Yes   Yes         xx
+pop3        Yes   Yes         xx
+smtp        Yes   No          xx
+==========  ====  =========== ======
 
 Installation
 ------------
