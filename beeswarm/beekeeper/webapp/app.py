@@ -58,11 +58,9 @@ def feeder_data():
     if not _feeder:
         _feeder = Feeder(id=data['feeder_id'])
 
-    classification = Classification.get(type='dummy')
 
     _honeybee = Honeybee(id=data['id'],
                          timestamp=datetime.strptime(data['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
-                         classification=classification,
                          received=datetime.utcnow(),
                          protocol=data['protocol'],
                          username=data['login'],
@@ -92,12 +90,10 @@ def hive_data():
     if not _hive:
         _hive = Hive(id=data['hive_id'])
 
-    classification = Classification.get(type='dummy')
 
     for login_attempt in data['login_attempts']:
         _session = Session(id=login_attempt['id'],
                            timestamp=datetime.strptime(login_attempt['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
-                           classification=classification,
                            received=datetime.utcnow(),
                            protocol=data['protocol'],
                            #TODO: not all capabilities delivers login/passwords. This needs to be subclasses...

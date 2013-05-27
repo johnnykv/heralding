@@ -8,6 +8,7 @@ from beeswarm.beekeeper.db.database_config import db
 if db is None:
     raise OperationalError('Please setup database before importing this module.')
 
+
 class Feeder(db.Entity):
     id = PrimaryKey(str)
     honeybees = Set("Honeybee")
@@ -26,7 +27,7 @@ class Session(db.Entity):
     destination_ip = Required(str)
     destination_port = Required(int)
     hive = Optional("Hive")
-    classification = Required("Classification")
+    classification = Optional("Classification")
 
 
 class Hive(db.Entity):
