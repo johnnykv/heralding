@@ -1,0 +1,13 @@
+{"classifications": [
+    {
+        "type": "dummy",
+        "description_short": "Dummy",
+        "description_long": "Classification used for testing purposes."
+    },
+
+    {
+        "type": "honeybee",
+        "description_short": "Legit Honeytoken traffic",
+        "description_long": "A session where a Feeder instance successfully transmitted information to a Hive with no indication of malicious activity."
+    }
+]}
