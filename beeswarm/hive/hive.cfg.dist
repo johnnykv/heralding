@@ -24,13 +24,6 @@ beekeeper_url = http://127.0.0.1:5000/ws/hive_data
 enabled = False
 socket = /dev/log
 
-#Additional information for logging purposes
-[public_ip]
-#Optional
-public_ip =
-#Get public ip by querying external webservice
-fetch_ip = False
-
 # Capabilities
 [cap_ftp]
 enabled = True

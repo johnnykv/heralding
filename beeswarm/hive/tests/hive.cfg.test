@@ -20,13 +20,6 @@ chan = beeswarm.hive
 enabled = False
 socket = /dev/log
 
-#Additional information for logging purposes
-[public_ip]
-#Optional
-public_ip =
-#Get public ip by querying external webservice
-fetch_public_ip = False
-
 # Capabilities
 [cap_ftp]
 enabled = True
