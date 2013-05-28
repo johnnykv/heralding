@@ -15,6 +15,7 @@ port = 20000
 ident = 2wtadBoH
 secret = mJPyhNhJmLYGbDCt
 chan = beeswarm.hive
+port_mapping = {}
 
 [log_beekeeper]
 enabled = True

@@ -32,12 +32,16 @@ class HPFeedsLogger(LoggerBase):
         port = self.config.getint('log_hpfeedslogger', 'port')
         secret = self.config.get('log_hpfeedslogger', 'secret')
         ident = self.config.get('log_hpfeedslogger', 'ident')
+        self.port_mapping = eval(self.config.get('log_hpfeedslogger', 'port_mapping'))
         self.chan = self.config.get('log_hpfeedslogger', 'chan')
         self.enabled = True
         self.hpc = hpfeeds.new(host, port, ident, secret)
 
     def log(self, session):
-        data = json.dumps(session.to_dict(), default=self.json_default)
+        session_dict = session.to_dict()
+        if session_dict['honey_port'] in self.port_mapping:
+            session_dict['honey_port'] = self.port_mapping[session_dict['honey_port']]
+        data = json.dumps(session_dict, default=self.json_default)
         error_msg = self.hpc.publish(self.chan, data)
         if error_msg:
             logger.warning('Error while publishing: {0}'.format(error_msg))
