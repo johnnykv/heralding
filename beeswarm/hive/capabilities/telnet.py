@@ -80,7 +80,7 @@ class telnet_wrapper(TelnetHandler):
             self.writeline('Invalid username/password')
             self.auth_count += 1
             self.authentication_ok()
-        return False
+        raise AuthenticationFailed()
 
     @command('ls')
     def command_ls(self, params):
@@ -130,11 +130,15 @@ class telnet_wrapper(TelnetHandler):
         self.TERM = term
         self.ESCSEQ = {}
         for k in self.KEYS.keys():
-            str = curses.tigetstr(curses.has_key._capability_names[k])
-            if str:
-                self.ESCSEQ[str] = k
+            str_ = curses.tigetstr(curses.has_key._capability_names[k])
+            if str_:
+                self.ESCSEQ[str_] = k
         self.CODES['DEOL'] = curses.tigetstr('el')
         self.CODES['DEL'] = curses.tigetstr('dch1')
         self.CODES['INS'] = curses.tigetstr('ich1')
         self.CODES['CSRLEFT'] = curses.tigetstr('cub1')
         self.CODES['CSRRIGHT'] = curses.tigetstr('cuf1')
+
+
+class AuthenticationFailed(Exception):
+    pass
