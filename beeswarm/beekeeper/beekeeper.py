@@ -20,7 +20,7 @@ from ConfigParser import ConfigParser
 
 from gevent.wsgi import WSGIServer
 import beeswarm
-from beeswarm.beekeeper import database_config
+from beeswarm.beekeeper.db import database_config
 
 logger = logging.getLogger(__name__)
 
