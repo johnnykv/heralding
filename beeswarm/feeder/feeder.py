@@ -48,6 +48,7 @@ class Feeder(object):
         self.config.read(config_file)
 
         BeeSession.feeder_id = self.config.get('general', 'feeder_id')
+        BeeSession.hive_id = self.config.get('general', 'hive_id')
 
         if self.config.getboolean('public_ip', 'fetch_ip'):
             self.my_ip = urllib2.urlopen('http://api-sth01.exip.org/?call=ip').read()

@@ -53,6 +53,7 @@ def feeder_data():
     data = json.loads(request.data)
 
     _feeder = Feeder.get(id=data['feeder_id'])
+    _hive = Hive.get(id=data['hive_id'])
 
     _honeybee = Honeybee(id=data['id'],
                          timestamp=datetime.strptime(data['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
@@ -68,6 +69,8 @@ def feeder_data():
                          did_login=data['did_login'],
                          did_complete=data['did_complete'],
                          feeder=_feeder)
+                         feeder=_feeder,
+                         hive=_hive)
 
     commit()
 

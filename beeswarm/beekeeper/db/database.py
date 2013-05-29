@@ -26,7 +26,7 @@ class Session(db.Entity):
     source_port = Required(int)
     destination_ip = Required(str)
     destination_port = Required(int)
-    hive = Optional("Hive")
+    hive = Required("Hive")
     classification = Optional("Classification")
 
 

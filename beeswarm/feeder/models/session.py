@@ -20,12 +20,14 @@ from datetime import datetime
 class BeeSession(object):
 
     feeder_id = ''
+    hive_id = ''
 
     def __init__(self, protocol, login, password, hive_host, hive_port, my_ip):
         assert BeeSession.feeder_id
 
         self.id = uuid.uuid4()
         self.feeder_id = BeeSession.feeder_id
+        self.hive_id = BeeSession.hive_id
         self.protocol = protocol
         self.login = login
         self.password = password
