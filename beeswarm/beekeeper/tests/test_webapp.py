@@ -2,19 +2,15 @@ import json
 import uuid
 import unittest
 from datetime import datetime
-from pony.orm import commit, select
 
 import gevent.monkey
-from beeswarm.beekeeper.db import database_config
-
 gevent.monkey.patch_all()
 
-#find better way to do this!
-
+from pony.orm import commit, select
+from beeswarm.beekeeper.db import database_config
 database_config.setup_db(':memory:')
+
 from beeswarm.beekeeper.db.database import Hive, Classification, Feeder
-
-
 from beeswarm.beekeeper.webapp import app
 
 
@@ -22,21 +18,25 @@ class WebappTests(unittest.TestCase):
     def setUp(self):
         self.app = app.app.test_client()
 
+        #setup dummy entities
+        self.feeder_id =  str(uuid.uuid4())
+        _feeder = Feeder(id=self.feeder_id)
+        self.hive_id = str(uuid.uuid4())
+        _hive = Hive(id=self.hive_id)
+        commit()
+
     def tearDown(self):
-        pass
+        database_config.clear_db()
 
     def test_basic_feeder_post(self):
         """
         Tests if a honeybee dict can be posted without exceptions.
         """
-        #setup dummy feeder entity
-        feeder_id =  str(uuid.uuid4())
-        _feeder = Feeder(id=feeder_id)
-        commit()
 
         data_dict = {
             'id': str(uuid.uuid4()),
-            'feeder_id': feeder_id,
+            'feeder_id': self.feeder_id,
+            'hive_id': self.hive_id,
             'protocol': 'pop3',
             'login': 'james',
             'password': 'bond',
@@ -57,14 +57,10 @@ class WebappTests(unittest.TestCase):
         """
         Tests if a session dict can be posted without exceptions.
         """
-        #setup dummy hive entity
-        hive_id =  str(uuid.uuid4())
-        _hive = Hive(id=hive_id)
-        commit()
 
         data_dict = {
             'id': 'ba9fdb3d-0efb-4764-9a6b-d9b86eccda96',
-            'hive_id': hive_id,
+            'hive_id': self.hive_id,
             'honey_ip': '192.168.1.1',
             'honey_port': 8023,
             'protocol': 'telnet',

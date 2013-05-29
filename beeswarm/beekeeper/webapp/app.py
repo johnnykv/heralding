@@ -43,8 +43,7 @@ def sessions_honeybees():
 
 @app.route('/sessions/attacks')
 def sessions_attacks():
-    #TODO: Figure out the correct way to do this with PonyORM
-    attacks = select(a for a in Session if a.classtype == 'Session')
+    attacks = select(a for a in Session if a.classification is None)
     return render_template('logs.html', sessions=attacks)
 
 @app.route('/ws/feeder_data', methods=['POST'])
@@ -68,7 +67,6 @@ def feeder_data():
                          did_connect=data['did_connect'],
                          did_login=data['did_login'],
                          did_complete=data['did_complete'],
-                         feeder=_feeder)
                          feeder=_feeder,
                          hive=_hive)
 

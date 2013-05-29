@@ -18,6 +18,7 @@ import os
 import shutil
 from ConfigParser import ConfigParser
 
+import gevent
 from gevent.wsgi import WSGIServer
 import beeswarm
 from beeswarm.beekeeper.db import database_config
@@ -30,7 +31,11 @@ class Beekeeper(object):
         self.config = ConfigParser()
         self.config.read(config_file)
 
+        self.servers = {}
+        self.greenlets = []
+
         database_config.setup_db(os.path.join(os.getcwd(), self.config.get('sqlite', 'db_file')))
+        #Out of band import because of premature db implementation
         from beeswarm.beekeeper.webapp import app
 
         self.app = app.app
@@ -38,16 +43,29 @@ class Beekeeper(object):
     def start(self, port=5000):
         #management interface
         logger.info('Starting Beekeeper listening on port {0}'.format(port))
-        self.http_server = WSGIServer(('', 5000), self.app)
-        self.http_server.serve_forever()
+
+        http_server = WSGIServer(('', 5000), self.app)
+        http_server_greenlet = gevent.spawn(http_server.serve_forever)
+        self.servers['http'] = http_server
+        self.greenlets.append(http_server_greenlet)
+
+        #Out of band import because of premature db implementation
+        from beeswarm.beekeeper.classifier.classifier import Classifier
+        classifier = Classifier()
+        classifier_greenlet = gevent.spawn(classifier.start)
+        self.servers['classifier'] = classifier
+        self.greenlets.append(classifier_greenlet)
+
+        gevent.joinall(self.greenlets)
 
     def stop(self):
-        self.http_server.stop(5)
+        logging.info('Stopping beekeeper.')
+        self.servers['classifier'].stop()
+        self.servers['http'].stop(5)
 
     @staticmethod
     def prepare_environment(work_dir):
         package_directory = os.path.dirname(os.path.abspath(beeswarm.__file__))
-        #no preparation needed as of yet
         config_file = os.path.join(work_dir, 'beekeeper.cfg.dist')
         if not os.path.isfile(config_file):
             logging.info('Copying configuration file to workdir.')
