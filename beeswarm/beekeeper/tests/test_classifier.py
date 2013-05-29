@@ -68,7 +68,7 @@ class ClassifierTests(unittest.TestCase):
 
         c = Classifier()
         result = c.get_matching_session(self.honeybee)
-        self.assertEqual('session2', result.id)3
+        self.assertEqual('session2', result.id)
 
     def test_classify_sessions(self):
         """
