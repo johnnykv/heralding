@@ -33,6 +33,7 @@ class Session(db.Entity):
 class Hive(db.Entity):
     id = PrimaryKey(str)
     sessions = Set(Session)
+    configuration_file = Optional(unicode)
 
 
 class Honeybee(db.Session):
