@@ -17,7 +17,7 @@ setup(
     description='Honeytoken transmission, reception and analysis.',
     test_suite='nose.collector',
     dependency_links = [
-    'git+https://github.com/rep/hpfeeds.git#egg=hpfeeds',
+    'git+https://github.com/rep/hpfeeds.git#egg=hpfeeds-1.0.0',
     ],
     install_requires=open('requirements.txt').read().splitlines(),
 )
