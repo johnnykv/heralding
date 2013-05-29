@@ -29,38 +29,50 @@ class Classifier(object):
     def start(self):
         self.enabled = True
         while self.enabled:
-            #get all bees with no classification
-            honeybees = select(h for h in Honeybee if h.classification == None)
-            for h in honeybees:
-                session_match = self.get_matching_session(honeybees)
-                #a match means that the traffic is legit (eg. honeybee traffic)
-                if session_match:
-                    #confirm (classify) the honeybee and delete the hive session.
-                    h.classification = Classification.get(type='honeybee')
-                    session_match.delete()
+            self.classify_honeybees()
+            self.classify_sessions()
             commit()
-
             gevent.sleep(10)
 
     #match honeybee with session
     def get_matching_session(self, honeybee, timediff=5):
         """
-        Provided a honeybee object a matching sessions is returned. If no matching
+        Provided a honeybee object a matching session is returned. If no matching
         session is found None is returned.
 
-        :param honeybee: honeybee object which serves a basic for the query.
-        :param timediff: +/- allowed timed difference between a honeybee and a potential matching session.
+        :param honeybee: honeybee object which will be used as base for query.
+        :param timediff: +/- allowed time difference between a honeybee and a potential matching session.
         """
         min_datetime = honeybee.timestamp - datetime.timedelta(seconds=timediff)
         max_datetime = honeybee.timestamp + datetime.timedelta(seconds=timediff)
         session_match = Session.get(lambda s: s.protocol == honeybee.protocol and
-                                              s.username == honeybee.username and
-                                              s.password == honeybee.password and
                                               s.hive == honeybee.hive and
                                               s.timestamp >= min_datetime and
                                               s.timestamp <= max_datetime and
                                               s.classtype != 'Honeybee')
         return session_match
+
+    def classify_honeybees(self):
+        honeybees = select(h for h in Honeybee if h.classification == None)
+        for h in honeybees:
+            session_match = self.get_matching_session(honeybees)
+            #a match means that the traffic is legit (eg. honeybee traffic)
+            if session_match:
+                logger.debug('Classifying honeybee with id {0} as successfull honeybee traffic and deleting '
+                             'matching sessions with id {1}'.format(h.id, session_match.id))
+                h.classification = Classification.get(type='honeybee')
+                session_match.delete()
+
+    def classify_sessions(self, delay_seconds):
+        min_datetime = datetime.datetime.now() - datetime.timedelta(seconds=delay_seconds)
+        print min_datetime
+        sessions = select(s for s in Session if s.classification == None and
+                                                s.classtype == 'Session' and
+                                                s.timestamp <= min_datetime)
+        #sessions are classified as brute-force attempts (until further notice...)
+        for s in sessions:
+            logger.debug('Classifying session with id {0} as bruteforce attempt.'.format(s.id))
+            s.classification = Classification.get(type='malicious_brute')
 
     def stop(self):
         self.enabled = False

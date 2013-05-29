@@ -12,7 +12,12 @@
     },
     {
         "type": "imp_1",
-        "description_short": "Attacker impersonating service",
+        "description_short": "Attacker impersonating",
         "description_long": "A feeder instance successfully communicated with a attacker impersonating a Hive service."
+    },
+    {
+        "type": "malicious_brute",
+        "description_short": "Attacker brute-forcing",
+        "description_long": "A attacker connected to a Hive instance and tried to authenticate using credentials not transmitted in any recorded honeybee."
     }
 ]}
