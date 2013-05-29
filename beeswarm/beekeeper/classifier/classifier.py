@@ -43,9 +43,16 @@ class Classifier(object):
             gevent.sleep(10)
 
     #match honeybee with session
-    def get_matching_session(self, honeybee):
-        min_datetime = honeybee.timestamp - datetime.timedelta(seconds=5)
-        max_datetime = honeybee.timestamp + datetime.timedelta(seconds=5)
+    def get_matching_session(self, honeybee, timediff=5):
+        """
+        Provided a honeybee object a matching sessions is returned. If no matching
+        session is found None is returned.
+
+        :param honeybee: honeybee object which serves a basic for the query.
+        :param timediff: +/- allowed timed difference between a honeybee and a potential matching session.
+        """
+        min_datetime = honeybee.timestamp - datetime.timedelta(seconds=timediff)
+        max_datetime = honeybee.timestamp + datetime.timedelta(seconds=timediff)
         session_match = Session.get(lambda s: s.protocol == honeybee.protocol and
                                               s.username == honeybee.username and
                                               s.password == honeybee.password and
