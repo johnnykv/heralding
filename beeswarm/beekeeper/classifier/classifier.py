@@ -89,8 +89,18 @@ class Classifier(object):
                                                 s.timestamp <= min_datetime)
         #sessions are classified as brute-force attempts (until further notice...)
         for s in sessions:
-            logger.debug('Classifying session with id {0} as bruteforce attempt.'.format(s.id))
-            s.classification = Classification.get(type='malicious_brute')
+            if s.password == None or s.username == None:
+                logger.debug('Classifying session with id {0} as bruteforce attempt.'.format(s.id))
+                s.classification = Classification.get(type='malicious_brute')
+            else:
+                honey_matches = select(h for h in Honeybee if h.username == s.username and
+                                                              h.password == s.username)
+                if len(honey_matches) > 0:
+                    logger.debug('Classifying session with id {0} as bruteforce attempt.'.format(s.id))
+                    s.classification = Classification.get(type='mitm_2')
+                else:
+                    logger.debug('Classifying session with id {0} as bruteforce attempt.'.format(s.id))
+                    s.classification = Classification.get(type='malicious_brute')
 
     def stop(self):
         self.enabled = False
