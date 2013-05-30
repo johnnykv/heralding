@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>New Hive Configuration:</h2>
+<form action="" method="post" name='create_hive'>
+    {{ form.hidden_tag() }}
+        <h5>HTTP:</h5>
+        Enabled: {{ form.http_enabled() }}<br>
+        Port: {{ form.http_port() }}<br>
+        Banner: {{ form.http_banner() }}<br>
+        <hr>
+
+        <h5>HTTPS:</h5>
+        Enabled: {{ form.https_enabled() }}<br>
+        Port: {{ form.https_port() }}<br>
+        Banner: {{ form.https_banner() }}<br>
+        <hr>
+
+        <h5>FTP:</h5>
+        Enabled: {{ form.ftp_enabled() }}<br>
+        Port: {{ form.ftp_port() }}<br>
+        Max Attempts: {{ form.ftp_max_attempts() }}<br>
+        Banner: {{ form.ftp_banner() }}
+        <hr>
+
+        <h5>SMTP:</h5>
+        Enabled: {{ form.smtp_enabled() }}<br>
+        Port: {{ form.smtp_port() }}<br>
+        Banner: {{ form.smtp_banner() }}
+        <hr>
+
+        <h5>VNC:</h5>
+        Enabled: {{ form.vnc_enabled() }}<br>
+        Port: {{ form.vnc_port() }}<br>
+        <hr>
+
+        <h5>Telnet:</h5>
+        Enabled: {{ form.telnet_enabled() }}<br>
+        Port: {{ form.telnet_port() }}<br>
+        Max Attempts: {{ form.telnet_max_attempts() }}<br>
+        <hr>
+
+        <h5>POP3:</h5>
+        Enabled: {{ form.pop3_enabled() }}<br>
+        Port: {{ form.pop3_port() }}<br>
+        Max Attempts: {{ form.pop3_max_attempts() }}<br>
+        <hr>
+
+        <h5>POP3s:</h5>
+        Enabled: {{ form.pop3s_enabled() }}<br>
+        Port: {{ form.pop3s_port() }}<br>
+        Max Attempts: {{ form.pop3s_max_attempts() }}<br>
+        <hr>
+
+        <h5>SSH:</h5>
+        Enabled: {{ form.ssh_enabled() }}<br>
+        Port: {{ form.ssh_port() }}<br>
+        Key: {{ form.ssh_key() }}<br>
+        <hr>
+
+        <input type="submit" value="Generate!">
+</form>
+
+{% endblock %}
