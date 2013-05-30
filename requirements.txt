@@ -9,3 +9,4 @@ flask
 pony>=0.4.6
 pyOpenSSL
 hpfeeds
+flask-wtf
