@@ -63,7 +63,7 @@ class Classifier(object):
                 h.classification = Classification.get(type='honeybee')
                 session_match.delete()
 
-    def classify_sessions(self, delay_seconds):
+    def classify_sessions(self, delay_seconds=15):
         min_datetime = datetime.datetime.now() - datetime.timedelta(seconds=delay_seconds)
         print min_datetime
         sessions = select(s for s in Session if s.classification == None and
