@@ -52,20 +52,38 @@ class Classifier(object):
                                               s.classtype != 'Honeybee')
         return session_match
 
-    def classify_honeybees(self):
-        honeybees = select(h for h in Honeybee if h.classification == None)
+    def classify_honeybees(self, delay_seconds=30):
+        """
+        Will classify all unclassified honeybees as either legit or malicious activity. A honeybee can e.g. be classified
+        as involved in malicious activity if the honeybee is subject to a MiTM attack.
+
+        :param delay_seconds: no honeybees newer than (now - delay_seconds) will be processed.
+        """
+        min_datetime = datetime.datetime.utcnow() - datetime.timedelta(seconds=delay_seconds)
+        honeybees = select(h for h in Honeybee if h.classification == None and
+                                                  h.did_complete and
+                                                  h.timestamp < min_datetime)
         for h in honeybees:
             session_match = self.get_matching_session(honeybees)
-            #a match means that the traffic is legit (eg. honeybee traffic)
+            #if we have a match this is legit honeybee traffic
             if session_match:
-                logger.debug('Classifying honeybee with id {0} as successfull honeybee traffic and deleting '
-                             'matching sessions with id {1}'.format(h.id, session_match.id))
+                logger.debug('Classifying honeybee with id {0} as legit honeybee traffic and deleting '
+                             'matching session with id {1}'.format(h.id, session_match.id))
                 h.classification = Classification.get(type='honeybee')
                 session_match.delete()
+            #else we classify it as a MiTM attack
+            else:
+                h.classification = Classification.get(type='mitm_1')
 
-    def classify_sessions(self, delay_seconds=15):
+    def classify_sessions(self, delay_seconds=30):
+        """
+        Will classify all sessions (which are not honeybees) as malicious activity. Note: The classify_honeybees method
+        should be called before this method.
+
+        :param delay_seconds: no sessions newer than (now - delay_seconds) will be processed.
+        """
         min_datetime = datetime.datetime.now() - datetime.timedelta(seconds=delay_seconds)
-        print min_datetime
+
         sessions = select(s for s in Session if s.classification == None and
                                                 s.classtype == 'Session' and
                                                 s.timestamp <= min_datetime)

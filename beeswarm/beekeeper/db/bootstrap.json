@@ -11,9 +11,9 @@
         "description_long": "A session where a Feeder instance successfully transmitted information to a Hive with no indication of malicious activity."
     },
     {
-        "type": "imp_1",
-        "description_short": "Attacker impersonating",
-        "description_long": "A feeder instance successfully communicated with a attacker impersonating a Hive service."
+        "type": "mitm_1",
+        "description_short": "Attacker impersonating Hive instance.",
+        "description_long": "A feeder instance successfully communicated with a attacker impersonating a Hive instance."
     },
     {
         "type": "malicious_brute",

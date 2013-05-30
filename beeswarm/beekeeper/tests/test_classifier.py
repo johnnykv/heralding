@@ -54,7 +54,7 @@ class ClassifierTests(unittest.TestCase):
 
     def test_matching_session(self):
         """
-        Tests if the get_matching_session method returns the session which matches a given honeybee.
+        Test if the get_matching_session method returns the session which matches a given honeybee.
         """
 
         #session2 is the matching session
@@ -72,7 +72,7 @@ class ClassifierTests(unittest.TestCase):
 
     def test_classify_sessions(self):
         """
-        Tests is 'standalone' sessions older than X seconds get classified as brute-force attempts.
+        Test if 'standalone' sessions older than X seconds get classified as brute-force attempts.
         """
         database_config.clear_db()
         for id, offset in (('session1', -30), ('session2', -10), ('session3', -2)):
