@@ -105,7 +105,7 @@ def hive_data():
     return ''
 
 
-@app.route('/add/hive', methods=['GET', 'POST'])
+@app.route('/ws/hive', methods=['GET', 'POST'])
 def create_hive():
     form = NewConfigForm()
     if form.validate_on_submit():
