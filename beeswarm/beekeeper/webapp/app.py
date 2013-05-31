@@ -19,7 +19,7 @@ import logging
 import uuid
 from flask import Flask, render_template, request, abort
 
-from forms import NewConfigForm
+from forms import NewHiveConfigForm, NewFeederConfigForm
 from pony.orm import commit, select
 from beeswarm.beekeeper.db.database import Feeder, Honeybee, Session, Hive, Classification
 
@@ -109,7 +109,7 @@ def hive_data():
 
 @app.route('/ws/hive', methods=['GET', 'POST'])
 def create_hive():
-    form = NewConfigForm()
+    form = NewHiveConfigForm()
     new_hive_id = str(uuid.uuid4())
     if form.validate_on_submit():
         config = {
@@ -192,6 +192,67 @@ def create_hive():
         return ''
 
     return render_template('create-hive.html', form=form)
+
+@app.route('/ws/feeder', methods=['GET', 'POST'])
+def create_feeder():
+    form = NewFeederConfigForm()
+    new_feeder_id = str(uuid.uuid4())
+    if form.validate_on_submit():
+        config = {
+            'general': {
+                'feeder_id': new_feeder_id,
+                'hive_id': None
+            },
+            'public_ip': {
+                'fetch_ip': True
+            },
+            'bee_http': {
+                'enabled': form.http_enabled.data,
+                'server': form.http_server.data,
+                'port': form.http_port.data,
+                'timing': form.http_timing.data,
+                'login': form.http_login.data,
+                'password': form.http_password.data
+            },
+            'bee_pop3': {
+                'enabled': form.pop3_enabled.data,
+                'server': form.pop3_server.data,
+                'port': form.pop3_port.data,
+                'timing': form.pop3_timing.data,
+                'login': form.pop3_login.data,
+                'password': form.pop3_password.data
+            },
+            'bee_smtp': {
+                'enabled': form.smtp_enabled.data,
+                'server': form.smtp_server.data,
+                'port': form.smtp_port.data,
+                'timing': form.smtp_timing.data,
+                'login': form.smtp_login.data,
+                'password': form.smtp_password.data
+            },
+            'bee_vnc': {
+                'enabled': form.vnc_enabled.data,
+                'server': form.vnc_server.data,
+                'port': form.vnc_port.data,
+                'timing': form.vnc_timing.data,
+                'login': form.vnc_login.data,
+                'password': form.vnc_password.data
+            },
+            'bee_telnet': {
+                'enabled': form.telnet_enabled.data,
+                'server': form.telnet_server.data,
+                'port': form.telnet_port.data,
+                'timing': form.telnet_timing.data,
+                'login': form.telnet_login.data,
+                'password': form.telnet_password.data
+            },
+        }
+        config_json = json.dumps(config)
+        new_feeder = Feeder(id=new_feeder_id, configuration=config_json)
+        commit()
+        return ''
+
+    return render_template('create-feeder.html', form=form)
 
 if __name__ == '__main__':
     app.run()

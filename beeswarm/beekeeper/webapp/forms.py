@@ -3,7 +3,7 @@ from flask.ext.wtf import Required
 from flask.ext.wtf import IntegerField, FileField
 
 
-class NewConfigForm(Form):
+class NewHiveConfigForm(Form):
 
     http_enabled = BooleanField(default=False)
     http_port = IntegerField(default=80)
@@ -40,3 +40,41 @@ class NewConfigForm(Form):
     ssh_enabled = BooleanField(default=False)
     ssh_port = IntegerField(default=22)
     ssh_key = FileField(default='server.key')
+
+
+class NewFeederConfigForm(Form):
+
+    http_enabled = BooleanField(default=False)
+    http_server = TextField(default='127.0.0.1')
+    http_port = IntegerField(default=80)
+    http_timing = TextField(default='regular')
+    http_login = TextField(default='test')
+    http_password = TextField(default='password')
+
+    pop3_enabled = BooleanField(default=False)
+    pop3_server = TextField(default='127.0.0.1')
+    pop3_port = IntegerField(default=80)
+    pop3_timing = TextField(default='regular')
+    pop3_login = TextField(default='test')
+    pop3_password = TextField(default='password')
+
+    smtp_enabled = BooleanField(default=False)
+    smtp_server = TextField(default='127.0.0.1')
+    smtp_port = IntegerField(default=80)
+    smtp_timing = TextField(default='regular')
+    smtp_login = TextField(default='test')
+    smtp_password = TextField(default='password')
+
+    vnc_enabled = BooleanField(default=False)
+    vnc_server = TextField(default='127.0.0.1')
+    vnc_port = IntegerField(default=80)
+    vnc_timing = TextField(default='regular')
+    vnc_login = TextField(default='test')
+    vnc_password = TextField(default='password')
+
+    telnet_enabled = BooleanField(default=False)
+    telnet_server = TextField(default='127.0.0.1')
+    telnet_port = IntegerField(default=80)
+    telnet_timing = TextField(default='regular')
+    telnet_login = TextField(default='test')
+    telnet_password = TextField(default='password')
