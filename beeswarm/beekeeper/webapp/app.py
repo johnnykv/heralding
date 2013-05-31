@@ -16,6 +16,7 @@
 from datetime import datetime
 import json
 import logging
+import uuid
 from flask import Flask, render_template, request, abort
 
 from forms import NewConfigForm
@@ -108,8 +109,85 @@ def hive_data():
 @app.route('/ws/hive', methods=['GET', 'POST'])
 def create_hive():
     form = NewConfigForm()
+    new_hive_id = str(uuid.uuid4())
     if form.validate_on_submit():
-        # Here I use form data
+        config = {
+            'general': {
+                'hive_id': new_hive_id,
+                'hive_ip': '192.168.1.1',
+                'fetch_ip': False
+            },
+            'log_hpfeedslogger': {
+                'enabled': False,
+                'host': 'hpfriends.honeycloud.net',
+                'port': 20000,
+                'ident': '2wtadBoH',
+                'secret': 'mJPyhNhJmLYGbDCt',
+                'chan': 'beeswarm.hive',
+                'port_mapping': '{}'
+            },
+            'log_beekeeper': {
+                'enabled': False,
+                'beekeeper_url': 'http://127.0.0.1:5000/ws/hive_data'
+            },
+            'log_syslog': {
+                'enabled': False,
+                'socket': '/dev/log'
+            },
+            "cap_ftp": {
+                "enabled": form.ftp_enabled.data,
+                "port": form.ftp_port.data,
+                "max_attempts": form.ftp_max_attempts.data,
+                "banner": form.ftp_banner.data
+            },
+            "cap_telnet": {
+                "enabled": form.telnet_enabled.data,
+                "port": form.telnet_port.data,
+                "max_attempts": form.telnet_max_attempts.data
+            },
+            "cap_pop3": {
+                "enabled": form.pop3_enabled.data,
+                "port": form.pop3_port.data,
+                "max_attempts": form.pop3_max_attempts.data
+            },
+            "cap_pop3s": {
+                "enabled": form.pop3s_enabled.data,
+                "port": form.pop3s_port.data,
+                "max_attempts": form.pop3s_max_attempts.data
+            },
+            "cap_ssh": {
+                "enabled": form.ssh_enabled.data,
+                "port": form.ssh_port.data,
+                "key": form.ssh_key.data
+            },
+            "cap_http": {
+                "enabled": form.http_enabled.data,
+                "port": form.http_port.data,
+                "banner": form.http_banner.data
+            },
+            "cap_https": {
+                "enabled": form.https_enabled.data,
+                "port": form.https_port.data,
+                "banner": form.https_banner.data
+            },
+            "cap_smtp": {
+                "enabled": form.smtp_enabled.data,
+                "port": form.smtp_port.data,
+                "banner": form.smtp_banner.data
+            },
+            "cap_vnc": {
+                "enabled": form.vnc_enabled.data,
+                "port": form.vnc_port.data
+            },
+            "timecheck": {
+                "enabled": True,
+                "poll": 5,
+                "ntp_pool": "pool.ntp.org"
+            }
+        }
+        config_json = json.dumps(config)
+        new_hive = Hive(id=new_hive_id, configuration=config_json)
+        commit()
         return ''
 
     return render_template('create-hive.html', form=form)
