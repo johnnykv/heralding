@@ -10,7 +10,7 @@ class NewHiveConfigForm(Form):
     http_banner = TextField(default='Microsoft-IIS/5.0')
 
     https_enabled = BooleanField(default=False)
-    https_port = IntegerField(default=80)
+    https_port = IntegerField(default=443)
     https_banner = TextField(default='Microsoft-IIS/5.0')
 
     ftp_enabled = BooleanField(default=False)
