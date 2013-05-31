@@ -12,6 +12,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import json
 
 import gevent
 import gevent.monkey
@@ -38,19 +39,23 @@ logger = logging.getLogger(__name__)
 
 
 class Feeder(object):
-    def __init__(self, work_dir, config_file='feeder.cfg'):
+    def __init__(self, work_dir, config_file='feedercfg.json'):
 
         self.config = ConfigParser.ConfigParser()
         self.run_flag = True
         if not os.path.exists(config_file):
             raise ConfigNotFound('Configuration file could not be found. ({0})'.format(config_file))
 
-        self.config.read(config_file)
+        try:
+            with open(config_file, 'r') as cfg:
+                self.config = json.load(cfg)
+        except (ValueError, TypeError) as e:
+            raise Exception('Bad syntax for Config File: (%s)%s' % (e, str(type(e))))
 
-        BeeSession.feeder_id = self.config.get('general', 'feeder_id')
-        BeeSession.hive_id = self.config.get('general', 'hive_id')
+        BeeSession.feeder_id = self.config['general']['feeder_id']
+        BeeSession.hive_id = self.config['general']['hive_id']
 
-        if self.config.getboolean('public_ip', 'fetch_ip'):
+        if self.config['public_ip']['fetch_ip']:
             self.my_ip = urllib2.urlopen('http://api-sth01.exip.org/?call=ip').read()
             logging.info('Fetched {0} as my external ip.'.format(self.my_ip))
         else:
@@ -82,16 +87,16 @@ class Feeder(object):
             gevent.sleep(60)
 
     def get_targets(self):
-        enabled_bees = self.config.sections()
+        enabled_bees = self.config.keys()
         #TODO: Needs to be correlated with hive
         # Maybe correlation can be done when the webapp initializes a new hive/feeder pair
         targets = {}
         for bee in enabled_bees:
             if bee.startswith('bee_'):
                 bee_name = bee[4:]  # discard the 'bee_' prefix
-                targets[bee_name] = list2dict(self.config.items(bee))
+                targets[bee_name] = self.config[bee]
             else:
-                targets[bee] = list2dict(self.config.items(bee))
+                targets[bee] = self.config[bee]
         return targets
 
     def stop(self):
@@ -104,16 +109,8 @@ class Feeder(object):
     def prepare_environment(work_dir):
         package_directory = os.path.dirname(os.path.abspath(beeswarm.__file__))
 
-        config_file = os.path.join(work_dir, 'feeder.cfg.dist')
+        config_file = os.path.join(work_dir, 'feedercfg.json.dist')
         if not os.path.isfile(config_file):
             logging.info('Copying configuration file to current directory.')
-            shutil.copyfile(os.path.join(package_directory, 'feeder/feeder.cfg.dist'),
-                            os.path.join(work_dir, 'feeder.cfg'))
-
-
-def list2dict(list_of_options):
-    """Transforms a list of 2 element tuples to a dictionary"""
-    d = {}
-    for key, value in list_of_options:
-        d[key] = value
-    return d
+            shutil.copyfile(os.path.join(package_directory, 'feeder/feedercfg.json.dist'),
+                            os.path.join(work_dir, 'feedercfg.json'))
