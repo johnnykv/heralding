@@ -14,12 +14,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import ConfigParser
 import os
 import sys
 import shutil
 import _socket
-import ntplib 
+import ntplib
+import json
 
 import gevent
 from gevent import Greenlet
@@ -47,19 +47,21 @@ class Hive(object):
 
     """ This is the main class, which starts up all the capabilities. """
 
-    def __init__(self, work_dir, config_file='hive.cfg', key='server.key', cert='server.crt'):
+    def __init__(self, work_dir, config_arg='hivecfg.json', key='server.key', cert='server.crt'):
         self.work_dir = work_dir
         self.key = key
         self.cert = cert
 
-        self.config = ConfigParser.ConfigParser()
+        if not os.path.exists(config_arg):
+            raise ConfigNotFound('Configuration file could not be found. ({0})'.format(config_arg))
 
+        try:
+            with open(config_arg, 'r') as cfg:
+                self.config = json.load(cfg)
+        except (ValueError, TypeError) as e:
+            raise Exception('Bad syntax for Config File: (%s)%s' % (e, str(type(e))))
 
-        if not os.path.exists(config_file):
-            raise ConfigNotFound('Configuration file could not be found. ({0})'.format(config_file))
-
-        self.config.read(config_file)
-        Session.hive_id = self.config.get('general', 'hive_id')
+        Session.hive_id = self.config['general']['hive_id']
 
         #will contain HiveUser objects
         self.users = create_users()
@@ -68,7 +70,7 @@ class Hive(object):
         Session.authenticator = Authenticator(self.users)
 
         #spawning time checker
-        if self.config.getboolean('timecheck', 'Enabled'):
+        if self.config['timecheck']['enabled']:
             Greenlet.spawn(self.checktime)
         
     #function to check the time offset
@@ -76,8 +78,8 @@ class Hive(object):
         """ Make sure our Hive time is consistent, and not too far off
         from the actual time. """
 
-        poll = self.config.getint('timecheck', 'poll')
-        ntp_poll = self.config.get('timecheck', 'ntp_pool')
+        poll = self.config['timecheck']['poll']
+        ntp_poll = self.config['timecheck']['ntp_pool']
         while True:
             clnt = ntplib.NTPClient()
             response = clnt.request(ntp_poll, version=3)
@@ -96,7 +98,7 @@ class Hive(object):
         #will contain Session objects
         self.sessions = {}
 
-        if self.config.getboolean('general', 'fetch_ip'):
+        if self.config['general']['fetch_ip']:
             try:
                 url = 'http://api-sth01.exip.org/?call=ip'
                 req = requests.get(url)
@@ -117,17 +119,17 @@ class Hive(object):
 
             cap_name = 'cap_' + c.__name__
 
-            if not self.config.has_section(cap_name):
+            if cap_name not in self.config:
                 logger.warning(
                     "Not loading {0} capability because it has no option in configuration file.".format(c.__name__))
                 continue
                 #skip loading if disabled
-            if not self.config.getboolean(cap_name, 'Enabled'):
+            if not self.config[cap_name]['enabled']:
                 continue
 
-            port = self.config.getint(cap_name, 'port')
+            port = self.config[cap_name]['port']
             #carve out the options for this specific service
-            options = list2dict(self.config.items(cap_name))
+            options = self.config[cap_name]
             cap = c(self.sessions, options, self.users, self.work_dir)
 
             try:
@@ -168,11 +170,11 @@ class Hive(object):
     def prepare_environment(work_dir):
         package_directory = os.path.dirname(os.path.abspath(beeswarm.__file__))
 
-        config_file = os.path.join(work_dir, 'hive.cfg.dist')
+        config_file = os.path.join(work_dir, 'hivecfg.json.dist')
         if not os.path.isfile(config_file):
             logging.info('Copying configuration file to workdir.')
-            shutil.copyfile(os.path.join(package_directory, 'hive/hive.cfg.dist'),
-                            os.path.join(work_dir, 'hive.cfg'))
+            shutil.copyfile(os.path.join(package_directory, 'hive/hivecfg.json.dist'),
+                            os.path.join(work_dir, 'hivecfg.json'))
 
         logging.info('Copying data files to workdir.')
         shutil.copytree(os.path.join(package_directory, 'hive/data'), os.path.join(work_dir, 'data/'),

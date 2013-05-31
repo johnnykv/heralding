@@ -12,7 +12,7 @@ if db is None:
 class Feeder(db.Entity):
     id = PrimaryKey(str)
     honeybees = Set("Honeybee")
-
+    configuration = Optional(unicode, 2000)
 
 class Session(db.Entity):
     classtype = Discriminator(int)
@@ -33,7 +33,7 @@ class Session(db.Entity):
 class Hive(db.Entity):
     id = PrimaryKey(str)
     sessions = Set(Session)
-    configuration_file = Optional(unicode)
+    configuration = Optional(unicode, 2000)
 
 
 class Honeybee(db.Session):

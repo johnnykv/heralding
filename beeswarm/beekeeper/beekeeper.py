@@ -27,9 +27,9 @@ logger = logging.getLogger(__name__)
 
 
 class Beekeeper(object):
-    def __init__(self, work_dir, config_file='beekeeper.cfg'):
+    def __init__(self, work_dir, config_arg='beekeeper.cfg'):
         self.config = ConfigParser()
-        self.config.read(config_file)
+        self.config.read(config_arg)
 
         self.servers = {}
         self.greenlets = []

@@ -1,0 +1,44 @@
+{
+    "general": {
+        "feeder_id": "f51171df-c8f6-4af4-86c0-f4e163cf69e8",
+        "hive_id": null
+    },
+    "public_ip": {
+        "fetch_ip": true
+    },
+    "bee_http": {
+        "server": "127.0.0.1",
+        "port": 80,
+        "timing": "regular",
+        "login": "test",
+        "password": "test"
+    },
+    "bee_pop3": {
+        "server": "127.0.0.1",
+        "port": 110,
+        "timing": "regular",
+        "login": "test",
+        "password": "test"
+    },
+    "bee_smtp": {
+        "server": "127.0.0.1",
+        "port": 25,
+        "timing": "regular",
+        "login": "test",
+        "password": "test"
+    },
+    "bee_vnc": {
+        "server": "127.0.0.1",
+        "port": 5900,
+        "timing": "regular",
+        "login": "test",
+        "password": "test"
+    },
+    "bee_telnet": {
+        "server": "127.0.0.1",
+        "port": 23,
+        "timing": "regular",
+        "login": "test",
+        "password": "test"
+    }
+}

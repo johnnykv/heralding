@@ -78,5 +78,92 @@ class WebappTests(unittest.TestCase):
 
         self.app.post('/ws/hive_data', data=json.dumps(data_dict), content_type='application/json')
 
+    def test_new_feeder_configuration(self):
+        """
+        Tests if a new Feeder configuration can be posted successfully
+        """
+
+        post_data = {
+            'http_enabled': True,
+            'http_server': '127.0.0.1',
+            'http_port': 80,
+            'http_timing': 'regular',
+            'http_login': 'test',
+            'http_password': 'test',
+
+            'pop3_enabled': True,
+            'pop3_server': '127.0.0.1',
+            'pop3_port': 110,
+            'pop3_timing': 'regular',
+            'pop3_login': 'test',
+            'pop3_password': 'test',
+
+            'smtp_enabled': True,
+            'smtp_server': '127.0.0.1',
+            'smtp_port': 25,
+            'smtp_timing': 'regular',
+            'smtp_login': 'test',
+            'smtp_password': 'test',
+
+            'vnc_enabled': True,
+            'vnc_server': '127.0.0.1',
+            'vnc_port': 5900,
+            'vnc_timing': 'regular',
+            'vnc_login': 'test',
+            'vnc_password': 'test',
+
+            'telnet_enabled': True,
+            'telnet_server': '127.0.0.1',
+            'telnet_port': 23,
+            'telnet_timing': 'regular',
+            'telnet_login': 'test',
+            'telnet_password': 'test',
+        }
+        self.app.post('/ws/feeder', data=post_data)
+
+    def test_new_hive_configuration(self):
+        """
+        Tests whether new Hive configuration can be posted successfully.
+        """
+        post_data = {
+            'http_enabled': True,
+            'http_port': 80,
+            'http_banner': 'Microsoft-IIS/5.0',
+
+            'https_enabled': False,
+            'https_port': 443,
+            'https_banner': 'Microsoft-IIS/5.0',
+
+            'ftp_enabled': False,
+            'ftp_port': 21,
+            'ftp_max_attempts': 3,
+            'ftp_banner': 'Microsoft FTP Server',
+
+            'smtp_enabled': False,
+            'smtp_port': 25,
+            'smtp_banner': 'Microsoft ESMTP MAIL service ready',
+
+            'vnc_enabled': False,
+            'vnc_port': 5900,
+
+            'telnet_enabled': False,
+            'telnet_port': 23,
+            'telnet_max_attempts': 3,
+
+            'pop3_enabled': False,
+            'pop3_port': 110,
+            'pop3_max_attempts': 3,
+
+            'pop3s_enabled': False,
+            'pop3s_port': 110,
+            'pop3s_max_attempts': 3,
+
+            'ssh_enabled': False,
+            'ssh_port': 22,
+            'ssh_key': 'server.key'
+        }
+        self.app.post('/ws/hive', data=post_data)
+
+
 if __name__ == '__main__':
     unittest.main()
