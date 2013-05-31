@@ -47,16 +47,16 @@ class Hive(object):
 
     """ This is the main class, which starts up all the capabilities. """
 
-    def __init__(self, work_dir, config_file='hivecfg.json', key='server.key', cert='server.crt'):
+    def __init__(self, work_dir, config_arg='hivecfg.json', key='server.key', cert='server.crt'):
         self.work_dir = work_dir
         self.key = key
         self.cert = cert
 
-        if not os.path.exists(config_file):
-            raise ConfigNotFound('Configuration file could not be found. ({0})'.format(config_file))
+        if not os.path.exists(config_arg):
+            raise ConfigNotFound('Configuration file could not be found. ({0})'.format(config_arg))
 
         try:
-            with open(config_file, 'r') as cfg:
+            with open(config_arg, 'r') as cfg:
                 self.config = json.load(cfg)
         except (ValueError, TypeError) as e:
             raise Exception('Bad syntax for Config File: (%s)%s' % (e, str(type(e))))

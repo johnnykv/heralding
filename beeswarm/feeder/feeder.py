@@ -39,15 +39,14 @@ logger = logging.getLogger(__name__)
 
 
 class Feeder(object):
-    def __init__(self, work_dir, config_file='feedercfg.json'):
+    def __init__(self, work_dir, config_arg='feedercfg.json'):
 
-        self.config = ConfigParser.ConfigParser()
         self.run_flag = True
-        if not os.path.exists(config_file):
-            raise ConfigNotFound('Configuration file could not be found. ({0})'.format(config_file))
+        if not os.path.exists(config_arg):
+            raise ConfigNotFound('Configuration file could not be found. ({0})'.format(config_arg))
 
         try:
-            with open(config_file, 'r') as cfg:
+            with open(config_arg, 'r') as cfg:
                 self.config = json.load(cfg)
         except (ValueError, TypeError) as e:
             raise Exception('Bad syntax for Config File: (%s)%s' % (e, str(type(e))))

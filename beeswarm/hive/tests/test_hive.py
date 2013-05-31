@@ -39,12 +39,12 @@ class hive_tests(unittest.TestCase):
 
     def test_init(self):
         """Tests if the Hive class can be instantiated successfully using the default configuration file"""
-        sut = Hive(self.work_dir, config_file=self.test_config_file, key=self.key, cert=self.cert)
+        sut = Hive(self.work_dir, config_arg=self.test_config_file, key=self.key, cert=self.cert)
 
 
     def test_start_serving(self):
 
-        sut = Hive(self.work_dir, config_file=self.test_config_file, key=self.key, cert=self.cert)
+        sut = Hive(self.work_dir, config_arg=self.test_config_file, key=self.key, cert=self.cert)
         gevent.spawn(sut.start)
         gevent.sleep(1)
         #number of capabilities (servers). This value must be updated when adding new capabilities
