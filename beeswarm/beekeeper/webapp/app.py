@@ -48,7 +48,8 @@ def sessions_honeybees():
 
 @app.route('/sessions/attacks')
 def sessions_attacks():
-    attacks = select(a for a in Session if a.classification is None)
+    attacks = select(a for a in Session if a.classification != Classification.get(type='honeybee') and
+                                           a.classification != None)
     return render_template('logs.html', sessions=attacks)
 
 @app.route('/ws/feeder_data', methods=['POST'])

@@ -11,13 +11,18 @@
         "description_long": "A session where a Feeder instance successfully transmitted information to a Hive with no indication of malicious activity."
     },
     {
-        "type": "imp_1",
-        "description_short": "Attacker impersonating",
-        "description_long": "A feeder instance successfully communicated with a attacker impersonating a Hive service."
+        "type": "mitm_1",
+        "description_short": "Attacker impersonating Hive instance.",
+        "description_long": "A feeder instance successfully communicated with an attacker impersonating a Hive instance."
+    },
+    {
+        "type": "mitm_2",
+        "description_short": "Attacker used honeytoken.",
+        "description_long": "An attacker tried authenticating using credentials previously transmitted in a honeybee."
     },
     {
         "type": "malicious_brute",
         "description_short": "Attacker brute-forcing",
-        "description_long": "A attacker connected to a Hive instance and tried to authenticate using credentials not transmitted in any recorded honeybee."
+        "description_long": "An attacker connected to a Hive instance and tried to authenticate using credentials not transmitted in any recorded honeybee."
     }
 ]}

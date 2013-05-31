@@ -54,7 +54,7 @@ class ClassifierTests(unittest.TestCase):
 
     def test_matching_session(self):
         """
-        Tests if the get_matching_session method returns the session which matches a given honeybee.
+        Test if the get_matching_session method returns the session which matches a given honeybee.
         """
 
         #session2 is the matching session
@@ -72,11 +72,11 @@ class ClassifierTests(unittest.TestCase):
 
     def test_classify_sessions(self):
         """
-        Tests is 'standalone' sessions older than X seconds get classified as brute-force attempts.
+        Test if 'standalone' sessions older than X seconds get classified as brute-force attempts.
         """
         database_config.clear_db()
         for id, offset in (('session1', -30), ('session2', -10), ('session3', -2)):
-            s = Session(id=id, username='a', password='a', source_ip='321', destination_ip='123',
+            s = Session(id=id, username='b', password='b', source_ip='321', destination_ip='123',
                         received=datetime.now(), timestamp=datetime.now() + timedelta(seconds=offset),
                         protocol='pop3', source_port=1, destination_port=1, hive=self.hive)
             self.tmp_sessions.append(s)

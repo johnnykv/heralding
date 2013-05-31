@@ -70,14 +70,19 @@ class Consumer:
         self.enabled = False
 
     def stop_loggers(self, loggers):
-        """Execute stop method in all logging classes which implement it."""
+        """
+        Execute stop method in all logging classes which implement a stop method.
+
+        :param loggers: list of LoggerBase instances.
+        """
         for l in loggers:
             stop_method = getattr(l, 'stop', None)
             if callable(stop_method):
                 stop_method()
 
     def get_enabled_loggers(self):
-        """Extracts names of enabled loggers from configuration file.
+        """
+        Extracts names of enabled loggers from configuration file.
 
         :return: a list of enabled loggers (strings)
         """
@@ -93,7 +98,8 @@ class Consumer:
         return enabled_loggers
 
     def start_loggers(self, enabled_logger_classes):
-        """Starts loggers.
+        """
+        Starts loggers.
 
         :param enabled_logger_classes: list of names (string) of loggers to activate.
         :return: a list of instantiated loggers
