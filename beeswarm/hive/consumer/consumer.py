@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 class Consumer:
-    def __init__(self, sessions,  hive_ip, config='hive.cfg'):
+    def __init__(self, sessions,  hive_ip, config):
         logging.debug('Consumer created.')
         self.config = config
         self.enabled = True
@@ -86,14 +86,14 @@ class Consumer:
 
         :return: a list of enabled loggers (strings)
         """
-        parser = ConfigParser()
-        parser.read(self.config)
+        #parser = ConfigParser()
+        #parser.read(self.config)
         enabled_loggers = []
-        for l in parser.sections():
-            if '_' in l:
-                type, name = l.split('_')
+        for k, v in self.config.items():
+            if '_' in k:
+                type, name = k.split('_')
                 #only interested in logging configurations
-                if type == 'log' and parser.getboolean(l, 'enabled'):
+                if type == 'log' and v['enabled']:
                     enabled_loggers.append(name)
         return enabled_loggers
 
@@ -108,7 +108,7 @@ class Consumer:
         for l in loggerbase.LoggerBase.__subclasses__():
             logger_name = l.__name__.lower()
             if logger_name in enabled_logger_classes:
-                hive_logger = l()
+                hive_logger = l(self.config)
                 logger.debug('{0} logger initialized.'.format(logger_name.title()))
                 loggers.append(hive_logger)
         return loggers

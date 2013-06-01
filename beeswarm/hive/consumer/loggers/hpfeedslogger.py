@@ -26,14 +26,14 @@ logger = logging.getLogger(__name__)
 
 class HPFeedsLogger(LoggerBase):
 
-    def __init__(self, config='hive.cfg'):
+    def __init__(self, config):
         super(HPFeedsLogger, self).__init__(config)
-        host = self.config.get('log_hpfeedslogger', 'host')
-        port = self.config.getint('log_hpfeedslogger', 'port')
-        secret = self.config.get('log_hpfeedslogger', 'secret')
-        ident = self.config.get('log_hpfeedslogger', 'ident')
-        self.port_mapping = eval(self.config.get('log_hpfeedslogger', 'port_mapping'))
-        self.chan = self.config.get('log_hpfeedslogger', 'chan')
+        host = config['log_hpfeedslogger']['host'].encode('latin1')
+        port = config['log_hpfeedslogger']['port']
+        secret = config['log_hpfeedslogger']['secret'].encode('latin1')
+        ident = config['log_hpfeedslogger']['ident'].encode('latin1')
+        self.port_mapping = eval(config['log_hpfeedslogger']['port_mapping'])
+        self.chan = config['log_hpfeedslogger']['chan']
         self.enabled = True
         self.hpc = hpfeeds.new(host, port, ident, secret)
 

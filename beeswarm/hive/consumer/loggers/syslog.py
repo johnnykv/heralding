@@ -23,12 +23,10 @@ from beeswarm.hive.consumer.loggers.loggerbase import LoggerBase
 
 
 class Syslog(LoggerBase):
-    def __init__(self, config='hive.cfg.dist'):
-        conf_parser = ConfigParser()
-        conf_parser.read(config)
+    def __init__(self, config):
         self.options = {
-            "enabled": conf_parser.get("log_syslog", "enabled"),
-            "socket": conf_parser.get("log_syslog", "socket"),
+            'enabled': config['log_syslog']['enabled'],
+            'socket': config['log_syslog']['socket'],
         }
 
         #Make sure we only have one logger

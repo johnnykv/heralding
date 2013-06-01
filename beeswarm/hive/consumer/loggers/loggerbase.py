@@ -16,9 +16,8 @@
 from ConfigParser import ConfigParser
 
 class LoggerBase(object):
-    def __init__(self, config='config.cfg'):
-        self.config = ConfigParser()
-        self.config.read(config)
+    def __init__(self, config):
+        self.config = config
 
     def log(self, session):
         raise Exception('Do no call base class!')
