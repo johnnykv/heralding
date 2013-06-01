@@ -5,7 +5,6 @@ Deployment overview
 -------------------
 
 .. digraph:: overview
-    digraph g{
 
     hive_a -> beekeeper [label="Reporting",color= "blue"];
     feeder_a -> beekeeper [label="Reporting",color= "blue"];
@@ -22,7 +21,6 @@ Deployment overview
     feeder_a [label="Feeder\n192.168.200.222"];
     feeder_b [label="Feeder\n192.168.200.250"];
     nsm [label="NSM", style="dashed"]
-    }
 
 Supported protocols
 -------------------
