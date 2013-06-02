@@ -41,4 +41,11 @@
         "login": "test",
         "password": "test"
     }
+    "bee_ftp": {
+        "server": "127.0.0.1",
+        "port": 21,
+        "timing": "regular",
+        "login": "test",
+        "password": "test"
+    }
 }
