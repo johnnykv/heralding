@@ -16,6 +16,7 @@ import json
 
 import gevent
 import gevent.monkey
+import requests
 from beeswarm.feeder.consumer import consumer
 
 gevent.monkey.patch_all()
@@ -28,7 +29,7 @@ import beeswarm
 from beeswarm.feeder.bees import clientbase
 from beeswarm.feeder.models.session import BeeSession
 from beeswarm.errors import ConfigNotFound
-from beeswarm.shared.helpers import asciify
+from beeswarm.shared.helpers import asciify, is_url
 import logging
 import urllib2
 
@@ -42,14 +43,20 @@ class Feeder(object):
     def __init__(self, work_dir, config_arg='feedercfg.json'):
 
         self.run_flag = True
-        if not os.path.exists(config_arg):
-            raise ConfigNotFound('Configuration file could not be found. ({0})'.format(config_arg))
 
-        try:
-            with open(config_arg, 'r') as cfg:
-                self.config = json.load(cfg, object_hook=asciify)
-        except (ValueError, TypeError) as e:
-            raise Exception('Bad syntax for Config File: (%s)%s' % (e, str(type(e))))
+        if not is_url(config_arg):
+            if not os.path.exists(config_arg):
+                raise ConfigNotFound('Configuration file could not be found. ({0})'.format(config_arg))
+            try:
+                with open(config_arg, 'r') as cfg:
+                    self.config = json.load(cfg, object_hook=asciify)
+            except (ValueError, TypeError) as e:
+                raise Exception('Bad syntax for Config File: (%s)%s' % (e, str(type(e))))
+        else:
+            conf = requests.get(config_arg)
+            with open('feedercfg.json', 'w') as local_config:
+                local_config.write(conf.text)
+            self.config = json.loads(conf.text, object_hook=asciify)
 
         BeeSession.feeder_id = self.config['general']['feeder_id']
         BeeSession.hive_id = self.config['general']['hive_id']

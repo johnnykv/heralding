@@ -39,7 +39,7 @@ from beeswarm.hive.models.user import HiveUser
 from beeswarm.errors import ConfigNotFound
 import requests
 from requests.exceptions import Timeout, ConnectionError
-from beeswarm.shared.helpers import asciify
+from beeswarm.shared.helpers import asciify, is_url
 
 logger = logging.getLogger(__name__)
 
@@ -53,14 +53,19 @@ class Hive(object):
         self.key = key
         self.cert = cert
 
-        if not os.path.exists(config_arg):
-            raise ConfigNotFound('Configuration file could not be found. ({0})'.format(config_arg))
-
-        try:
-            with open(config_arg, 'r') as cfg:
-                self.config = json.load(cfg, object_hook=asciify)
-        except (ValueError, TypeError) as e:
-            raise Exception('Bad syntax for Config File: (%s)%s' % (e, str(type(e))))
+        if not is_url(config_arg):
+            if not os.path.exists(config_arg):
+                raise ConfigNotFound('Configuration file could not be found. ({0})'.format(config_arg))
+            try:
+                with open(config_arg, 'r') as cfg:
+                    self.config = json.load(cfg, object_hook=asciify)
+            except (ValueError, TypeError) as e:
+                raise Exception('Bad syntax for Config File: (%s)%s' % (e, str(type(e))))
+        else:
+            conf = requests.get(config_arg)
+            with open('hivecfg.json', 'w') as local_config:
+                local_config.write(conf.text)
+            self.config = json.loads(conf.text, object_hook=asciify)
 
         Session.hive_id = self.config['general']['hive_id']
 

@@ -50,7 +50,7 @@ def sessions_honeybees():
 @app.route('/sessions/attacks')
 def sessions_attacks():
     attacks = select(a for a in Session if a.classification != Classification.get(type='honeybee') and
-                                           a.classification != None)
+                     a.classification is not None)
     return render_template('logs.html', sessions=attacks)
 
 @app.route('/ws/feeder_data', methods=['POST'])
@@ -106,6 +106,16 @@ def hive_data():
 
     commit()
     return ''
+
+@app.route('/ws/hive/config/<hive_id>', methods=['GET'])
+def get_hive_config(hive_id):
+    current_hive = Hive[hive_id]
+    return current_hive.configuration
+
+@app.route('/ws/feeder/config/<feeder_id>', methods=['GET'])
+def get_feeder_config(feeder_id):
+    current_feeder = Feeder[feeder_id]
+    return current_feeder.configuration
 
 
 @app.route('/ws/hive', methods=['GET', 'POST'])
@@ -190,9 +200,9 @@ def create_hive():
         config_json = json.dumps(config)
         new_hive = Hive(id=new_hive_id, configuration=config_json)
         commit()
-        return ''
+        return 'http://localhost:5000/ws/hive/config/'+new_hive_id
 
-    return render_template('create-config.html', form=form)
+    return render_template('create-config.html', form=form, mode_name='Hive')
 
 @app.route('/ws/feeder', methods=['GET', 'POST'])
 def create_feeder():
@@ -251,9 +261,9 @@ def create_feeder():
         config_json = json.dumps(config)
         new_feeder = Feeder(id=new_feeder_id, configuration=config_json)
         commit()
-        return ''
+        return 'http://localhost:5000/ws/feeder/config/'+new_feeder_id
 
-    return render_template('create-config.html', form=form)
+    return render_template('create-config.html', form=form, mode_name='Feeder')
 
 if __name__ == '__main__':
     app.run()
