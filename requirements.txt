@@ -6,6 +6,7 @@ ntplib
 fs
 pysendfile
 flask
+flask-bootstrap
 pony>=0.4.6
 pyOpenSSL
 hpfeeds
