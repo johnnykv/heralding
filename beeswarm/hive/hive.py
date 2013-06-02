@@ -111,7 +111,7 @@ class Hive(object):
             self.hive_ip = self.config.get('general', 'hive_ip')
 
         #greenlet to consume the provided sessions
-        self.session_consumer = consumer.Consumer(self.sessions, self.hive_ip)
+        self.session_consumer = consumer.Consumer(self.sessions, self.hive_ip, self.config)
         Greenlet.spawn(self.session_consumer.start)
 
         #protocol handlers

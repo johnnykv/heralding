@@ -26,9 +26,9 @@ logger = logging.getLogger(__name__)
 
 
 class Beekeeper(LoggerBase):
-    def __init__(self, config='hive.cfg'):
+    def __init__(self, config):
         super(Beekeeper, self).__init__(config)
-        self.beekeeper_url = self.config.get('log_beekeeper', 'beekeeper_url')
+        self.beekeeper_url = config['log_beekeeper']['beekeeper_url']
 
     def log(self, session):
         try:

@@ -13,14 +13,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import SocketServer
+import socket
 import random
+import logging
+
+import SocketServer
 
 from beeswarm.hive.capabilities.handlerbase import HandlerBase
 
 # Import the constants defined for the VNC protocol
 from beeswarm.shared.vnc_constants import *
 
+logger = logging.getLogger(__name__)
 
 class BeeVNCHandler(SocketServer.StreamRequestHandler):
 
@@ -70,8 +74,12 @@ class vnc(HandlerBase):
 
     def handle_session(self, gsocket, address):
         session = self.create_session(address, gsocket)
-        handler = BeeVNCHandler(gsocket, address, None, session)
+        try:
+            handler = BeeVNCHandler(gsocket, address, None, session)
+        except socket.error as err:
+            logger.debug('Unexpected end of VNC session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
 
+        session.connected = False
 
 def get_random_challenge():
     challenge = []
