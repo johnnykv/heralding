@@ -39,6 +39,7 @@ from beeswarm.hive.models.user import HiveUser
 from beeswarm.errors import ConfigNotFound
 import requests
 from requests.exceptions import Timeout, ConnectionError
+from beeswarm.shared.helpers import asciify
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +58,7 @@ class Hive(object):
 
         try:
             with open(config_arg, 'r') as cfg:
-                self.config = json.load(cfg)
+                self.config = json.load(cfg, object_hook=asciify)
         except (ValueError, TypeError) as e:
             raise Exception('Bad syntax for Config File: (%s)%s' % (e, str(type(e))))
 

@@ -20,7 +20,6 @@ from beeswarm.feeder.consumer import consumer
 
 gevent.monkey.patch_all()
 
-import ConfigParser
 import os
 import sys
 import shutil
@@ -29,6 +28,7 @@ import beeswarm
 from beeswarm.feeder.bees import clientbase
 from beeswarm.feeder.models.session import BeeSession
 from beeswarm.errors import ConfigNotFound
+from beeswarm.shared.helpers import asciify
 import logging
 import urllib2
 
@@ -47,7 +47,7 @@ class Feeder(object):
 
         try:
             with open(config_arg, 'r') as cfg:
-                self.config = json.load(cfg)
+                self.config = json.load(cfg, object_hook=asciify)
         except (ValueError, TypeError) as e:
             raise Exception('Bad syntax for Config File: (%s)%s' % (e, str(type(e))))
 
