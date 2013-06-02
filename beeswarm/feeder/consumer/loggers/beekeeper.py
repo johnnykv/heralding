@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 class Beekeeper(LoggerBase):
     def __init__(self, config):
         super(Beekeeper, self).__init__(config)
-        self.beekeeper_url = self.config.get('beekeeper', 'beekeeper_url')
+        self.beekeeper_url = self.config['beekeeper']['beekeeper_url']
 
     def log(self, session):
         try:
