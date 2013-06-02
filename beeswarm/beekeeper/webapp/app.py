@@ -18,7 +18,7 @@ import json
 import logging
 import uuid
 from flask import Flask, render_template, request, abort
-
+from flask.ext.bootstrap import Bootstrap
 from forms import NewHiveConfigForm, NewFeederConfigForm
 from pony.orm import commit, select
 from beeswarm.beekeeper.db.database import Feeder, Honeybee, Session, Hive, Classification
@@ -27,6 +27,7 @@ app = Flask(__name__)
 app.config['DEBUG'] = True
 app.config['CSRF_ENABLED'] = True
 app.config['SECRET_KEY'] = 'beeswarm-is-awesome'
+Bootstrap(app)
 
 logger = logging.getLogger(__name__)
 
@@ -191,7 +192,7 @@ def create_hive():
         commit()
         return ''
 
-    return render_template('create-hive.html', form=form)
+    return render_template('create-config.html', form=form)
 
 @app.route('/ws/feeder', methods=['GET', 'POST'])
 def create_feeder():
@@ -252,7 +253,7 @@ def create_feeder():
         commit()
         return ''
 
-    return render_template('create-feeder.html', form=form)
+    return render_template('create-config.html', form=form)
 
 if __name__ == '__main__':
     app.run()
