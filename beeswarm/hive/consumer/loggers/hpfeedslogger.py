@@ -28,12 +28,20 @@ class HPFeedsLogger(LoggerBase):
 
     def __init__(self, config):
         super(HPFeedsLogger, self).__init__(config)
+        #hpfeeds lib has problems with unicodestring - hence we encode as latin1
         host = config['log_hpfeedslogger']['host'].encode('latin1')
         port = config['log_hpfeedslogger']['port']
         secret = config['log_hpfeedslogger']['secret'].encode('latin1')
         ident = config['log_hpfeedslogger']['ident'].encode('latin1')
         self.port_mapping = eval(config['log_hpfeedslogger']['port_mapping'])
-        self.chan = config['log_hpfeedslogger']['chan']
+        tmpchannels = config['log_hpfeedslogger']['chan']
+        if type(tmpchannels) == unicode or type(tmpchannels) == str:
+            self.chan = tmpchannels.encode('latin1')
+        else:
+            d = []
+            for chan in tmpchannels:
+                d.append(chan.encode('latin1'))
+            self.chan = d
         self.enabled = True
         self.hpc = hpfeeds.new(host, port, ident, secret)
 
