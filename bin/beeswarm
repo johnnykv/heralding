@@ -75,7 +75,7 @@ if __name__ == '__main__':
     group.add_argument('-be', '--beekeeper', action='store_true', help='Starts beeswarm in beekeeper mode.')
 
     parser.add_argument('--prepare', action='store_true', default=False)
-    parser.add_argument('--config', dest='configfile')
+    parser.add_argument('--config', dest='configarg')
     parser.add_argument('--workdir', dest='workdir', default=os.getcwd())
     parser.add_argument('--logfile', dest='logfile', default='beeswarm.log')
     parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Logs debug messages.')
@@ -99,8 +99,8 @@ if __name__ == '__main__':
                 logger.error('Error while preparing work directory, please make sure '
                              'the work directory is empty. ({0})'.format(ex))
                 sys.exit(1)
-        if args.configfile:
-            m = mode(args.workdir, config_file=args.configfile)
+        if args.configarg:
+            m = mode(args.workdir, config_arg=args.configarg)
         else:
             m = mode(args.workdir)
     except ConfigNotFound as ex:

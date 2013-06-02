@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2>New Feeder Configuration:</h2>
-{{ wtf.quick_form(form) }}
+<h2>New {{ mode_name }} Configuration:</h2>
+    {{ wtf.quick_form(form, action='', buttons=[('submit', 'primary', 'Generate')]) }}
 {% endblock %}

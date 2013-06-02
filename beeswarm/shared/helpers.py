@@ -1,7 +1,8 @@
-# This code is taken from: https://gist.github.com/chris-hailstorm/4989643
+# Parts of this code are taken from: https://gist.github.com/chris-hailstorm/4989643
 # All credits go to the original author
 
 import unicodedata
+import urlparse
 
 
 def _remove_accents(data):
@@ -59,3 +60,10 @@ def asciify(data):
         return data
     else:
         raise TypeError('Input must be dict, list, str or unicode')
+
+
+def is_url(string):
+    parts = urlparse.urlsplit(string)
+    if not parts.scheme or not parts.netloc:
+        return False
+    return True
