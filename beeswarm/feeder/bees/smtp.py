@@ -41,7 +41,7 @@ class smtp(ClientBase):
             session.did_connect = True
             smtp_.login(login, password)
             session.did_login = True
-        except (smtplib.SMTPException, Exception) as error:
+        except smtplib.SMTPException as error:
             logging.debug('Caught exception: %s (%s)' % (error, str(type(error))))
         else:
             smtp_.sendmail(from_addr, to_addr, mail_body)
