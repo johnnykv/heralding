@@ -60,11 +60,12 @@ class Classifier(object):
         :param delay_seconds: no honeybees newer than (now - delay_seconds) will be processed.
         """
         min_datetime = datetime.datetime.utcnow() - datetime.timedelta(seconds=delay_seconds)
+
         honeybees = select(h for h in Honeybee if h.classification == None and
                                                   h.did_complete and
                                                   h.timestamp < min_datetime)
         for h in honeybees:
-            session_match = self.get_matching_session(honeybees)
+            session_match = self.get_matching_session(h)
             #if we have a match this is legit honeybee traffic
             if session_match:
                 logger.debug('Classifying honeybee with id {0} as legit honeybee traffic and deleting '
@@ -82,7 +83,7 @@ class Classifier(object):
 
         :param delay_seconds: no sessions newer than (now - delay_seconds) will be processed.
         """
-        min_datetime = datetime.datetime.now() - datetime.timedelta(seconds=delay_seconds)
+        min_datetime = datetime.datetime.utcnow() - datetime.timedelta(seconds=delay_seconds)
 
         sessions = select(s for s in Session if s.classification == None and
                                                 s.classtype == 'Session' and

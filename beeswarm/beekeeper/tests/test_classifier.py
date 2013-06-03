@@ -36,13 +36,15 @@ class ClassifierTests(unittest.TestCase):
         self.feeder_id = str(uuid.uuid4())
         self.hive_id = str(uuid.uuid4())
         self.honeybee_id = str(uuid.uuid4())
+        self.honeybee_datetime = datetime.utcnow()
 
         self.feeder = Feeder(id=self.feeder_id)
         self.hive = Hive(id=self.hive_id)
         self.honeybee = Honeybee(id=self.honeybee_id, username='a', password='a', source_ip='321', destination_ip='123',
-                                 received=datetime.now(), timestamp=datetime.now(), protocol='pop3', source_port=1,
-                                 destination_port=1, feeder=self.feeder, hive=self.hive)
+                                 received=datetime.utcnow(), timestamp= self.honeybee_datetime, protocol='pop3', source_port=1,
+                                 destination_port=1, did_complete=True, feeder=self.feeder, hive=self.hive)
 
+        #all session stored here will get deleted on each testrun
         self.tmp_sessions = []
 
         commit()
@@ -51,6 +53,9 @@ class ClassifierTests(unittest.TestCase):
         #delete test-case specific data
         for e in self.tmp_sessions:
             e.delete()
+        self.hive.delete()
+        self.honeybee.delete()
+        commit()
 
     def test_matching_session(self):
         """
@@ -61,7 +66,7 @@ class ClassifierTests(unittest.TestCase):
         t = []
         for id, offset in (('session1', -15), ('session2', 3), ('session3', 15)):
             s = Session(id=id, username='a', password='a', source_ip='321', destination_ip='123',
-                        received=datetime.now(), timestamp=self.honeybee.timestamp + timedelta(seconds=offset),
+                        received=datetime.utcnow(), timestamp=self.honeybee.timestamp + timedelta(seconds=offset),
                         protocol='pop3', source_port=1, destination_port=1, hive=self.hive)
             self.tmp_sessions.append(s)
         commit()
@@ -70,14 +75,46 @@ class ClassifierTests(unittest.TestCase):
         result = c.get_matching_session(self.honeybee)
         self.assertEqual('session2', result.id)
 
-    def test_classify_sessions(self):
+    def test_correlation_honeybee_session(self):
+        """
+        Test if honeybee session is correctly identified as related to a specific hive session.
+        We expect the honeybee entity to be classified as a legit (successfully completed) 'honeybee' and that the hive
+        session is deleted.
+        """
+        database_config.clear_db()
+
+        #setup the hive session we expect to match the honeybee
+        s_id = str(uuid.uuid4())
+
+        s = Session(id=s_id, username='a', password='b', source_ip='321', destination_ip='123',
+                    received=datetime.now(), timestamp=self.honeybee_datetime - timedelta(seconds=2),
+                    protocol='pop3', source_port=1, destination_port=1, hive=self.hive)
+        self.tmp_sessions.append(s)
+        commit()
+
+        c = Classifier()
+        c.classify_honeybees(0)
+
+        honeybee = Honeybee.get(id=self.honeybee_id)
+        session = Honeybee.get(id=s_id)
+
+        #test that the honeybee got classified
+        self.assertTrue(honeybee.classification == Classification.get(type='honeybee'))
+        #test that the hive session got deleted
+        self.assertIsNone(session)
+
+
+        #we expect the resultset to contain session1 and session2
+        #self.assertEquals(len(result), 2)
+
+    def test_classify_sessions_bruteforce(self):
         """
         Test if 'standalone' sessions older than X seconds get classified as brute-force attempts.
         """
         database_config.clear_db()
         for id, offset in (('session1', -30), ('session2', -10), ('session3', -2)):
             s = Session(id=id, username='b', password='b', source_ip='321', destination_ip='123',
-                        received=datetime.now(), timestamp=datetime.now() + timedelta(seconds=offset),
+                        received=datetime.utcnow(), timestamp=datetime.utcnow() + timedelta(seconds=offset),
                         protocol='pop3', source_port=1, destination_port=1, hive=self.hive)
             self.tmp_sessions.append(s)
         commit()
@@ -91,5 +128,6 @@ class ClassifierTests(unittest.TestCase):
 
         #we expect the resultset to contain session1 and session2
         self.assertEquals(len(result), 2)
+
 
 
