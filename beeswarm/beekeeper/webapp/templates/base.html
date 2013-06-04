@@ -2,56 +2,50 @@
 {% import "bootstrap_wtf.html" as wtf %}
 
 {% block body_content %}
-    <div class="container">
-        <h1>BeeSwarm
-            <br>
-        </h1>
+<div class="container">
+    <h1>BeeSwarm
+        <br>
+    </h1>
 
-        <div class="navbar">
-            <div class="navbar-inner">
-                <div class="container">
-                    <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </a>
-                    <a class="brand" href="/">Home</a>
+    <div class="navbar">
+        <div class="navbar-inner">
+            <div class="container">
+                <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </a>
+                <a class="brand" href="/">Home</a>
 
-                    <div class="nav-collapse collapse">
-                        <ul style="" class="nav"></ul>
-                    </div>
-                    <form class="navbar-form pull-right">
-                        <input class="span2" type="text">
-                        <input class="span2" type="password">
-                        <button type="submit" class="btn">Login</button>
-                    </form>
-                    <div class="btn-group">
-                        <a class="btn" data-toggle="dropdown" href="#">Sessions</a>
-                        <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-                            <span class="caret"></span>
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li>
-                                <a href="#">First Link</a>
-                            </li>
-                            <li>
-                                <a href="#">Second Link</a>
-                            </li>
-                            <li>
-                                <a href="#">Third Link</a>
-                            </li>
-                        </ul>
-                    </div>
-                    <a class="btn">Add Hive</a>
-                    <a class="btn">Settings</a>
+                <div class="nav-collapse collapse">
+                    <ul style="" class="nav"></ul>
                 </div>
+                <form class="navbar-form pull-right">
+                    <input class="span2" type="text">
+                    <input class="span2" type="password">
+                    <button type="submit" class="btn">Login</button>
+                </form>
+                <div class="btn-group">
+                    <a class="btn" data-toggle="dropdown" href="#">Sessions</a>
+                    <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="/sessions">All</a></li>
+                        <li><a href="/sessions/attacks">Attacks</a></li>
+                        <li><a href="/sessions/honeybees">Honeybees</a></li>
+                    </ul>
+                </div>
+                <a class="btn">Add Hive</a>
+                <a class="btn">Settings</a>
             </div>
         </div>
-    {% block content %}{% endblock %}
     </div>
-    <footer class="text-center">
-      <div class="well">©2013,
+    {% block content %}{% endblock %}
+</div>
+<footer class="text-center">
+    <div class="well">©2013,
         <a href="http://www.honeynet.org/">The Honeynet Project</a>
-      </div>
-    </footer>
+    </div>
+</footer>
 {% endblock %}
