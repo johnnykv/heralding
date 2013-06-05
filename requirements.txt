@@ -5,6 +5,7 @@ paramiko
 ntplib
 fs
 pysendfile
+pyDes
 flask
 flask-bootstrap
 pony>=0.4.6
