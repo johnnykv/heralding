@@ -34,7 +34,7 @@ from beeswarm.hive.capabilities import handlerbase
 from beeswarm.hive.models.session import Session
 from beeswarm.hive.models.authenticator import Authenticator
 from beeswarm.hive.helpers.streamserver import HiveStreamServer
-from beeswarm.hive.helpers.common import drop_privileges, list2dict, create_socket
+from beeswarm.hive.helpers.common import drop_privileges, create_socket
 from beeswarm.hive.models.user import HiveUser
 from beeswarm.errors import ConfigNotFound
 import requests

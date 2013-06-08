@@ -17,8 +17,6 @@
 
 import logging
 
-from ConfigParser import ConfigParser
-
 from beeswarm.hive.consumer.loggers.loggerbase import LoggerBase
 
 

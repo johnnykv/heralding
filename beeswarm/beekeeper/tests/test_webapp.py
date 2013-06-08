@@ -6,11 +6,11 @@ from datetime import datetime
 import gevent.monkey
 gevent.monkey.patch_all()
 
-from pony.orm import commit, select
+from pony.orm import commit
 from beeswarm.beekeeper.db import database_config
 database_config.setup_db(':memory:')
 
-from beeswarm.beekeeper.db.database import Hive, Classification, Feeder
+from beeswarm.beekeeper.db.database import Hive, Feeder
 from beeswarm.beekeeper.webapp import app
 
 
@@ -20,9 +20,9 @@ class WebappTests(unittest.TestCase):
 
         #setup dummy entities
         self.feeder_id =  str(uuid.uuid4())
-        _feeder = Feeder(id=self.feeder_id)
+        Feeder(id=self.feeder_id)
         self.hive_id = str(uuid.uuid4())
-        _hive = Hive(id=self.hive_id)
+        Hive(id=self.hive_id)
         commit()
 
     def tearDown(self):

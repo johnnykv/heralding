@@ -17,7 +17,7 @@ import logging
 import datetime
 import gevent
 from pony.orm import commit, select
-from beeswarm.beekeeper.db.database import Feeder, Hive, Classification, Honeybee, Session
+from beeswarm.beekeeper.db.database import Classification, Honeybee, Session
 
 logger = logging.getLogger(__name__)
 

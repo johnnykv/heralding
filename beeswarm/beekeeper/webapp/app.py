@@ -17,7 +17,7 @@ from datetime import datetime
 import json
 import logging
 import uuid
-from flask import Flask, render_template, request, abort
+from flask import Flask, render_template, request
 from flask.ext.bootstrap import Bootstrap
 from forms import NewHiveConfigForm, NewFeederConfigForm
 from pony.orm import commit, select
@@ -57,25 +57,26 @@ def sessions_attacks():
 def feeder_data():
     #TODO: investigate why the flask provided request.json returns None.
     data = json.loads(request.data)
+    logger.debug(data)
 
     _feeder = Feeder.get(id=data['feeder_id'])
     _hive = Hive.get(id=data['hive_id'])
 
-    _honeybee = Honeybee(id=data['id'],
-                         timestamp=datetime.strptime(data['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
-                         received=datetime.utcnow(),
-                         protocol=data['protocol'],
-                         username=data['login'],
-                         password=data['password'],
-                         destination_ip=data['server_host'],
-                         destination_port=data['server_port'],
-                         source_ip=data['source_ip'],
-                         source_port=data['source_port'],
-                         did_connect=data['did_connect'],
-                         did_login=data['did_login'],
-                         did_complete=data['did_complete'],
-                         feeder=_feeder,
-                         hive=_hive)
+    Honeybee(id=data['id'],
+             timestamp=datetime.strptime(data['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
+             received=datetime.utcnow(),
+             protocol=data['protocol'],
+             username=data['login'],
+             password=data['password'],
+             destination_ip=data['server_host'],
+             destination_port=data['server_port'],
+             source_ip=data['source_ip'],
+             source_port=data['source_port'],
+             did_connect=data['did_connect'],
+             did_login=data['did_login'],
+             did_complete=data['did_complete'],
+             feeder=_feeder,
+             hive=_hive)
 
     commit()
 
@@ -91,18 +92,18 @@ def hive_data():
     #create if not found in the database
 
     for login_attempt in data['login_attempts']:
-        _session = Session(id=login_attempt['id'],
-                           timestamp=datetime.strptime(login_attempt['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
-                           received=datetime.utcnow(),
-                           protocol=data['protocol'],
-                           #TODO: not all capabilities delivers login/passwords. This needs to be subclasses...
-                           username=login_attempt['username'],
-                           password=login_attempt['password'],
-                           destination_ip='aaa',
-                           destination_port=data['honey_port'],
-                           source_ip=data['attacker_ip'],
-                           source_port=data['attacker_source_port'],
-                           hive=_hive)
+        Session(id=login_attempt['id'],
+                timestamp=datetime.strptime(login_attempt['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
+                received=datetime.utcnow(),
+                protocol=data['protocol'],
+                #TODO: not all capabilities delivers login/passwords. This needs to be subclasses...
+                username=login_attempt['username'],
+                password=login_attempt['password'],
+                destination_ip='aaa',
+                destination_port=data['honey_port'],
+                source_ip=data['attacker_ip'],
+                source_port=data['attacker_source_port'],
+                hive=_hive)
 
     commit()
     return ''
@@ -198,7 +199,7 @@ def create_hive():
             }
         }
         config_json = json.dumps(config)
-        new_hive = Hive(id=new_hive_id, configuration=config_json)
+        Hive(id=new_hive_id, configuration=config_json)
         commit()
         return 'http://localhost:5000/ws/hive/config/'+new_hive_id
 
@@ -259,7 +260,7 @@ def create_feeder():
             },
         }
         config_json = json.dumps(config)
-        new_feeder = Feeder(id=new_feeder_id, configuration=config_json)
+        Feeder(id=new_feeder_id, configuration=config_json)
         commit()
         return 'http://localhost:5000/ws/feeder/config/'+new_feeder_id
 

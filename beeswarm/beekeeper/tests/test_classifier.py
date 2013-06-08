@@ -41,7 +41,8 @@ class ClassifierTests(unittest.TestCase):
         self.feeder = Feeder(id=self.feeder_id)
         self.hive = Hive(id=self.hive_id)
         self.honeybee = Honeybee(id=self.honeybee_id, username='a', password='a', source_ip='321', destination_ip='123',
-                                 received=datetime.utcnow(), timestamp= self.honeybee_datetime, protocol='pop3', source_port=1,
+                                 received=datetime.utcnow(), timestamp=self.honeybee_datetime, protocol='pop3',
+                                 source_port=1,
                                  destination_port=1, did_complete=True, feeder=self.feeder, hive=self.hive)
 
         #all session stored here will get deleted on each testrun
@@ -63,7 +64,6 @@ class ClassifierTests(unittest.TestCase):
         """
 
         #session2 is the matching session
-        t = []
         for id, offset in (('session1', -15), ('session2', 3), ('session3', 15)):
             s = Session(id=id, username='a', password='a', source_ip='321', destination_ip='123',
                         received=datetime.utcnow(), timestamp=self.honeybee.timestamp + timedelta(seconds=offset),
@@ -104,8 +104,7 @@ class ClassifierTests(unittest.TestCase):
         self.assertIsNone(session)
 
 
-        #we expect the resultset to contain session1 and session2
-        #self.assertEquals(len(result), 2)
+
 
     def test_classify_sessions_bruteforce(self):
         """
