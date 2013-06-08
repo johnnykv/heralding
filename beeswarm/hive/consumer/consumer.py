@@ -17,6 +17,8 @@ import logging
 
 import gevent
 from beeswarm.hive.consumer.loggers import loggerbase
+from beeswarm.hive.consumer.loggers.hpfeedslogger import HPFeedsLogger
+from beeswarm.hive.consumer.loggers.beekeeper import Beekeeper
 
 logger = logging.getLogger(__name__)
 
