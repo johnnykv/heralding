@@ -4,8 +4,12 @@ Beeswarm |Build Status|
 .. |Build Status| image:: https://travis-ci.org/honeynet/beeswarm.png?branch=master
                        :target: https://travis-ci.org/honeynet/beeswarm
 
-A honeytoken project which will try to estimate how, where and when credentials are intercepted and reused.
-The project will eventually consist of three parts:
+A honeypot project which provides easy configuration, deployment and managment of honeytokens.
+Beeswarm operates by deploying fake end-user systems and services. Beeswarm uses these systems to provides 
+IoC (Indication of Compromise) by observing the difference between expected and actual traffic. 
+An IoC could be a certificate mismatch or the unexpected reuse of credentials (honeytokens).
+
+Beeswarm consist of three parts:
 
 
 * Hive
