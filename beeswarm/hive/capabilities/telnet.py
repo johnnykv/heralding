@@ -15,15 +15,11 @@
 import curses
 
 import logging
-import os
-import random
 import socket
-from fs.path import dirname
 
-from telnetsrv.green import TelnetHandler, command
 
 from beeswarm.hive.capabilities.handlerbase import HandlerBase
-from beeswarm.hive.helpers.common import path_to_ls
+from beeswarm.hive.capabilities.shared.shell import Commands
 
 logger = logging.getLogger(__name__)
 
@@ -43,21 +39,10 @@ class telnet(HandlerBase):
         session.connected = False
 
 
-class telnet_wrapper(TelnetHandler):
+class telnet_wrapper(Commands):
     """
     Wraps the telnetsrv module to fit the Hive architecture.
     """
-    max_tries = 3
-    PROMPT = ''
-    WELCOME = 'Logged in.'
-    HOSTNAME = 'host'
-    authNeedUser = True
-    authNeedPass = True
-    TERM = 'ansi'
-
-    # Making these empty will disable option negotiations, so less headache for us.
-    DOACK = {}
-    WILLACK = {}
 
     def __init__(self, client_address, server, socket, session, vfs):
         self.session = session
@@ -66,9 +51,7 @@ class telnet_wrapper(TelnetHandler):
         request._sock = socket
 
         self.vfs = vfs
-        self.working_dir = None
-        self.total_file_size = str(random.randint(588, 22870))
-        TelnetHandler.__init__(self, request, client_address, server)
+        Commands.__init__(self, request, client_address, server, vfs)
 
     def authCallback(self, username, password):
         while self.auth_count < telnet_wrapper.max_tries:
@@ -81,43 +64,6 @@ class telnet_wrapper(TelnetHandler):
             self.auth_count += 1
             self.authentication_ok()
         raise AuthenticationFailed()
-
-    @command('ls')
-    def command_ls(self, params):
-        self.writeline('total ' + self.total_file_size)  # report a fake random file size
-        file_names = self.vfs.listdir(self.working_dir)
-        for fname in file_names:
-            abspath = self.vfs.getsyspath(self.working_dir + '/' + fname)
-            self.writeline(path_to_ls(abspath))
-
-    @command('echo')
-    def command_echo(self, params):
-        if not params:
-            self.writeline('')
-            return
-        elif '*' in params:
-            params.remove('*')
-            params.extend(self.vfs.listdir())
-        self.writeline(' '.join(params))
-
-    @command('cd')
-    def command_cd(self, params):
-        newdir = self.working_dir[:]
-        if len(params) > 1:
-            self.writeline('cd: string not in pwd: {0}'.format(params[0]))
-            return
-        arg = params[0]
-        while arg.startswith('..'):
-            if newdir.endswith('/'):
-                newdir = newdir[:-1]
-            newdir = dirname(newdir)
-            arg = arg[3:]
-        newdir = os.path.join(newdir, arg)
-        if self.vfs.isdir(newdir):
-            self.working_dir = newdir[:]
-            self.PROMPT = '[{0}@{1} {2}]$ '.format(self.username, self.HOSTNAME, self.working_dir)
-        else:
-            self.writeline('cd: no such file or directory: {0}'.format(params[0]))
 
     def session_end(self):
         self.session.connected = False

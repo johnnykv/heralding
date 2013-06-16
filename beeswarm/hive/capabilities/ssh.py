@@ -15,12 +15,12 @@
 
 import logging
 
-from telnetsrv.green import TelnetHandler
 from telnetsrv.paramiko_ssh import SSHHandler
 from paramiko import RSAKey
 from paramiko.ssh_exception import SSHException
 
 from beeswarm.hive.capabilities.handlerbase import HandlerBase
+from beeswarm.hive.capabilities.shared.shell import Commands
 
 logger = logging.getLogger(__name__)
 
@@ -34,11 +34,17 @@ class ssh(HandlerBase):
     def handle_session(self, gsocket, address):
         session = self.create_session(address, gsocket)
         try:
-            ssh_wrapper(address, None, gsocket, session, self.options)
+            ssh_wrapper(address, None, gsocket, session, self.options, self.vfsystem)
         except (SSHException, EOFError) as ex:
             logger.debug('Unexpected end of ssh session: {0}. ({1})'.format(ex, session.id))
 
         session.connected = False
+
+
+class BeeTelnetHandler(Commands):
+
+    def __init__(self, request, client_address, server, vfs):
+        Commands.__init__(self, request, client_address, server, vfs)
 
 
 class ssh_wrapper(SSHHandler):
@@ -47,11 +53,17 @@ class ssh_wrapper(SSHHandler):
     """
 
     WELCOME = '...'
-    telnet_handler = TelnetHandler
+    HOSTNAME = 'host'
+    PROMPT = None
+    telnet_handler = BeeTelnetHandler
 
-    def __init__(self, client_address, server, socket, session, options):
+    def __init__(self, client_address, server, socket, session, options, vfs):
         self.session = session
         self.auth_count = 0
+        self.vfs = vfs
+        self.working_dir = None
+        self.username = None
+
         server_key = options['key']
         ssh_wrapper.host_key = RSAKey(filename=server_key)
         request = ssh_wrapper.dummy_request()
@@ -64,11 +76,12 @@ class ssh_wrapper(SSHHandler):
 
     def authCallback(self, username, password):
         self.session.activity()
-        self.session.try_auth('plaintext', username=username, password=password)
+        if self.session.try_auth('plaintext', username=username, password=password):
+            self.working_dir = '/'
+            self.username = username
+            self.telnet_handler.PROMPT = '[{0}@{1} {2}]$ '.format(self.username, self.HOSTNAME, self.working_dir)
+            return True
         raise
-
-    def handle_session(self, gsocket, address):
-        ssh._handle(gsocket, address)
 
     def finish(self):
         self.session.connected = False
@@ -92,3 +105,17 @@ class ssh_wrapper(SSHHandler):
                         break
                 if not any_running:
                     break
+
+    def start_pty_request(self, channel, term, modes):
+        """Start a PTY - intended to run it a (green)thread."""
+        request = self.dummy_request()
+        request._sock = channel
+        request.modes = modes
+        request.term = term
+        request.username = self.username
+
+        # This should block until the user quits the pty
+        self.pty_handler(request, self.client_address, self.tcp_server, self.vfs)
+
+        # Shutdown the entire session
+        self.transport.close()
