@@ -98,13 +98,13 @@ class Telnet_Tests(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        options = {'enabled': 'True', 'port': 2503, 'max_attempts': 3}
+        options = {'enabled': 'True', 'port': 0, 'max_attempts': 3}
         cap = telnet.telnet(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 2503))
+        socket = create_socket(('0.0.0.0', 0))
         server = StreamServer(socket, cap.handle_session)
         server.start()
 
-        client = telnetlib.Telnet('localhost', 2503)
+        client = telnetlib.Telnet('localhost', server.server_port)
         #set this to 1 if having problems with this test
         client.set_debuglevel(0)
 
@@ -139,13 +139,13 @@ class Telnet_Tests(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        options = {'enabled': 'True', 'port': 2506, 'max_attempts': 3}
+        options = {'enabled': 'True', 'port': 0, 'max_attempts': 3}
         cap = telnet.telnet(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 2506))
+        socket = create_socket(('0.0.0.0', 0))
         server = StreamServer(socket, cap.handle_session)
         server.start()
 
-        client = telnetlib.Telnet('localhost', 2506)
+        client = telnetlib.Telnet('localhost', server.server_port)
         #set this to 1 if having problems with this test
         client.set_debuglevel(0)
 
