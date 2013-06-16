@@ -52,7 +52,7 @@ class ftp_Tests(unittest.TestCase):
         authenticator = Authenticator()
         Session.authenticator = authenticator
 
-        options = {'enabled': 'True', 'port': 0, 'banner': 'Test Banner', 'max_attempts': 3}
+        options = {'enabled': 'True', 'port': 0, 'banner': 'Test Banner', 'max_attempts': 3, 'syst_type': 'Test Type'}
         cap = ftp.ftp(sessions, options, users, self.work_dir)
         socket = create_socket(('0.0.0.0', 0))
         srv = StreamServer(socket, cap.handle_session)
