@@ -108,7 +108,7 @@ class SMTP_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        options = {'enabled': 'True', 'port': 2500, 'banner': 'Test'}
+        options = {'enabled': 'True', 'port': 2502, 'banner': 'Test'}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
         socket = create_socket(('0.0.0.0', 2502))
         srv = StreamServer(socket, cap.handle_session)
@@ -131,7 +131,7 @@ class SMTP_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        options = {'enabled': 'True', 'port': 2500, 'banner': 'Test'}
+        options = {'enabled': 'True', 'port': 2501, 'banner': 'Test'}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
         socket = create_socket(('0.0.0.0', 2501))
         srv = StreamServer(socket, cap.handle_session)
@@ -155,7 +155,7 @@ class SMTP_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        options = {'enabled': 'True', 'port': 2500, 'banner': 'Test'}
+        options = {'enabled': 'True', 'port': 2503, 'banner': 'Test'}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
         socket = create_socket(('0.0.0.0', 2503))
         srv = StreamServer(socket, cap.handle_session)
@@ -184,7 +184,7 @@ class SMTP_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        options = {'enabled': 'True', 'port': 2500, 'banner': 'Test'}
+        options = {'enabled': 'True', 'port': 2504, 'banner': 'Test'}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
         socket = create_socket(('0.0.0.0', 2504))
         srv = StreamServer(socket, cap.handle_session)
@@ -206,7 +206,7 @@ class SMTP_Test(unittest.TestCase):
         #provide valid login/pass to authenticator
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
-        options = {'enabled': 'True', 'port': 2500, 'banner': 'Test'}
+        options = {'enabled': 'True', 'port': 2505, 'banner': 'Test'}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
         socket = create_socket(('0.0.0.0', 2505))
         srv = StreamServer(socket, cap.handle_session)
