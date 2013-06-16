@@ -33,6 +33,7 @@ class telnet(ClientBase):
 
         try:
             client = telnetlib.Telnet(server_host, server_port)
+            client.set_option_negotiation_callback(self.process_options)
             session.did_connect = True
             session.source_port = client.sock.getsockname()[1]
             client.read_until('Username: ')
@@ -63,6 +64,9 @@ class telnet(ClientBase):
             client.close()
         finally:
             session.alldone = True
+
+    def process_options(self, *args):
+        """Dummy callback, used to disable options negotiations"""
 
 
 class InvalidLogin(Exception):
