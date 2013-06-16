@@ -1,6 +1,5 @@
 import argparse
 import os
-import random
 from fs.errors import ResourceNotFoundError
 from fs.path import dirname
 from telnetsrv.green import TelnetHandler
@@ -16,8 +15,7 @@ class Commands(TelnetHandler):
     max_tries = 3
     PROMPT = ''
 
-    #TODO: Read from '<vfs>/etc/motd'
-    WELCOME = 'Logged in.'
+    WELCOME = ''
 
     HOSTNAME = 'host'
     authNeedUser = True
@@ -26,17 +24,19 @@ class Commands(TelnetHandler):
 
     def __init__(self, request, client_address, server, vfs):
         self.vfs = vfs
+        with self.vfs.open('/etc/motd') as motd:
+            Commands.WELCOME = motd.read()
         self.working_dir = '/'
 
-        #TODO: calculate actual file size
-        self.total_file_size = str(random.randint(588, 22870))
+        self.total_file_size = 0
+        self.update_total_file_size(self.working_dir)
 
         TelnetHandler.__init__(self, request, client_address, server)
 
     @command('ls')
     def command_ls(self, params):
         if '-l' in params:
-            self.writeline('total ' + self.total_file_size)  # report a fake random file size
+            self.writeline('total ' + str(self.total_file_size))  # report a fake random file size
             file_names = self.vfs.listdir(self.working_dir)
             for fname in file_names:
                 abspath = self.vfs.getsyspath(self.working_dir + '/' + fname)
@@ -80,6 +80,7 @@ class Commands(TelnetHandler):
             self.working_dir = '/'
             self.PROMPT = '[{0}@{1} {2}]$ '.format(self.username, self.HOSTNAME, self.working_dir)
             pass
+        self.update_total_file_size(self.working_dir)
 
     @command('pwd')
     def command_pwd(self, params):
@@ -146,4 +147,10 @@ class Commands(TelnetHandler):
             uptime_seconds = float(f.readline().split()[0])
             uptime_string = str(timedelta(seconds=uptime_seconds))
         self.writeline(uptime_string)
+
+    def update_total_file_size(self, path):
+        size = 0
+        for dirname, info in self.vfs.ilistdirinfo(path):
+            size += info['st_blocks']
+        self.total_file_size = size
 
