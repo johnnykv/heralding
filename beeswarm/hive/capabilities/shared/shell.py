@@ -139,7 +139,7 @@ class Commands(TelnetHandler):
                             break
                         self.write(chunk)
             except ResourceNotFoundError:
-                self.writeline('cat: {0}: No such file or directory')
+                self.writeline('cat: {0}: No such file or directory'.format(filepath)
 
     @command('uptime')
     def command_uptime(self, params):
