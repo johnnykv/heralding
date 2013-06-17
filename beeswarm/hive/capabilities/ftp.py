@@ -34,6 +34,7 @@ class BeeFTPHandler(object):
     def __init__(self, conn, session, vfs, options):
         self.banner = options['banner']
         self.max_logins = int(options['max_attempts'])
+        self.syst_type = options['syst_type']
         self.curr_logins = 0
         self.authenticated = False
         self.conn = conn
@@ -161,8 +162,7 @@ class BeeFTPHandler(object):
         self.respond('200 Command Successful.')
 
     def do_SYST(self, arg):
-        #TODO: Make the SYST type configurable
-        self.respond('215 WINDOWS-NT-3.5')
+        self.respond('215 ' + self.syst_type)
 
     def do_QUIT(self, arg):
         self.respond('221 Bye.')

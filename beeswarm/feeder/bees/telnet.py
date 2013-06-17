@@ -33,29 +33,21 @@ class telnet(ClientBase):
 
         try:
             client = telnetlib.Telnet(server_host, server_port)
+            client.set_option_negotiation_callback(self.process_options)
             session.did_connect = True
             session.source_port = client.sock.getsockname()[1]
             client.read_until('Username: ')
             client.write(login + '\r\n')
             client.read_until('Password: ')
             client.write(password + '\r\n')
-            while True:
-                current_data = client.read_until('\r\n')
-                if 'Invalid' not in current_data:
-                    if 'Logged in.' not in current_data:
-                        # We got some useless string from the server, so get more data and hope
-                        # that the next line will contain a valid response
-                        continue
-                    else:
-                        session.did_login = True
-                        break
-                else:
-                    raise InvalidLogin
+            current_data = client.read_until('$ ', 5)
+            if not current_data.endswith('$ '):
+                raise InvalidLogin
+            session.did_login = True
         except Exception as err:
             logging.debug('Caught exception: %s (%s)' % (err, str(type(err))))
         else:
-            client.read_until('$ ')
-            client.write('ls\r\n')
+            client.write('ls -l\r\n')
             client.read_until('$ ')
             logging.debug('Telnet file listing successful.')
             client.write('exit\r\n')
@@ -63,6 +55,9 @@ class telnet(ClientBase):
             client.close()
         finally:
             session.alldone = True
+
+    def process_options(self, *args):
+        """Dummy callback, used to disable options negotiations"""
 
 
 class InvalidLogin(Exception):

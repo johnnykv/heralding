@@ -57,13 +57,13 @@ class SMTP_Test(unittest.TestCase):
 
         sessions = {}
         # Use uncommon port so that we can run test even if the Hive is running.
-        options = {'enabled': 'True', 'port': 2526, 'banner': 'Test'}
+        options = {'enabled': 'True', 'port': 0, 'banner': 'Test'}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 2526))
+        socket = create_socket(('0.0.0.0', 0))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()
 
-        smtp_ = smtplib.SMTP('127.0.0.1', 2526, local_hostname='localhost', timeout=15)
+        smtp_ = smtplib.SMTP('127.0.0.1', srv.server_port, local_hostname='localhost', timeout=15)
         smtp_.ehlo()
         smtp_.quit()
         srv.stop()
@@ -80,9 +80,9 @@ class SMTP_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        options = {'enabled': 'True', 'port': 2500, 'banner': 'Test'}
+        options = {'enabled': 'True', 'port': 0, 'banner': 'Test'}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 2500))
+        socket = create_socket(('0.0.0.0', 0))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()
         
@@ -91,7 +91,7 @@ class SMTP_Test(unittest.TestCase):
             response = user + ' ' + hmac.HMAC(password, challenge).hexdigest()
             return base64.b64encode(response)
 
-        smtp_ = smtplib.SMTP('127.0.0.1', 2500, local_hostname='localhost', timeout=15)
+        smtp_ = smtplib.SMTP('127.0.0.1', srv.server_port, local_hostname='localhost', timeout=15)
         _, resp = smtp_.docmd('AUTH', 'CRAM-MD5')
         code, resp = smtp_.docmd(encode_cram_md5(resp, 'test', 'test'))
         # For now, the server's going to return a 535 code.
@@ -108,13 +108,13 @@ class SMTP_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        options = {'enabled': 'True', 'port': 2500, 'banner': 'Test'}
+        options = {'enabled': 'True', 'port': 0, 'banner': 'Test'}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 2502))
+        socket = create_socket(('0.0.0.0', 0))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()
 
-        smtp_ = smtplib.SMTP('127.0.0.1', 2502, local_hostname='localhost', timeout=15)
+        smtp_ = smtplib.SMTP('127.0.0.1', srv.server_port, local_hostname='localhost', timeout=15)
         arg = '\0%s\0%s' % ('test', 'test')
         code, resp = smtp_.docmd('AUTH', 'PLAIN ' + base64.b64encode(arg))
         self.assertEqual(code, 535)
@@ -131,13 +131,13 @@ class SMTP_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        options = {'enabled': 'True', 'port': 2500, 'banner': 'Test'}
+        options = {'enabled': 'True', 'port': 0, 'banner': 'Test'}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 2501))
+        socket = create_socket(('0.0.0.0', 0))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()
 
-        smtp_ = smtplib.SMTP('127.0.0.1', 2501, local_hostname='localhost', timeout=15)
+        smtp_ = smtplib.SMTP('127.0.0.1', srv.server_port, local_hostname='localhost', timeout=15)
         smtp_.docmd('AUTH', 'LOGIN')
         smtp_.docmd(base64.b64encode('test'))
         code, resp = smtp_.docmd(base64.b64encode('test'))
@@ -155,9 +155,9 @@ class SMTP_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        options = {'enabled': 'True', 'port': 2500, 'banner': 'Test'}
+        options = {'enabled': 'True', 'port': 0, 'banner': 'Test'}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 2503))
+        socket = create_socket(('0.0.0.0', 0))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()
 
@@ -166,7 +166,7 @@ class SMTP_Test(unittest.TestCase):
             response = user + ' ' + hmac.HMAC(password, challenge).hexdigest()
             return base64.b64encode(response)
 
-        smtp_ = smtplib.SMTP('127.0.0.1', 2503, local_hostname='localhost', timeout=15)
+        smtp_ = smtplib.SMTP('127.0.0.1', srv.server_port, local_hostname='localhost', timeout=15)
         _, resp = smtp_.docmd('AUTH', 'CRAM-MD5')
         code, resp = smtp_.docmd(encode_cram_md5(resp, 'test', 'test'))
         # For now, the server's going to return a 535 code.
@@ -184,13 +184,13 @@ class SMTP_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        options = {'enabled': 'True', 'port': 2500, 'banner': 'Test'}
+        options = {'enabled': 'True', 'port': 0, 'banner': 'Test'}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 2504))
+        socket = create_socket(('0.0.0.0', 0))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()
 
-        smtp_ = smtplib.SMTP('127.0.0.1', 2504, local_hostname='localhost', timeout=15)
+        smtp_ = smtplib.SMTP('127.0.0.1', srv.server_port, local_hostname='localhost', timeout=15)
         arg = '\0%s\0%s' % ('test', 'test')
         code, resp = smtp_.docmd('AUTH', 'PLAIN ' + base64.b64encode(arg))
         self.assertEqual(code, 235)
@@ -206,13 +206,13 @@ class SMTP_Test(unittest.TestCase):
         #provide valid login/pass to authenticator
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
-        options = {'enabled': 'True', 'port': 2500, 'banner': 'Test'}
+        options = {'enabled': 'True', 'port': 0, 'banner': 'Test'}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 2505))
+        socket = create_socket(('0.0.0.0', 0))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()
 
-        smtp_ = smtplib.SMTP('127.0.0.1', 2505, local_hostname='localhost', timeout=15)
+        smtp_ = smtplib.SMTP('127.0.0.1', srv.server_port, local_hostname='localhost', timeout=15)
         smtp_.docmd('AUTH', 'LOGIN')
         smtp_.docmd(base64.b64encode('test'))
         code, resp = smtp_.docmd(base64.b64encode('test'))

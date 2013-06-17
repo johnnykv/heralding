@@ -54,13 +54,13 @@ class HTTP_Test(unittest.TestCase):
 
         # Use uncommon port so that you can run the test even if the Hive
         # is running.
-        options = {'enabled': 'True', 'port': 8081}
+        options = {'enabled': 'True', 'port': 0}
         cap = http.http(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 8081))
+        socket = create_socket(('0.0.0.0', 0))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()
 
-        client = httplib.HTTPConnection('127.0.0.1', 8081)
+        client = httplib.HTTPConnection('127.0.0.1', srv.server_port)
         client.request('GET', '/')
         response = client.getresponse()
         self.assertEqual(response.status, 401)
@@ -74,12 +74,12 @@ class HTTP_Test(unittest.TestCase):
 
         sessions = {}
         users = {'test': HiveUser('test', 'test')}
-        cap = http.http(sessions, {'enabled': 'True', 'port': 8081}, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 8081))
+        cap = http.http(sessions, {'enabled': 'True', 'port': 0}, users, self.work_dir)
+        socket = create_socket(('0.0.0.0', 0))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()
 
-        client = httplib.HTTPConnection('127.0.0.1', 8081)
+        client = httplib.HTTPConnection('127.0.0.1', srv.server_port)
         client.putrequest('GET', '/')
         client.putheader('Authorization', 'Basic ' + base64.b64encode('test:test'))
         client.endheaders()

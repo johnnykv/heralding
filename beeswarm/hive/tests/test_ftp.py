@@ -52,14 +52,14 @@ class ftp_Tests(unittest.TestCase):
         authenticator = Authenticator()
         Session.authenticator = authenticator
 
-        options = {'enabled': 'True', 'port': 2122, 'banner': 'Test Banner', 'max_attempts': 3}
+        options = {'enabled': 'True', 'port': 0, 'banner': 'Test Banner', 'max_attempts': 3, 'syst_type': 'Test Type'}
         cap = ftp.ftp(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 2122))
+        socket = create_socket(('0.0.0.0', 0))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()
 
         ftp_client = FTP()
-        ftp_client.connect('127.0.0.1', 2122, 1)
+        ftp_client.connect('127.0.0.1', srv.server_port, 1)
 
         #expect perm exception
         try:

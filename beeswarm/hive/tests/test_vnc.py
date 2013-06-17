@@ -46,7 +46,7 @@ class VNC_Test(unittest.TestCase):
         """
         sessions = {}
         users = {'test': HiveUser('test', 'test')}
-        options = {'enabled': 'True', 'port': 5902}
+        options = {'enabled': 'True', 'port': 0}
         cap = vnc.vnc(sessions, options, users, self.work_dir)
         s = create_socket(('0.0.0.0', 0))
         srv = StreamServer(s, cap.handle_session)
