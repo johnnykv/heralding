@@ -1,36 +1,20 @@
 {% extends "base.html" %}
+{% block css %}
+{{ super() }}
+    <link rel="stylesheet" href="/static/css/watable.css">
+{% endblock css %}
+{% block javascript %}
+    {{ super() }}
+    <script src="/static/js/jquery.watable.js"></script>
+{% endblock javascript %}
 {% block content %}
-<h3>Logs</h3>
-
-<table class="table table-striped table-condensed table-hover">
-<thead>
-<tr>
-    <th><i class="icon-calendar"></i> Time</th>
-    <th><i class="icon-envelope"></i> Protocol</th>
-    <th><i class="icon-user"></i> Username</th>
-    <th><i class="icon-bullhorn"></i> Password</th>
-    <th><i class="icon-comment"></i> IP</th>
-</tr>
-</thead>
-<tbody>
- {% for session in sessions %}
- {%  if session.feeder and session.hive %}
- {%   set class_name = "success" %}
- {%  elif session.feeder and not session.hive %}
- {%   set class_name = "warning" %}
- {%  elif session.hive and not session.feeder %}
- {%   set class_name = "error" %}
- {%  else %}
- {%   set class_name = "info" %}
- {% endif %}
-<tr class="{{ class_name }}">
-    <td>{{ session.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-    <td>{{ session.protocol }}</td>
-    <td>{{ session.username }}</td>
-    <td>{{ session.password }}</td>
-    <td>{{ session.source_ip }}</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
-{% endblock %}
+    <h3>All Sessions: </h3>
+    <div id="logtable" class="cont"></div>
+    <script type="text/javascript">
+        $('#logtable').WATable(
+                {
+                    url: '/test', //I added a new route which just echoes sample data for the table, in JSON format.
+                    preFill: true
+                });
+    </script>
+{% endblock content %}

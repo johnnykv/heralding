@@ -1,6 +1,6 @@
 {% extends "base.html" %}
+{% import "macros.html" as macros %}
 {% block content %}
-
-<h2>New {{ mode_name }} Configuration:</h2>
-    {{ wtf.quick_form(form, action='', buttons=[('submit', 'primary', 'Generate')]) }}
-{% endblock %}
+<h3>New Hive Configuration:</h3>
+    {{ macros.quick_form(form, action='', buttons=[('submit', 'primary', 'Generate')]) }}
+{% endblock content %}
