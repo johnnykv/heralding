@@ -18,18 +18,22 @@ import json
 import logging
 import uuid
 from flask import Flask, render_template, request
-from flask.ext.bootstrap import Bootstrap
+from wtforms import HiddenField
 from forms import NewHiveConfigForm, NewFeederConfigForm
 from pony.orm import commit, select
 from beeswarm.beekeeper.db.database import Feeder, Honeybee, Session, Hive, Classification
+
+
+def is_hidden_field_filter(field):
+    return isinstance(field, HiddenField)
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
 app.config['CSRF_ENABLED'] = True
 app.config['SECRET_KEY'] = 'beeswarm-is-awesome'
-Bootstrap(app)
-
+app.jinja_env.filters['bootstrap_is_hidden_field'] = is_hidden_field_filter
 logger = logging.getLogger(__name__)
+
 
 @app.route('/')
 def home():
@@ -39,19 +43,21 @@ def home():
 @app.route('/sessions')
 def sessions_all():
     sessions = select(s for s in Session)
-    return render_template('logs.html', sessions=sessions)
+    return render_template('logs.html', sessions=sessions, logtype='All')
 
 
 @app.route('/sessions/honeybees')
 def sessions_honeybees():
     honeybees = select(h for h in Honeybee)
-    return render_template('logs.html', sessions=honeybees)
+    return render_template('logs.html', sessions=honeybees, logtype='HoneyBees')
+
 
 @app.route('/sessions/attacks')
 def sessions_attacks():
     attacks = select(a for a in Session if a.classification != Classification.get(type='honeybee') and
-                     a.classification is not None)
-    return render_template('logs.html', sessions=attacks)
+                                           a.classification is not None)
+    return render_template('logs.html', sessions=attacks, logtype='Attacks')
+
 
 @app.route('/ws/feeder_data', methods=['POST'])
 def feeder_data():
@@ -82,6 +88,7 @@ def feeder_data():
 
     return ''
 
+
 @app.route('/ws/hive_data', methods=['POST'])
 def hive_data():
     #TODO: investigate why the flask provided request.json returns None.
@@ -108,10 +115,12 @@ def hive_data():
     commit()
     return ''
 
+
 @app.route('/ws/hive/config/<hive_id>', methods=['GET'])
 def get_hive_config(hive_id):
     current_hive = Hive[hive_id]
     return current_hive.configuration
+
 
 @app.route('/ws/feeder/config/<feeder_id>', methods=['GET'])
 def get_feeder_config(feeder_id):
@@ -201,9 +210,10 @@ def create_hive():
         config_json = json.dumps(config)
         Hive(id=new_hive_id, configuration=config_json)
         commit()
-        return 'http://localhost:5000/ws/hive/config/'+new_hive_id
+        return 'http://localhost:5000/ws/hive/config/' + new_hive_id
 
     return render_template('create-config.html', form=form, mode_name='Hive')
+
 
 @app.route('/ws/feeder', methods=['GET', 'POST'])
 def create_feeder():
@@ -262,9 +272,140 @@ def create_feeder():
         config_json = json.dumps(config)
         Feeder(id=new_feeder_id, configuration=config_json)
         commit()
-        return 'http://localhost:5000/ws/feeder/config/'+new_feeder_id
+        return 'http://localhost:5000/ws/feeder/config/' + new_feeder_id
 
     return render_template('create-config.html', form=form, mode_name='Feeder')
+
+
+@app.route('/data/sessions/all', methods=['GET', 'POST'])
+def data_sessions_all():
+    sessions = select(s for s in Session)
+    table_data = {
+        'rows': [],
+        'cols': {
+            'time': {
+                'index': 1,
+                'type': 'string',
+                'friendly': 'Time',
+                'sortOrder': 'desc'
+            },
+
+            'protocol': {
+                'index': 2,
+                'type': 'string',
+                'friendly': 'Protocol'
+            },
+            'username': {
+                'index': 3,
+                'type': 'string',
+                'friendly': 'Username'
+            },
+            'password': {
+                'index': 4,
+                'type': 'string',
+                'friendly': 'Password'
+            },
+            'ip_address': {
+                'index': 5,
+                'type': 'string',
+                'friendly': 'IP Address'
+            }
+        }
+    }
+
+    for s in sessions:
+        row = {'time': s.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': s.protocol, 'username': s.username,
+               'password': s.password, 'ip_address': s.source_ip}
+        table_data['rows'].append(row)
+
+    return json.dumps(table_data)
+
+@app.route('/data/sessions/honeybees', methods=['GET', 'POST'])
+def data_sessions_bees():
+    honeybees = select(b for b in Honeybee)
+    table_data = {
+        'rows': [],
+        'cols': {
+            'time': {
+                'index': 1,
+                'type': 'string',
+                'friendly': 'Time',
+                'sortOrder': 'desc'
+            },
+
+            'protocol': {
+                'index': 2,
+                'type': 'string',
+                'friendly': 'Protocol'
+            },
+            'username': {
+                'index': 3,
+                'type': 'string',
+                'friendly': 'Username'
+            },
+            'password': {
+                'index': 4,
+                'type': 'string',
+                'friendly': 'Password'
+            },
+            'ip_address': {
+                'index': 5,
+                'type': 'string',
+                'friendly': 'IP Address'
+            }
+        }
+    }
+
+    for b in honeybees:
+        row = {'time': b.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': b.protocol, 'username': b.username,
+               'password': b.password, 'ip_address': b.source_ip}
+        table_data['rows'].append(row)
+    return json.dumps(table_data)
+
+@app.route('/data/sessions/attacks', methods=['GET', 'POST'])
+def data_sessions_attacks():
+    attacks = select(a for a in Session if a.classification != Classification.get(type='honeybee') and
+                                           a.classification is not None)
+    table_data = {
+        'rows': [],
+        'cols': {
+            'time': {
+                'index': 1,
+                'type': 'string',
+                'friendly': 'Time',
+                'sortOrder': 'desc'
+            },
+
+            'protocol': {
+                'index': 2,
+                'type': 'string',
+                'friendly': 'Protocol'
+            },
+            'username': {
+                'index': 3,
+                'type': 'string',
+                'friendly': 'Username'
+            },
+            'password': {
+                'index': 4,
+                'type': 'string',
+                'friendly': 'Password'
+            },
+            'ip_address': {
+                'index': 5,
+                'type': 'string',
+                'friendly': 'IP Address'
+            }
+        }
+    }
+
+    for a in attacks:
+        row = {'time': a.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': a.protocol, 'username': a.username,
+               'password': a.password, 'ip_address': a.source_ip}
+        table_data['rows'].append(row)
+
+    return json.dumps(table_data)
+
 
 if __name__ == '__main__':
     app.run()
