@@ -43,20 +43,20 @@ def home():
 @app.route('/sessions')
 def sessions_all():
     sessions = select(s for s in Session)
-    return render_template('logs.html', sessions=sessions)
+    return render_template('logs.html', sessions=sessions, logtype='All')
 
 
 @app.route('/sessions/honeybees')
 def sessions_honeybees():
     honeybees = select(h for h in Honeybee)
-    return render_template('logs.html', sessions=honeybees)
+    return render_template('logs.html', sessions=honeybees, logtype='HoneyBees')
 
 
 @app.route('/sessions/attacks')
 def sessions_attacks():
     attacks = select(a for a in Session if a.classification != Classification.get(type='honeybee') and
                                            a.classification is not None)
-    return render_template('logs.html', sessions=attacks)
+    return render_template('logs.html', sessions=attacks, logtype='Attacks')
 
 
 @app.route('/ws/feeder_data', methods=['POST'])
@@ -362,7 +362,7 @@ def data_sessions_bees():
         table_data['rows'].append(row)
     return json.dumps(table_data)
 
-@app.route('/data/sessions/all', methods=['GET', 'POST'])
+@app.route('/data/sessions/attacks', methods=['GET', 'POST'])
 def data_sessions_attacks():
     attacks = select(a for a in Session if a.classification != Classification.get(type='honeybee') and
                                            a.classification is not None)

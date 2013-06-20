@@ -8,12 +8,19 @@
     <script src="/static/js/jquery.watable.js"></script>
 {% endblock javascript %}
 {% block content %}
-    <h3>All Sessions: </h3>
+    <h3>Logs - {{ logtype }} </h3>
     <div id="logtable" class="cont"></div>
+    {% if logtype == 'All' %}
+    {% set dataurl = '/data/sessions/all' %}
+    {% elif logtype == 'HoneyBees' %}
+    {% set dataurl = '/data/sessions/honeybees' %}
+    {% elif logtype == 'Attacks' %}
+    {% set dataurl = '/data/sessions/attacks' %}
+    {% endif %}
     <script type="text/javascript">
-        $('#logtable').WATable(
+        $("#logtable").WATable(
                 {
-                    url: '/test', //I added a new route which just echoes sample data for the table, in JSON format.
+                    url: '{{ dataurl }}',
                     preFill: true
                 });
     </script>
