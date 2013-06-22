@@ -48,7 +48,7 @@ class ClassifierTests(unittest.TestCase):
 
     def test_matching_session(self):
         """
-        Test if the get_matching_session method returns the session which matches a given honeybee.
+        Test if the get_matching_session method returns the session that matches the given honeybee.
         """
 
         db_session = database.get_session()
@@ -117,6 +117,29 @@ class ClassifierTests(unittest.TestCase):
         result = db_session.query(Session).filter(Session.classification_id == 'malicious_brute').all()
         #we expect the resultset to contain session1 and session2
         self.assertEquals(len(result), 2)
+
+    def test_classify_sessions_reuse_credentails(self):
+        """
+        Test if attack which uses previously transmitted credentials is tagged correctly
+        """
+
+        db_session = database.get_session()
+        hive = db_session.query(Hive).filter(Hive.id == self.hive_id).one()
+
+        s = Session(id='session1010', username='a', password='a', source_ip='321', destination_ip='123',
+                    received=datetime.utcnow(), timestamp=datetime.utcnow() + timedelta(seconds=-25),
+                    protocol='pop3', source_port=1, destination_port=1, hive=hive)
+        db_session.add(s)
+        db_session.commit()
+
+        c = Classifier()
+        c.classify_sessions(0, db_session)
+
+        result = db_session.query(Session).filter(Session.classification_id == 'mitm_2').one()
+        #we expect the resultset to contain session1010
+        self.assertEquals(result.id, 'session1010')
+
+
 
 
 

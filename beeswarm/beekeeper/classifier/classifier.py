@@ -103,22 +103,24 @@ class Classifier(object):
             db_session = database.get_session()
 
         sessions = db_session.query(Session).filter(Session.discriminator == None) \
-            .filter(Session.timestamp <= min_datetime) \
-            .filter(Session.discriminator == None) \
-            .all()
+                                            .filter(Session.timestamp <= min_datetime) \
+                                            .all()
 
-        #sessions are classified as brute-force attempts (until further notice...)
         for s in sessions:
             if s.password == None or s.username == None:
+                # '== None' is a temporary solution until we have figured out the final model for Session
                 logger.debug('Classifying session with id {0} as bruteforce attempt.'.format(s.id))
-                s.classification = Classification.get(type='malicious_brute')
+                s.classification = db_session.query(Classification).filter(Classification.type == 'malicious_brute').one()
             else:
-                honey_matches = db_session.query(Honeybee).filter(Honeybee.username == None) \
-                    .filter(Honeybee.password == None).all()
+                honey_matches = db_session.query(Honeybee).filter(Honeybee.username == s.username) \
+                                                          .filter(Honeybee.password == s.password).all()
                 if len(honey_matches) > 0:
-                    logger.debug('Classifying session with id {0} as bruteforce attempt.'.format(s.id))
+                    #username/password has previously been transmitted in a honeybee
+                    logger.debug('Classifying session with id {0} as attack which involved the reused '
+                                 'of previously transmitted credentials.'.format(s.id))
                     s.classification = db_session.query(Classification).filter(Classification.type == 'mitm_2').one()
                 else:
+                    #we have never transmitted this username/password combo
                     logger.debug('Classifying session with id {0} as bruteforce attempt.'.format(s.id))
                     s.classification = db_session.query(Classification).filter(
                         Classification.type == 'malicious_brute').one()
