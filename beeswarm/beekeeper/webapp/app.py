@@ -19,11 +19,7 @@ import logging
 import uuid
 from flask import Flask, render_template, request
 from wtforms import HiddenField
-<<<<<<< HEAD
-from forms import NewHiveConfigForm, NewFeederConfigForm
-=======
 from forms import NewHiveConfigForm, NewFeederConfigForm, LoginForm
->>>>>>> ecc484eb2e3fb713af58394e4775bb190fa92e6d
 from beeswarm.beekeeper.db import database
 from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Hive, Classification
 
