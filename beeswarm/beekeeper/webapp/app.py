@@ -19,7 +19,7 @@ import logging
 import uuid
 from flask import Flask, render_template, request
 from wtforms import HiddenField
-from forms import NewHiveConfigForm, NewFeederConfigForm
+from forms import NewHiveConfigForm, NewFeederConfigForm, LoginForm
 from beeswarm.beekeeper.db import database
 from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Hive, Classification
 
@@ -130,13 +130,15 @@ def hive_data():
 
 @app.route('/ws/hive/config/<hive_id>', methods=['GET'])
 def get_hive_config(hive_id):
-    current_hive = Hive[hive_id]
+    db_session = database.get_session()
+    current_hive = db_session.query(Hive).filter(Hive.id == hive_id).one()
     return current_hive.configuration
 
 
 @app.route('/ws/feeder/config/<feeder_id>', methods=['GET'])
 def get_feeder_config(feeder_id):
-    current_feeder = Feeder[feeder_id]
+    db_session = database.get_session()
+    current_feeder = db_session.query(Feeder).filter(Feeder.id == feeder_id).one()
     return current_feeder.configuration
 
 
@@ -428,6 +430,10 @@ def data_sessions_attacks():
 
     return json.dumps(table_data)
 
+@app.route('/login')
+def login():
+    form = LoginForm()
+    return render_template('login.html', form=form)
 
 if __name__ == '__main__':
     app.run()

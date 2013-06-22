@@ -1,6 +1,7 @@
 from flask.ext.wtf import Form, TextField, BooleanField, RadioField
 from flask.ext.wtf import Required
 from flask.ext.wtf import IntegerField, FileField
+from wtforms import PasswordField
 
 
 class NewHiveConfigForm(Form):
@@ -85,3 +86,9 @@ class NewFeederConfigForm(Form):
     ftp_timing = TextField(default='regular')
     ftp_login = TextField(default='test')
     ftp_password = TextField(default='password')
+
+
+class LoginForm(Form):
+
+    username = TextField()
+    password = PasswordField()
