@@ -34,20 +34,25 @@
     {%- endif %}
 {%- endmacro %}
 
-{% macro quick_form(form, action=".", method="post", class="form form-horizontal", buttons = [('submit', 'primary', 'Save')], enctype=None) %}
-    <form action="{{ action }}" method="{{ method }}" class="{{ class }}"{% if enctype %}
+{% macro quick_form(form, action=".", method="post", class="form form-horizontal",
+                    buttons = [('submit', 'primary', 'Save')], enctype=None, legend=None) %}
+    <form action="{{ action }}" method="{{ method }}" class="{{ class }} span4"{% if enctype %}
           enctype="{{ enctype }}"{% endif %}>
-        {{ form.hidden_tag() }}
-        {{ form_errors(form, 'only') }}
-        {%- for field in form %}
-            {% if not field|bootstrap_is_hidden_field %}
-                {{ horizontal_field(field) }}
-            {%- endif %}
-        {%- endfor %}
-        <div class="controls">
-            {% for name, type, text in buttons %}
-                <button name="{{ name }}" type="submit" class="btn btn-{{ type }}">{{ text }}</button>
+        <fieldset>
+            {% if legend %}
+                <legend>{{ legend }}</legend>{% endif %}
+            {{ form.hidden_tag() }}
+            {{ form_errors(form, 'only') }}
+            {%- for field in form %}
+                {% if not field|bootstrap_is_hidden_field %}
+                    {{ horizontal_field(field) }}
+                {%- endif %}
             {%- endfor %}
-        </div>
+            <div class="controls">
+                {% for name, type, text in buttons %}
+                    <button name="{{ name }}" type="submit" class="btn btn-{{ type }}">{{ text }}</button>
+                {%- endfor %}
+            </div>
+        </fieldset>
     </form>
 {%- endmacro %}
