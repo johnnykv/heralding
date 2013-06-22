@@ -16,8 +16,9 @@
 import logging
 import datetime
 import gevent
-from pony.orm import commit, select
-from beeswarm.beekeeper.db.database import Classification, Honeybee, Session
+from beeswarm.beekeeper.db import database
+from beeswarm.beekeeper.db.entities import Classification, Honeybee, Session
+
 
 logger = logging.getLogger(__name__)
 
@@ -29,13 +30,14 @@ class Classifier(object):
     def start(self):
         self.enabled = True
         while self.enabled:
-            self.classify_honeybees()
-            self.classify_sessions()
-            commit()
+            db_session = database.get_session()
+            self.classify_honeybees(db_session=db_session)
+            self.classify_sessions(db_session=db_session)
+            db_session.commit()
             gevent.sleep(10)
 
     #match honeybee with session
-    def get_matching_session(self, honeybee, timediff=5):
+    def get_matching_session(self, honeybee, timediff=5, db_session=None):
         """
         Provided a honeybee object a matching session is returned. If no matching
         session is found None is returned.
@@ -45,14 +47,19 @@ class Classifier(object):
         """
         min_datetime = honeybee.timestamp - datetime.timedelta(seconds=timediff)
         max_datetime = honeybee.timestamp + datetime.timedelta(seconds=timediff)
-        session_match = Session.get(lambda s: s.protocol == honeybee.protocol and
-                                              s.hive == honeybee.hive and
-                                              s.timestamp >= min_datetime and
-                                              s.timestamp <= max_datetime and
-                                              s.classtype != 'Honeybee')
+
+        if not db_session:
+            db_session = database.get_session()
+
+        session_match = db_session.query(Session).filter(Session.protocol == honeybee.protocol) \
+            .filter(Session.hive == honeybee.hive) \
+            .filter(Session.timestamp >= min_datetime) \
+            .filter(Session.timestamp <= max_datetime) \
+            .filter(Session.discriminator == None).first()
+
         return session_match
 
-    def classify_honeybees(self, delay_seconds=30):
+    def classify_honeybees(self, delay_seconds=30, db_session=None):
         """
         Will classify all unclassified honeybees as either legit or malicious activity. A honeybee can e.g. be classified
         as involved in malicious activity if the honeybee is subject to a MiTM attack.
@@ -61,22 +68,29 @@ class Classifier(object):
         """
         min_datetime = datetime.datetime.utcnow() - datetime.timedelta(seconds=delay_seconds)
 
-        honeybees = select(h for h in Honeybee if h.classification == None and
-                                                  h.did_complete and
-                                                  h.timestamp < min_datetime)
+        if not db_session:
+            db_session = database.get_session()
+
+        honeybees = db_session.query(Honeybee).filter(Honeybee.classification == None) \
+            .filter(Honeybee.did_complete == True) \
+            .filter(Honeybee.timestamp < min_datetime).all()
+
         for h in honeybees:
-            session_match = self.get_matching_session(h)
+            session_match = self.get_matching_session(h, db_session=db_session)
             #if we have a match this is legit honeybee traffic
             if session_match:
                 logger.debug('Classifying honeybee with id {0} as legit honeybee traffic and deleting '
                              'matching session with id {1}'.format(h.id, session_match.id))
-                h.classification = Classification.get(type='honeybee')
-                session_match.delete()
+                h.classification = db_session.query(Classification).filter(Classification.type == 'honeybee').one()
+                db_session.delete(session_match)
             #else we classify it as a MiTM attack
             else:
-                h.classification = Classification.get(type='mitm_1')
+                h.classification = db_session.query(Classification).filter(Classification.type == 'mitm_1').one()
 
-    def classify_sessions(self, delay_seconds=30):
+        db_session.commit()
+
+
+    def classify_sessions(self, delay_seconds=30, db_session=None):
         """
         Will classify all sessions (which are not honeybees) as malicious activity. Note: The classify_honeybees method
         should be called before this method.
@@ -85,23 +99,30 @@ class Classifier(object):
         """
         min_datetime = datetime.datetime.utcnow() - datetime.timedelta(seconds=delay_seconds)
 
-        sessions = select(s for s in Session if s.classification == None and
-                                                s.classtype == 'Session' and
-                                                s.timestamp <= min_datetime)
+        if not db_session:
+            db_session = database.get_session()
+
+        sessions = db_session.query(Session).filter(Session.discriminator == None) \
+            .filter(Session.timestamp <= min_datetime) \
+            .filter(Session.discriminator == None) \
+            .all()
+
         #sessions are classified as brute-force attempts (until further notice...)
         for s in sessions:
             if s.password == None or s.username == None:
                 logger.debug('Classifying session with id {0} as bruteforce attempt.'.format(s.id))
                 s.classification = Classification.get(type='malicious_brute')
             else:
-                honey_matches = select(h for h in Honeybee if h.username == s.username and
-                                                              h.password == s.username)
+                honey_matches = db_session.query(Honeybee).filter(Honeybee.username == None) \
+                    .filter(Honeybee.password == None).all()
                 if len(honey_matches) > 0:
                     logger.debug('Classifying session with id {0} as bruteforce attempt.'.format(s.id))
-                    s.classification = Classification.get(type='mitm_2')
+                    s.classification = db_session.query(Classification).filter(Classification.type == 'mitm_2').one()
                 else:
                     logger.debug('Classifying session with id {0} as bruteforce attempt.'.format(s.id))
-                    s.classification = Classification.get(type='malicious_brute')
+                    s.classification = db_session.query(Classification).filter(
+                        Classification.type == 'malicious_brute').one()
+        db_session.commit()
 
     def stop(self):
         self.enabled = False

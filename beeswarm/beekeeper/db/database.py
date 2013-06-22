@@ -1,55 +1,58 @@
-from datetime import datetime
-from pony.orm import *
-from pony.orm.core import Discriminator
-from beeswarm.beekeeper.db.database_config import db
+# Copyright (C) 2013 Johnny Vestergaard <jkv@unixcluster.dk>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 
-#db = Database("sqlite", "beekeeper.sqlite", create_db=True)
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-if db is None:
-    raise OperationalError('Please setup database before importing this module.')
+import os
+import json
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from entities import Classification
+import entities
 
-
-class Feeder(db.Entity):
-    id = PrimaryKey(str)
-    honeybees = Set("Honeybee")
-    configuration = Optional(unicode, 2000)
-
-class Session(db.Entity):
-    classtype = Discriminator(int)
-    id = PrimaryKey(str)
-    received = Required(datetime)
-    timestamp = Required(datetime)
-    protocol = Required(str)
-    username = Optional(unicode)
-    password = Optional(unicode)
-    source_ip = Required(str)
-    source_port = Required(int)
-    destination_ip = Required(str)
-    destination_port = Required(int)
-    hive = Required("Hive")
-    classification = Optional("Classification")
+DB_Session = None
+engine = None
 
 
-class Hive(db.Entity):
-    id = PrimaryKey(str)
-    sessions = Set(Session)
-    configuration = Optional(unicode, 2000)
+def setup_db(connection_string):
+    global DB_Session, engine
+    engine = create_engine(connection_string)
+    entities.Base.metadata.create_all(engine)
+    DB_Session = sessionmaker(bind=engine)
+    db_path = os.path.dirname(__file__)
+
+    #bootstrapping the db with classifications types
+    json_file = open(os.path.join(db_path, 'bootstrap.json'))
+    data = json.load(json_file)
+    session = get_session()
+    for entry in data['classifications']:
+        c = session.query(Classification).filter(Classification.type == entry['type']).first()
+        if not c:
+            classification = Classification(type=entry['type'], description_short=entry['description_short'],
+                                            description_long=entry['description_long'])
+            session.add(classification)
+        else:
+            c.description_short = entry['description_short']
+            c.description_long = entry['description_long']
+    session.commit()
 
 
-class Honeybee(db.Session):
-    feeder = Required(Feeder)
-    did_connect = Optional(bool)
-    did_login = Optional(bool)
-    did_complete = Optional(bool)
+def clear_db():
+    entities.Base.metadata.drop_all(engine)
 
 
-class Classification(db.Entity):
-    type = PrimaryKey(str)
-    sessions = Set(Session)
-    description_long = Required(str)
-    description_short = Required(str)
-
-
-#sql_debug(True)
-db.generate_mapping(create_tables=True)
-# db.generate_mapping(check_tables=True)
+def get_session():
+    if DB_Session:
+        return DB_Session()
+    else:
+        raise Exception('DB session has not been configured, please run setup_db.')

@@ -21,7 +21,8 @@ from ConfigParser import ConfigParser
 import gevent
 from gevent.wsgi import WSGIServer
 import beeswarm
-from beeswarm.beekeeper.db import database_config
+from beeswarm.beekeeper.db import database
+from beeswarm.beekeeper.webapp import app
 
 logger = logging.getLogger(__name__)
 
@@ -34,10 +35,7 @@ class Beekeeper(object):
         self.servers = {}
         self.greenlets = []
 
-        database_config.setup_db(os.path.join(os.getcwd(), self.config.get('sqlite', 'db_file')))
-        #Out of band import because of premature db implementation
-        from beeswarm.beekeeper.webapp import app
-
+        database.setup_db(os.path.join(self.config.get('sql', 'connection_string')))
         self.app = app.app
 
     def start(self, port=5000):

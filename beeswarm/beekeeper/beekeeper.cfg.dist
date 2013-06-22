@@ -1,2 +1,2 @@
-[sqlite]
-db_file = beekeeper_sqlite.db
+[sql]
+connection_string = sqlite:///beekeeper_sqlite.db

@@ -6,27 +6,28 @@ from datetime import datetime
 import gevent.monkey
 gevent.monkey.patch_all()
 
-from pony.orm import commit
-from beeswarm.beekeeper.db import database_config
-database_config.setup_db(':memory:')
 
-from beeswarm.beekeeper.db.database import Hive, Feeder
+from beeswarm.beekeeper.db import database
+from beeswarm.beekeeper.db.entities import Feeder, Hive
 from beeswarm.beekeeper.webapp import app
 
 
 class WebappTests(unittest.TestCase):
     def setUp(self):
         self.app = app.app.test_client()
-
+        database.setup_db('sqlite://')
+        session = database.get_session()
         #setup dummy entities
         self.feeder_id =  str(uuid.uuid4())
-        Feeder(id=self.feeder_id)
+        f = Feeder(id=self.feeder_id)
         self.hive_id = str(uuid.uuid4())
-        Hive(id=self.hive_id)
-        commit()
+        h = Hive(id=self.hive_id)
+        session.add(f)
+        session.add(h)
+        session.commit()
 
     def tearDown(self):
-        database_config.clear_db()
+        database.clear_db()
 
     def test_basic_feeder_post(self):
         """
