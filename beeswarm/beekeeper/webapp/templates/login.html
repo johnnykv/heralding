@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% import "macros.html" as macros %}
+{% block body %}
+    <div class="container span10 offset2">
+        {% block pageheading %}
+            {{ super() }}
+        {% endblock pageheading %}
+        {% block navbar %}{% endblock navbar %}
+        {{ macros.quick_form(form, action='', buttons=[('submit', 'primary', 'Login')], legend='Login') }}
+    </div>
+{% endblock body %}
