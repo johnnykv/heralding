@@ -25,6 +25,7 @@ from beeswarm.beekeeper.classifier.classifier import Classifier
 
 class ClassifierTests(unittest.TestCase):
     def setUp(self):
+        #'sqlite://' gives a in-memory sqlite database
         database.setup_db('sqlite://')
 
         self.feeder_id = str(uuid.uuid4())
@@ -33,15 +34,14 @@ class ClassifierTests(unittest.TestCase):
         self.honeybee_datetime = datetime.utcnow()
 
         db_session = database.get_session()
-        self.feeder = Feeder(id=self.feeder_id)
-        self.hive = Hive(id=self.hive_id)
+        feeder = Feeder(id=self.feeder_id)
+        hive = Hive(id=self.hive_id)
         honeybee = Honeybee(id=self.honeybee_id, username='a', password='a', source_ip='321', destination_ip='123',
                             received=datetime.utcnow(), timestamp=self.honeybee_datetime, protocol='pop3',
                             source_port=1,
-                            destination_port=1, did_complete=True, feeder=self.feeder, hive=self.hive)
-        db_session.add_all([self.feeder, self.hive, honeybee])
+                            destination_port=1, did_complete=True, feeder=feeder, hive=hive)
+        db_session.add_all([feeder, hive, honeybee])
         db_session.commit()
-        db_session.expunge_all()
 
     def tearDown(self):
         database.clear_db()
@@ -53,12 +53,13 @@ class ClassifierTests(unittest.TestCase):
 
         db_session = database.get_session()
         honeybee = db_session.query(Honeybee).filter(Honeybee.id == self.honeybee_id).one()
+        hive = db_session.query(Hive).filter(Hive.id == self.hive_id).one()
 
         #session2 is the matching session
         for id, offset in (('session1', -15), ('session2', 3), ('session3', 15)):
             s = Session(id=id, username='a', password='a', source_ip='321', destination_ip='123',
                         received=datetime.utcnow(), timestamp=honeybee.timestamp + timedelta(seconds=offset),
-                        protocol='pop3', source_port=1, destination_port=1, hive=self.hive)
+                        protocol='pop3', source_port=1, destination_port=1, hive=hive)
             db_session.add(s)
         db_session.commit()
 
@@ -75,10 +76,12 @@ class ClassifierTests(unittest.TestCase):
 
         #setup the hive session we expect to match the honeybee
         db_session = database.get_session()
+        hive = db_session.query(Hive).filter(Hive.id == self.hive_id).one()
+
         s_id = str(uuid.uuid4())
         s = Session(id=s_id, username='a', password='b', source_ip='321', destination_ip='123',
                     received=datetime.now(), timestamp=self.honeybee_datetime - timedelta(seconds=2),
-                    protocol='pop3', source_port=1, destination_port=1, hive=self.hive)
+                    protocol='pop3', source_port=1, destination_port=1, hive=hive)
         db_session.add(s)
         db_session.commit()
 
@@ -100,10 +103,11 @@ class ClassifierTests(unittest.TestCase):
         """
 
         db_session = database.get_session()
+        hive = db_session.query(Hive).filter(Hive.id == self.hive_id).one()
         for id, offset in (('session99', -30), ('session88', -10), ('session77', -2)):
             s = Session(id=id, username='b', password='b', source_ip='321', destination_ip='123',
                         received=datetime.utcnow(), timestamp=datetime.utcnow() + timedelta(seconds=offset),
-                        protocol='pop3', source_port=1, destination_port=1, hive=self.hive)
+                        protocol='pop3', source_port=1, destination_port=1, hive=hive)
             db_session.add(s)
         db_session.commit()
 

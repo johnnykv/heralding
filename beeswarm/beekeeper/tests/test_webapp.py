@@ -19,11 +19,10 @@ class WebappTests(unittest.TestCase):
         session = database.get_session()
         #setup dummy entities
         self.feeder_id =  str(uuid.uuid4())
-        f = Feeder(id=self.feeder_id)
+        feeder = Feeder(id=self.feeder_id)
         self.hive_id = str(uuid.uuid4())
-        h = Hive(id=self.hive_id)
-        session.add(f)
-        session.add(h)
+        hive = Hive(id=self.hive_id)
+        session.add_all([feeder, hive])
         session.commit()
 
     def tearDown(self):
