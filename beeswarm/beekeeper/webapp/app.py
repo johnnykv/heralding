@@ -20,8 +20,8 @@ import uuid
 from flask import Flask, render_template, request
 from wtforms import HiddenField
 from forms import NewHiveConfigForm, NewFeederConfigForm
-from pony.orm import commit, select
-from beeswarm.beekeeper.db.database import Feeder, Honeybee, Session, Hive, Classification
+from beeswarm.beekeeper.db import database
+from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Hive, Classification
 
 
 def is_hidden_field_filter(field):
@@ -42,20 +42,23 @@ def home():
 
 @app.route('/sessions')
 def sessions_all():
-    sessions = select(s for s in Session)
+    db_session = database.get_session()
+    sessions = db_session.query(Session).all()
     return render_template('logs.html', sessions=sessions, logtype='All')
 
 
 @app.route('/sessions/honeybees')
 def sessions_honeybees():
-    honeybees = select(h for h in Honeybee)
+    db_session = database.get_session()
+    honeybees = db_session.query(Honeybee).all()
     return render_template('logs.html', sessions=honeybees, logtype='HoneyBees')
 
 
 @app.route('/sessions/attacks')
 def sessions_attacks():
-    attacks = select(a for a in Session if a.classification != Classification.get(type='honeybee') and
-                                           a.classification is not None)
+    db_session = database.get_session()
+    attacks = db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+                                               Session.classification_id is not None).all()
     return render_template('logs.html', sessions=attacks, logtype='Attacks')
 
 
@@ -64,11 +67,15 @@ def feeder_data():
     #TODO: investigate why the flask provided request.json returns None.
     data = json.loads(request.data)
     logger.debug(data)
+    session = database.get_session()
 
-    _feeder = Feeder.get(id=data['feeder_id'])
-    _hive = Hive.get(id=data['hive_id'])
+    #_feeder = Feeder.get(id=data['feeder_id'])
+    _feeder = session.query(Feeder).filter(Feeder.id == data['feeder_id']).one()
 
-    Honeybee(id=data['id'],
+    #_hive = Hive.get(id=data['hive_id'])
+    _hive = session.query(Hive).filter(Hive.id == data['hive_id']).one()
+
+    h = Honeybee(id=data['id'],
              timestamp=datetime.strptime(data['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
              received=datetime.utcnow(),
              protocol=data['protocol'],
@@ -82,9 +89,11 @@ def feeder_data():
              did_login=data['did_login'],
              did_complete=data['did_complete'],
              feeder=_feeder,
-             hive=_hive)
+             hive=_hive
+             )
 
-    commit()
+    session.add(h)
+    session.commit()
 
     return ''
 
@@ -95,11 +104,13 @@ def hive_data():
     data = json.loads(request.data)
     logger.debug('Received: {0}'.format(data))
 
-    _hive = Hive.get(id=data['hive_id'])
+    session = database.get_session()
+    _hive = session.query(Hive).filter(Hive.id == data['hive_id']).one()
+
     #create if not found in the database
 
     for login_attempt in data['login_attempts']:
-        Session(id=login_attempt['id'],
+        s = Session(id=login_attempt['id'],
                 timestamp=datetime.strptime(login_attempt['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
                 received=datetime.utcnow(),
                 protocol=data['protocol'],
@@ -111,8 +122,9 @@ def hive_data():
                 source_ip=data['attacker_ip'],
                 source_port=data['attacker_source_port'],
                 hive=_hive)
+        session.add(s)
+    session.commit()
 
-    commit()
     return ''
 
 
@@ -208,8 +220,11 @@ def create_hive():
             }
         }
         config_json = json.dumps(config)
-        Hive(id=new_hive_id, configuration=config_json)
-        commit()
+
+        db_session = database.get_session()
+        h = Hive(id=new_hive_id, configuration=config_json)
+        db_session.add(h)
+        db_session.commit()
         return 'http://localhost:5000/ws/hive/config/' + new_hive_id
 
     return render_template('create-config.html', form=form, mode_name='Hive')
@@ -270,8 +285,12 @@ def create_feeder():
             },
         }
         config_json = json.dumps(config)
-        Feeder(id=new_feeder_id, configuration=config_json)
-        commit()
+
+        db_session = database.get_session()
+        f = Feeder(id=new_feeder_id, configuration=config_json)
+        db_session.add(f)
+        db_session.commit()
+
         return 'http://localhost:5000/ws/feeder/config/' + new_feeder_id
 
     return render_template('create-config.html', form=form, mode_name='Feeder')
@@ -279,7 +298,8 @@ def create_feeder():
 
 @app.route('/data/sessions/all', methods=['GET', 'POST'])
 def data_sessions_all():
-    sessions = select(s for s in Session)
+    db_session = database.get_session()
+    sessions = db_session.query(Session).all()
     table_data = {
         'rows': [],
         'cols': {
@@ -322,7 +342,8 @@ def data_sessions_all():
 
 @app.route('/data/sessions/honeybees', methods=['GET', 'POST'])
 def data_sessions_bees():
-    honeybees = select(b for b in Honeybee)
+    db_session = database.get_session()
+    honeybees = db_session.query(Honeybee).all()
     table_data = {
         'rows': [],
         'cols': {
@@ -364,8 +385,9 @@ def data_sessions_bees():
 
 @app.route('/data/sessions/attacks', methods=['GET', 'POST'])
 def data_sessions_attacks():
-    attacks = select(a for a in Session if a.classification != Classification.get(type='honeybee') and
-                                           a.classification is not None)
+    db_session = database.get_session()
+    attacks = db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+                                               Session.classification_id is not None).all()
     table_data = {
         'rows': [],
         'cols': {

@@ -7,7 +7,7 @@ fs
 pysendfile
 pyDes
 flask
-pony==0.4.6
+sqlalchemy>=0.8.1
 pyOpenSSL
 hpfeeds
 flask-wtf

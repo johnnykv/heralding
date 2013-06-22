@@ -16,63 +16,54 @@
 import unittest
 import uuid
 from datetime import datetime, timedelta
-from pony.orm import commit, select
 
-import gevent.monkey
-
-gevent.monkey.patch_all()
-
-#find better way to do this!
-from beeswarm.beekeeper.db import database_config
-
-database_config.setup_db(':memory:')
-
-from beeswarm.beekeeper.db.database import Hive, Classification, Feeder, Session, Honeybee
+from beeswarm.beekeeper.db import database
+from beeswarm.beekeeper.db.entities import Feeder, Hive
+from beeswarm.beekeeper.db.entities import Classification, Session, Honeybee
 from beeswarm.beekeeper.classifier.classifier import Classifier
 
 
 class ClassifierTests(unittest.TestCase):
     def setUp(self):
+        database.setup_db('sqlite://')
+
         self.feeder_id = str(uuid.uuid4())
         self.hive_id = str(uuid.uuid4())
         self.honeybee_id = str(uuid.uuid4())
         self.honeybee_datetime = datetime.utcnow()
 
+        db_session = database.get_session()
         self.feeder = Feeder(id=self.feeder_id)
         self.hive = Hive(id=self.hive_id)
-        self.honeybee = Honeybee(id=self.honeybee_id, username='a', password='a', source_ip='321', destination_ip='123',
-                                 received=datetime.utcnow(), timestamp=self.honeybee_datetime, protocol='pop3',
-                                 source_port=1,
-                                 destination_port=1, did_complete=True, feeder=self.feeder, hive=self.hive)
-
-        #all session stored here will get deleted on each testrun
-        self.tmp_sessions = []
-
-        commit()
+        honeybee = Honeybee(id=self.honeybee_id, username='a', password='a', source_ip='321', destination_ip='123',
+                            received=datetime.utcnow(), timestamp=self.honeybee_datetime, protocol='pop3',
+                            source_port=1,
+                            destination_port=1, did_complete=True, feeder=self.feeder, hive=self.hive)
+        db_session.add_all([self.feeder, self.hive, honeybee])
+        db_session.commit()
+        db_session.expunge_all()
 
     def tearDown(self):
-        #delete test-case specific data
-        for e in self.tmp_sessions:
-            e.delete()
-        self.hive.delete()
-        self.honeybee.delete()
-        commit()
+        database.clear_db()
 
     def test_matching_session(self):
         """
         Test if the get_matching_session method returns the session which matches a given honeybee.
         """
 
+        db_session = database.get_session()
+        honeybee = db_session.query(Honeybee).filter(Honeybee.id == self.honeybee_id).one()
+
         #session2 is the matching session
         for id, offset in (('session1', -15), ('session2', 3), ('session3', 15)):
             s = Session(id=id, username='a', password='a', source_ip='321', destination_ip='123',
-                        received=datetime.utcnow(), timestamp=self.honeybee.timestamp + timedelta(seconds=offset),
+                        received=datetime.utcnow(), timestamp=honeybee.timestamp + timedelta(seconds=offset),
                         protocol='pop3', source_port=1, destination_port=1, hive=self.hive)
-            self.tmp_sessions.append(s)
-        commit()
+            db_session.add(s)
+        db_session.commit()
 
         c = Classifier()
-        result = c.get_matching_session(self.honeybee)
+        result = c.get_matching_session(honeybee)
         self.assertEqual('session2', result.id)
 
     def test_correlation_honeybee_session(self):
@@ -81,50 +72,45 @@ class ClassifierTests(unittest.TestCase):
         We expect the honeybee entity to be classified as a legit (successfully completed) 'honeybee' and that the hive
         session is deleted.
         """
-        database_config.clear_db()
 
         #setup the hive session we expect to match the honeybee
+        db_session = database.get_session()
         s_id = str(uuid.uuid4())
-
         s = Session(id=s_id, username='a', password='b', source_ip='321', destination_ip='123',
                     received=datetime.now(), timestamp=self.honeybee_datetime - timedelta(seconds=2),
                     protocol='pop3', source_port=1, destination_port=1, hive=self.hive)
-        self.tmp_sessions.append(s)
-        commit()
+        db_session.add(s)
+        db_session.commit()
 
         c = Classifier()
         c.classify_honeybees(0)
 
-        honeybee = Honeybee.get(id=self.honeybee_id)
-        session = Honeybee.get(id=s_id)
+        honeybee = db_session.query(Honeybee).filter(Honeybee.id == self.honeybee_id).one()
+        session = db_session.query(Session).filter(Session.id == s_id).first()
 
         #test that the honeybee got classified
-        self.assertTrue(honeybee.classification == Classification.get(type='honeybee'))
+        self.assertTrue(
+            honeybee.classification == db_session.query(Classification).filter(Classification.type == 'honeybee').one())
         #test that the hive session got deleted
         self.assertIsNone(session)
-
-
-
 
     def test_classify_sessions_bruteforce(self):
         """
         Test if 'standalone' sessions older than X seconds get classified as brute-force attempts.
         """
-        database_config.clear_db()
-        for id, offset in (('session1', -30), ('session2', -10), ('session3', -2)):
+
+        db_session = database.get_session()
+        for id, offset in (('session99', -30), ('session88', -10), ('session77', -2)):
             s = Session(id=id, username='b', password='b', source_ip='321', destination_ip='123',
                         received=datetime.utcnow(), timestamp=datetime.utcnow() + timedelta(seconds=offset),
                         protocol='pop3', source_port=1, destination_port=1, hive=self.hive)
-            self.tmp_sessions.append(s)
-        commit()
+            db_session.add(s)
+        db_session.commit()
 
         c = Classifier()
         c.classify_sessions(5)
-        commit()
 
-        result = select(a for a in Session if a.classtype == 'Session' and
-                                              a.classification == Classification.get(type='malicious_brute'))
-
+        result = db_session.query(Session).filter(Session.classification_id == 'malicious_brute').all()
         #we expect the resultset to contain session1 and session2
         self.assertEquals(len(result), 2)
 
