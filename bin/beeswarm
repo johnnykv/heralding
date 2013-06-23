@@ -16,18 +16,20 @@
 
 import logging
 from argparse import ArgumentParser
+import shutil
 import sys
 import os
-from ConfigParser import NoSectionError, NoOptionError
 
 import gevent
 import gevent.monkey
 from gevent import Greenlet
+import beeswarm
 
 from beeswarm.hive.hive import Hive
 from beeswarm.beekeeper.beekeeper import Beekeeper
 from beeswarm.feeder.feeder import Feeder
 from beeswarm.errors import ConfigNotFound
+from beeswarm.shared.helpers import is_url
 
 
 gevent.monkey.patch_all()
@@ -74,7 +76,6 @@ if __name__ == '__main__':
     group.add_argument('-fe', '--feeder', action='store_true', help='Starts beeswarm in feeder mode.')
     group.add_argument('-be', '--beekeeper', action='store_true', help='Starts beeswarm in beekeeper mode.')
 
-    parser.add_argument('--prepare', action='store_true', default=False)
     parser.add_argument('--config', dest='configarg', help='Name of the config file or URL if configured remotely')
     parser.add_argument('--workdir', dest='workdir', default=os.getcwd())
     parser.add_argument('--logfile', dest='logfile', default='beeswarm.log')
@@ -86,19 +87,30 @@ if __name__ == '__main__':
     mode = None
     if args.hive:
         mode = Hive
-    elif args.feeder:
-        mode = Feeder
-    elif args.beekeeper:
-        mode = Beekeeper
-
-    try:
-        if args.prepare:
+        if args.configarg and is_url(args.configarg):
+            #We have a new Hive being used.
             try:
                 mode.prepare_environment(args.workdir)
             except OSError as ex:
                 logger.error('Error while preparing work directory, please make sure '
                              'the work directory is empty. ({0})'.format(ex))
                 sys.exit(1)
+
+    elif args.feeder:
+        mode = Feeder
+    elif args.beekeeper:
+        mode = Beekeeper
+        if not args.configarg:
+            # User hasn't specified a config file, so check if the default exists.
+            # if not, copy the default file to the work-dir
+            package_directory = os.path.dirname(os.path.abspath(beeswarm.__file__))
+            config_file = os.path.join(args.workdir, 'beekeeper.cfg')
+            if not os.path.isfile(config_file):
+                logging.info('Copying configuration file to workdir.')
+                shutil.copyfile(os.path.join(package_directory, 'beekeeper/beekeeper.cfg.dist'),
+                                os.path.join(args.workdir, 'beekeeper.cfg'))
+
+    try:
         if args.configarg:
             m = mode(args.workdir, config_arg=args.configarg)
         else:
