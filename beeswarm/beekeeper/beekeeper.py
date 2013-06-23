@@ -42,13 +42,13 @@ class Beekeeper(object):
         self.app = app.app
 
         session = database.get_session()
-        userid = "".join([random.choice(string.letters[:26]) for i in xrange(5)])
-        password = "".join([random.choice(string.letters[:26]) for i in xrange(4)])
+        userid = 'admin'
+        password = ''.join([random.choice(string.letters[:26]) for i in xrange(4)])
         u = User(id=userid, nickname='admin', password=password)
         session.add(u)
         session.commit()
-        logging.info('Created default admin account for the BeeKeeper. '
-                     'Username: "{0}", Password: "{1}"'.format(userid, password))
+        logging.info('Created default admin account for the BeeKeeper.')
+        print 'Default password for the admin account is: {0}'.format(password)
 
     def start(self, port=5000):
         #management interface
@@ -81,4 +81,3 @@ class Beekeeper(object):
             logging.info('Copying configuration file to workdir.')
             shutil.copyfile(os.path.join(package_directory, 'beekeeper/beekeeper.cfg.dist'),
                             os.path.join(work_dir, 'beekeeper.cfg'))
-
