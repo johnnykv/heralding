@@ -460,15 +460,6 @@ def data_sessions_attacks():
     return json.dumps(table_data)
 
 
-@app.route('/adduser', methods=['GET'])
-def adduser():
-    session = database.get_session()
-    u = User(id='admin', nickname='admin', password='test')
-    session.add(u)
-    session.commit()
-    return 'User Added'
-
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()

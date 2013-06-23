@@ -22,6 +22,7 @@ import gevent
 from gevent.wsgi import WSGIServer
 import beeswarm
 from beeswarm.beekeeper.db import database
+from beeswarm.beekeeper.db.entities import User
 from beeswarm.beekeeper.webapp import app
 
 logger = logging.getLogger(__name__)
@@ -37,6 +38,12 @@ class Beekeeper(object):
 
         database.setup_db(os.path.join(self.config.get('sql', 'connection_string')))
         self.app = app.app
+
+        session = database.get_session()
+        u = User(id='admin', nickname='admin', password='test')
+        session.add(u)
+        session.commit()
+        logging.info('Created default admin account for the BeeKeeper. Username: "admin", Password: "test"')
 
     def start(self, port=5000):
         #management interface
