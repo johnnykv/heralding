@@ -36,18 +36,26 @@
             {% endblock pageheading %}
             {% block navbar %}
                 <div class="navbar">
-                    <div class="btn-toolbar" style="margin: 0;">
-                        <button class="btn"><i class="icon-home"></i> Home</button>
-                        <div class="btn-group">
-                            <button class="btn"><i class="icon-plus"></i> Hive</button>
-                            <button class="btn"><i class="icon-plus"></i> Feeder</button>
-                        </div>
-                        <div class="btn-group">
-                            <button class="btn"><i class="icon-list"></i> All Sessions</button>
-                            <button class="btn"><i class="icon-exclamation"></i> Attacks</button>
-                            <button class="btn"><i class="icon-ok"></i> HoneyBees</button>
-
-                        </div>
+                    <div class="navbar-inner">
+                        <ul class="nav">
+                            <li><a href="/"><i class="icon-home"></i> Home</a></li>
+                            <li class="divider-vertical"></li>
+                            <li><a href="#"><i class="icon-plus"></i> Hive</a></li>
+                            <li><a href="#"><i class="icon-plus"></i> Feeder</a></li>
+                            <li class="divider-vertical"></li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                    <i class="icon-list"></i> Sessions
+                                    <b class="caret"></b>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a href="#">All</a></li>
+                                    <li><a href="#">Attacks</a></li>
+                                    <li><a href="#">HoneyBees</a></li>
+                                </ul>
+                            </li>
+                            <li class="divider-vertical"></li>
+                        </ul>
                     </div>
                 </div>
             {% endblock navbar %}

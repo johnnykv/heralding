@@ -17,11 +17,13 @@ from datetime import datetime
 import json
 import logging
 import uuid
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, flash
+from flask.ext.login import LoginManager, login_user, current_user, login_required, logout_user
+from sqlalchemy.orm.exc import NoResultFound
 from wtforms import HiddenField
 from forms import NewHiveConfigForm, NewFeederConfigForm, LoginForm
 from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Hive, Classification
+from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Hive, Classification, User
 
 
 def is_hidden_field_filter(field):
@@ -32,22 +34,42 @@ app.config['DEBUG'] = True
 app.config['CSRF_ENABLED'] = True
 app.config['SECRET_KEY'] = 'beeswarm-is-awesome'
 app.jinja_env.filters['bootstrap_is_hidden_field'] = is_hidden_field_filter
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+
+@login_manager.user_loader
+def user_loader(userid):
+    userid = userid.encode('utf-8')
+    db_session = database.get_session()
+    user = None
+    try:
+        user = db_session.query(User).filter(User.id == userid).one()
+    except NoResultFound:
+        pass
+    return user
+
 logger = logging.getLogger(__name__)
 
 
 @app.route('/')
+@login_required
 def home():
-    return render_template('index.html')
+    return render_template('index.html', user=current_user)
 
 
 @app.route('/sessions')
+@login_required
 def sessions_all():
     db_session = database.get_session()
     sessions = db_session.query(Session).all()
-    return render_template('logs.html', sessions=sessions, logtype='All')
+    return render_template('logs.html', sessions=sessions, logtype='All', user=current_user)
 
 
 @app.route('/sessions/honeybees')
+@login_required
 def sessions_honeybees():
     db_session = database.get_session()
     honeybees = db_session.query(Honeybee).all()
@@ -55,6 +77,7 @@ def sessions_honeybees():
 
 
 @app.route('/sessions/attacks')
+@login_required
 def sessions_attacks():
     db_session = database.get_session()
     attacks = db_session.query(Session).filter(Session.classification_id != 'honeybee' and
@@ -75,22 +98,23 @@ def feeder_data():
     #_hive = Hive.get(id=data['hive_id'])
     _hive = session.query(Hive).filter(Hive.id == data['hive_id']).one()
 
-    h = Honeybee(id=data['id'],
-             timestamp=datetime.strptime(data['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
-             received=datetime.utcnow(),
-             protocol=data['protocol'],
-             username=data['login'],
-             password=data['password'],
-             destination_ip=data['server_host'],
-             destination_port=data['server_port'],
-             source_ip=data['source_ip'],
-             source_port=data['source_port'],
-             did_connect=data['did_connect'],
-             did_login=data['did_login'],
-             did_complete=data['did_complete'],
-             feeder=_feeder,
-             hive=_hive
-             )
+    h = Honeybee(
+        id=data['id'],
+        timestamp=datetime.strptime(data['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
+        received=datetime.utcnow(),
+        protocol=data['protocol'],
+        username=data['login'],
+        password=data['password'],
+        destination_ip=data['server_host'],
+        destination_port=data['server_port'],
+        source_ip=data['source_ip'],
+        source_port=data['source_port'],
+        did_connect=data['did_connect'],
+        did_login=data['did_login'],
+        did_complete=data['did_complete'],
+        feeder=_feeder,
+        hive=_hive
+    )
 
     session.add(h)
     session.commit()
@@ -110,18 +134,19 @@ def hive_data():
     #create if not found in the database
 
     for login_attempt in data['login_attempts']:
-        s = Session(id=login_attempt['id'],
-                timestamp=datetime.strptime(login_attempt['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
-                received=datetime.utcnow(),
-                protocol=data['protocol'],
-                #TODO: not all capabilities delivers login/passwords. This needs to be subclasses...
-                username=login_attempt['username'],
-                password=login_attempt['password'],
-                destination_ip='aaa',
-                destination_port=data['honey_port'],
-                source_ip=data['attacker_ip'],
-                source_port=data['attacker_source_port'],
-                hive=_hive)
+        s = Session(
+            id=login_attempt['id'],
+            timestamp=datetime.strptime(login_attempt['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
+            received=datetime.utcnow(),
+            protocol=data['protocol'],
+            #TODO: not all capabilities delivers login/passwords. This needs to be subclasses...
+            username=login_attempt['username'],
+            password=login_attempt['password'],
+            destination_ip='aaa',
+            destination_port=data['honey_port'],
+            source_ip=data['attacker_ip'],
+            source_port=data['attacker_source_port'],
+            hive=_hive)
         session.add(s)
     session.commit()
 
@@ -143,6 +168,7 @@ def get_feeder_config(feeder_id):
 
 
 @app.route('/ws/hive', methods=['GET', 'POST'])
+@login_required
 def create_hive():
     form = NewHiveConfigForm()
     new_hive_id = str(uuid.uuid4())
@@ -233,6 +259,7 @@ def create_hive():
 
 
 @app.route('/ws/feeder', methods=['GET', 'POST'])
+@login_required
 def create_feeder():
     form = NewFeederConfigForm()
     new_feeder_id = str(uuid.uuid4())
@@ -342,6 +369,7 @@ def data_sessions_all():
 
     return json.dumps(table_data)
 
+
 @app.route('/data/sessions/honeybees', methods=['GET', 'POST'])
 def data_sessions_bees():
     db_session = database.get_session()
@@ -384,6 +412,7 @@ def data_sessions_bees():
                'password': b.password, 'ip_address': b.source_ip}
         table_data['rows'].append(row)
     return json.dumps(table_data)
+
 
 @app.route('/data/sessions/attacks', methods=['GET', 'POST'])
 def data_sessions_attacks():
@@ -430,10 +459,39 @@ def data_sessions_attacks():
 
     return json.dumps(table_data)
 
-@app.route('/login')
+
+@app.route('/adduser', methods=['GET'])
+def adduser():
+    session = database.get_session()
+    u = User(id='admin', nickname='admin', password='test')
+    session.add(u)
+    session.commit()
+    return 'User Added'
+
+
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
+    if form.validate_on_submit():
+        db_session = database.get_session()
+        user = None
+        try:
+            user = db_session.query(User).filter(User.id == form.username.data).one()
+        except NoResultFound:
+            pass
+        if user and form.password.data == 'test':
+            login_user(user)
+            flash('Logged in successfully')
+            return redirect(request.args.get("next") or '/')
     return render_template('login.html', form=form)
+
+
+@app.route('/logout', methods=['GET'])
+@login_required
+def logout():
+    logout_user()
+    flash('Logged out succesfully')
+    return redirect('/login')
 
 if __name__ == '__main__':
     app.run()
