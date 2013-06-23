@@ -40,7 +40,8 @@
           enctype="{{ enctype }}"{% endif %}>
         <fieldset>
             {% if legend %}
-                <legend>{{ legend }}</legend>{% endif %}
+                <legend>{{ legend }}</legend>
+            {% endif %}
             {{ form.hidden_tag() }}
             {{ form_errors(form, 'only') }}
             {%- for field in form %}

@@ -73,7 +73,7 @@ def sessions_all():
 def sessions_honeybees():
     db_session = database.get_session()
     honeybees = db_session.query(Honeybee).all()
-    return render_template('logs.html', sessions=honeybees, logtype='HoneyBees')
+    return render_template('logs.html', sessions=honeybees, logtype='HoneyBees', user=current_user)
 
 
 @app.route('/sessions/attacks')
@@ -82,7 +82,7 @@ def sessions_attacks():
     db_session = database.get_session()
     attacks = db_session.query(Session).filter(Session.classification_id != 'honeybee' and
                                                Session.classification_id is not None).all()
-    return render_template('logs.html', sessions=attacks, logtype='Attacks')
+    return render_template('logs.html', sessions=attacks, logtype='Attacks', user=current_user)
 
 
 @app.route('/ws/feeder_data', methods=['POST'])
@@ -255,7 +255,7 @@ def create_hive():
         db_session.commit()
         return 'http://localhost:5000/ws/hive/config/' + new_hive_id
 
-    return render_template('create-config.html', form=form, mode_name='Hive')
+    return render_template('create-config.html', form=form, mode_name='Hive', user=current_user)
 
 
 @app.route('/ws/feeder', methods=['GET', 'POST'])
@@ -322,7 +322,7 @@ def create_feeder():
 
         return 'http://localhost:5000/ws/feeder/config/' + new_feeder_id
 
-    return render_template('create-config.html', form=form, mode_name='Feeder')
+    return render_template('create-config.html', form=form, mode_name='Feeder', user=current_user)
 
 
 @app.route('/data/sessions/all', methods=['GET', 'POST'])
