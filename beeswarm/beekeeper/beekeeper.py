@@ -15,13 +15,16 @@
 
 import logging
 import os
+import random
 import shutil
 from ConfigParser import ConfigParser
+import string
 
 import gevent
 from gevent.wsgi import WSGIServer
 import beeswarm
 from beeswarm.beekeeper.db import database
+from beeswarm.beekeeper.db.entities import User
 from beeswarm.beekeeper.webapp import app
 
 logger = logging.getLogger(__name__)
@@ -37,6 +40,15 @@ class Beekeeper(object):
 
         database.setup_db(os.path.join(self.config.get('sql', 'connection_string')))
         self.app = app.app
+
+        session = database.get_session()
+        userid = 'admin'
+        password = ''.join([random.choice(string.letters[:26]) for i in xrange(4)])
+        u = User(id=userid, nickname='admin', password=password)
+        session.add(u)
+        session.commit()
+        logging.info('Created default admin account for the BeeKeeper.')
+        print 'Default password for the admin account is: {0}'.format(password)
 
     def start(self, port=5000):
         #management interface
@@ -69,4 +81,3 @@ class Beekeeper(object):
             logging.info('Copying configuration file to workdir.')
             shutil.copyfile(os.path.join(package_directory, 'beekeeper/beekeeper.cfg.dist'),
                             os.path.join(work_dir, 'beekeeper.cfg'))
-
