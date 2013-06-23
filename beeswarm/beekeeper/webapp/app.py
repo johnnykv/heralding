@@ -48,7 +48,7 @@ def user_loader(userid):
     try:
         user = db_session.query(User).filter(User.id == userid).one()
     except NoResultFound:
-        pass
+        logging.info('Attempt to load non-existent user: {0}'.format(userid))
     return user
 
 logger = logging.getLogger(__name__)
