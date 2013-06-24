@@ -470,7 +470,7 @@ def login():
             user = db_session.query(User).filter(User.id == form.username.data).one()
         except NoResultFound:
             pass
-        if user and form.password.data == 'test':
+        if user and form.password.data == user.password:
             login_user(user)
             flash('Logged in successfully')
             return redirect(request.args.get("next") or '/')
