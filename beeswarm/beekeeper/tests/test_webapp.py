@@ -4,24 +4,32 @@ import unittest
 from datetime import datetime
 
 import gevent.monkey
+from beeswarm.beekeeper.webapp.auth import Authenticator
+from beeswarm.shared.helpers import is_url
+
 gevent.monkey.patch_all()
 
 
 from beeswarm.beekeeper.db import database
 from beeswarm.beekeeper.db.entities import Feeder, Hive
 from beeswarm.beekeeper.webapp import app
+app.app.config['CSRF_ENABLED'] = False
 
 
 class WebappTests(unittest.TestCase):
     def setUp(self):
         self.app = app.app.test_client()
+        self.authenticator = Authenticator()
+
         database.setup_db('sqlite://')
         session = database.get_session()
+
         #setup dummy entities
-        self.feeder_id =  str(uuid.uuid4())
-        feeder = Feeder(id=self.feeder_id)
+        self.authenticator.add_user('test', 'test', 'Nick Name')
+        self.feeder_id = str(uuid.uuid4())
+        feeder = Feeder(id=self.feeder_id, configuration='test_feeder_config')
         self.hive_id = str(uuid.uuid4())
-        hive = Hive(id=self.hive_id)
+        hive = Hive(id=self.hive_id, configuration='test_hive_config')
         session.add_all([feeder, hive])
         session.commit()
 
@@ -78,7 +86,7 @@ class WebappTests(unittest.TestCase):
 
         self.app.post('/ws/hive_data', data=json.dumps(data_dict), content_type='application/json')
 
-    def test_new_feeder_configuration(self):
+    def test_new_feeder(self):
         """
         Tests if a new Feeder configuration can be posted successfully
         """
@@ -119,9 +127,13 @@ class WebappTests(unittest.TestCase):
             'telnet_login': 'test',
             'telnet_password': 'test',
         }
-        self.app.post('/ws/feeder', data=post_data)
+        self.login('test', 'test')
+        resp = self.app.post('/ws/feeder', data=post_data)
+        self.assertTrue(is_url(resp.data))
+        self.assertTrue('/ws/feeder/config/' in resp.data)
+        self.logout()
 
-    def test_new_hive_configuration(self):
+    def test_new_hive(self):
         """
         Tests whether new Hive configuration can be posted successfully.
         """
@@ -162,8 +174,33 @@ class WebappTests(unittest.TestCase):
             'ssh_port': 22,
             'ssh_key': 'server.key'
         }
-        self.app.post('/ws/hive', data=post_data)
+        self.login('test', 'test')
+        resp = self.app.post('/ws/hive', data=post_data)
+        self.assertTrue(is_url(resp.data))
+        self.assertTrue('/ws/hive/config/' in resp.data)
+        self.logout()
 
+    def test_new_hive_config(self):
+        """ Tests if a Hive config is being returned correctly """
+
+        resp = self.app.get('/ws/hive/config/' + self.hive_id)
+        self.assertEquals(resp.data, 'test_hive_config')
+
+    def test_new_feeder_config(self):
+        """ Tests if a Feeder config is being returned correctly """
+
+        resp = self.app.get('/ws/feeder/config/' + self.feeder_id)
+        self.assertEquals(resp.data, 'test_feeder_config')
+
+    def login(self, username, password):
+        data = {
+            'username': username,
+            'password': password
+        }
+        return self.app.post('/login', data=data, follow_redirects=True)
+
+    def logout(self):
+        return self.app.get('/logout', follow_redirects=True)
 
 if __name__ == '__main__':
     unittest.main()

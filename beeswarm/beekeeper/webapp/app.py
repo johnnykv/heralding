@@ -469,7 +469,7 @@ def login():
         try:
             user = db_session.query(User).filter(User.id == form.username.data).one()
         except NoResultFound:
-            pass
+            logging.info('Attempt to log in as non-existant user: {0}'.format(form.username.data))
         if user and form.password.data == user.password:
             login_user(user)
             flash('Logged in successfully')

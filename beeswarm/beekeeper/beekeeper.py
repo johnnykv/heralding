@@ -15,17 +15,16 @@
 
 import logging
 import os
-import random
 import shutil
 from ConfigParser import ConfigParser
-import string
 
 import gevent
-from gevent.wsgi import WSGIServer
 import beeswarm
+from gevent.wsgi import WSGIServer
+from sqlalchemy.exc import IntegrityError
 from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import User
 from beeswarm.beekeeper.webapp import app
+from beeswarm.beekeeper.webapp.auth import Authenticator
 
 logger = logging.getLogger(__name__)
 
@@ -41,14 +40,11 @@ class Beekeeper(object):
         database.setup_db(os.path.join(self.config.get('sql', 'connection_string')))
         self.app = app.app
 
-        session = database.get_session()
-        userid = 'admin'
-        password = ''.join([random.choice(string.letters[:26]) for i in xrange(4)])
-        u = User(id=userid, nickname='admin', password=password)
-        session.add(u)
-        session.commit()
-        logging.info('Created default admin account for the BeeKeeper.')
-        print 'Default password for the admin account is: {0}'.format(password)
+        self.authenticator = Authenticator()
+        try:
+            self.authenticator.add_default_user()
+        except IntegrityError:
+            logging.info('Default user exists, won\'t add another.')
 
     def start(self, port=5000):
         #management interface
