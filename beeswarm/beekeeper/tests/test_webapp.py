@@ -6,12 +6,12 @@ from datetime import datetime
 import gevent.monkey
 from beeswarm.beekeeper.webapp.auth import Authenticator
 from beeswarm.shared.helpers import is_url
-
+from werkzeug.security import check_password_hash
 gevent.monkey.patch_all()
 
 
 from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Feeder, Hive
+from beeswarm.beekeeper.db.entities import Feeder, Hive, User
 from beeswarm.beekeeper.webapp import app
 app.app.config['CSRF_ENABLED'] = False
 
@@ -191,6 +191,10 @@ class WebappTests(unittest.TestCase):
 
         resp = self.app.get('/ws/feeder/config/' + self.feeder_id)
         self.assertEquals(resp.data, 'test_feeder_config')
+
+    def test_login_logout(self):
+        self.login('test', 'test')
+        self.logout()
 
     def login(self, username, password):
         data = {

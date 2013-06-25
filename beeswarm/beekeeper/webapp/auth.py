@@ -17,6 +17,7 @@ import random
 import string
 from beeswarm.beekeeper.db import database
 from beeswarm.beekeeper.db.entities import User
+from werkzeug.security import generate_password_hash
 
 
 class Authenticator(object):
@@ -26,7 +27,8 @@ class Authenticator(object):
         session = database.get_session()
         userid = 'admin'
         password = ''.join([random.choice(string.letters[:26]) for i in xrange(4)])
-        u = User(id=userid, nickname='admin', password=password)
+        pw_hash = generate_password_hash(password)
+        u = User(id=userid, nickname='admin', password=pw_hash)
         session.add(u)
         session.commit()
         logging.info('Created default admin account for the BeeKeeper.')
@@ -35,7 +37,8 @@ class Authenticator(object):
     def add_user(self, username, password, nickname=''):
         session = database.get_session()
         userid = username
-        u = User(id=userid, nickname=nickname, password=password)
+        pw_hash = generate_password_hash(password)
+        u = User(id=userid, nickname=nickname, password=pw_hash)
         session.add(u)
         session.commit()
 

@@ -20,10 +20,11 @@ import uuid
 from flask import Flask, render_template, request, redirect, flash
 from flask.ext.login import LoginManager, login_user, current_user, login_required, logout_user
 from sqlalchemy.orm.exc import NoResultFound
+from werkzeug.security import check_password_hash
 from wtforms import HiddenField
 from forms import NewHiveConfigForm, NewFeederConfigForm, LoginForm
 from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Hive, Classification, User
+from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Hive, User
 
 
 def is_hidden_field_filter(field):
@@ -470,8 +471,9 @@ def login():
             user = db_session.query(User).filter(User.id == form.username.data).one()
         except NoResultFound:
             logging.info('Attempt to log in as non-existant user: {0}'.format(form.username.data))
-        if user and form.password.data == user.password:
+        if user and check_password_hash(user.password, form.password.data):
             login_user(user)
+            logging.info('User {0} logged in.'.format(user.id))
             flash('Logged in successfully')
             return redirect(request.args.get("next") or '/')
     return render_template('login.html', form=form)
