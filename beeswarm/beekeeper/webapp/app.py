@@ -479,6 +479,43 @@ def login():
     return render_template('login.html', form=form)
 
 
+@app.route('/export/sessions/all', methods=['GET', 'POST'])
+def export_sessions_all():
+    db_session = database.get_session()
+    sessions = db_session.query(Session).all()
+    rows = []
+    for s in sessions:
+        row = {'time': s.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': s.protocol, 'username': s.username,
+               'password': s.password, 'ip_address': s.source_ip}
+        rows.append(row)
+    return json.dumps(rows)
+
+
+@app.route('/export/sessions/honeybees', methods=['GET', 'POST'])
+def export_sessions_bees():
+    db_session = database.get_session()
+    honeybees = db_session.query(Honeybee).all()
+    rows = []
+    for b in honeybees:
+        row = {'time': b.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': b.protocol, 'username': b.username,
+               'password': b.password, 'ip_address': b.source_ip}
+        rows.append(row)
+    return json.dumps(rows)
+
+
+@app.route('/export/sessions/attacks', methods=['GET', 'POST'])
+def export_sessions_attacks():
+    db_session = database.get_session()
+    attacks = db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+                                               Session.classification_id is not None).all()
+    rows = []
+    for a in attacks:
+        row = {'time': a.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': a.protocol, 'username': a.username,
+               'password': a.password, 'ip_address': a.source_ip}
+        rows.append(row)
+
+    return json.dumps(rows)
+
 @app.route('/logout', methods=['GET'])
 @login_required
 def logout():

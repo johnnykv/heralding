@@ -11,7 +11,7 @@ gevent.monkey.patch_all()
 
 
 from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Feeder, Hive, User
+from beeswarm.beekeeper.db.entities import Feeder, Hive, User, Session, Honeybee
 from beeswarm.beekeeper.webapp import app
 app.app.config['CSRF_ENABLED'] = False
 
@@ -192,6 +192,44 @@ class WebappTests(unittest.TestCase):
         resp = self.app.get('/ws/feeder/config/' + self.feeder_id)
         self.assertEquals(resp.data, 'test_feeder_config')
 
+    def test_data_sessions_all(self):
+        """ Tests if all sessions are returned properly"""
+        self.populate_sessions()
+        resp = self.app.get('/data/sessions/all')
+        table_data = json.loads(resp.data)
+        self.assertEquals(len(table_data['rows']), 4)
+
+    def test_data_sessions_honeybees(self):
+        self.populate_honeybees()
+        resp = self.app.get('/data/sessions/honeybees')
+        table_data = json.loads(resp.data)
+        self.assertEquals(len(table_data['rows']), 3)
+
+    def test_data_sessions_attacks(self):
+        self.populate_sessions()
+        resp = self.app.get('/data/sessions/attacks')
+        table_data = json.loads(resp.data)
+        self.assertEquals(len(table_data['rows']), 4)
+
+    def test_export_sessions_all(self):
+        """ Tests if all sessions are returned properly"""
+        self.populate_sessions()
+        resp = self.app.get('/export/sessions/all')
+        data = json.loads(resp.data)
+        self.assertEquals(len(data), 4)
+
+    def test_export_sessions_honeybees(self):
+        self.populate_honeybees()
+        resp = self.app.get('/export/sessions/honeybees')
+        data = json.loads(resp.data)
+        self.assertEquals(len(data), 3)
+
+    def test_export_sessions_attacks(self):
+        self.populate_sessions()
+        resp = self.app.get('/export/sessions/attacks')
+        data = json.loads(resp.data)
+        self.assertEquals(len(data), 4)
+
     def test_login_logout(self):
         self.login('test', 'test')
         self.logout()
@@ -202,6 +240,46 @@ class WebappTests(unittest.TestCase):
             'password': password
         }
         return self.app.post('/login', data=data, follow_redirects=True)
+
+    def populate_honeybees(self):
+        db_session = database.get_session()
+        for i in xrange(3):
+            h = Honeybee(
+                id='test_' + str(i),
+                timestamp=datetime.utcnow(),
+                received=datetime.utcnow(),
+                protocol='ssh',
+                username='uuu',
+                password='vvvv',
+                destination_ip='1.2.3.4',
+                destination_port=1234,
+                source_ip='4.3.2.1',
+                source_port=4321,
+                did_connect=True,
+                did_login=False,
+                did_complete=True
+            )
+            db_session.add(h)
+        db_session.commit()
+
+    def populate_sessions(self):
+        db_session = database.get_session()
+        for i in xrange(4):
+            s = Session(
+                id='test_' + str(i),
+                timestamp=datetime.utcnow(),
+                received=datetime.utcnow(),
+                protocol='telnet',
+                username='aaa',
+                password='bbb',
+                destination_ip='123.123.123.123',
+                destination_port=1234,
+                source_ip='12.12.12.12',
+                source_port=12345,
+                classification_id='asd'
+            )
+            db_session.add(s)
+        db_session.commit()
 
     def logout(self):
         return self.app.get('/logout', follow_redirects=True)
