@@ -196,19 +196,19 @@ class WebappTests(unittest.TestCase):
         self.populate_sessions()
         resp = self.app.get('/data/sessions/all')
         table_data = json.loads(resp.data)
-        self.assertEquals(len(table_data['rows']), 4)
+        self.assertEquals(len(table_data), 4)
 
     def test_data_sessions_honeybees(self):
         self.populate_honeybees()
         resp = self.app.get('/data/sessions/honeybees')
         table_data = json.loads(resp.data)
-        self.assertEquals(len(table_data['rows']), 3)
+        self.assertEquals(len(table_data), 3)
 
     def test_data_sessions_attacks(self):
         self.populate_sessions()
         resp = self.app.get('/data/sessions/attacks')
         table_data = json.loads(resp.data)
-        self.assertEquals(len(table_data['rows']), 4)
+        self.assertEquals(len(table_data), 4)
 
     def test_login_logout(self):
         self.login('test', 'test')

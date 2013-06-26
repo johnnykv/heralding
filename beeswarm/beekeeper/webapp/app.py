@@ -17,7 +17,7 @@ from datetime import datetime
 import json
 import logging
 import uuid
-from flask import Flask, render_template, request, redirect, flash
+from flask import Flask, render_template, request, redirect, flash, Response
 from flask.ext.login import LoginManager, login_user, current_user, login_required, logout_user
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.security import check_password_hash
@@ -330,136 +330,39 @@ def create_feeder():
 def data_sessions_all():
     db_session = database.get_session()
     sessions = db_session.query(Session).all()
-    table_data = {
-        'rows': [],
-        'cols': {
-            'time': {
-                'index': 1,
-                'type': 'string',
-                'friendly': 'Time',
-                'sortOrder': 'desc'
-            },
-
-            'protocol': {
-                'index': 2,
-                'type': 'string',
-                'friendly': 'Protocol'
-            },
-            'username': {
-                'index': 3,
-                'type': 'string',
-                'friendly': 'Username'
-            },
-            'password': {
-                'index': 4,
-                'type': 'string',
-                'friendly': 'Password'
-            },
-            'ip_address': {
-                'index': 5,
-                'type': 'string',
-                'friendly': 'IP Address'
-            }
-        }
-    }
-
+    rows = []
     for s in sessions:
         row = {'time': s.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': s.protocol, 'username': s.username,
                'password': s.password, 'ip_address': s.source_ip}
-        table_data['rows'].append(row)
-
-    return json.dumps(table_data)
+        rows.append(row)
+    rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
+    return rsp
 
 
 @app.route('/data/sessions/honeybees', methods=['GET', 'POST'])
 def data_sessions_bees():
     db_session = database.get_session()
     honeybees = db_session.query(Honeybee).all()
-    table_data = {
-        'rows': [],
-        'cols': {
-            'time': {
-                'index': 1,
-                'type': 'string',
-                'friendly': 'Time',
-                'sortOrder': 'desc'
-            },
-
-            'protocol': {
-                'index': 2,
-                'type': 'string',
-                'friendly': 'Protocol'
-            },
-            'username': {
-                'index': 3,
-                'type': 'string',
-                'friendly': 'Username'
-            },
-            'password': {
-                'index': 4,
-                'type': 'string',
-                'friendly': 'Password'
-            },
-            'ip_address': {
-                'index': 5,
-                'type': 'string',
-                'friendly': 'IP Address'
-            }
-        }
-    }
-
+    rows = []
     for b in honeybees:
         row = {'time': b.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': b.protocol, 'username': b.username,
                'password': b.password, 'ip_address': b.source_ip}
-        table_data['rows'].append(row)
-    return json.dumps(table_data)
-
+        rows.append(row)
+    rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
+    return rsp
 
 @app.route('/data/sessions/attacks', methods=['GET', 'POST'])
 def data_sessions_attacks():
     db_session = database.get_session()
     attacks = db_session.query(Session).filter(Session.classification_id != 'honeybee' and
                                                Session.classification_id is not None).all()
-    table_data = {
-        'rows': [],
-        'cols': {
-            'time': {
-                'index': 1,
-                'type': 'string',
-                'friendly': 'Time',
-                'sortOrder': 'desc'
-            },
-
-            'protocol': {
-                'index': 2,
-                'type': 'string',
-                'friendly': 'Protocol'
-            },
-            'username': {
-                'index': 3,
-                'type': 'string',
-                'friendly': 'Username'
-            },
-            'password': {
-                'index': 4,
-                'type': 'string',
-                'friendly': 'Password'
-            },
-            'ip_address': {
-                'index': 5,
-                'type': 'string',
-                'friendly': 'IP Address'
-            }
-        }
-    }
-
+    rows = []
     for a in attacks:
         row = {'time': a.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': a.protocol, 'username': a.username,
                'password': a.password, 'ip_address': a.source_ip}
-        table_data['rows'].append(row)
-
-    return json.dumps(table_data)
-
+        rows.append(row)
+    rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
+    return rsp
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
