@@ -9,16 +9,13 @@
 {% endblock javascript %}
 {% if logtype == 'All' %}
     {% set dataurl = '/data/sessions/all' %}
-    {% set export_url = '/export/sessions/all' %}
 {% elif logtype == 'HoneyBees' %}
     {% set dataurl = '/data/sessions/honeybees' %}
-    {% set export_url = '/export/sessions/honeybees' %}
 {% elif logtype == 'Attacks' %}
     {% set dataurl = '/data/sessions/attacks' %}
-    {% set export_url = '/export/sessions/attacks' %}
 {% endif %}
 {% block content %}
-    <h3>Logs - {{ logtype }} <a class="btn btn-info pull-right" href="{{ export_url }}"><i
+    <h3>Logs - {{ logtype }} <a class="btn btn-info pull-right" href="{{ dataurl }}"><i
             class="icon-download-alt"></i> Export</a></h3>
     <div id="logtable" class="cont"></div>
     <script type="text/javascript">

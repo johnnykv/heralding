@@ -6,12 +6,11 @@ from datetime import datetime
 import gevent.monkey
 from beeswarm.beekeeper.webapp.auth import Authenticator
 from beeswarm.shared.helpers import is_url
-from werkzeug.security import check_password_hash
 gevent.monkey.patch_all()
 
 
 from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Feeder, Hive, User, Session, Honeybee
+from beeswarm.beekeeper.db.entities import Feeder, Hive, Session, Honeybee
 from beeswarm.beekeeper.webapp import app
 app.app.config['CSRF_ENABLED'] = False
 
@@ -211,25 +210,6 @@ class WebappTests(unittest.TestCase):
         table_data = json.loads(resp.data)
         self.assertEquals(len(table_data['rows']), 4)
 
-    def test_export_sessions_all(self):
-        """ Tests if all sessions are returned properly"""
-        self.populate_sessions()
-        resp = self.app.get('/export/sessions/all')
-        data = json.loads(resp.data)
-        self.assertEquals(len(data), 4)
-
-    def test_export_sessions_honeybees(self):
-        self.populate_honeybees()
-        resp = self.app.get('/export/sessions/honeybees')
-        data = json.loads(resp.data)
-        self.assertEquals(len(data), 3)
-
-    def test_export_sessions_attacks(self):
-        self.populate_sessions()
-        resp = self.app.get('/export/sessions/attacks')
-        data = json.loads(resp.data)
-        self.assertEquals(len(data), 4)
-
     def test_login_logout(self):
         self.login('test', 'test')
         self.logout()
@@ -245,7 +225,7 @@ class WebappTests(unittest.TestCase):
         db_session = database.get_session()
         for i in xrange(3):
             h = Honeybee(
-                id='test_' + str(i),
+                id=str(uuid.uuid4()),
                 timestamp=datetime.utcnow(),
                 received=datetime.utcnow(),
                 protocol='ssh',
@@ -266,7 +246,7 @@ class WebappTests(unittest.TestCase):
         db_session = database.get_session()
         for i in xrange(4):
             s = Session(
-                id='test_' + str(i),
+                id=str(uuid.uuid4()),
                 timestamp=datetime.utcnow(),
                 received=datetime.utcnow(),
                 protocol='telnet',

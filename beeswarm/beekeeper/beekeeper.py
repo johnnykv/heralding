@@ -41,10 +41,7 @@ class Beekeeper(object):
         self.app = app.app
 
         self.authenticator = Authenticator()
-        try:
-            self.authenticator.add_default_user()
-        except IntegrityError:
-            logging.info('Default user exists, won\'t add another.')
+        self.authenticator.ensure_default_user()
 
     def start(self, port=5000):
         #management interface

@@ -23,16 +23,18 @@ from werkzeug.security import generate_password_hash
 class Authenticator(object):
     """ Handles BeeKeeper authentications """
 
-    def add_default_user(self):
+    def ensure_default_user(self):
         session = database.get_session()
         userid = 'admin'
-        password = ''.join([random.choice(string.letters[:26]) for i in xrange(4)])
-        pw_hash = generate_password_hash(password)
-        u = User(id=userid, nickname='admin', password=pw_hash)
-        session.add(u)
-        session.commit()
-        logging.info('Created default admin account for the BeeKeeper.')
-        print 'Default password for the admin account is: {0}'.format(password)
+        count = session.query(User).filter(User.id == userid).count()
+        if not count:
+            password = ''.join([random.choice(string.letters[:26]) for i in xrange(4)])
+            pw_hash = generate_password_hash(password)
+            u = User(id=userid, nickname='admin', password=pw_hash)
+            session.add(u)
+            session.commit()
+            logging.info('Created default admin account for the BeeKeeper.')
+            print 'Default password for the admin account is: {0}'.format(password)
 
     def add_user(self, username, password, nickname=''):
         session = database.get_session()
