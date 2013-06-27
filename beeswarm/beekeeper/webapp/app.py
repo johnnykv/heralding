@@ -17,13 +17,14 @@ from datetime import datetime
 import json
 import logging
 import uuid
-from flask import Flask, render_template, request, redirect, flash
+from flask import Flask, render_template, request, redirect, flash, Response
 from flask.ext.login import LoginManager, login_user, current_user, login_required, logout_user
 from sqlalchemy.orm.exc import NoResultFound
+from werkzeug.security import check_password_hash
 from wtforms import HiddenField
 from forms import NewHiveConfigForm, NewFeederConfigForm, LoginForm
 from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Hive, Classification, User
+from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Hive, User
 
 
 def is_hidden_field_filter(field):
@@ -57,7 +58,50 @@ logger = logging.getLogger(__name__)
 @app.route('/')
 @login_required
 def home():
-    return render_template('index.html', user=current_user)
+    db_session = database.get_session()
+    status = {
+        'nhives': db_session.query(Hive).count(),
+        'nfeeders': db_session.query(Feeder).count(),
+        'nsessions': db_session.query(Session).count(),
+        'nbees': db_session.query(Honeybee).count(),
+        'nattacks': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+                                                     Session.classification_id is not None).count(),
+        'attacks': {
+            'http': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+                                                     Session.classification_id is not None and
+                                                     Session.protocol == 'http').count(),
+            'vnc': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+                                                    Session.classification_id is not None and
+                                                    Session.protocol == 'vnc').count(),
+            'ssh': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+                                                    Session.classification_id is not None and
+                                                    Session.protocol == 'ssh').count(),
+            'ftp': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+                                                    Session.classification_id is not None and
+                                                    Session.protocol == 'ftp').count(),
+            'https': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+                                                      Session.classification_id is not None and
+                                                      Session.protocol == 'https').count(),
+            'pop3': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+                                                     Session.classification_id is not None and
+                                                     Session.protocol == 'pop3').count(),
+            'pop3s': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+                                                      Session.classification_id is not None and
+                                                      Session.protocol == 'pop3s').count(),
+            'smtp': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+                                                     Session.classification_id is not None and
+                                                     Session.protocol == 'smtp').count(),
+            'telnet': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+                                                       Session.classification_id is not None and
+                                                       Session.protocol == 'telnet').count(),
+        },
+        'bees': {
+            'successful': db_session.query(Honeybee).filter(Honeybee.did_login).count(),
+            'failed': db_session.query(Honeybee).filter(not Honeybee.did_login).count(),
+
+        }
+    }
+    return render_template('index.html', user=current_user, status=status)
 
 
 @app.route('/sessions')
@@ -326,139 +370,46 @@ def create_feeder():
 
 
 @app.route('/data/sessions/all', methods=['GET', 'POST'])
+@login_required
 def data_sessions_all():
     db_session = database.get_session()
     sessions = db_session.query(Session).all()
-    table_data = {
-        'rows': [],
-        'cols': {
-            'time': {
-                'index': 1,
-                'type': 'string',
-                'friendly': 'Time',
-                'sortOrder': 'desc'
-            },
-
-            'protocol': {
-                'index': 2,
-                'type': 'string',
-                'friendly': 'Protocol'
-            },
-            'username': {
-                'index': 3,
-                'type': 'string',
-                'friendly': 'Username'
-            },
-            'password': {
-                'index': 4,
-                'type': 'string',
-                'friendly': 'Password'
-            },
-            'ip_address': {
-                'index': 5,
-                'type': 'string',
-                'friendly': 'IP Address'
-            }
-        }
-    }
-
+    rows = []
     for s in sessions:
         row = {'time': s.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': s.protocol, 'username': s.username,
                'password': s.password, 'ip_address': s.source_ip}
-        table_data['rows'].append(row)
-
-    return json.dumps(table_data)
+        rows.append(row)
+    rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
+    return rsp
 
 
 @app.route('/data/sessions/honeybees', methods=['GET', 'POST'])
+@login_required
 def data_sessions_bees():
     db_session = database.get_session()
     honeybees = db_session.query(Honeybee).all()
-    table_data = {
-        'rows': [],
-        'cols': {
-            'time': {
-                'index': 1,
-                'type': 'string',
-                'friendly': 'Time',
-                'sortOrder': 'desc'
-            },
-
-            'protocol': {
-                'index': 2,
-                'type': 'string',
-                'friendly': 'Protocol'
-            },
-            'username': {
-                'index': 3,
-                'type': 'string',
-                'friendly': 'Username'
-            },
-            'password': {
-                'index': 4,
-                'type': 'string',
-                'friendly': 'Password'
-            },
-            'ip_address': {
-                'index': 5,
-                'type': 'string',
-                'friendly': 'IP Address'
-            }
-        }
-    }
-
+    rows = []
     for b in honeybees:
         row = {'time': b.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': b.protocol, 'username': b.username,
                'password': b.password, 'ip_address': b.source_ip}
-        table_data['rows'].append(row)
-    return json.dumps(table_data)
+        rows.append(row)
+    rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
+    return rsp
 
 
 @app.route('/data/sessions/attacks', methods=['GET', 'POST'])
+@login_required
 def data_sessions_attacks():
     db_session = database.get_session()
     attacks = db_session.query(Session).filter(Session.classification_id != 'honeybee' and
                                                Session.classification_id is not None).all()
-    table_data = {
-        'rows': [],
-        'cols': {
-            'time': {
-                'index': 1,
-                'type': 'string',
-                'friendly': 'Time',
-                'sortOrder': 'desc'
-            },
-
-            'protocol': {
-                'index': 2,
-                'type': 'string',
-                'friendly': 'Protocol'
-            },
-            'username': {
-                'index': 3,
-                'type': 'string',
-                'friendly': 'Username'
-            },
-            'password': {
-                'index': 4,
-                'type': 'string',
-                'friendly': 'Password'
-            },
-            'ip_address': {
-                'index': 5,
-                'type': 'string',
-                'friendly': 'IP Address'
-            }
-        }
-    }
-
+    rows = []
     for a in attacks:
         row = {'time': a.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': a.protocol, 'username': a.username,
                'password': a.password, 'ip_address': a.source_ip}
-        table_data['rows'].append(row)
-
-    return json.dumps(table_data)
-
+        rows.append(row)
+    rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
+    return rsp
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -469,9 +420,10 @@ def login():
         try:
             user = db_session.query(User).filter(User.id == form.username.data).one()
         except NoResultFound:
-            pass
-        if user and form.password.data == 'test':
+            logging.info('Attempt to log in as non-existant user: {0}'.format(form.username.data))
+        if user and check_password_hash(user.password, form.password.data):
             login_user(user)
+            logging.info('User {0} logged in.'.format(user.id))
             flash('Logged in successfully')
             return redirect(request.args.get("next") or '/')
     return render_template('login.html', form=form)

@@ -7,21 +7,57 @@
     {{ super() }}
     <script src="/static/js/jquery.watable.js"></script>
 {% endblock javascript %}
+{% if logtype == 'All' %}
+    {% set dataurl = '/data/sessions/all' %}
+{% elif logtype == 'HoneyBees' %}
+    {% set dataurl = '/data/sessions/honeybees' %}
+{% elif logtype == 'Attacks' %}
+    {% set dataurl = '/data/sessions/attacks' %}
+{% endif %}
 {% block content %}
-    <h3>Logs - {{ logtype }} </h3>
+    <h3>Logs - {{ logtype }} <a class="btn btn-info pull-right" href="{{ dataurl }}"><i
+            class="icon-download-alt"></i> Export</a></h3>
     <div id="logtable" class="cont"></div>
-    {% if logtype == 'All' %}
-        {% set dataurl = '/data/sessions/all' %}
-    {% elif logtype == 'HoneyBees' %}
-        {% set dataurl = '/data/sessions/honeybees' %}
-    {% elif logtype == 'Attacks' %}
-        {% set dataurl = '/data/sessions/attacks' %}
-    {% endif %}
     <script type="text/javascript">
-        $("#logtable").WATable(
-                {
-                    url: '{{ dataurl }}',
-                    preFill: true
-                });
+        tableData = {
+            "rows": "",
+            "cols": {
+                "username": {
+                    "index": 3,
+                    "type": "string",
+                    "friendly": "Username"
+                },
+                "ip_address": {
+                    "index": 5,
+                    "type": "string",
+                    "friendly": "IP Address"
+                },
+                "password": {
+                    "index": 4,
+                    "type": "string",
+                    "friendly": "Password"
+                },
+                "protocol": {
+                    "index": 2,
+                    "type": "string",
+                    "friendly": "Protocol"
+                },
+                "time": {
+                    "index": 1,
+                    "type": "string",
+                    "friendly": "Time",
+                    "sortOrder": "desc"
+                }
+            }
+        };
+        var waTable = $("#logtable").WATable({preFill: true}).data('WATable');
+        jQuery.ajax('{{ dataurl }}', {
+            success: function (response, status) {
+                if ('success' == status) {
+                    tableData.rows = response;
+                    waTable.setData(tableData);
+                }
+            }
+        });
     </script>
 {% endblock content %}

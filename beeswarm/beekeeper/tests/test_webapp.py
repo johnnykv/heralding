@@ -4,24 +4,31 @@ import unittest
 from datetime import datetime
 
 import gevent.monkey
+from beeswarm.beekeeper.webapp.auth import Authenticator
+from beeswarm.shared.helpers import is_url
 gevent.monkey.patch_all()
 
 
 from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Feeder, Hive
+from beeswarm.beekeeper.db.entities import Feeder, Hive, Session, Honeybee
 from beeswarm.beekeeper.webapp import app
+app.app.config['CSRF_ENABLED'] = False
 
 
 class WebappTests(unittest.TestCase):
     def setUp(self):
         self.app = app.app.test_client()
+        self.authenticator = Authenticator()
+
         database.setup_db('sqlite://')
         session = database.get_session()
+
         #setup dummy entities
-        self.feeder_id =  str(uuid.uuid4())
-        feeder = Feeder(id=self.feeder_id)
+        self.authenticator.add_user('test', 'test', 'Nick Name')
+        self.feeder_id = str(uuid.uuid4())
+        feeder = Feeder(id=self.feeder_id, configuration='test_feeder_config')
         self.hive_id = str(uuid.uuid4())
-        hive = Hive(id=self.hive_id)
+        hive = Hive(id=self.hive_id, configuration='test_hive_config')
         session.add_all([feeder, hive])
         session.commit()
 
@@ -78,7 +85,7 @@ class WebappTests(unittest.TestCase):
 
         self.app.post('/ws/hive_data', data=json.dumps(data_dict), content_type='application/json')
 
-    def test_new_feeder_configuration(self):
+    def test_new_feeder(self):
         """
         Tests if a new Feeder configuration can be posted successfully
         """
@@ -119,9 +126,13 @@ class WebappTests(unittest.TestCase):
             'telnet_login': 'test',
             'telnet_password': 'test',
         }
-        self.app.post('/ws/feeder', data=post_data)
+        self.login('test', 'test')
+        resp = self.app.post('/ws/feeder', data=post_data)
+        self.assertTrue(is_url(resp.data))
+        self.assertTrue('/ws/feeder/config/' in resp.data)
+        self.logout()
 
-    def test_new_hive_configuration(self):
+    def test_new_hive(self):
         """
         Tests whether new Hive configuration can be posted successfully.
         """
@@ -162,8 +173,107 @@ class WebappTests(unittest.TestCase):
             'ssh_port': 22,
             'ssh_key': 'server.key'
         }
-        self.app.post('/ws/hive', data=post_data)
+        self.login('test', 'test')
+        resp = self.app.post('/ws/hive', data=post_data)
+        self.assertTrue(is_url(resp.data))
+        self.assertTrue('/ws/hive/config/' in resp.data)
+        self.logout()
 
+    def test_new_hive_config(self):
+        """ Tests if a Hive config is being returned correctly """
+
+        resp = self.app.get('/ws/hive/config/' + self.hive_id)
+        self.assertEquals(resp.data, 'test_hive_config')
+
+    def test_new_feeder_config(self):
+        """ Tests if a Feeder config is being returned correctly """
+
+        resp = self.app.get('/ws/feeder/config/' + self.feeder_id)
+        self.assertEquals(resp.data, 'test_feeder_config')
+
+    def test_data_sessions_all(self):
+        """ Tests if all sessions are returned properly"""
+
+        self.login('test', 'test')
+        self.populate_sessions()
+        resp = self.app.get('/data/sessions/all')
+        table_data = json.loads(resp.data)
+        self.assertEquals(len(table_data), 4)
+        self.logout()
+
+    def test_data_sessions_honeybees(self):
+        """ Tests if honeybees are returned properly """
+
+        self.login('test', 'test')
+        self.populate_honeybees()
+        resp = self.app.get('/data/sessions/honeybees')
+        table_data = json.loads(resp.data)
+        self.assertEquals(len(table_data), 3)
+        self.logout()
+
+    def test_data_sessions_attacks(self):
+        """ Tests if attacks are returned properly """
+
+        self.login('test', 'test')
+        self.populate_sessions()
+        resp = self.app.get('/data/sessions/attacks')
+        table_data = json.loads(resp.data)
+        self.assertEquals(len(table_data), 4)
+        self.logout()
+
+    def test_login_logout(self):
+        self.login('test', 'test')
+        self.logout()
+
+    def login(self, username, password):
+        data = {
+            'username': username,
+            'password': password
+        }
+        return self.app.post('/login', data=data, follow_redirects=True)
+
+    def populate_honeybees(self):
+        db_session = database.get_session()
+        for i in xrange(3):
+            h = Honeybee(
+                id=str(uuid.uuid4()),
+                timestamp=datetime.utcnow(),
+                received=datetime.utcnow(),
+                protocol='ssh',
+                username='uuu',
+                password='vvvv',
+                destination_ip='1.2.3.4',
+                destination_port=1234,
+                source_ip='4.3.2.1',
+                source_port=4321,
+                did_connect=True,
+                did_login=False,
+                did_complete=True
+            )
+            db_session.add(h)
+        db_session.commit()
+
+    def populate_sessions(self):
+        db_session = database.get_session()
+        for i in xrange(4):
+            s = Session(
+                id=str(uuid.uuid4()),
+                timestamp=datetime.utcnow(),
+                received=datetime.utcnow(),
+                protocol='telnet',
+                username='aaa',
+                password='bbb',
+                destination_ip='123.123.123.123',
+                destination_port=1234,
+                source_ip='12.12.12.12',
+                source_port=12345,
+                classification_id='asd'
+            )
+            db_session.add(s)
+        db_session.commit()
+
+    def logout(self):
+        return self.app.get('/logout', follow_redirects=True)
 
 if __name__ == '__main__':
     unittest.main()
