@@ -24,42 +24,75 @@
                     <tr>
                         <td>http</td>
                         <td>{{ status.attacks.http }}</td>
-                        <td>{{ '%0.2f' % (status.attacks.http/status.nattacks * 100) }}%</td>
+                        {% if status.nattacks > 0 %}
+                            <td>{{ '%0.2f' % (status.attacks.http/status.nattacks * 100) }}%</td>
+                        {% else %}
+                            <td>No Attacks</td>
+                        {% endif %}
                     </tr>
                     <tr>
                         <td>vnc</td>
                         <td>{{ status.attacks.vnc }}</td>
-                        <td>{{ '%0.2f' % (status.attacks.vnc/status.nattacks * 100) }}%</td>
+                        {% if status.nattacks > 0 %}
+                            <td>{{ '%0.2f' % (status.attacks.vnc/status.nattacks * 100) }}%</td>
+                        {% else %}
+                            <td>No Attacks</td>
+                        {% endif %}
+
                     </tr>
                     <tr>
                         <td>ssh</td>
                         <td>{{ status.attacks.ssh }}</td>
-                        <td>{{ '%0.2f' % (status.attacks.ssh/status.nattacks * 100) }}%</td>
+                        {% if status.nattacks > 0 %}
+                            <td>{{ '%0.2f' % (status.attacks.ssh/status.nattacks * 100) }}%</td>
+                        {% else %}
+                            <td>No Attacks</td>
+                        {% endif %}
                     </tr>
                     <tr>
                         <td>ftp</td>
                         <td>{{ status.attacks.ftp }}</td>
-                        <td>{{ '%0.2f' % (status.attacks.ftp/status.nattacks * 100) }}%</td>
+                        {% if status.nattacks > 0 %}
+                            <td>{{ '%0.2f' % (status.attacks.ftp/status.nattacks * 100) }}%</td>
+                        {% else %}
+                            <td>No Attacks</td>
+                        {% endif %}
                     </tr>
                     <tr>
                         <td>pop3s</td>
                         <td>{{ status.attacks.pop3s }}</td>
-                        <td>{{ '%0.2f' % (status.attacks.pop3s/status.nattacks * 100) }}%</td>
+                        {% if status.nattacks > 0 %}
+                            <td>{{ '%0.2f' % (status.attacks.pop3s/status.nattacks * 100) }}%</td>
+                        {% else %}
+                            <td>No Attacks</td>
+                        {% endif %}
                     </tr>
                     <tr>
                         <td>pop3</td>
                         <td>{{ status.attacks.pop3 }}</td>
-                        <td>{{ '%0.2f' % (status.attacks.pop3/status.nattacks * 100) }}%</td>
+                        {% if status.nattacks > 0 %}
+                            <td>{{ '%0.2f' % (status.attacks.pop3/status.nattacks * 100) }}%</td>
+                        {% else %}
+                            <td>No Attacks</td>
+                        {% endif %}
                     </tr>
                     <tr>
                         <td>telnet</td>
                         <td>{{ status.attacks.telnet }}</td>
-                        <td>{{ '%0.2f' % (status.attacks.telnet/status.nattacks * 100) }}%</td>
+                        {% if status.nattacks > 0 %}
+                            <td>{{ '%0.2f' % (status.attacks.telnet/status.nattacks * 100) }}%</td>
+                        {% else %}
+                            <td>No Attacks</td>
+                        {% endif %}
                     </tr>
                     <tr>
                         <td>smtp</td>
                         <td>{{ status.attacks.smtp }}</td>
-                        <td>{{ '%0.2f' % (status.attacks.smtp/status.nattacks * 100) }}%</td>
+                        {% if status.nattacks > 0 %}
+                            <td>{{ '%0.2f' % (status.attacks.smtp/status.nattacks * 100) }}%</td>
+                        {% else %}
+                            <td>No Attacks</td>
+                        {% endif %}
                     </tr>
                 </table>
             </li>
