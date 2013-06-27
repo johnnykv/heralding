@@ -1,4 +1,88 @@
 {% extends "base.html" %}
 {% block content %}
-<h3>Status: </h3>
+    <div class="row-fluid">
+        <ul class="thumbnails">
+            <li class="thumbnail span6 text-center">
+                <h1>{{ status.nhives }}
+                    <small>Hives</small>
+                </h1>
+                <hr>
+                <div class="row-fluid">
+                    <h2 class="alert alert-error">{{ status.nattacks }}
+                        <small>Attacks Recorded</small>
+                    </h2>
+                    <h2 class="alert alert-success">{{ status.nattacks }}
+                        <small>Bees Classified</small>
+                    </h2>
+                </div>
+                <table class="table table-bordered">
+                    <tr>
+                        <th>Capability</th>
+                        <th>Attacks</th>
+                        <th>%</th>
+                    </tr>
+                    <tr>
+                        <td>http</td>
+                        <td>{{ status.attacks.http }}</td>
+                        <td>{{ '%0.2f' % (status.attacks.http/status.nattacks * 100) }}%</td>
+                    </tr>
+                    <tr>
+                        <td>vnc</td>
+                        <td>{{ status.attacks.vnc }}</td>
+                        <td>{{ '%0.2f' % (status.attacks.vnc/status.nattacks * 100) }}%</td>
+                    </tr>
+                    <tr>
+                        <td>ssh</td>
+                        <td>{{ status.attacks.ssh }}</td>
+                        <td>{{ '%0.2f' % (status.attacks.ssh/status.nattacks * 100) }}%</td>
+                    </tr>
+                    <tr>
+                        <td>ftp</td>
+                        <td>{{ status.attacks.ftp }}</td>
+                        <td>{{ '%0.2f' % (status.attacks.ftp/status.nattacks * 100) }}%</td>
+                    </tr>
+                    <tr>
+                        <td>pop3s</td>
+                        <td>{{ status.attacks.pop3s }}</td>
+                        <td>{{ '%0.2f' % (status.attacks.pop3s/status.nattacks * 100) }}%</td>
+                    </tr>
+                    <tr>
+                        <td>pop3</td>
+                        <td>{{ status.attacks.pop3 }}</td>
+                        <td>{{ '%0.2f' % (status.attacks.pop3/status.nattacks * 100) }}%</td>
+                    </tr>
+                    <tr>
+                        <td>telnet</td>
+                        <td>{{ status.attacks.telnet }}</td>
+                        <td>{{ '%0.2f' % (status.attacks.telnet/status.nattacks * 100) }}%</td>
+                    </tr>
+                    <tr>
+                        <td>smtp</td>
+                        <td>{{ status.attacks.smtp }}</td>
+                        <td>{{ '%0.2f' % (status.attacks.smtp/status.nattacks * 100) }}%</td>
+                    </tr>
+                </table>
+            </li>
+            <li class="thumbnail span6 text-center pull-right">
+                <h1>{{ status.nfeeders }}
+                    <small>Feeders</small>
+                </h1>
+                <hr>
+                <div class="row-fluid">
+                    <h2 class="alert alert-success">{{ status.bees.successful }}
+                        <small>HoneyBees successful</small>
+                    </h2>
+                    <h2 class="alert alert-error">{{ status.bees.failed }}
+                        <small>HoneyBees failed</small>
+                    </h2>
+                </div>
+            </li>
+        </ul>
+    </div>
+    <script>
+        var thumbs = $('.thumbnail');
+        thumbs.css({
+            'height': thumbs.height()
+        });
+    </script>
 {% endblock %}

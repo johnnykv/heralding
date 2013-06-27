@@ -193,22 +193,33 @@ class WebappTests(unittest.TestCase):
 
     def test_data_sessions_all(self):
         """ Tests if all sessions are returned properly"""
+
+        self.login('test', 'test')
         self.populate_sessions()
         resp = self.app.get('/data/sessions/all')
         table_data = json.loads(resp.data)
         self.assertEquals(len(table_data), 4)
+        self.logout()
 
     def test_data_sessions_honeybees(self):
+        """ Tests if honeybees are returned properly """
+
+        self.login('test', 'test')
         self.populate_honeybees()
         resp = self.app.get('/data/sessions/honeybees')
         table_data = json.loads(resp.data)
         self.assertEquals(len(table_data), 3)
+        self.logout()
 
     def test_data_sessions_attacks(self):
+        """ Tests if attacks are returned properly """
+
+        self.login('test', 'test')
         self.populate_sessions()
         resp = self.app.get('/data/sessions/attacks')
         table_data = json.loads(resp.data)
         self.assertEquals(len(table_data), 4)
+        self.logout()
 
     def test_login_logout(self):
         self.login('test', 'test')

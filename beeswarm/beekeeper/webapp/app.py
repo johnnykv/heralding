@@ -58,7 +58,50 @@ logger = logging.getLogger(__name__)
 @app.route('/')
 @login_required
 def home():
-    return render_template('index.html', user=current_user)
+    db_session = database.get_session()
+    status = {
+        'nhives': db_session.query(Hive).count(),
+        'nfeeders': db_session.query(Feeder).count(),
+        'nsessions': db_session.query(Session).count(),
+        'nbees': db_session.query(Honeybee).count(),
+        'nattacks': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+                                                     Session.classification_id is not None).count(),
+        'attacks': {
+            'http': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+                                                     Session.classification_id is not None and
+                                                     Session.protocol == 'http').count(),
+            'vnc': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+                                                    Session.classification_id is not None and
+                                                    Session.protocol == 'vnc').count(),
+            'ssh': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+                                                    Session.classification_id is not None and
+                                                    Session.protocol == 'ssh').count(),
+            'ftp': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+                                                    Session.classification_id is not None and
+                                                    Session.protocol == 'ftp').count(),
+            'https': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+                                                      Session.classification_id is not None and
+                                                      Session.protocol == 'https').count(),
+            'pop3': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+                                                     Session.classification_id is not None and
+                                                     Session.protocol == 'pop3').count(),
+            'pop3s': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+                                                      Session.classification_id is not None and
+                                                      Session.protocol == 'pop3s').count(),
+            'smtp': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+                                                     Session.classification_id is not None and
+                                                     Session.protocol == 'smtp').count(),
+            'telnet': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+                                                       Session.classification_id is not None and
+                                                       Session.protocol == 'telnet').count(),
+        },
+        'bees': {
+            'successful': db_session.query(Honeybee).filter(Honeybee.did_login).count(),
+            'failed': db_session.query(Honeybee).filter(not Honeybee.did_login).count(),
+
+        }
+    }
+    return render_template('index.html', user=current_user, status=status)
 
 
 @app.route('/sessions')
@@ -327,6 +370,7 @@ def create_feeder():
 
 
 @app.route('/data/sessions/all', methods=['GET', 'POST'])
+@login_required
 def data_sessions_all():
     db_session = database.get_session()
     sessions = db_session.query(Session).all()
@@ -340,6 +384,7 @@ def data_sessions_all():
 
 
 @app.route('/data/sessions/honeybees', methods=['GET', 'POST'])
+@login_required
 def data_sessions_bees():
     db_session = database.get_session()
     honeybees = db_session.query(Honeybee).all()
@@ -351,7 +396,9 @@ def data_sessions_bees():
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp
 
+
 @app.route('/data/sessions/attacks', methods=['GET', 'POST'])
+@login_required
 def data_sessions_attacks():
     db_session = database.get_session()
     attacks = db_session.query(Session).filter(Session.classification_id != 'honeybee' and
