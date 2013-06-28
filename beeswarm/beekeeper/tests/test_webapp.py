@@ -225,6 +225,52 @@ class WebappTests(unittest.TestCase):
         self.login('test', 'test')
         self.logout()
 
+    def test_hive_delete(self):
+        self.login('test', 'test')
+        self.populate_hives()
+        data = [
+            {'attacks':0, 'checked':False, 'hive_id':self.hives[0]},
+            {'attacks':0, 'checked':False, 'hive_id':self.hives[1]}
+        ]
+        self.app.post('/ws/hive/delete', data=json.dumps(data))
+        db_session = database.get_session()
+        nhives = db_session.query(Hive).count()
+        self.assertEquals(3, nhives)
+
+    def test_feeder_delete(self):
+        self.login('test', 'test')
+        self.populate_feeders()
+        data = [
+            {'feeder_id': self.feeders[0], 'bees': 0, 'checked': False},
+            {'feeder_id': self.feeders[1], 'bees': 0, 'checked': False}
+        ]
+        self.app.post('/ws/feeder/delete', data=json.dumps(data))
+        db_session = database.get_session()
+        nhives = db_session.query(Feeder).count()
+        self.assertEquals(3, nhives)
+
+    def populate_feeders(self):
+        db_session = database.get_session()
+        self.feeders = []
+        for i in xrange(4):
+            curr_id = str(uuid.uuid4())
+            curr_id = curr_id.encode('utf-8')
+            self.feeders.append(curr_id)
+            f = Feeder(id=curr_id)
+            db_session.add(f)
+        db_session.commit()
+
+    def populate_hives(self):
+        db_session = database.get_session()
+        self.hives = []
+        for i in xrange(4):
+            curr_id = str(uuid.uuid4())
+            curr_id = curr_id.encode('utf-8')
+            self.hives.append(curr_id)
+            h = Hive(id=curr_id)
+            db_session.add(h)
+        db_session.commit()
+
     def login(self, username, password):
         data = {
             'username': username,
