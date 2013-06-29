@@ -222,10 +222,14 @@ class WebappTests(unittest.TestCase):
         self.logout()
 
     def test_login_logout(self):
+        """ Tests basic login/logout """
+
         self.login('test', 'test')
         self.logout()
 
     def test_hive_delete(self):
+        """ Tests the '/ws/hive/delete' route."""
+
         self.login('test', 'test')
         self.populate_hives()
         data = [
@@ -238,6 +242,8 @@ class WebappTests(unittest.TestCase):
         self.assertEquals(3, nhives)
 
     def test_feeder_delete(self):
+        """ Tests the '/ws/feeder/delete' route."""
+
         self.login('test', 'test')
         self.populate_feeders()
         data = [
@@ -250,6 +256,8 @@ class WebappTests(unittest.TestCase):
         self.assertEquals(3, nfeeders)
 
     def populate_feeders(self):
+        """ Populates the database with 4 Feeders """
+
         db_session = database.get_session()
         self.feeders = []
         for i in xrange(4):
@@ -261,6 +269,8 @@ class WebappTests(unittest.TestCase):
         db_session.commit()
 
     def populate_hives(self):
+        """ Populates the database with 4 Hives """
+
         db_session = database.get_session()
         self.hives = []
         for i in xrange(4):
@@ -272,6 +282,8 @@ class WebappTests(unittest.TestCase):
         db_session.commit()
 
     def login(self, username, password):
+        """ Logs into the web-app """
+
         data = {
             'username': username,
             'password': password
@@ -279,6 +291,8 @@ class WebappTests(unittest.TestCase):
         return self.app.post('/login', data=data, follow_redirects=True)
 
     def populate_honeybees(self):
+        """ Populates the database with 3 Honeybees """
+
         db_session = database.get_session()
         for i in xrange(3):
             h = Honeybee(
@@ -300,6 +314,8 @@ class WebappTests(unittest.TestCase):
         db_session.commit()
 
     def populate_sessions(self):
+        """ Populates the database with 3 Sessions """
+
         db_session = database.get_session()
         for i in xrange(4):
             s = Session(
