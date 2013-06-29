@@ -250,7 +250,8 @@ def create_hive():
                 "enabled": form.ftp_enabled.data,
                 "port": form.ftp_port.data,
                 "max_attempts": form.ftp_max_attempts.data,
-                "banner": form.ftp_banner.data
+                "banner": form.ftp_banner.data,
+                "syst_type": form.ftp_syst_type.data
             },
             "cap_telnet": {
                 "enabled": form.telnet_enabled.data,
@@ -347,6 +348,14 @@ def create_feeder():
                 'timing': form.http_timing.data,
                 'login': form.http_login.data,
                 'password': form.http_password.data
+            },
+            'bee_ftp': {
+                'enabled': form.ftp_enabled.data,
+                'server': form.ftp_server.data,
+                'port': form.ftp_port.data,
+                'timing': form.ftp_timing.data,
+                'login': form.ftp_login.data,
+                'password': form.ftp_password.data
             },
             'bee_pop3': {
                 'enabled': form.pop3_enabled.data,

@@ -47,10 +47,12 @@ class ftp(ClientBase):
             resp = ftp_client.retrbinary('RETR ' + random.choice(self.file_list), self.save_file)
 
             if resp.startswith('226'):
+                logging.debug('FTP file listing successful')
                 session.did_complete = True
         except ftplib.error_perm as err:
             logging.debug('Caught exception: %s (%s)' % (err, str(type(err))))
         finally:
+            ftp_client.quit()
             session.alldone = True
 
     def save_file(self, data):

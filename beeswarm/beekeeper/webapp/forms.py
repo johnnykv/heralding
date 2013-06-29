@@ -17,6 +17,7 @@ class NewHiveConfigForm(Form):
     ftp_enabled = BooleanField(default=False)
     ftp_port = IntegerField(default=21)
     ftp_max_attempts = IntegerField(default=3)
+    ftp_syst_type = TextField(default='Windows-NT')
     ftp_banner = TextField(default='Microsoft FTP Server')
 
     smtp_enabled = BooleanField(default=False)

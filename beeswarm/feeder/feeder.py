@@ -79,6 +79,16 @@ class Feeder(object):
 
         honeybees = []
         for b in clientbase.ClientBase.__subclasses__():
+            bee_name = 'bee_' + b.__name__
+
+            if bee_name not in self.config:
+                logger.warning(
+                    "Not loading {0} bee because it has no option in configuration file.".format(b.__name__))
+                continue
+                #skip loading if disabled
+            if not self.config[bee_name]['enabled']:
+                continue
+
             bee = b(sessions)
             honeybees.append(bee)
             logging.debug('Adding {0} as a honeybee'.format(bee.__class__.__name__))
