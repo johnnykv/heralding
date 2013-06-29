@@ -18,8 +18,9 @@ from beeswarm.feeder.models.session import BeeSession
 
 class ClientBase(object):
 
-    def __init__(self, sessions):
+    def __init__(self, sessions, options):
         self.sessions = sessions
+        self.options = options
 
     def do_session(self, login, password, server_host, server_port, my_ip):
         raise Exception('Do not call base class!')

@@ -24,8 +24,8 @@ from beeswarm.feeder.bees.clientbase import ClientBase
 
 class http(ClientBase):
 
-    def __init__(self, sessions):
-        super(http, self).__init__(sessions)
+    def __init__(self, sessions, options):
+        super(http, self).__init__(sessions, options)
 
     def do_session(self, login, password, server_host, server_port, my_ip):
 

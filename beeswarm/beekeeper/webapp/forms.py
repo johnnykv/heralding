@@ -1,5 +1,4 @@
-from flask.ext.wtf import Form, TextField, BooleanField, RadioField
-from flask.ext.wtf import Required
+from flask.ext.wtf import Form, TextField, BooleanField
 from flask.ext.wtf import IntegerField, FileField
 from wtforms import PasswordField
 
@@ -17,6 +16,7 @@ class NewHiveConfigForm(Form):
     ftp_enabled = BooleanField(default=False)
     ftp_port = IntegerField(default=21)
     ftp_max_attempts = IntegerField(default=3)
+    ftp_syst_type = TextField(default='Windows-NT')
     ftp_banner = TextField(default='Microsoft FTP Server')
 
     smtp_enabled = BooleanField(default=False)
@@ -64,6 +64,7 @@ class NewFeederConfigForm(Form):
     smtp_port = IntegerField(default=25)
     smtp_timing = TextField(default='regular')
     smtp_login = TextField(default='test')
+    smtp_local_hostname = TextField(default='localhost')
     smtp_password = TextField(default='password')
 
     vnc_enabled = BooleanField(default=False)

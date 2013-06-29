@@ -233,8 +233,8 @@ class WebappTests(unittest.TestCase):
         self.login('test', 'test')
         self.populate_hives()
         data = [
-            {'attacks': 0, 'checked':False, 'hive_id': self.hives[0]},
-            {'attacks': 0, 'checked':False, 'hive_id': self.hives[1]}
+            {'attacks': 0, 'checked': False, 'hive_id': self.hives[0]},
+            {'attacks': 0, 'checked': False, 'hive_id': self.hives[1]}
         ]
         self.app.post('/ws/hive/delete', data=json.dumps(data))
         db_session = database.get_session()
