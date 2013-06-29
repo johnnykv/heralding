@@ -316,6 +316,11 @@ def delete_hives():
     for hive in hive_ids:
         hive_id = hive['hive_id']
         to_delete = db_session.query(Hive).filter(Hive.id == hive_id).one()
+        bees = db_session.query(Honeybee).filter(Honeybee.hive_id == hive_id)
+        for s in to_delete.sessions:
+            db_session.delete(s)
+        for b in bees:
+            db_session.delete(b)
         db_session.delete(to_delete)
     db_session.commit()
     return ''
@@ -396,6 +401,8 @@ def delete_feeders():
     for feeder in feeder_ids:
         feeder_id = feeder['feeder_id']
         to_delete = db_session.query(Feeder).filter(Feeder.id == feeder_id).one()
+        for b in to_delete.honeybees:
+            db_session.delete(b)
         db_session.delete(to_delete)
     db_session.commit()
     return ''
