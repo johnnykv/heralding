@@ -21,8 +21,8 @@ from beeswarm.feeder.bees.clientbase import ClientBase
 
 class telnet(ClientBase):
 
-    def __init__(self, sessions):
-        super(telnet, self).__init__(sessions)
+    def __init__(self, sessions, options):
+        super(telnet, self).__init__(sessions, options)
 
     def do_session(self, login, password, server_host, server_port, my_ip):
 

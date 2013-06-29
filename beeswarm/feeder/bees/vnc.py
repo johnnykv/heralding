@@ -22,8 +22,8 @@ from beeswarm.shared.vnc_constants import *
 
 class vnc(ClientBase):
 
-    def __init__(self, sessions):
-        super(vnc, self).__init__(sessions)
+    def __init__(self, sessions, options):
+        super(vnc, self).__init__(sessions, options)
 
     def do_session(self, login, password, server_host, server_port, my_ip):
         session = self.create_session(login, password, server_host, server_port, my_ip)
