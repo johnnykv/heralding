@@ -35,8 +35,7 @@ class smtp(ClientBase):
             'Sending %s honeybee to %s:%s. (bee id: %s)' % ('smtp', server_host, server_port, session.id))
 
         try:
-            #TODO local_hostname could be made configurable, from the config file
-            smtp_ = smtplib.SMTP(server_host, server_port, local_hostname='localhost', timeout=15)
+            smtp_ = smtplib.SMTP(server_host, server_port, local_hostname=self.options['local_hostname'], timeout=15)
             session.source_port = smtp_.sock.getsockname()[1]
             session.did_connect = True
             smtp_.login(login, password)

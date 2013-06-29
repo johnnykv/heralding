@@ -60,7 +60,8 @@ class SMTP_Test(unittest.TestCase):
             'login': 'test',
             'password': 'test',
             'port': srv.server_port,
-            'server': '127.0.0.1'
+            'server': '127.0.0.1',
+            'local_hostname': 'testhost'
         }
         beesessions = {}
 

@@ -371,6 +371,7 @@ def create_feeder():
                 'port': form.smtp_port.data,
                 'timing': form.smtp_timing.data,
                 'login': form.smtp_login.data,
+                'local_hostname': form.smtp_local_hostname.data,
                 'password': form.smtp_password.data
             },
             'bee_vnc': {
