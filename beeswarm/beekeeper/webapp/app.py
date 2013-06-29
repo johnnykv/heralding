@@ -101,7 +101,13 @@ def home():
 
         }
     }
-    return render_template('index.html', user=current_user, status=status)
+    urls = {
+        'hivedata': '/data/hives',
+        'feederdata': '/data/feeders',
+        'delhive': '/ws/hive/delete',
+        'delfeeder': '/ws/feeder/delete'
+    }
+    return render_template('index.html', user=current_user, status=status, urls=urls)
 
 
 @app.route('/sessions')
@@ -302,6 +308,24 @@ def create_hive():
     return render_template('create-config.html', form=form, mode_name='Hive', user=current_user)
 
 
+@app.route('/ws/hive/delete', methods=['POST'])
+@login_required
+def delete_hives():
+    hive_ids = json.loads(request.data)
+    db_session = database.get_session()
+    for hive in hive_ids:
+        hive_id = hive['hive_id']
+        to_delete = db_session.query(Hive).filter(Hive.id == hive_id).one()
+        bees = db_session.query(Honeybee).filter(Honeybee.hive_id == hive_id)
+        for s in to_delete.sessions:
+            db_session.delete(s)
+        for b in bees:
+            db_session.delete(b)
+        db_session.delete(to_delete)
+    db_session.commit()
+    return ''
+
+
 @app.route('/ws/feeder', methods=['GET', 'POST'])
 @login_required
 def create_feeder():
@@ -369,6 +393,20 @@ def create_feeder():
     return render_template('create-config.html', form=form, mode_name='Feeder', user=current_user)
 
 
+@app.route('/ws/feeder/delete', methods=['POST'])
+@login_required
+def delete_feeders():
+    feeder_ids = json.loads(request.data)
+    db_session = database.get_session()
+    for feeder in feeder_ids:
+        feeder_id = feeder['feeder_id']
+        to_delete = db_session.query(Feeder).filter(Feeder.id == feeder_id).one()
+        for b in to_delete.honeybees:
+            db_session.delete(b)
+        db_session.delete(to_delete)
+    db_session.commit()
+    return ''
+
 @app.route('/data/sessions/all', methods=['GET', 'POST'])
 @login_required
 def data_sessions_all():
@@ -407,6 +445,34 @@ def data_sessions_attacks():
     for a in attacks:
         row = {'time': a.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': a.protocol, 'username': a.username,
                'password': a.password, 'ip_address': a.source_ip}
+        rows.append(row)
+    rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
+    return rsp
+
+
+@app.route('/data/hives', methods=['GET'])
+@login_required
+def data_hives():
+    db_session = database.get_session()
+    hives = db_session.query(Hive).all()
+    rows = []
+    for h in hives:
+        row = {'hive_id': h.id, 'attacks': db_session.query(Session).filter(Session.hive_id == h.id).count(),
+               'checked': False}
+        rows.append(row)
+    rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
+    return rsp
+
+
+@app.route('/data/feeders', methods=['GET'])
+@login_required
+def data_feeders():
+    db_session = database.get_session()
+    feeders = db_session.query(Feeder).all()
+    rows = []
+    for f in feeders:
+        row = {'feeder_id': f.id, 'bees': db_session.query(Honeybee).filter(Honeybee.feeder_id == f.id).count(),
+               'checked': False}
         rows.append(row)
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp

@@ -222,10 +222,68 @@ class WebappTests(unittest.TestCase):
         self.logout()
 
     def test_login_logout(self):
+        """ Tests basic login/logout """
+
         self.login('test', 'test')
         self.logout()
 
+    def test_hive_delete(self):
+        """ Tests the '/ws/hive/delete' route."""
+
+        self.login('test', 'test')
+        self.populate_hives()
+        data = [
+            {'attacks': 0, 'checked':False, 'hive_id': self.hives[0]},
+            {'attacks': 0, 'checked':False, 'hive_id': self.hives[1]}
+        ]
+        self.app.post('/ws/hive/delete', data=json.dumps(data))
+        db_session = database.get_session()
+        nhives = db_session.query(Hive).count()
+        self.assertEquals(3, nhives)
+
+    def test_feeder_delete(self):
+        """ Tests the '/ws/feeder/delete' route."""
+
+        self.login('test', 'test')
+        self.populate_feeders()
+        data = [
+            {'feeder_id': self.feeders[0], 'bees': 0, 'checked': False},
+            {'feeder_id': self.feeders[1], 'bees': 0, 'checked': False}
+        ]
+        self.app.post('/ws/feeder/delete', data=json.dumps(data))
+        db_session = database.get_session()
+        nfeeders = db_session.query(Feeder).count()
+        self.assertEquals(3, nfeeders)
+
+    def populate_feeders(self):
+        """ Populates the database with 4 Feeders """
+
+        db_session = database.get_session()
+        self.feeders = []
+        for i in xrange(4):
+            curr_id = str(uuid.uuid4())
+            curr_id = curr_id.encode('utf-8')
+            self.feeders.append(curr_id)
+            f = Feeder(id=curr_id)
+            db_session.add(f)
+        db_session.commit()
+
+    def populate_hives(self):
+        """ Populates the database with 4 Hives """
+
+        db_session = database.get_session()
+        self.hives = []
+        for i in xrange(4):
+            curr_id = str(uuid.uuid4())
+            curr_id = curr_id.encode('utf-8')
+            self.hives.append(curr_id)
+            h = Hive(id=curr_id)
+            db_session.add(h)
+        db_session.commit()
+
     def login(self, username, password):
+        """ Logs into the web-app """
+
         data = {
             'username': username,
             'password': password
@@ -233,6 +291,8 @@ class WebappTests(unittest.TestCase):
         return self.app.post('/login', data=data, follow_redirects=True)
 
     def populate_honeybees(self):
+        """ Populates the database with 3 Honeybees """
+
         db_session = database.get_session()
         for i in xrange(3):
             h = Honeybee(
@@ -254,6 +314,8 @@ class WebappTests(unittest.TestCase):
         db_session.commit()
 
     def populate_sessions(self):
+        """ Populates the database with 3 Sessions """
+
         db_session = database.get_session()
         for i in xrange(4):
             s = Session(

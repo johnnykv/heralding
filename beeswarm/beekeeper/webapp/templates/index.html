@@ -1,11 +1,21 @@
 {% extends "base.html" %}
+{% block css %}
+    {{ super() }}
+    <link rel="stylesheet" href="/static/css/watable.css">
+{% endblock css %}
+{% block javascript %}
+    {{ super() }}
+    <script src="/static/js/jquery.watable.js"></script>
+{% endblock javascript %}
 {% block content %}
     <div class="row-fluid">
         <ul class="thumbnails">
             <li class="thumbnail span6 text-center">
-                <h1>{{ status.nhives }}
-                    <small>Hives</small>
-                </h1>
+                <a class="btn-link" href="#hivemodal" data-toggle="modal">
+                    <h1>{{ status.nhives }}
+                        <small>Hives</small>
+                    </h1>
+                </a>
                 <hr>
                 <div class="row-fluid">
                     <h2 class="alert alert-error">{{ status.nattacks }}
@@ -97,9 +107,11 @@
                 </table>
             </li>
             <li class="thumbnail span6 text-center pull-right">
-                <h1>{{ status.nfeeders }}
-                    <small>Feeders</small>
-                </h1>
+                <a class="btn-link" href="#feedermodal" data-toggle="modal">
+                    <h1>{{ status.nfeeders }}
+                        <small>Feeders</small>
+                    </h1>
+                </a>
                 <hr>
                 <div class="row-fluid">
                     <h2 class="alert alert-success">{{ status.bees.successful }}
@@ -118,4 +130,112 @@
             'height': thumbs.height()
         });
     </script>
+
+    {#--- modals ---#}
+    <div id="hivemodal" class="modal hide fade" tabindex="-1">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">x</button>
+            <h2>Hives</h2>
+        </div>
+        <div id="hivetable" class="modal-body"></div>
+        <script type="text/javascript">
+            h_tableData = {
+                "rows": "",
+                "cols": {
+                    "hive_id": {
+                        "index": 1,
+                        "type": "string",
+                        "unique": true,
+                        "friendly": "Hive ID"
+                    },
+                    "attacks": {
+                        "index": 5,
+                        "type": "number",
+                        "friendly": "Attacks"
+                    }
+                }
+            };
+            var h_waTable = $("#hivetable").WATable({preFill: true, checkboxes: true}).data('WATable');
+            jQuery.ajax('{{ urls.hivedata }}', {
+                success: function (response, status) {
+                    if ('success' == status) {
+                        h_tableData.rows = response;
+                        h_waTable.setData(h_tableData);
+                    }
+                }
+            });
+            $("body").on('click', '.delete_hive', function (e) {
+                e.preventDefault();
+                var data = h_waTable.getData(true);
+                var rows = data.rows;
+                $.ajax({
+                    url: '/ws/hive/delete',
+                    type: 'POST',
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify(rows)
+                });
+                $("#hivemodal").modal('hide');
+                location.reload();
+            });
+
+        </script>
+        <div class="modal-footer">
+            <a href="#" class="btn btn-primary delete_hive">Delete</a>
+            <button class="btn" data-dismiss="modal">Close</button>
+        </div>
+    </div>
+
+    <div id="feedermodal" class="modal hide fade" tabindex="-1">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">x</button>
+            <h2>Feeder</h2>
+        </div>
+        <div id="feedertable" class="modal-body"></div>
+        <script type="text/javascript">
+            f_tableData = {
+                "rows": "",
+                "cols": {
+                    "feeder_id": {
+                        "index": 1,
+                        "type": "string",
+                        "unique": true,
+                        "friendly": "Feeder ID"
+                    },
+                    "bees": {
+                        "index": 5,
+                        "type": "number",
+                        "friendly": "HoneyBees"
+                    }
+                }
+            };
+            var f_waTable = $("#feedertable").WATable({preFill: true, checkboxes: true}).data('WATable');
+            jQuery.ajax('{{ urls.feederdata }}', {
+                success: function (response, status) {
+                    if ('success' == status) {
+                        f_tableData.rows = response;
+                        f_waTable.setData(f_tableData);
+                    }
+                }
+            });
+            $("body").on('click', '.delete_feeder', function (e) {
+                e.preventDefault();
+                var data = f_waTable.getData(true);
+                var rows = data.rows;
+                $.ajax({
+                    url: '/ws/feeder/delete',
+                    type: 'POST',
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify(rows)
+                });
+                $("#feedermodal").modal('hide');
+                location.reload();
+            });
+
+        </script>
+        <div class="modal-footer">
+            <a href="#" class="btn btn-primary delete_feeder">Delete</a>
+            <button class="btn" data-dismiss="modal">Close</button>
+        </div>
+    </div>
+
 {% endblock %}
