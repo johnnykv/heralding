@@ -59,7 +59,7 @@ class VNC_Test(unittest.TestCase):
             'timing': 'regular',
             'login': 'test',
             'password': 'test',
-            'port': 0,
+            'port': srv.server_port,
             'server': '127.0.0.1'
         }
         beesessions = {}

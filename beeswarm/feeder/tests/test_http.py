@@ -48,9 +48,9 @@ class HTTP_Test(unittest.TestCase):
         users = {'test': HiveUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
-        options = {'enabled': 'True', 'port': 8081}
+        options = {'enabled': 'True', 'port': 0}
         cap = hive_http.http(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 8081))
+        socket = create_socket(('0.0.0.0', 0))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()
 
@@ -58,7 +58,7 @@ class HTTP_Test(unittest.TestCase):
             'timing': 'regular',
             'login': 'test',
             'password': 'test',
-            'port': '8081',
+            'port': srv.server_port,
             'server': '127.0.0.1'
         }
         beesessions = {}
