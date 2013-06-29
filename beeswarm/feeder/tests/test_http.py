@@ -65,7 +65,7 @@ class HTTP_Test(unittest.TestCase):
 
         BeeSession.feeder_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
 
-        current_bee = bee_http.http(beesessions)
+        current_bee = bee_http.http(beesessions, options)
         current_bee.do_session(bee_info['login'], bee_info['password'], bee_info['server'],
                                bee_info['port'], '127.0.0.1')
         srv.stop()
