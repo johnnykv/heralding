@@ -42,7 +42,7 @@ class POP3S_Test(unittest.TestCase):
         if os.path.isdir(self.work_dir):
             shutil.rmtree(self.work_dir)
 
-    def test_pop3s(self):
+    def test_login(self):
         """Tests if the POP3s bee can login to the POP3 capability"""
 
         sessions = {}
