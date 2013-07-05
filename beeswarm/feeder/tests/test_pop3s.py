@@ -27,13 +27,13 @@ from beeswarm.hive.helpers.common import create_socket
 from beeswarm.hive.models.user import HiveUser
 from beeswarm.hive.models.authenticator import Authenticator
 from beeswarm.hive.models.session import Session
-from beeswarm.hive.capabilities import pop3 as hive_pop3
+from beeswarm.hive.capabilities import pop3s as hive_pop3s
 
 from beeswarm.feeder.models.session import BeeSession
-from beeswarm.feeder.bees import pop3 as bee_pop3
+from beeswarm.feeder.bees import pop3s as bee_pop3s
 
 
-class POP3_Test(unittest.TestCase):
+class POP3S_Test(unittest.TestCase):
     def setUp(self):
         self.work_dir = tempfile.mkdtemp()
         Hive.prepare_environment(self.work_dir)
@@ -43,7 +43,7 @@ class POP3_Test(unittest.TestCase):
             shutil.rmtree(self.work_dir)
 
     def test_login(self):
-        """Tests if the POP3 bee can login to the POP3 capability"""
+        """Tests if the POP3s bee can login to the POP3 capability"""
 
         sessions = {}
         users = {'test': HiveUser('test', 'test')}
@@ -51,7 +51,7 @@ class POP3_Test(unittest.TestCase):
         Session.authenticator = authenticator
 
         options = {'enabled': 'True', 'port': 0, 'max_attempts': 3}
-        cap = hive_pop3.pop3(sessions, options, users, self.work_dir)
+        cap = hive_pop3s.pop3s(sessions, options, users, self.work_dir)
         socket = create_socket(('0.0.0.0', 0))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()
@@ -67,7 +67,7 @@ class POP3_Test(unittest.TestCase):
 
         BeeSession.feeder_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
 
-        current_bee = bee_pop3.pop3(beesessions, bee_info)
+        current_bee = bee_pop3s.pop3s(beesessions, bee_info)
         current_bee.do_session(bee_info['login'], bee_info['password'], bee_info['server'],
                                bee_info['port'], '127.0.0.1')
         srv.stop()
