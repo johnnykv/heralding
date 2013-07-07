@@ -16,7 +16,7 @@ install:
   - "sudo pip install python-coveralls --use-mirrors"
 # command to run tests
 script:
- - nosetests 
+ - nosetests --with-coverage
  
 after_success:
  - coveralls
