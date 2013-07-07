@@ -12,11 +12,11 @@ before_install:
 install:
   - "sudo pip install -e git+https://github.com/rep/hpfeeds.git#egg=hpfeeds"
   - "sudo pip install -r requirements.txt --use-mirrors"
-  - "sudo pip install coveralls --use-mirrors"
-  - "sudo pip install python-coveralls --use-mirrors"
 # command to run tests
 script:
- - nosetests --with-coverage
+ - nosetests
  
 after_success:
+ - pip install coveralls
+ - coverage run --source=beeswarm setup.py -q nosetests
  - coveralls
