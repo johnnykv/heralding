@@ -225,6 +225,7 @@ def create_hive():
     if form.validate_on_submit():
         with open('beekeeper.crt') as cert:
             cert_str = cert.read()
+        beekeeper_password = str(uuid.uuid4())
         config = {
             'general': {
                 'hive_id': new_hive_id,
@@ -242,7 +243,8 @@ def create_hive():
             },
             'log_beekeeper': {
                 'enabled': False,
-                'beekeeper_url': 'http://127.0.0.1:5000/ws/hive_data'
+                'beekeeper_url': 'http://127.0.0.1:5000/ws/hive_data',
+                'beekeeper_pass': beekeeper_password
             },
             'log_syslog': {
                 'enabled': False,
@@ -305,7 +307,8 @@ def create_hive():
 
         db_session = database.get_session()
         h = Hive(id=new_hive_id, configuration=config_json)
-        db_session.add(h)
+        u = User(id=new_hive_id, nickname='Hive', password=beekeeper_password, utype=1)
+        db_session.addall([h, u])
         db_session.commit()
         return 'https://localhost:5000/ws/hive/config/' + new_hive_id
 
@@ -338,6 +341,7 @@ def create_feeder():
     if form.validate_on_submit():
         with open('beekeeper.crt') as cert:
             cert_str = cert.read()
+        beekeeper_password = str(uuid.uuid4())
         config = {
             'general': {
                 'feeder_id': new_feeder_id,
@@ -401,7 +405,8 @@ def create_feeder():
 
         db_session = database.get_session()
         f = Feeder(id=new_feeder_id, configuration=config_json)
-        db_session.add(f)
+        u = User(id=new_feeder_id, nickname='Feeder', password=beekeeper_password, utype=2)
+        db_session.addall([f, u])
         db_session.commit()
 
         return 'https://localhost:5000/ws/feeder/config/' + new_feeder_id
