@@ -307,7 +307,7 @@ def create_hive():
         h = Hive(id=new_hive_id, configuration=config_json)
         db_session.add(h)
         db_session.commit()
-        return 'http://localhost:5000/ws/hive/config/' + new_hive_id
+        return 'https://localhost:5000/ws/hive/config/' + new_hive_id
 
     return render_template('create-config.html', form=form, mode_name='Hive', user=current_user)
 
@@ -404,7 +404,7 @@ def create_feeder():
         db_session.add(f)
         db_session.commit()
 
-        return 'http://localhost:5000/ws/feeder/config/' + new_feeder_id
+        return 'https://localhost:5000/ws/feeder/config/' + new_feeder_id
 
     return render_template('create-config.html', form=form, mode_name='Feeder', user=current_user)
 

@@ -20,7 +20,7 @@ from ConfigParser import ConfigParser
 
 import gevent
 import beeswarm
-from gevent.wsgi import WSGIServer
+from gevent.pywsgi import WSGIServer
 from sqlalchemy.exc import IntegrityError
 from beeswarm.beekeeper.db import database
 from beeswarm.beekeeper.webapp import app
@@ -47,7 +47,7 @@ class Beekeeper(object):
         #management interface
         logger.info('Starting Beekeeper listening on port {0}'.format(port))
 
-        http_server = WSGIServer(('', 5000), self.app)
+        http_server = WSGIServer(('', 5000), self.app, keyfile='beekeeper.key', certfile='beekeeper.crt')
         http_server_greenlet = gevent.spawn(http_server.serve_forever)
         self.servers['http'] = http_server
         self.greenlets.append(http_server_greenlet)
