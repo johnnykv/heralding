@@ -89,7 +89,7 @@ class Feeder(object):
             if not self.config[bee_name]['enabled']:
                 continue
 
-            bee = b(sessions)
+            bee = b(sessions, self.config[bee_name])
             honeybees.append(bee)
             logging.debug('Adding {0} as a honeybee'.format(bee.__class__.__name__))
 

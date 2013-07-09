@@ -223,6 +223,8 @@ def create_hive():
     form = NewHiveConfigForm()
     new_hive_id = str(uuid.uuid4())
     if form.validate_on_submit():
+        with open('beekeeper.crt') as cert:
+            cert_str = cert.read()
         config = {
             'general': {
                 'hive_id': new_hive_id,
@@ -296,7 +298,8 @@ def create_hive():
                 "enabled": True,
                 "poll": 5,
                 "ntp_pool": "pool.ntp.org"
-            }
+            },
+            "beekeeper_cert": cert_str
         }
         config_json = json.dumps(config)
 
@@ -333,6 +336,8 @@ def create_feeder():
     form = NewFeederConfigForm()
     new_feeder_id = str(uuid.uuid4())
     if form.validate_on_submit():
+        with open('beekeeper.crt') as cert:
+            cert_str = cert.read()
         config = {
             'general': {
                 'feeder_id': new_feeder_id,
@@ -390,6 +395,7 @@ def create_feeder():
                 'login': form.telnet_login.data,
                 'password': form.telnet_password.data
             },
+            "beekeeper_cert": cert_str
         }
         config_json = json.dumps(config)
 
