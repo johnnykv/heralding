@@ -104,11 +104,11 @@ if __name__ == '__main__':
             # User hasn't specified a config file, so check if the default exists.
             # if not, copy the default file to the work-dir
             package_directory = os.path.dirname(os.path.abspath(beeswarm.__file__))
-            config_file = os.path.join(args.workdir, 'beekeeper.cfg')
+            config_file = os.path.join(args.workdir, 'beekeepercfg.json')
             if not os.path.isfile(config_file):
                 logging.info('Copying configuration file to workdir.')
-                shutil.copyfile(os.path.join(package_directory, 'beekeeper/beekeeper.cfg.dist'),
-                                os.path.join(args.workdir, 'beekeeper.cfg'))
+                shutil.copyfile(os.path.join(package_directory, 'beekeeper/beekeepercfg.json.dist'),
+                                os.path.join(args.workdir, 'beekeepercfg.json'))
 
     try:
         if args.configarg:
