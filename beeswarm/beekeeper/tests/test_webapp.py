@@ -10,7 +10,7 @@ gevent.monkey.patch_all()
 
 
 from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Feeder, Hive, Session, Honeybee
+from beeswarm.beekeeper.db.entities import Feeder, Hive, Session, Honeybee, User
 from beeswarm.beekeeper.webapp import app
 app.app.config['CSRF_ENABLED'] = False
 
@@ -264,8 +264,10 @@ class WebappTests(unittest.TestCase):
             curr_id = str(uuid.uuid4())
             curr_id = curr_id.encode('utf-8')
             self.feeders.append(curr_id)
+            u = User(id=curr_id, password=str(uuid.uuid4()), utype=1)
             f = Feeder(id=curr_id)
             db_session.add(f)
+            db_session.add(u)
         db_session.commit()
 
     def populate_hives(self):
@@ -278,7 +280,9 @@ class WebappTests(unittest.TestCase):
             curr_id = curr_id.encode('utf-8')
             self.hives.append(curr_id)
             h = Hive(id=curr_id)
+            u = User(id=curr_id, password=str(uuid.uuid4()), utype=1)
             db_session.add(h)
+            db_session.add(u)
         db_session.commit()
 
     def login(self, username, password):

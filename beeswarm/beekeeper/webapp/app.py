@@ -243,7 +243,7 @@ def create_hive():
             },
             'log_beekeeper': {
                 'enabled': False,
-                'beekeeper_url': 'https://127.0.0.1:5000/ws/hive_data',
+                'beekeeper_url': 'https://127.0.0.1:5000/',
                 'beekeeper_pass': beekeeper_password
             },
             'log_syslog': {
@@ -323,7 +323,7 @@ def delete_hives():
     for hive in hive_ids:
         hive_id = hive['hive_id']
         to_delete = db_session.query(Hive).filter(Hive.id == hive_id).one()
-        huser = db_session.query(User).filter(User.id == hive_id)
+        huser = db_session.query(User).filter(User.id == hive_id).one()
         bees = db_session.query(Honeybee).filter(Honeybee.hive_id == hive_id)
         for s in to_delete.sessions:
             db_session.delete(s)
@@ -424,7 +424,7 @@ def delete_feeders():
     for feeder in feeder_ids:
         feeder_id = feeder['feeder_id']
         to_delete = db_session.query(Feeder).filter(Feeder.id == feeder_id).one()
-        fuser = db_session.query(User).filter(User.id == feeder_id)
+        fuser = db_session.query(User).filter(User.id == feeder_id).one()
         for b in to_delete.honeybees:
             db_session.delete(b)
         db_session.delete(to_delete)
@@ -512,11 +512,18 @@ def login():
             user = db_session.query(User).filter(User.id == form.username.data).one()
         except NoResultFound:
             logging.info('Attempt to log in as non-existant user: {0}'.format(form.username.data))
-        if user and check_password_hash(user.password, form.password.data):
-            login_user(user)
-            logging.info('User {0} logged in.'.format(user.id))
-            flash('Logged in successfully')
-            return redirect(request.args.get("next") or '/')
+        if user:
+            if user.utype != 0:
+                if form.password.data == user.password:
+                    login_user(user)
+                    logging.info('User {0} logged in.'.format(user.id))
+                    flash('Logged in successfully')
+                    return redirect(request.args.get("next") or '/')
+            elif check_password_hash(user.password, form.password.data):
+                login_user(user)
+                logging.info('User {0} logged in.'.format(user.id))
+                flash('Logged in successfully')
+                return redirect(request.args.get("next") or '/')
     return render_template('login.html', form=form)
 
 
