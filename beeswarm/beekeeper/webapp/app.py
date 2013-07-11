@@ -243,7 +243,7 @@ def create_hive():
             },
             'log_beekeeper': {
                 'enabled': False,
-                'beekeeper_url': 'http://127.0.0.1:5000/ws/hive_data',
+                'beekeeper_url': 'https://127.0.0.1:5000/ws/hive_data',
                 'beekeeper_pass': beekeeper_password
             },
             'log_syslog': {
@@ -308,7 +308,7 @@ def create_hive():
         db_session = database.get_session()
         h = Hive(id=new_hive_id, configuration=config_json)
         u = User(id=new_hive_id, nickname='Hive', password=beekeeper_password, utype=1)
-        db_session.addall([h, u])
+        db_session.add_all([h, u])
         db_session.commit()
         return 'https://localhost:5000/ws/hive/config/' + new_hive_id
 
@@ -323,12 +323,14 @@ def delete_hives():
     for hive in hive_ids:
         hive_id = hive['hive_id']
         to_delete = db_session.query(Hive).filter(Hive.id == hive_id).one()
+        huser = db_session.query(User).filter(User.id == hive_id)
         bees = db_session.query(Honeybee).filter(Honeybee.hive_id == hive_id)
         for s in to_delete.sessions:
             db_session.delete(s)
         for b in bees:
             db_session.delete(b)
         db_session.delete(to_delete)
+        db_session.delete(huser)
     db_session.commit()
     return ''
 
@@ -406,7 +408,7 @@ def create_feeder():
         db_session = database.get_session()
         f = Feeder(id=new_feeder_id, configuration=config_json)
         u = User(id=new_feeder_id, nickname='Feeder', password=beekeeper_password, utype=2)
-        db_session.addall([f, u])
+        db_session.add_all([f, u])
         db_session.commit()
 
         return 'https://localhost:5000/ws/feeder/config/' + new_feeder_id
@@ -422,9 +424,11 @@ def delete_feeders():
     for feeder in feeder_ids:
         feeder_id = feeder['feeder_id']
         to_delete = db_session.query(Feeder).filter(Feeder.id == feeder_id).one()
+        fuser = db_session.query(User).filter(User.id == feeder_id)
         for b in to_delete.honeybees:
             db_session.delete(b)
         db_session.delete(to_delete)
+        db_session.delete(fuser)
     db_session.commit()
     return ''
 
