@@ -223,7 +223,7 @@ def create_hive():
     form = NewHiveConfigForm()
     new_hive_id = str(uuid.uuid4())
     if form.validate_on_submit():
-        with open('beekeeper.crt') as cert:
+        with open(app.config['CERT_PATH']) as cert:
             cert_str = cert.read()
         beekeeper_password = str(uuid.uuid4())
         config = {
@@ -341,7 +341,7 @@ def create_feeder():
     form = NewFeederConfigForm()
     new_feeder_id = str(uuid.uuid4())
     if form.validate_on_submit():
-        with open('beekeeper.crt') as cert:
+        with open(app.config['CERT_PATH']) as cert:
             cert_str = cert.read()
         beekeeper_password = str(uuid.uuid4())
         config = {

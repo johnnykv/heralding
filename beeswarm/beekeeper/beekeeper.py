@@ -37,7 +37,7 @@ class Beekeeper(object):
 
         database.setup_db(os.path.join(self.config['sql']['connection_string']))
         self.app = app.app
-
+        self.app.config['CERT_PATH'] = self.config['ssl']['certpath']
         self.authenticator = Authenticator()
         self.authenticator.ensure_default_user()
 

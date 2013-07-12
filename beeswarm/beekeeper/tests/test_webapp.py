@@ -1,4 +1,5 @@
 import json
+import os
 import uuid
 import unittest
 from datetime import datetime
@@ -13,6 +14,8 @@ from beeswarm.beekeeper.db import database
 from beeswarm.beekeeper.db.entities import Feeder, Hive, Session, Honeybee, User
 from beeswarm.beekeeper.webapp import app
 app.app.config['CSRF_ENABLED'] = False
+app.app.config['CERT_PATH'] = os.path.join(os.path.dirname(__file__), 'beekeepercfg.json.test')
+
 
 
 class WebappTests(unittest.TestCase):
@@ -264,7 +267,7 @@ class WebappTests(unittest.TestCase):
             curr_id = str(uuid.uuid4())
             curr_id = curr_id.encode('utf-8')
             self.feeders.append(curr_id)
-            u = User(id=curr_id, password=str(uuid.uuid4()), utype=1)
+            u = User(id=curr_id, password=str(uuid.uuid4()), utype=2)
             f = Feeder(id=curr_id)
             db_session.add(f)
             db_session.add(u)
