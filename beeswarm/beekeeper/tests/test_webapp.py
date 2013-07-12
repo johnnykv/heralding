@@ -17,7 +17,6 @@ app.app.config['CSRF_ENABLED'] = False
 app.app.config['CERT_PATH'] = os.path.join(os.path.dirname(__file__), 'beekeepercfg.json.test')
 
 
-
 class WebappTests(unittest.TestCase):
     def setUp(self):
         self.app = app.app.test_client()

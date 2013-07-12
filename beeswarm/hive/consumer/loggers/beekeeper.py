@@ -31,7 +31,7 @@ class Beekeeper(LoggerBase):
     def __init__(self, config):
         super(Beekeeper, self).__init__(config)
         self.beekeeper_url = config['log_beekeeper']['beekeeper_url']
-        self.submit_url = urlparse.urljoin(self.beekeeper_url, 'ws/hive')
+        self.submit_url = urlparse.urljoin(self.beekeeper_url, 'ws/hive_data')
         self.websession = requests.session()
         login_url = urlparse.urljoin(self.beekeeper_url, 'login')
         csrf_response = self.websession.get(login_url, verify=False)
@@ -51,7 +51,8 @@ class Beekeeper(LoggerBase):
     def log(self, session):
         try:
             data = json.dumps(session.to_dict(), default=json_default)
-            response = self.websession.post(self.submit_url, data=data, verify=False)
+            response = self.websession.post(self.submit_url, data=data, verify=True)
+            print response.text
             #raise exception for everything other than response code 200
             response.raise_for_status()
         except RequestException as ex:
