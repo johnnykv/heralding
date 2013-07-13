@@ -120,13 +120,3 @@ class Feeder(object):
         self.sessions_consumer.stop_handling()
         logger.info('All clients stopped')
         sys.exit(0)
-
-    @staticmethod
-    def prepare_environment(work_dir):
-        package_directory = os.path.dirname(os.path.abspath(beeswarm.__file__))
-
-        config_file = os.path.join(work_dir, 'feedercfg.json.dist')
-        if not os.path.isfile(config_file):
-            logging.info('Copying configuration file to current directory.')
-            shutil.copyfile(os.path.join(package_directory, 'feeder/feedercfg.json.dist'),
-                            os.path.join(work_dir, 'feedercfg.json'))

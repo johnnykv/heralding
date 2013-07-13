@@ -310,7 +310,7 @@ def create_hive():
         u = User(id=new_hive_id, nickname='Hive', password=beekeeper_password, utype=1)
         db_session.add_all([h, u])
         db_session.commit()
-        return 'https://localhost:5000/ws/hive/config/' + new_hive_id
+        return 'https://localhost:5000/ws/hive/config/{0}'.format(new_hive_id)
 
     return render_template('create-config.html', form=form, mode_name='Hive', user=current_user)
 
@@ -411,7 +411,7 @@ def create_feeder():
         db_session.add_all([f, u])
         db_session.commit()
 
-        return 'https://localhost:5000/ws/feeder/config/' + new_feeder_id
+        return 'https://localhost:5000/ws/feeder/config/{0}'.format(new_feeder_id)
 
     return render_template('create-config.html', form=form, mode_name='Feeder', user=current_user)
 

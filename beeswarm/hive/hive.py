@@ -176,12 +176,6 @@ class Hive(object):
     def prepare_environment(work_dir):
         package_directory = os.path.dirname(os.path.abspath(beeswarm.__file__))
 
-        config_file = os.path.join(work_dir, 'hivecfg.json.dist')
-        if not os.path.isfile(config_file):
-            logging.info('Copying configuration file to workdir.')
-            shutil.copyfile(os.path.join(package_directory, 'hive/hivecfg.json.dist'),
-                            os.path.join(work_dir, 'hivecfg.json'))
-
         logging.info('Copying data files to workdir.')
         shutil.copytree(os.path.join(package_directory, 'hive/data'), os.path.join(work_dir, 'data/'),
                         ignore=Hive._ignore_copy_files)

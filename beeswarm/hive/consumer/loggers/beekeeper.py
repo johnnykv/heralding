@@ -34,7 +34,7 @@ class Beekeeper(LoggerBase):
         self.submit_url = urlparse.urljoin(self.beekeeper_url, 'ws/hive_data')
         self.websession = requests.session()
         login_url = urlparse.urljoin(self.beekeeper_url, 'login')
-        csrf_response = self.websession.get(login_url, verify=False)
+        csrf_response = self.websession.get(login_url, verify=True)
         csrf_doc = html.document_fromstring(csrf_response.text)
         csrf_token = csrf_doc.get_element_by_id('csrf_token').value
         login_data = {
@@ -46,7 +46,7 @@ class Beekeeper(LoggerBase):
         headers = {
             'Referer': login_url
         }
-        self.websession.post(login_url, data=login_data, headers=headers, verify=False)
+        self.websession.post(login_url, data=login_data, headers=headers, verify=True)
 
     def log(self, session):
         try:
