@@ -17,6 +17,7 @@ import logging
 
 import gevent
 from beeswarm.feeder.consumer.loggers import loggerbase
+from beeswarm.feeder.consumer.loggers.beekeeper import Beekeeper
 
 
 class Consumer:

@@ -147,7 +147,10 @@ def feeder_data():
     _feeder = session.query(Feeder).filter(Feeder.id == data['feeder_id']).one()
 
     #_hive = Hive.get(id=data['hive_id'])
-    _hive = session.query(Hive).filter(Hive.id == data['hive_id']).one()
+    if data['hive_id'] is not None:
+        _hive = session.query(Hive).filter(Hive.id == data['hive_id']).one()
+    else:
+        _hive = None
 
     h = Honeybee(
         id=data['id'],
