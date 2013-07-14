@@ -1,6 +1,3 @@
-from beeswarm.hive.capabilities import ssh
-
-__author__ = 'jkv'
 # Copyright (C) 2012 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -27,6 +24,7 @@ import shutil
 import tempfile
 
 from beeswarm.hive.hive import Hive
+from beeswarm.hive.capabilities import ssh
 from beeswarm.hive.models.session import Session
 from beeswarm.hive.models.authenticator import Authenticator
 from beeswarm.hive.models.user import HiveUser

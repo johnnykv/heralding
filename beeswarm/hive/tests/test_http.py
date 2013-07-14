@@ -86,6 +86,3 @@ class HTTP_Test(unittest.TestCase):
         response = client.getresponse()
         self.assertEqual(response.status, 200)
         srv.stop()
-
-if __name__ == '__main__':
-    unittest.main()

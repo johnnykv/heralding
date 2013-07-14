@@ -49,6 +49,3 @@ class hive_tests(unittest.TestCase):
         gevent.sleep(1)
         #number of capabilities (servers). This value must be updated when adding new capabilities
         self.assertEquals(9, len(sut.servers))
-
-if __name__ == '__main__':
-    unittest.main()

@@ -190,7 +190,3 @@ class Pop3_Tests(unittest.TestCase):
     #             self.assertEqual(response, pair[1])
     #
     #     server.stop()
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -70,6 +70,3 @@ class VNC_Test(unittest.TestCase):
         client_socket.send('\x00' * 16)
         auth_status = client_socket.recv(1024)
         self.assertEquals(auth_status, AUTH_FAILED)
-        
-if __name__ == '__main__':
-    unittest.main()

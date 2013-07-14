@@ -68,6 +68,3 @@ class ftp_Tests(unittest.TestCase):
         except ftplib.error_perm:
             pass
         srv.stop()
-
-if __name__ == '__main__':
-    unittest.main()

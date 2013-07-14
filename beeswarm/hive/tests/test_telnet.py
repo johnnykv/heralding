@@ -213,6 +213,3 @@ class Telnet_Tests(unittest.TestCase):
 
     def cb(self, socket, command, option):
         return
-
-if __name__ == '__main__':
-    unittest.main()
