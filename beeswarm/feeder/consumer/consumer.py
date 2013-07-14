@@ -47,7 +47,6 @@ class Consumer:
     def get_loggers(self):
         loggers = []
         for l in loggerbase.LoggerBase.__subclasses__():
-            print l.__name__.lower()
             if self.config['log_' + l.__name__.lower()]['enabled']:
                 logger = l(self.config)
                 loggers.append(logger)
