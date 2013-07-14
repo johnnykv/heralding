@@ -246,7 +246,8 @@ def create_hive():
             'log_beekeeper': {
                 'enabled': False,
                 'beekeeper_url': 'https://127.0.0.1:5000/',
-                'beekeeper_pass': beekeeper_password
+                'beekeeper_pass': beekeeper_password,
+                'cert': cert_str
             },
             'log_syslog': {
                 'enabled': False,
@@ -303,7 +304,6 @@ def create_hive():
                 "poll": 5,
                 "ntp_pool": "pool.ntp.org"
             },
-            "beekeeper_cert": cert_str
         }
         config_json = json.dumps(config)
 
@@ -403,7 +403,12 @@ def create_feeder():
                 'login': form.telnet_login.data,
                 'password': form.telnet_password.data
             },
-            "beekeeper_cert": cert_str
+            'log_beekeeper': {
+                'enabled': False,
+                'beekeeper_url': 'https://127.0.0.1:5000/',
+                'beekeeper_pass': beekeeper_password,
+                'cert': cert_str
+            },
         }
         config_json = json.dumps(config)
 
