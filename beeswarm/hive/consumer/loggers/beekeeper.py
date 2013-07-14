@@ -35,7 +35,6 @@ class Beekeeper(LoggerBase):
         self.submit_url = urlparse.urljoin(self.beekeeper_url, 'ws/hive_data')
         self.tempcert = tempfile.NamedTemporaryFile()
         self.tempcert.write(config['beekeeper_cert'])
-        print self.tempcert.read()
         self.websession = requests.session()
         login_url = urlparse.urljoin(self.beekeeper_url, 'login')
         csrf_response = self.websession.get(login_url, verify=self.tempcert.name)
