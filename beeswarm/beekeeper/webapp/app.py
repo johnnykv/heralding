@@ -136,6 +136,7 @@ def sessions_attacks():
 
 
 @app.route('/ws/feeder_data', methods=['POST'])
+@login_required
 def feeder_data():
     #TODO: investigate why the flask provided request.json returns None.
     data = json.loads(request.data)
@@ -173,6 +174,7 @@ def feeder_data():
 
 
 @app.route('/ws/hive_data', methods=['POST'])
+@login_required
 def hive_data():
     #TODO: investigate why the flask provided request.json returns None.
     data = json.loads(request.data)
