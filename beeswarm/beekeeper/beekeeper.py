@@ -12,16 +12,13 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import json
 
 import logging
 import os
-import shutil
-from ConfigParser import ConfigParser
 
 import gevent
-import beeswarm
-from gevent.wsgi import WSGIServer
-from sqlalchemy.exc import IntegrityError
+from gevent.pywsgi import WSGIServer
 from beeswarm.beekeeper.db import database
 from beeswarm.beekeeper.webapp import app
 from beeswarm.beekeeper.webapp.auth import Authenticator
@@ -30,16 +27,17 @@ logger = logging.getLogger(__name__)
 
 
 class Beekeeper(object):
-    def __init__(self, work_dir, config_arg='beekeeper.cfg'):
-        self.config = ConfigParser()
-        self.config.read(config_arg)
+    def __init__(self, work_dir, config_arg='beekeepercfg.json'):
+
+        with open(config_arg) as config_file:
+            self.config = json.load(config_file)
 
         self.servers = {}
         self.greenlets = []
 
-        database.setup_db(os.path.join(self.config.get('sql', 'connection_string')))
+        database.setup_db(os.path.join(self.config['sql']['connection_string']))
         self.app = app.app
-
+        self.app.config['CERT_PATH'] = self.config['ssl']['certpath']
         self.authenticator = Authenticator()
         self.authenticator.ensure_default_user()
 
@@ -47,7 +45,7 @@ class Beekeeper(object):
         #management interface
         logger.info('Starting Beekeeper listening on port {0}'.format(port))
 
-        http_server = WSGIServer(('', 5000), self.app)
+        http_server = WSGIServer(('', 5000), self.app, keyfile='beekeeper.key', certfile='beekeeper.crt')
         http_server_greenlet = gevent.spawn(http_server.serve_forever)
         self.servers['http'] = http_server
         self.greenlets.append(http_server_greenlet)
@@ -65,12 +63,3 @@ class Beekeeper(object):
         logging.info('Stopping beekeeper.')
         self.servers['classifier'].stop()
         self.servers['http'].stop(5)
-
-    @staticmethod
-    def prepare_environment(work_dir):
-        package_directory = os.path.dirname(os.path.abspath(beeswarm.__file__))
-        config_file = os.path.join(work_dir, 'beekeeper.cfg.dist')
-        if not os.path.isfile(config_file):
-            logging.info('Copying configuration file to workdir.')
-            shutil.copyfile(os.path.join(package_directory, 'beekeeper/beekeeper.cfg.dist'),
-                            os.path.join(work_dir, 'beekeeper.cfg'))

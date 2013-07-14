@@ -1,4 +1,5 @@
 import json
+import os
 import uuid
 import unittest
 from datetime import datetime
@@ -10,9 +11,10 @@ gevent.monkey.patch_all()
 
 
 from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Feeder, Hive, Session, Honeybee
+from beeswarm.beekeeper.db.entities import Feeder, Hive, Session, Honeybee, User
 from beeswarm.beekeeper.webapp import app
 app.app.config['CSRF_ENABLED'] = False
+app.app.config['CERT_PATH'] = os.path.join(os.path.dirname(__file__), 'beekeepercfg.json.test')
 
 
 class WebappTests(unittest.TestCase):
@@ -27,15 +29,47 @@ class WebappTests(unittest.TestCase):
         self.authenticator.add_user('test', 'test', 'Nick Name')
         self.feeder_id = str(uuid.uuid4())
         feeder = Feeder(id=self.feeder_id, configuration='test_feeder_config')
+        fuser = User(id=self.feeder_id, nickname='Feeder Test', password=str(uuid.uuid4()), utype=2)
         self.hive_id = str(uuid.uuid4())
         hive = Hive(id=self.hive_id, configuration='test_hive_config')
-        session.add_all([feeder, hive])
+        huser = User(id=self.hive_id, nickname='Hive Test', password=str(uuid.uuid4()), utype=1)
+        session.add_all([feeder, hive, fuser, huser])
         session.commit()
 
     def tearDown(self):
         database.clear_db()
 
     def test_basic_feeder_post(self):
+        """
+        Tests if a honeybee dict can be posted without exceptions.
+        """
+
+        db_session = database.get_session()
+        fuser = db_session.query(User).filter(User.id == self.feeder_id).one()
+        self.login(fuser.id, fuser.password)
+
+        data_dict = {
+            'id': str(uuid.uuid4()),
+            'feeder_id': self.feeder_id,
+            'hive_id': self.hive_id,
+            'protocol': 'pop3',
+            'login': 'james',
+            'password': 'bond',
+            'server_host': '127.0.0.1',
+            'server_port': '110',
+            'source_ip': '123.123.123.123',
+            'source_port': 12345,
+            'timestamp': datetime.utcnow().isoformat(),
+            'did_connect': True,
+            'did_login': True,
+            'did_complete': True,
+            'protocol_data': None
+        }
+
+        r = self.app.post('/ws/feeder_data', data=json.dumps(data_dict), content_type='application/json')
+        self.assertEquals(r.status, '200 OK')
+
+    def test_basic_unsuccessful_feeder_post(self):
         """
         Tests if a honeybee dict can be posted without exceptions.
         """
@@ -58,9 +92,40 @@ class WebappTests(unittest.TestCase):
             'protocol_data': None
         }
 
-        self.app.post('/ws/feeder_data', data=json.dumps(data_dict), content_type='application/json')
+        r = self.app.post('/ws/feeder_data', data=json.dumps(data_dict), content_type='application/json')
+        self.assertEquals(r.status, '302 FOUND')
 
     def test_basic_hive_post(self):
+        """
+        Tests if a session dict can be posted without exceptions.
+        """
+
+        db_session = database.get_session()
+        huser = db_session.query(User).filter(User.id == self.hive_id).one()
+        self.login(huser.id, huser.password)
+
+        data_dict = {
+            'id': 'ba9fdb3d-0efb-4764-9a6b-d9b86eccda96',
+            'hive_id': self.hive_id,
+            'honey_ip': '192.168.1.1',
+            'honey_port': 8023,
+            'protocol': 'telnet',
+            'attacker_ip': '127.0.0.1',
+            'timestamp': '2013-05-07T22:21:19.453828',
+            'attacker_source_port': 61175,
+            'login_attempts': [
+                {'username': 'qqq', 'timestamp': '2013-05-07T22:21:20.846805', 'password': 'aa', 'type': 'plaintext',
+                 'id': '027bd968-f8ea-4a69-8d4c-6cf21476ca10'},
+                {'username': 'as', 'timestamp': '2013-05-07T22:21:21.150571', 'password': 'd', 'type': 'plaintext',
+                 'id': '603f40a4-e7eb-442d-9fde-0cd3ba707af7'},
+                {'username': 'as', 'timestamp': '2013-05-07T22:21:21.431958', 'password': 'd', 'type': 'plaintext',
+                 'id': 'ba24a095-f2c5-4426-84b9-9b7bfb609045'}]
+        }
+
+        r = self.app.post('/ws/hive_data', data=json.dumps(data_dict), content_type='application/json')
+        self.assertEquals(r.status, '200 OK')
+
+    def test_basic_unsuccessful_hive_post(self):
         """
         Tests if a session dict can be posted without exceptions.
         """
@@ -83,7 +148,8 @@ class WebappTests(unittest.TestCase):
                  'id': 'ba24a095-f2c5-4426-84b9-9b7bfb609045'}]
         }
 
-        self.app.post('/ws/hive_data', data=json.dumps(data_dict), content_type='application/json')
+        r = self.app.post('/ws/hive_data', data=json.dumps(data_dict), content_type='application/json')
+        self.assertEquals(r.status, '302 FOUND')
 
     def test_new_feeder(self):
         """
@@ -255,6 +321,28 @@ class WebappTests(unittest.TestCase):
         nfeeders = db_session.query(Feeder).count()
         self.assertEquals(3, nfeeders)
 
+    def test_hive_login(self):
+        """ Tests if one can log in as a Hive """
+
+        self.populate_hives()
+        db_session = database.get_session()
+        hive = db_session.query(Hive).first()
+        huser = db_session.query(User).filter(User.id == hive.id).one()
+        self.assertEquals(huser.utype, 1)
+
+        self.login(huser.id, huser.password)
+
+    def test_feeder_login(self):
+        """ Tests if one can log in as a Hive """
+
+        self.populate_feeders()
+        db_session = database.get_session()
+        feeder = db_session.query(Feeder).first()
+        fuser = db_session.query(User).filter(User.id == feeder.id).one()
+        self.assertEquals(fuser.utype, 2)
+        self.login(fuser.id, fuser.password)
+        self.logout()
+
     def populate_feeders(self):
         """ Populates the database with 4 Feeders """
 
@@ -264,8 +352,10 @@ class WebappTests(unittest.TestCase):
             curr_id = str(uuid.uuid4())
             curr_id = curr_id.encode('utf-8')
             self.feeders.append(curr_id)
+            u = User(id=curr_id, password=str(uuid.uuid4()), utype=2)
             f = Feeder(id=curr_id)
             db_session.add(f)
+            db_session.add(u)
         db_session.commit()
 
     def populate_hives(self):
@@ -278,7 +368,9 @@ class WebappTests(unittest.TestCase):
             curr_id = curr_id.encode('utf-8')
             self.hives.append(curr_id)
             h = Hive(id=curr_id)
+            u = User(id=curr_id, password=str(uuid.uuid4()), utype=1)
             db_session.add(h)
+            db_session.add(u)
         db_session.commit()
 
     def login(self, username, password):

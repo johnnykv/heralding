@@ -62,7 +62,7 @@ class Hive(object):
             except (ValueError, TypeError) as e:
                 raise Exception('Bad syntax for Config File: (%s)%s' % (e, str(type(e))))
         else:
-            conf = requests.get(config_arg)
+            conf = requests.get(config_arg, verify=False)
             with open('hivecfg.json', 'w') as local_config:
                 local_config.write(conf.text)
             self.config = json.loads(conf.text, object_hook=asciify)
@@ -175,12 +175,6 @@ class Hive(object):
     @staticmethod
     def prepare_environment(work_dir):
         package_directory = os.path.dirname(os.path.abspath(beeswarm.__file__))
-
-        config_file = os.path.join(work_dir, 'hivecfg.json.dist')
-        if not os.path.isfile(config_file):
-            logging.info('Copying configuration file to workdir.')
-            shutil.copyfile(os.path.join(package_directory, 'hive/hivecfg.json.dist'),
-                            os.path.join(work_dir, 'hivecfg.json'))
 
         logging.info('Copying data files to workdir.')
         shutil.copytree(os.path.join(package_directory, 'hive/data'), os.path.join(work_dir, 'data/'),

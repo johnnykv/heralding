@@ -53,7 +53,7 @@ class Feeder(object):
             except (ValueError, TypeError) as e:
                 raise Exception('Bad syntax for Config File: (%s)%s' % (e, str(type(e))))
         else:
-            conf = requests.get(config_arg)
+            conf = requests.get(config_arg, verify=False)
             with open('feedercfg.json', 'w') as local_config:
                 local_config.write(conf.text)
             self.config = json.loads(conf.text, object_hook=asciify)
@@ -89,7 +89,7 @@ class Feeder(object):
             if not self.config[bee_name]['enabled']:
                 continue
 
-            bee = b(sessions)
+            bee = b(sessions, self.config[bee_name])
             honeybees.append(bee)
             logging.debug('Adding {0} as a honeybee'.format(bee.__class__.__name__))
 
@@ -120,13 +120,3 @@ class Feeder(object):
         self.sessions_consumer.stop_handling()
         logger.info('All clients stopped')
         sys.exit(0)
-
-    @staticmethod
-    def prepare_environment(work_dir):
-        package_directory = os.path.dirname(os.path.abspath(beeswarm.__file__))
-
-        config_file = os.path.join(work_dir, 'feedercfg.json.dist')
-        if not os.path.isfile(config_file):
-            logging.info('Copying configuration file to current directory.')
-            shutil.copyfile(os.path.join(package_directory, 'feeder/feedercfg.json.dist'),
-                            os.path.join(work_dir, 'feedercfg.json'))

@@ -1,0 +1,9 @@
+{
+    "sql": {
+        "connection_string": "sqlite:///beekeeper_sqlite.db"
+    },
+    "ssl": {
+        "certpath": "beekeeper.crt",
+        "keypath": "beekeeper.key"
+    }
+}

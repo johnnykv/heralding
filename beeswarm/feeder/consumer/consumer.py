@@ -17,7 +17,7 @@ import logging
 
 import gevent
 from beeswarm.feeder.consumer.loggers import loggerbase
-
+from beeswarm.feeder.consumer.loggers.beekeeper import Beekeeper
 
 class Consumer:
     def __init__(self, sessions, config):
@@ -47,6 +47,7 @@ class Consumer:
     def get_loggers(self):
         loggers = []
         for l in loggerbase.LoggerBase.__subclasses__():
-            logger = l(self.config)
-            loggers.append(logger)
+            if self.config['log_' + l.__name__.lower()]['enabled']:
+                logger = l(self.config)
+                loggers.append(logger)
         return loggers

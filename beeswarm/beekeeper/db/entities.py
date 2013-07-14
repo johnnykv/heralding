@@ -64,6 +64,12 @@ class User(Base):
     nickname = Column(String(64), unique=True)
     password = Column(String(256))
 
+    # User type will be:
+    # Admin  == 0
+    # Hive   == 1
+    # Feeder == 2
+    utype = Column(Integer, default=0)
+
     def is_authenticated(self):
         return True
 

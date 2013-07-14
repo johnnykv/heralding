@@ -11,4 +11,5 @@ flask-login
 sqlalchemy>=0.8.1
 pyOpenSSL
 hpfeeds
+lxml
 flask-wtf

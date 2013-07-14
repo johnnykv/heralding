@@ -1,2 +1,0 @@
-[sql]
-connection_string = sqlite:///beekeeper_sqlite.db

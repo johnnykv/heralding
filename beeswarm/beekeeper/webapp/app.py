@@ -136,6 +136,7 @@ def sessions_attacks():
 
 
 @app.route('/ws/feeder_data', methods=['POST'])
+@login_required
 def feeder_data():
     #TODO: investigate why the flask provided request.json returns None.
     data = json.loads(request.data)
@@ -146,7 +147,10 @@ def feeder_data():
     _feeder = session.query(Feeder).filter(Feeder.id == data['feeder_id']).one()
 
     #_hive = Hive.get(id=data['hive_id'])
-    _hive = session.query(Hive).filter(Hive.id == data['hive_id']).one()
+    if data['hive_id'] is not None:
+        _hive = session.query(Hive).filter(Hive.id == data['hive_id']).one()
+    else:
+        _hive = None
 
     h = Honeybee(
         id=data['id'],
@@ -173,6 +177,7 @@ def feeder_data():
 
 
 @app.route('/ws/hive_data', methods=['POST'])
+@login_required
 def hive_data():
     #TODO: investigate why the flask provided request.json returns None.
     data = json.loads(request.data)
@@ -223,6 +228,9 @@ def create_hive():
     form = NewHiveConfigForm()
     new_hive_id = str(uuid.uuid4())
     if form.validate_on_submit():
+        with open(app.config['CERT_PATH']) as cert:
+            cert_str = cert.read()
+        beekeeper_password = str(uuid.uuid4())
         config = {
             'general': {
                 'hive_id': new_hive_id,
@@ -240,7 +248,9 @@ def create_hive():
             },
             'log_beekeeper': {
                 'enabled': False,
-                'beekeeper_url': 'http://127.0.0.1:5000/ws/hive_data'
+                'beekeeper_url': 'https://127.0.0.1:5000/',
+                'beekeeper_pass': beekeeper_password,
+                'cert': cert_str
             },
             'log_syslog': {
                 'enabled': False,
@@ -296,15 +306,16 @@ def create_hive():
                 "enabled": True,
                 "poll": 5,
                 "ntp_pool": "pool.ntp.org"
-            }
+            },
         }
         config_json = json.dumps(config)
 
         db_session = database.get_session()
         h = Hive(id=new_hive_id, configuration=config_json)
-        db_session.add(h)
+        u = User(id=new_hive_id, nickname='Hive', password=beekeeper_password, utype=1)
+        db_session.add_all([h, u])
         db_session.commit()
-        return 'http://localhost:5000/ws/hive/config/' + new_hive_id
+        return 'https://localhost:5000/ws/hive/config/{0}'.format(new_hive_id)
 
     return render_template('create-config.html', form=form, mode_name='Hive', user=current_user)
 
@@ -317,12 +328,14 @@ def delete_hives():
     for hive in hive_ids:
         hive_id = hive['hive_id']
         to_delete = db_session.query(Hive).filter(Hive.id == hive_id).one()
+        huser = db_session.query(User).filter(User.id == hive_id).one()
         bees = db_session.query(Honeybee).filter(Honeybee.hive_id == hive_id)
         for s in to_delete.sessions:
             db_session.delete(s)
         for b in bees:
             db_session.delete(b)
         db_session.delete(to_delete)
+        db_session.delete(huser)
     db_session.commit()
     return ''
 
@@ -333,6 +346,9 @@ def create_feeder():
     form = NewFeederConfigForm()
     new_feeder_id = str(uuid.uuid4())
     if form.validate_on_submit():
+        with open(app.config['CERT_PATH']) as cert:
+            cert_str = cert.read()
+        beekeeper_password = str(uuid.uuid4())
         config = {
             'general': {
                 'feeder_id': new_feeder_id,
@@ -390,15 +406,22 @@ def create_feeder():
                 'login': form.telnet_login.data,
                 'password': form.telnet_password.data
             },
+            'log_beekeeper': {
+                'enabled': False,
+                'beekeeper_url': 'https://127.0.0.1:5000/',
+                'beekeeper_pass': beekeeper_password,
+                'cert': cert_str
+            },
         }
         config_json = json.dumps(config)
 
         db_session = database.get_session()
         f = Feeder(id=new_feeder_id, configuration=config_json)
-        db_session.add(f)
+        u = User(id=new_feeder_id, nickname='Feeder', password=beekeeper_password, utype=2)
+        db_session.add_all([f, u])
         db_session.commit()
 
-        return 'http://localhost:5000/ws/feeder/config/' + new_feeder_id
+        return 'https://localhost:5000/ws/feeder/config/{0}'.format(new_feeder_id)
 
     return render_template('create-config.html', form=form, mode_name='Feeder', user=current_user)
 
@@ -411,9 +434,11 @@ def delete_feeders():
     for feeder in feeder_ids:
         feeder_id = feeder['feeder_id']
         to_delete = db_session.query(Feeder).filter(Feeder.id == feeder_id).one()
+        fuser = db_session.query(User).filter(User.id == feeder_id).one()
         for b in to_delete.honeybees:
             db_session.delete(b)
         db_session.delete(to_delete)
+        db_session.delete(fuser)
     db_session.commit()
     return ''
 
@@ -497,11 +522,18 @@ def login():
             user = db_session.query(User).filter(User.id == form.username.data).one()
         except NoResultFound:
             logging.info('Attempt to log in as non-existant user: {0}'.format(form.username.data))
-        if user and check_password_hash(user.password, form.password.data):
-            login_user(user)
-            logging.info('User {0} logged in.'.format(user.id))
-            flash('Logged in successfully')
-            return redirect(request.args.get("next") or '/')
+        if user:
+            if user.utype != 0:
+                if form.password.data == user.password:
+                    login_user(user)
+                    logging.info('User {0} logged in.'.format(user.id))
+                    flash('Logged in successfully')
+                    return redirect(request.args.get("next") or '/')
+            elif check_password_hash(user.password, form.password.data):
+                login_user(user)
+                logging.info('User {0} logged in.'.format(user.id))
+                flash('Logged in successfully')
+                return redirect(request.args.get("next") or '/')
     return render_template('login.html', form=form)
 
 
