@@ -17,6 +17,6 @@ script:
  - nosetests
  
 after_success:
- - pip install coveralls
+ - pip install coveralls distribute
  - coverage run --source=beeswarm setup.py -q nosetests
  - coveralls
