@@ -1,3 +1,4 @@
+nose
 gevent
 requests
 telnetsrv

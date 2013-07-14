@@ -5,18 +5,17 @@ python:
 virtualenv:
   system_site_packages: true
 before_install:
- - "sudo apt-get update"
- - "sudo apt-get install python-nose"
- - "sudo apt-get install python-dev libevent-dev"
+ - sudo apt-get update
+ - sudo apt-get install python-dev libevent-dev
 # command to install dependencies
 install:
-  - "sudo pip install -e git+https://github.com/rep/hpfeeds.git#egg=hpfeeds"
-  - "sudo pip install -r requirements.txt --use-mirrors"
+  - pip install -e git+https://github.com/rep/hpfeeds.git#egg=hpfeeds
+  - pip install -r requirements.txt --use-mirrors
 # command to run tests
 script:
  - nosetests
  
 after_success:
- - pip install coveralls distribute
+ - pip install --upgrade coveralls distribute
  - coverage run --source=beeswarm setup.py -q nosetests
  - coveralls
