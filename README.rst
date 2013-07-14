@@ -81,6 +81,46 @@ Sample usage
     2013-02-21 10:37:49,787 (hive.models.session) ssh authentication attempt from 192.168.1.123. [root/toor] (6cda8971-aefd-41a6-9a96-caf4c7407028)
     2013-02-21 10:37:50,113 (hive.models.session) ssh authentication attempt from 192.168.1.123. [root/qwerty] (6cda8971-aefd-41a6-9a96-caf4c7407028)
 
+BeeKeeper
+=========
+Beekeeper is the Web UI which can help manage the Hives/Feeders.
+
+Preparation
+-----------
+It is important to make sure that the Common Name specified in the following steps matches that of the
+Beekeeper server.
+
+.. code-block::
+
+    $>openssl genrsa -des3 -out beekeeper.key 2048
+    $>openssl req -new -key beekeeper.key -out beekeeper.csr
+    $>openssl x509 -req -days 3650 -in beekeeper.csr -signkey beekeeper.key -out beekeeper.crt
+    $>openssl rsa -in beekeeper.key -out beekeeper.key
+
+Sample Usage
+------------
+
+.. code-block::
+
+    $> beeswarm -be
+    2013-07-14 21:12:13,571 (root) Copying configuration file to workdir.
+    2013-07-14 21:12:14,917 (root) Created default admin account for the BeeKeeper.
+    Default password for the admin account is: gonz
+    2013-07-14 21:12:14,918 (beeswarm.beekeeper.beekeeper) Starting Beekeeper listening on port 5000
+    127.0.0.1 - - [2013-07-14 21:12:33] "GET / HTTP/1.1" 302 740 0.011379
+    127.0.0.1 - - [2013-07-14 21:12:33] "GET /login?next=%2F HTTP/1.1" 200 2874 0.051743
+    127.0.0.1 - - [2013-07-14 21:12:33] "GET /static/css/bootstrap.min.css HTTP/1.1" 304 524 0.006433
+    127.0.0.1 - - [2013-07-14 21:12:34] "GET /static/css/bootstrap-responsive.min.css HTTP/1.1" 304 523 0.002585
+    127.0.0.1 - - [2013-07-14 21:12:34] "GET /static/css/font-awesome.min.css HTTP/1.1" 304 523 0.002665
+    127.0.0.1 - - [2013-07-14 21:12:34] "GET /static/js/jquery-1.9.1.min.js HTTP/1.1" 304 523 0.002930
+    127.0.0.1 - - [2013-07-14 21:12:34] "GET /static/js/bootstrap.min.js HTTP/1.1" 304 524 0.003524
+    2013-07-14 21:12:53,688 (root) User admin logged in.
+    127.0.0.1 - - [2013-07-14 21:12:53] "POST /login?next=%2F HTTP/1.1" 302 766 0.021954
+    127.0.0.1 - - [2013-07-14 21:12:53] "GET / HTTP/1.1" 200 11016 0.147886
+    127.0.0.1 - - [2013-07-14 21:12:54] "GET /static/css/watable.css HTTP/1.1" 200 4975 0.037256
+    127.0.0.1 - - [2013-07-14 21:12:54] "GET /static/js/jquery.watable.js HTTP/1.1" 200 66523 0.075484
+
+
 
 The grand scheme
 ================
