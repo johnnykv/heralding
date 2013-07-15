@@ -23,10 +23,8 @@ class telnet(ClientBase):
 
     def __init__(self, sessions, options):
         super(telnet, self).__init__(sessions, options)
-        print options
 
     def do_session(self, my_ip):
-        print my_ip
         login = self.options['login']
         password = self.options['password']
         server_host = self.options['server']
