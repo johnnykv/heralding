@@ -23,7 +23,12 @@ class smtp(ClientBase):
     def __init__(self, sessions, options):
         super(smtp, self).__init__(sessions, options)
 
-    def do_session(self, login, password, server_host, server_port, my_ip):
+    def do_session(self, my_ip):
+
+        login = self.options['login']
+        password = self.options['password']
+        server_host = self.options['server']
+        server_port = self.options['port']
 
         from_addr = 'ned@stark.com'
         to_addr = 'jon@snow.com'
