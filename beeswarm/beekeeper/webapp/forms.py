@@ -59,6 +59,13 @@ class NewFeederConfigForm(Form):
     pop3_login = TextField(default='test')
     pop3_password = TextField(default='password')
 
+    pop3s_enabled = BooleanField(default=False)
+    pop3s_server = TextField(default='127.0.0.1')
+    pop3s_port = IntegerField(default=995)
+    pop3s_timing = TextField(default='regular')
+    pop3s_login = TextField(default='test')
+    pop3s_password = TextField(default='password')
+
     smtp_enabled = BooleanField(default=False)
     smtp_server = TextField(default='127.0.0.1')
     smtp_port = IntegerField(default=25)

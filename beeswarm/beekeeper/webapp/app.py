@@ -381,6 +381,14 @@ def create_feeder():
                 'login': form.pop3_login.data,
                 'password': form.pop3_password.data
             },
+            'bee_pop3s': {
+                'enabled': form.pop3s_enabled.data,
+                'server': form.pop3s_server.data,
+                'port': form.pop3s_port.data,
+                'timing': form.pop3s_timing.data,
+                'login': form.pop3s_login.data,
+                'password': form.pop3s_password.data
+            },
             'bee_smtp': {
                 'enabled': form.smtp_enabled.data,
                 'server': form.smtp_server.data,
