@@ -1,8 +1,10 @@
-Beeswarm |Build Status|
+Beeswarm |Build Status| |coverage|
 =======================
 
 .. |Build Status| image:: https://travis-ci.org/honeynet/beeswarm.png?branch=master
                        :target: https://travis-ci.org/honeynet/beeswarm
+.. |coverage| image:: https://coveralls.io/repos/honeynet/beeswarm/badge.png?brance=master
+                       :target: https://coveralls.io/r/honeynet/beeswarm
 
 A honeypot project which provides easy configuration, deployment and managment of honeytokens.
 Beeswarm operates by deploying fake end-user systems and services. Beeswarm uses these systems to provides 
