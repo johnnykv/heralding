@@ -70,7 +70,6 @@ class Feeder(object):
     def start(self):
         logging.info('Starting feeder.')
 
-        targets = self.get_targets()
         sessions = {}
 
         #greenlet to consume and maintain data in sessions list
@@ -95,25 +94,8 @@ class Feeder(object):
 
         while self.run_flag:
             for bee in honeybees:
-                class_name = bee.__class__.__name__
-                if class_name in targets:
-                    bee_info = targets[class_name]
-                    gevent.spawn(bee.do_session, bee_info['login'], bee_info['password'],
-                                 bee_info['server'], bee_info['port'], self.my_ip)
+                gevent.spawn(bee.do_session, self.my_ip)
             gevent.sleep(60)
-
-    def get_targets(self):
-        enabled_bees = self.config.keys()
-        #TODO: Needs to be correlated with hive
-        # Maybe correlation can be done when the webapp initializes a new hive/feeder pair
-        targets = {}
-        for bee in enabled_bees:
-            if bee.startswith('bee_'):
-                bee_name = bee[4:]  # discard the 'bee_' prefix
-                targets[bee_name] = self.config[bee]
-            else:
-                targets[bee] = self.config[bee]
-        return targets
 
     def stop(self):
         self.run_flag = False

@@ -22,7 +22,7 @@ class ClientBase(object):
         self.sessions = sessions
         self.options = options
 
-    def do_session(self, login, password, server_host, server_port, my_ip):
+    def do_session(self, my_ip):
         raise Exception('Do not call base class!')
 
     def create_session(self, login, password, server_host, server_port, my_ip):

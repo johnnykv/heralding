@@ -24,8 +24,11 @@ class telnet(ClientBase):
     def __init__(self, sessions, options):
         super(telnet, self).__init__(sessions, options)
 
-    def do_session(self, login, password, server_host, server_port, my_ip):
-
+    def do_session(self, my_ip):
+        login = self.options['login']
+        password = self.options['password']
+        server_host = self.options['server']
+        server_port = self.options['port']
         session = self.create_session(login, password, server_host, server_port, my_ip)
         self.sessions[session.id] = session
         logging.debug(
