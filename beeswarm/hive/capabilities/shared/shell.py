@@ -158,9 +158,16 @@ class Commands(TelnetHandler):
             except ResourceNotFoundError:
                 self.writeline('cat: {0}: No such file or directory'.format(filepath))
 
+    @command('sudo')
+    def command_sudo(self, params):
+        executable = params[0]
+        self.writeline('Sorry, user {} is not allowed to execute \'{}\' as root on {}.'.format(self.username,
+                                                                                               executable,
+                                                                                               self.HOSTNAME))
+
     @command('uptime')
     def command_uptime(self, params):
-        if params == '-V':
+        if '-V' in params:
             self.writeline('procps version 3.2.8')
             return
         with open('/proc/uptime', 'r') as f:

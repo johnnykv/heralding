@@ -99,6 +99,11 @@ class telnet(ClientBase):
         self.send_command(cmd)
         self.get_response()
 
+    def sudo(self, params=''):
+        cmd = 'cd {}'.format(params)
+        self.send_command(cmd)
+        self.get_response()
+
     def list(self, params=''):
         cmd = 'ls {}'.format(params)
         self.send_command(cmd)
