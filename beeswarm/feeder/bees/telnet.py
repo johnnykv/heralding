@@ -30,8 +30,8 @@ class telnet(ClientBase):
             'working_dir': '/',
             'file_list': [],
         }
-        self.senses = [self.pwd, self.uname, self.uptime, self.list]
-        self.actions = [self.change_dir, self.cat, self.echo, self.sudo]
+        self.senses = [self.pwd, self.uname, self.uptime, self.ls]
+        self.actions = [self.cd, self.cat, self.echo, self.sudo]
 
     def connect(self):
         self.client = telnetlib.Telnet(self.options['server'], self.options['port'])
@@ -65,7 +65,7 @@ class telnet(ClientBase):
         except Exception as err:
             logging.debug('Caught exception: %s (%s)' % (err, str(type(err))))
         else:
-            self.list('-l')
+            self.ls('-l')
             logging.debug('Telnet file listing successful.')
             self.client.write('exit\r\n')
             self.client.read_all()
@@ -73,7 +73,7 @@ class telnet(ClientBase):
         finally:
             session.alldone = True
 
-    def change_dir(self, params=''):
+    def cd(self, params=''):
         cmd = 'cd {}'.format(params)
         self.send_command(cmd)
         data = self.get_response()
@@ -112,7 +112,7 @@ class telnet(ClientBase):
         self.send_command(cmd)
         return self.get_response()
 
-    def list(self, params=''):
+    def ls(self, params=''):
         cmd = 'ls {}'.format(params)
         self.send_command(cmd)
         resp_raw = self.get_response()

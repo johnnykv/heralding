@@ -106,7 +106,7 @@ class Telnet_Test(unittest.TestCase):
 
         # Command: cd
         self.assertEquals('/', current_bee.state['working_dir'])
-        current_bee.change_dir('/var')
+        current_bee.cd('/var')
         self.assertEquals('/var', current_bee.state['working_dir'])
 
         # Command: pwd
@@ -130,7 +130,7 @@ class Telnet_Test(unittest.TestCase):
         self.assertTrue('just testing!' in resp)
 
         # Command: list
-        resp = current_bee.list()
+        resp = current_bee.ls()
         self.assertTrue('var' in resp)
 
 
