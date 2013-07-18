@@ -99,6 +99,8 @@ class Commands(TelnetHandler):
 
     @command('pwd')
     def command_pwd(self, params):
+        if params:
+            self.writeline('pwd too many arguments')
         self.writeline(self.working_dir)
 
     @command('uname')
@@ -158,6 +160,9 @@ class Commands(TelnetHandler):
 
     @command('uptime')
     def command_uptime(self, params):
+        if params == '-V':
+            self.writeline('procps version 3.2.8')
+            return
         with open('/proc/uptime', 'r') as f:
             uptime_seconds = float(f.readline().split()[0])
             uptime_string = str(timedelta(seconds=uptime_seconds))

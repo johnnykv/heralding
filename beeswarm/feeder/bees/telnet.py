@@ -73,7 +73,26 @@ class telnet(ClientBase):
         prompt = data.rsplit('\r\n', 1)[1]
         pattern = re.compile(r'/[/\w]+')
         self.state['working_dir'] = pattern.findall(prompt)[0]
-        print self.state['working_dir']
+
+    def pwd(self, params=''):
+        cmd = 'pwd {}'.format(params)
+        self.send_command(cmd)
+        self.get_response()
+
+    def uname(self, params=''):
+        cmd = 'uname {}'.format(params)
+        self.send_command(cmd)
+        self.get_response()
+
+    def cat(self, params=''):
+        cmd = 'cat {}'.format(params)
+        self.send_command(cmd)
+        self.get_response()
+
+    def uptime(self, params=''):
+        cmd = 'uptime {}'.format(params)
+        self.send_command(cmd)
+        self.get_response()
 
     def echo(self, params=''):
         cmd = 'cd {}'.format(params)
