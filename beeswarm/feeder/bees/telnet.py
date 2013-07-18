@@ -31,6 +31,19 @@ class telnet(ClientBase):
             'file_list': [],
         }
 
+    def connect(self):
+        self.client = telnetlib.Telnet(self.options['server'], self.options['port'])
+        self.client.set_option_negotiation_callback(self.process_options)
+
+    def login(self, login, password):
+            self.client.read_until('Username: ')
+            self.client.write(login + '\r\n')
+            self.client.read_until('Password: ')
+            self.client.write(password + '\r\n')
+            current_data = self.client.read_until('$ ', 5)
+            if not current_data.endswith('$ '):
+                raise InvalidLogin
+
     def do_session(self, my_ip):
         login = self.options['login']
         password = self.options['password']
@@ -42,22 +55,14 @@ class telnet(ClientBase):
             'Sending %s honeybee to %s:%s. (bee id: %s)' % ('telnet', server_host, server_port, session.id))
 
         try:
-            self.client = telnetlib.Telnet(server_host, server_port)
-            self.client.set_option_negotiation_callback(self.process_options)
+            self.connect()
+            self.login(login, password)
             session.did_connect = True
             session.source_port = self.client.sock.getsockname()[1]
-            self.client.read_until('Username: ')
-            self.client.write(login + '\r\n')
-            self.client.read_until('Password: ')
-            self.client.write(password + '\r\n')
-            current_data = self.client.read_until('$ ', 5)
-            if not current_data.endswith('$ '):
-                raise InvalidLogin
             session.did_login = True
         except Exception as err:
             logging.debug('Caught exception: %s (%s)' % (err, str(type(err))))
         else:
-            self.list()
             self.list('-l')
             logging.debug('Telnet file listing successful.')
             self.client.write('exit\r\n')
@@ -73,42 +78,43 @@ class telnet(ClientBase):
         prompt = data.rsplit('\r\n', 1)[1]
         pattern = re.compile(r'/[/\w]+')
         self.state['working_dir'] = pattern.findall(prompt)[0]
+        return data
 
     def pwd(self, params=''):
         cmd = 'pwd {}'.format(params)
         self.send_command(cmd)
-        self.get_response()
+        return self.get_response()
 
     def uname(self, params=''):
         cmd = 'uname {}'.format(params)
         self.send_command(cmd)
-        self.get_response()
+        return self.get_response()
 
     def cat(self, params=''):
         cmd = 'cat {}'.format(params)
         self.send_command(cmd)
-        self.get_response()
+        return self.get_response()
 
     def uptime(self, params=''):
         cmd = 'uptime {}'.format(params)
         self.send_command(cmd)
-        self.get_response()
+        return self.get_response()
 
     def echo(self, params=''):
         cmd = 'cd {}'.format(params)
         self.send_command(cmd)
-        self.get_response()
+        return self.get_response()
 
     def sudo(self, params=''):
         cmd = 'cd {}'.format(params)
         self.send_command(cmd)
-        self.get_response()
+        return self.get_response()
 
     def list(self, params=''):
         cmd = 'ls {}'.format(params)
         self.send_command(cmd)
-        resp = self.get_response()
-        resp = resp.split('\r\n')
+        resp_raw = self.get_response()
+        resp = resp_raw.split('\r\n')
         if params:
             # Our Hive capability only accepts "ls -l" or "ls" so params will always be "-l"
             files = []
@@ -120,6 +126,7 @@ class telnet(ClientBase):
         else:
             resp = '\r\n'.join(resp[1:-1])
             self.state['file_list'] = resp.split()
+        return resp_raw
 
     def get_response(self):
         response = self.client.read_until('$ ', 5)
