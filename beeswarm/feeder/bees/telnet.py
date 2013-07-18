@@ -30,19 +30,21 @@ class telnet(ClientBase):
             'working_dir': '/',
             'file_list': [],
         }
+        self.senses = [self.pwd, self.uname, self.uptime, self.list]
+        self.actions = [self.change_dir, self.cat, self.echo, self.sudo]
 
     def connect(self):
         self.client = telnetlib.Telnet(self.options['server'], self.options['port'])
         self.client.set_option_negotiation_callback(self.process_options)
 
     def login(self, login, password):
-            self.client.read_until('Username: ')
-            self.client.write(login + '\r\n')
-            self.client.read_until('Password: ')
-            self.client.write(password + '\r\n')
-            current_data = self.client.read_until('$ ', 5)
-            if not current_data.endswith('$ '):
-                raise InvalidLogin
+        self.client.read_until('Username: ')
+        self.client.write(login + '\r\n')
+        self.client.read_until('Password: ')
+        self.client.write(password + '\r\n')
+        current_data = self.client.read_until('$ ', 5)
+        if not current_data.endswith('$ '):
+            raise InvalidLogin
 
     def do_session(self, my_ip):
         login = self.options['login']
@@ -134,6 +136,7 @@ class telnet(ClientBase):
 
     def send_command(self, cmd):
         self.client.write(cmd + '\r\n')
+        self.state['last_command'] = cmd
 
     def process_options(self, *args):
         """Dummy callback, used to disable options negotiations"""
