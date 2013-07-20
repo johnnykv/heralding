@@ -38,6 +38,17 @@ class BeeTelnetClient(telnetlib.Telnet):
 
 class telnet(ClientBase):
 
+    COMMAND_MAP = {
+        'pwd': ['ls', 'uname', 'uptime'],
+        'cd': ['ls'],
+        'uname': ['uptime', 'ls'],
+        'ls': ['cd', 'cat', 'pwd'],
+        'cat': ['ls', 'echo', 'sudo', 'pwd'],
+        'uptime': ['ls', 'echo', 'sudo', 'uname', 'pwd'],
+        'echo': ['ls', 'echo', 'sudo', 'uname', 'pwd'],
+        'sudo': ['logout']
+    }
+
     def __init__(self, sessions, options):
         super(telnet, self).__init__(sessions, options)
         self.client = None
@@ -50,7 +61,7 @@ class telnet(ClientBase):
         self.actions = [self.cd, self.cat, self.echo, self.sudo]
 
     def connect(self):
-        self.client = telnetlib.Telnet(self.options['server'], self.options['port'])
+        self.client = BeeTelnetClient(self.options['server'], self.options['port'])
         self.client.set_option_negotiation_callback(self.process_options)
 
     def login(self, login, password):
@@ -88,6 +99,9 @@ class telnet(ClientBase):
             self.client.close()
         finally:
             session.alldone = True
+
+    def logout(self):
+        self.client.close()
 
     def cd(self, params=''):
         cmd = 'cd {}'.format(params)
@@ -145,6 +159,9 @@ class telnet(ClientBase):
             resp = '\r\n'.join(resp[1:-1])
             self.state['file_list'] = resp.split()
         return resp_raw
+
+    def sense(self):
+        pass
 
     def get_response(self):
         response = self.client.read_until('$ ', 5)
