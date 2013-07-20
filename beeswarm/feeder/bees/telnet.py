@@ -14,10 +14,26 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+import random
 import telnetlib
 import re
+import time
 
 from beeswarm.feeder.bees.clientbase import ClientBase
+
+
+class BeeTelnetClient(telnetlib.Telnet):
+
+    IAC = chr(255)
+
+    def write(self, buffer_):
+        if self.IAC in buffer_:
+            buffer_ = buffer_.replace(self.IAC, self.IAC+self.IAC)
+        self.msg("send %r", buffer_)
+        for char in buffer_:
+            delta = random.gauss(150, 30)
+            self.sock.sendall(char)
+            time.sleep(delta/1000.0)  # Convert milliseconds to seconds
 
 
 class telnet(ClientBase):
