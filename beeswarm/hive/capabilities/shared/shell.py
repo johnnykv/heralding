@@ -25,18 +25,26 @@ from datetime import timedelta
 
 
 class Commands(TelnetHandler):
-
     """This class implements the shell functionality for the telnet and SSH capabilities"""
 
     max_tries = 3
     PROMPT = ''
-
     WELCOME = ''
-
     HOSTNAME = 'host'
+    TERM = 'ansi'
+
+    ENVIRONMENT_VARS = {
+        'http_proxy': 'http://10.1.0.23/',
+        'https_proxy': 'http://10.1.0.23/',
+        'ftp_proxy': 'http://10.1.0.23/',
+        'BROWSER': 'firefox',
+        'EDITOR': 'gedit',
+        'SHELL': '/bin/bash',
+        'PAGER': 'less'
+    }
+
     authNeedUser = True
     authNeedPass = True
-    TERM = 'ansi'
 
     def __init__(self, request, client_address, server, vfs):
         self.vfs = vfs
@@ -70,10 +78,15 @@ class Commands(TelnetHandler):
         if not params:
             self.writeline('')
             return
+        elif params[0].startswith('$') and len(params) == 1:
+            var_name = params[0][1:]
+            value = self.ENVIRONMENT_VARS[var_name]
+            self.writeline(value)
         elif '*' in params:
             params.remove('*')
             params.extend(self.vfs.listdir())
-        self.writeline(' '.join(params))
+        else:
+            self.writeline(' '.join(params))
 
     @command('cd')
     def command_cd(self, params):

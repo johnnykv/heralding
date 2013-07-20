@@ -46,7 +46,7 @@ class telnet(ClientBase):
         'ls': ['cd', 'cat', 'pwd'],
         'cat': ['ls', 'echo', 'sudo', 'pwd'],
         'uptime': ['ls', 'echo', 'sudo', 'uname', 'pwd'],
-        'echo': ['ls', 'echo', 'sudo', 'uname', 'pwd'],
+        'echo': ['ls', 'sudo', 'uname', 'pwd'],
         'sudo': ['logout']
     }
 
@@ -218,9 +218,13 @@ class telnet(ClientBase):
                 param = ''.join(random.choice(string.lowercase) for x in range(3))
         elif next_command_name == 'echo':
             param = random.choice([
-                'yay we rock!',
-                'test',
-                'looks like ssh\'s working fine'
+                '$http_proxy',
+                '$https_proxy',
+                '$ftp_proxy',
+                '$BROWSER',
+                '$EDITOR',
+                '$SHELL',
+                '$PAGER'
             ])
         elif next_command_name == 'sudo':
             param = random.choice([
