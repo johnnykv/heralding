@@ -111,6 +111,11 @@ class Commands(TelnetHandler):
 
     @command('uname')
     def command_uname(self, params):
+
+        if not params:
+            self.writeline('Linux')
+            return
+
         buff = ''
         info = list(os.uname())
         parser = argparse.ArgumentParser()
