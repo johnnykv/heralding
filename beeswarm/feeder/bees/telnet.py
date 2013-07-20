@@ -181,7 +181,6 @@ class telnet(ClientBase):
     def sense(self):
         cmd_name = random.choice(self.senses)
         param = ''
-        print 'SENSE: ', cmd_name
         if cmd_name == 'ls':
             if random.randint(0, 1):
                 param = '-l'
@@ -198,7 +197,6 @@ class telnet(ClientBase):
     def decide(self):
 
         next_command_name = random.choice(self.COMMAND_MAP[self.state['last_command']])
-        print 'DECIDE: ', next_command_name
         param = ''
         if next_command_name == 'cd':
             try:
@@ -237,7 +235,6 @@ class telnet(ClientBase):
         return next_command_name, param
 
     def act(self, cmd_name, params):
-        print 'ACTING: ', cmd_name, params
         command = getattr(self, cmd_name)
         command(params)
 
@@ -246,7 +243,6 @@ class telnet(ClientBase):
         return response
 
     def send_command(self, cmd):
-        print "--->", cmd
         if self.command_count > self.command_limit:
             self.logout()
             return
