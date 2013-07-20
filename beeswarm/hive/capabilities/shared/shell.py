@@ -17,6 +17,7 @@ import argparse
 import os
 from fs.errors import ResourceNotFoundError
 from fs.path import dirname
+from fs.utils import isdir
 from telnetsrv.green import TelnetHandler
 from telnetsrv.telnetsrvlib import command
 from beeswarm.hive.helpers.common import path_to_ls
@@ -57,7 +58,12 @@ class Commands(TelnetHandler):
                 abspath = self.vfs.getsyspath(self.working_dir + '/' + fname)
                 self.writeline(path_to_ls(abspath))
         else:
-            self.writeline(' '.join(self.vfs.listdir(self.working_dir)))
+            listing = []
+            for item in self.vfs.listdir(self.working_dir):
+                if isdir(self.vfs, os.path.join(self.working_dir, item)):
+                    item += '/'  # Append a slash at the end of directory names
+                listing.append(item)
+            self.writeline(' '.join(listing))
 
     @command('echo')
     def command_echo(self, params):

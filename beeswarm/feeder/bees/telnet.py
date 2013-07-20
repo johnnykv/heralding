@@ -56,9 +56,10 @@ class telnet(ClientBase):
             'last_command': None,
             'working_dir': '/',
             'file_list': [],
+            'dir_list': [],
         }
-        self.senses = [self.pwd, self.uname, self.uptime, self.ls]
-        self.actions = [self.cd, self.cat, self.echo, self.sudo]
+        self.senses = ['pwd', 'uname', 'uptime', 'ls']
+        self.actions = ['cd', 'cat', 'echo', 'sudo']
 
     def connect(self):
         self.client = BeeTelnetClient(self.options['server'], self.options['port'])
@@ -147,21 +148,35 @@ class telnet(ClientBase):
         self.send_command(cmd)
         resp_raw = self.get_response()
         resp = resp_raw.split('\r\n')
+        files = []
+        dirs = []
         if params:
             # Our Hive capability only accepts "ls -l" or "ls" so params will always be "-l"
-            files = []
             for line in resp[2:-1]:  # Discard the line with echoed command, total and prompt
                 # 8 Makes sure we have the right result even if filenames have spaces.
-                filename = line.split(' ', 8)[-1]
-                files.append(filename)
-            self.state['file_list'] = files
+                info = line.split(' ', 8)
+                name = info[-1]
+                if info[0].startswith('d'):
+                    dirs.append(name)
+                else:
+                    files.append(name)
         else:
             resp = '\r\n'.join(resp[1:-1])
-            self.state['file_list'] = resp.split()
+            names = resp.split()
+            for name in names:
+                if name.endswith('/'):
+                    dirs.append(name)
+                else:
+                    files.append(name)
+        self.state['file_list'] = files
+        self.state['dir_list'] = dirs
         return resp_raw
 
     def sense(self):
-        pass
+        cmd_name = random.choice(self.senses)
+        if cmd_name == 'ls':
+            pass
+
 
     def get_response(self):
         response = self.client.read_until('$ ', 5)
