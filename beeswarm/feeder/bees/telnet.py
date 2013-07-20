@@ -195,7 +195,6 @@ class telnet(ClientBase):
         command(param)
 
     def decide(self):
-
         next_command_name = random.choice(self.COMMAND_MAP[self.state['last_command']])
         param = ''
         if next_command_name == 'cd':
