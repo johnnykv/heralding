@@ -26,7 +26,7 @@ class BeeTelnetClient(telnetlib.Telnet):
 
     IAC = chr(255)
 
-    def write(self, buffer_):
+    def write_human(self, buffer_):
         if self.IAC in buffer_:
             buffer_ = buffer_.replace(self.IAC, self.IAC+self.IAC)
         self.msg("send %r", buffer_)
@@ -168,7 +168,7 @@ class telnet(ClientBase):
         return response
 
     def send_command(self, cmd):
-        self.client.write(cmd + '\r\n')
+        self.client.write_human(cmd + '\r\n')
         self.state['last_command'] = cmd
 
     def process_options(self, *args):
