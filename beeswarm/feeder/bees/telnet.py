@@ -15,6 +15,7 @@
 
 import logging
 import random
+import string
 import telnetlib
 import re
 import time
@@ -31,7 +32,7 @@ class BeeTelnetClient(telnetlib.Telnet):
             buffer_ = buffer_.replace(self.IAC, self.IAC+self.IAC)
         self.msg("send %r", buffer_)
         for char in buffer_:
-            delta = random.gauss(150, 30)
+            delta = random.gauss(80, 20)
             self.sock.sendall(char)
             time.sleep(delta/1000.0)  # Convert milliseconds to seconds
 
@@ -53,11 +54,14 @@ class telnet(ClientBase):
         super(telnet, self).__init__(sessions, options)
         self.client = None
         self.state = {
-            'last_command': None,
+            # Hack! Assume that the client has initially performed an echo to avoid KeyErrors
+            'last_command': 'echo',
             'working_dir': '/',
             'file_list': [],
             'dir_list': [],
         }
+        self.command_count = 0
+        self.command_limit = random.randint(6, 11)
         self.senses = ['pwd', 'uname', 'uptime', 'ls']
         self.actions = ['cd', 'cat', 'echo', 'sudo']
 
@@ -93,15 +97,17 @@ class telnet(ClientBase):
         except Exception as err:
             logging.debug('Caught exception: %s (%s)' % (err, str(type(err))))
         else:
-            self.ls('-l')
-            logging.debug('Telnet file listing successful.')
-            self.client.write('exit\r\n')
-            self.client.read_all()
-            self.client.close()
+            while self.command_count < self.command_limit:
+                self.sense()
+                comm, param = self.decide()
+                self.act(comm, param)
+                time.sleep(10)
         finally:
             session.alldone = True
 
     def logout(self):
+        self.client.write('exit\r\n')
+        self.client.read_all()
         self.client.close()
 
     def cd(self, params=''):
@@ -134,12 +140,12 @@ class telnet(ClientBase):
         return self.get_response()
 
     def echo(self, params=''):
-        cmd = 'cd {}'.format(params)
+        cmd = 'echo {}'.format(params)
         self.send_command(cmd)
         return self.get_response()
 
     def sudo(self, params=''):
-        cmd = 'cd {}'.format(params)
+        cmd = 'sudo {}'.format(params)
         self.send_command(cmd)
         return self.get_response()
 
@@ -174,17 +180,79 @@ class telnet(ClientBase):
 
     def sense(self):
         cmd_name = random.choice(self.senses)
+        param = ''
+        print 'SENSE: ', cmd_name
         if cmd_name == 'ls':
-            pass
+            if random.randint(0, 1):
+                param = '-l'
+        elif cmd_name == 'uname':
+            # Choose options from predefined ones
+            opts = 'asnrvmpio'
+            start = random.randint(0, len(opts)-2)
+            end = random.randint(start+1, len(opts)-1)
+            param = '-{}'.format(opts[start:end])
+        command = getattr(self, cmd_name)
+        self.command_count += 1
+        command(param)
 
+    def decide(self):
+
+        next_command_name = random.choice(self.COMMAND_MAP[self.state['last_command']])
+        print 'DECIDE: ', next_command_name
+        param = ''
+        if next_command_name == 'cd':
+            try:
+                param = random.choice(self.state['dir_list'])
+            except IndexError:
+                next_command_name = 'ls'
+
+        elif next_command_name == 'uname':
+            opts = 'asnrvmpio'
+            start = random.randint(0, len(opts)-2)
+            end = random.randint(start+1, len(opts)-1)
+            param = '-{}'.format(opts[start:end])
+        elif next_command_name == 'ls':
+            if random.randint(0, 1):
+                param = '-l'
+        elif next_command_name == 'cat':
+            try:
+                param = random.choice(self.state['file_list'])
+            except IndexError:
+                param = ''.join(random.choice(string.lowercase) for x in range(3))
+        elif next_command_name == 'echo':
+            param = random.choice([
+                'yay we rock!',
+                'test',
+                'looks like ssh\'s working fine'
+            ])
+        elif next_command_name == 'sudo':
+            param = random.choice([
+                'pm-hibernate',
+                'shutdown -h',
+                'vim /etc/httpd.conf',
+                'vim /etc/resolve.conf',
+                'service network restart',
+                '/etc/init.d/network-manager restart',
+            ])
+        return next_command_name, param
+
+    def act(self, cmd_name, params):
+        print 'ACTING: ', cmd_name, params
+        command = getattr(self, cmd_name)
+        command(params)
 
     def get_response(self):
         response = self.client.read_until('$ ', 5)
         return response
 
     def send_command(self, cmd):
+        print "--->", cmd
+        if self.command_count > self.command_limit:
+            self.logout()
+            return
+        logging.debug('Sending %s command.' % cmd)
+        self.command_count += 1
         self.client.write_human(cmd + '\r\n')
-        self.state['last_command'] = cmd
 
     def process_options(self, *args):
         """Dummy callback, used to disable options negotiations"""
