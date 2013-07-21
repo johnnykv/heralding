@@ -25,21 +25,23 @@ class Consumer:
         self.sessions = sessions
         self.config = config
         self.enabled = True
+        self.active_loggers = None
 
-    def start_handling(self):
-        active_loggers = self.get_loggers()
+    def start_handling(self, sleep_time=5):
+        if not self.active_loggers:
+            self.active_loggers = self.get_loggers()
 
         while self.enabled:
             for session_id in self.sessions.keys():
                 session = self.sessions[session_id]
                 if session.alldone:
                     logging.debug('Found finished honeybee. (bee id: %s)' % session.id)
-                    for logger in active_loggers:
+                    for logger in self.active_loggers:
                         logging.debug(
                             'Logging honeybee with %s (session id: %s)' % (logger.__class__.__name__, session.id))
                         logger.log(session)
                     del self.sessions[session_id]
-            gevent.sleep(5)
+            gevent.sleep(sleep_time)
 
     def stop_handling(self):
         self.enabled = False
