@@ -12,6 +12,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import telnetlib
 
 import gevent.monkey
 gevent.monkey.patch_all()
@@ -66,16 +67,246 @@ class Telnet_Test(unittest.TestCase):
 
         BeeSession.feeder_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
         current_bee = bee_telnet.telnet(beesessions, bee_info)
-        current_bee.do_session('127.0.0.1')
-        session_id, session = beesessions.popitem()
-
-        # Make sure we only spawned one session.
-        self.assertEquals(beesessions, {})
-
-        # Make sure we were able to log in.
-        self.assertEquals(session.did_login, True)
-
+        current_bee.connect()
+        current_bee.login(bee_info['login'], bee_info['password'])
         srv.stop()
+
+    def test_validate_senses(self):
+        sessions = {}
+        users = {'test': HiveUser('test', 'test')}
+        authenticator = Authenticator(users)
+        Session.authenticator = authenticator
+
+        cap = hive_telnet.telnet(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users, self.work_dir)
+        socket = create_socket(('0.0.0.0', 0))
+        srv = StreamServer(socket, cap.handle_session)
+        srv.start()
+
+        bee_info = {
+            'timing': 'regular',
+            'login': 'test',
+            'password': 'test',
+            'port': srv.server_port,
+            'server': '127.0.0.1'
+        }
+        beesessions = {}
+
+        BeeSession.feeder_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        current_bee = bee_telnet.telnet(beesessions, bee_info)
+        for s in current_bee.senses:
+            sense = getattr(current_bee, s)
+            self.assertTrue(callable(sense))
+
+    def test_command_cd(self):
+        sessions = {}
+        users = {'test': HiveUser('test', 'test')}
+        authenticator = Authenticator(users)
+        Session.authenticator = authenticator
+
+        cap = hive_telnet.telnet(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users, self.work_dir)
+        socket = create_socket(('0.0.0.0', 0))
+        srv = StreamServer(socket, cap.handle_session)
+        srv.start()
+
+        bee_info = {
+            'timing': 'regular',
+            'login': 'test',
+            'password': 'test',
+            'port': srv.server_port,
+            'server': '127.0.0.1'
+        }
+        beesessions = {}
+
+        BeeSession.feeder_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        current_bee = bee_telnet.telnet(beesessions, bee_info)
+
+        current_bee.connect()
+        current_bee.login(bee_info['login'], bee_info['password'])
+
+        # Command: cd
+        self.assertEquals('/', current_bee.state['working_dir'])
+        current_bee.cd('/var')
+        self.assertEquals('/var', current_bee.state['working_dir'])
+
+    def test_command_pwd(self):
+
+        sessions = {}
+        users = {'test': HiveUser('test', 'test')}
+        authenticator = Authenticator(users)
+        Session.authenticator = authenticator
+
+        cap = hive_telnet.telnet(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users, self.work_dir)
+        socket = create_socket(('0.0.0.0', 0))
+        srv = StreamServer(socket, cap.handle_session)
+        srv.start()
+
+        bee_info = {
+            'timing': 'regular',
+            'login': 'test',
+            'password': 'test',
+            'port': srv.server_port,
+            'server': '127.0.0.1'
+        }
+        beesessions = {}
+
+        BeeSession.feeder_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        current_bee = bee_telnet.telnet(beesessions, bee_info)
+
+        current_bee.connect()
+        current_bee.login(bee_info['login'], bee_info['password'])
+
+        current_bee.cd('/var')
+        resp = current_bee.pwd()
+        self.assertTrue('/var' in resp)
+
+    def test_command_uname(self):
+
+        sessions = {}
+        users = {'test': HiveUser('test', 'test')}
+        authenticator = Authenticator(users)
+        Session.authenticator = authenticator
+
+        cap = hive_telnet.telnet(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users, self.work_dir)
+        socket = create_socket(('0.0.0.0', 0))
+        srv = StreamServer(socket, cap.handle_session)
+        srv.start()
+
+        bee_info = {
+            'timing': 'regular',
+            'login': 'test',
+            'password': 'test',
+            'port': srv.server_port,
+            'server': '127.0.0.1'
+        }
+        beesessions = {}
+
+        BeeSession.feeder_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        current_bee = bee_telnet.telnet(beesessions, bee_info)
+
+        current_bee.connect()
+        current_bee.login(bee_info['login'], bee_info['password'])
+
+        resp1 = current_bee.uname('-o')
+        self.assertTrue('GNU/Linux' in resp1)
+
+    def test_command_cat(self):
+
+        sessions = {}
+        users = {'test': HiveUser('test', 'test')}
+        authenticator = Authenticator(users)
+        Session.authenticator = authenticator
+
+        cap = hive_telnet.telnet(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users, self.work_dir)
+        socket = create_socket(('0.0.0.0', 0))
+        srv = StreamServer(socket, cap.handle_session)
+        srv.start()
+
+        bee_info = {
+            'timing': 'regular',
+            'login': 'test',
+            'password': 'test',
+            'port': srv.server_port,
+            'server': '127.0.0.1'
+        }
+        beesessions = {}
+
+        BeeSession.feeder_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        current_bee = bee_telnet.telnet(beesessions, bee_info)
+
+        current_bee.connect()
+        current_bee.login(bee_info['login'], bee_info['password'])
+
+        resp = current_bee.cat('/var/www/index.html')
+        self.assertTrue('</html>' in resp)
+
+    def test_command_uptime(self):
+
+        sessions = {}
+        users = {'test': HiveUser('test', 'test')}
+        authenticator = Authenticator(users)
+        Session.authenticator = authenticator
+
+        cap = hive_telnet.telnet(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users, self.work_dir)
+        socket = create_socket(('0.0.0.0', 0))
+        srv = StreamServer(socket, cap.handle_session)
+        srv.start()
+
+        bee_info = {
+            'timing': 'regular',
+            'login': 'test',
+            'password': 'test',
+            'port': srv.server_port,
+            'server': '127.0.0.1'
+        }
+        beesessions = {}
+
+        BeeSession.feeder_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        current_bee = bee_telnet.telnet(beesessions, bee_info)
+
+        current_bee.connect()
+        current_bee.login(bee_info['login'], bee_info['password'])
+
+        resp = current_bee.uptime('-V')
+        self.assertTrue('procps version 3.2.8' in resp)
+
+    def test_command_echo(self):
+
+        sessions = {}
+        users = {'test': HiveUser('test', 'test')}
+        authenticator = Authenticator(users)
+        Session.authenticator = authenticator
+
+        cap = hive_telnet.telnet(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users, self.work_dir)
+        socket = create_socket(('0.0.0.0', 0))
+        srv = StreamServer(socket, cap.handle_session)
+        srv.start()
+
+        bee_info = {
+            'timing': 'regular',
+            'login': 'test',
+            'password': 'test',
+            'port': srv.server_port,
+            'server': '127.0.0.1'
+        }
+        beesessions = {}
+
+        BeeSession.feeder_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        current_bee = bee_telnet.telnet(beesessions, bee_info)
+
+        current_bee.connect()
+        current_bee.login(bee_info['login'], bee_info['password'])
+        resp = current_bee.echo('just testing!')
+        self.assertTrue('just testing!' in resp)
+
+    def test_command_list(self):
+        sessions = {}
+        users = {'test': HiveUser('test', 'test')}
+        authenticator = Authenticator(users)
+        Session.authenticator = authenticator
+
+        cap = hive_telnet.telnet(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users, self.work_dir)
+        socket = create_socket(('0.0.0.0', 0))
+        srv = StreamServer(socket, cap.handle_session)
+        srv.start()
+
+        bee_info = {
+            'timing': 'regular',
+            'login': 'test',
+            'password': 'test',
+            'port': srv.server_port,
+            'server': '127.0.0.1'
+        }
+        beesessions = {}
+
+        BeeSession.feeder_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        current_bee = bee_telnet.telnet(beesessions, bee_info)
+
+        current_bee.connect()
+        current_bee.login(bee_info['login'], bee_info['password'])
+
+        resp = current_bee.ls()
+        self.assertTrue('var' in resp)
+
 
 if __name__ == '__main__':
     unittest.main()

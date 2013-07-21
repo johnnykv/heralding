@@ -17,6 +17,7 @@ import argparse
 import os
 from fs.errors import ResourceNotFoundError
 from fs.path import dirname
+from fs.utils import isdir
 from telnetsrv.green import TelnetHandler
 from telnetsrv.telnetsrvlib import command
 from beeswarm.hive.helpers.common import path_to_ls
@@ -24,18 +25,26 @@ from datetime import timedelta
 
 
 class Commands(TelnetHandler):
-
     """This class implements the shell functionality for the telnet and SSH capabilities"""
 
     max_tries = 3
     PROMPT = ''
-
     WELCOME = ''
-
     HOSTNAME = 'host'
+    TERM = 'ansi'
+
+    ENVIRONMENT_VARS = {
+        'http_proxy': 'http://10.1.0.23/',
+        'https_proxy': 'http://10.1.0.23/',
+        'ftp_proxy': 'http://10.1.0.23/',
+        'BROWSER': 'firefox',
+        'EDITOR': 'gedit',
+        'SHELL': '/bin/bash',
+        'PAGER': 'less'
+    }
+
     authNeedUser = True
     authNeedPass = True
-    TERM = 'ansi'
 
     def __init__(self, request, client_address, server, vfs):
         self.vfs = vfs
@@ -57,17 +66,27 @@ class Commands(TelnetHandler):
                 abspath = self.vfs.getsyspath(self.working_dir + '/' + fname)
                 self.writeline(path_to_ls(abspath))
         else:
-            self.writeline(' '.join(self.vfs.listdir(self.working_dir)))
+            listing = []
+            for item in self.vfs.listdir(self.working_dir):
+                if isdir(self.vfs, os.path.join(self.working_dir, item)):
+                    item += '/'  # Append a slash at the end of directory names
+                listing.append(item)
+            self.writeline(' '.join(listing))
 
     @command('echo')
     def command_echo(self, params):
         if not params:
             self.writeline('')
             return
+        elif params[0].startswith('$') and len(params) == 1:
+            var_name = params[0][1:]
+            value = self.ENVIRONMENT_VARS[var_name]
+            self.writeline(value)
         elif '*' in params:
             params.remove('*')
             params.extend(self.vfs.listdir())
-        self.writeline(' '.join(params))
+        else:
+            self.writeline(' '.join(params))
 
     @command('cd')
     def command_cd(self, params):
@@ -99,10 +118,17 @@ class Commands(TelnetHandler):
 
     @command('pwd')
     def command_pwd(self, params):
+        if params:
+            self.writeline('pwd too many arguments')
         self.writeline(self.working_dir)
 
     @command('uname')
     def command_uname(self, params):
+
+        if not params:
+            self.writeline('Linux')
+            return
+
         buff = ''
         info = list(os.uname())
         parser = argparse.ArgumentParser()
@@ -156,8 +182,18 @@ class Commands(TelnetHandler):
             except ResourceNotFoundError:
                 self.writeline('cat: {0}: No such file or directory'.format(filepath))
 
+    @command('sudo')
+    def command_sudo(self, params):
+        executable = params[0]
+        self.writeline('Sorry, user {} is not allowed to execute \'{}\' as root on {}.'.format(self.username,
+                                                                                               executable,
+                                                                                               self.HOSTNAME))
+
     @command('uptime')
     def command_uptime(self, params):
+        if '-V' in params:
+            self.writeline('procps version 3.2.8')
+            return
         with open('/proc/uptime', 'r') as f:
             uptime_seconds = float(f.readline().split()[0])
             uptime_string = str(timedelta(seconds=uptime_seconds))

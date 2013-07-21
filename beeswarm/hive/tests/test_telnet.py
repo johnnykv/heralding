@@ -209,6 +209,12 @@ class Telnet_Tests(unittest.TestCase):
         self.assertTrue(reply.startswith('uptime'))
         self.assertTrue(reply.endswith('$ '))
 
+        # Command: sudo
+        client.write('sudo service network restart' + '\r\n')
+        reply = client.read_until('$ ', 5)
+        self.assertTrue(reply.startswith('sudo'))
+        self.assertTrue('Sorry' in reply)
+        self.assertTrue(reply.endswith('$ '))
         server.stop()
 
     def cb(self, socket, command, option):
