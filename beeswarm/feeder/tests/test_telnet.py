@@ -67,15 +67,8 @@ class Telnet_Test(unittest.TestCase):
 
         BeeSession.feeder_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
         current_bee = bee_telnet.telnet(beesessions, bee_info)
-        current_bee.do_session('127.0.0.1')
-        session_id, session = beesessions.popitem()
-
-        # Make sure we only spawned one session.
-        self.assertEquals(beesessions, {})
-
-        # Make sure we were able to log in.
-        self.assertEquals(session.did_login, True)
-
+        current_bee.connect()
+        current_bee.login(bee_info['login'], bee_info['password'])
         srv.stop()
 
     def test_validate_senses(self):
