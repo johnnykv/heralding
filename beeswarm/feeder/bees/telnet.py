@@ -28,6 +28,8 @@ class BeeTelnetClient(telnetlib.Telnet):
     IAC = chr(255)
 
     def write_human(self, buffer_):
+        """ Emulates human typing speed """
+
         if self.IAC in buffer_:
             buffer_ = buffer_.replace(self.IAC, self.IAC+self.IAC)
         self.msg("send %r", buffer_)
@@ -65,20 +67,9 @@ class telnet(ClientBase):
         self.senses = ['pwd', 'uname', 'uptime', 'ls']
         self.actions = ['cd', 'cat', 'echo', 'sudo']
 
-    def connect(self):
-        self.client = BeeTelnetClient(self.options['server'], self.options['port'])
-        self.client.set_option_negotiation_callback(self.process_options)
-
-    def login(self, login, password):
-        self.client.read_until('Username: ')
-        self.client.write(login + '\r\n')
-        self.client.read_until('Password: ')
-        self.client.write(password + '\r\n')
-        current_data = self.client.read_until('$ ', 5)
-        if not current_data.endswith('$ '):
-            raise InvalidLogin
-
     def do_session(self, my_ip):
+        """ Launch one login session"""
+
         login = self.options['login']
         password = self.options['password']
         server_host = self.options['server']
@@ -104,6 +95,19 @@ class telnet(ClientBase):
                 time.sleep(10)
         finally:
             session.alldone = True
+
+    def connect(self):
+        self.client = BeeTelnetClient(self.options['server'], self.options['port'])
+        self.client.set_option_negotiation_callback(self.process_options)
+
+    def login(self, login, password):
+        self.client.read_until('Username: ')
+        self.client.write(login + '\r\n')
+        self.client.read_until('Password: ')
+        self.client.write(password + '\r\n')
+        current_data = self.client.read_until('$ ', 5)
+        if not current_data.endswith('$ '):
+            raise InvalidLogin
 
     def logout(self):
         self.client.write('exit\r\n')
@@ -179,6 +183,8 @@ class telnet(ClientBase):
         return resp_raw
 
     def sense(self):
+        """ Launch a command in the 'senses' List, and update the current state."""
+
         cmd_name = random.choice(self.senses)
         param = ''
         if cmd_name == 'ls':
@@ -195,6 +201,10 @@ class telnet(ClientBase):
         command(param)
 
     def decide(self):
+        """ Choose the next command to execute, and its parameters, based on the current
+            state.
+        """
+
         next_command_name = random.choice(self.COMMAND_MAP[self.state['last_command']])
         param = ''
         if next_command_name == 'cd':
@@ -238,6 +248,8 @@ class telnet(ClientBase):
         return next_command_name, param
 
     def act(self, cmd_name, params):
+        """ Run the specified command with its parameters."""
+
         command = getattr(self, cmd_name)
         command(params)
 
