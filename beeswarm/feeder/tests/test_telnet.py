@@ -78,6 +78,32 @@ class Telnet_Test(unittest.TestCase):
 
         srv.stop()
 
+    def test_validate_senses(self):
+        sessions = {}
+        users = {'test': HiveUser('test', 'test')}
+        authenticator = Authenticator(users)
+        Session.authenticator = authenticator
+
+        cap = hive_telnet.telnet(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users, self.work_dir)
+        socket = create_socket(('0.0.0.0', 0))
+        srv = StreamServer(socket, cap.handle_session)
+        srv.start()
+
+        bee_info = {
+            'timing': 'regular',
+            'login': 'test',
+            'password': 'test',
+            'port': srv.server_port,
+            'server': '127.0.0.1'
+        }
+        beesessions = {}
+
+        BeeSession.feeder_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        current_bee = bee_telnet.telnet(beesessions, bee_info)
+        for s in current_bee.senses:
+            sense = getattr(current_bee, s)
+            self.assertTrue(callable(sense))
+
     def test_command_cd(self):
         sessions = {}
         users = {'test': HiveUser('test', 'test')}
