@@ -381,6 +381,14 @@ def create_feeder():
                 'login': form.pop3_login.data,
                 'password': form.pop3_password.data
             },
+            'bee_ssh': {
+                'enabled': form.ssh_enabled.data,
+                'server': form.ssh_server.data,
+                'port': form.ssh_port.data,
+                'timing': form.ssh_timing.data,
+                'login': form.ssh_login.data,
+                'password': form.ssh_password.data
+            },
             'bee_pop3s': {
                 'enabled': form.pop3s_enabled.data,
                 'server': form.pop3s_server.data,
