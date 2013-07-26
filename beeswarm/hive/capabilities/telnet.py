@@ -16,7 +16,7 @@ import curses
 
 import logging
 import socket
-
+from beeswarm.errors import AuthenticationFailed
 
 from beeswarm.hive.capabilities.handlerbase import HandlerBase
 from beeswarm.hive.capabilities.shared.shell import Commands
@@ -84,7 +84,3 @@ class telnet_wrapper(Commands):
         self.CODES['INS'] = curses.tigetstr('ich1')
         self.CODES['CSRLEFT'] = curses.tigetstr('cub1')
         self.CODES['CSRRIGHT'] = curses.tigetstr('cuf1')
-
-
-class AuthenticationFailed(Exception):
-    pass
