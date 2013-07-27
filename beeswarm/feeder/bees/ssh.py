@@ -13,7 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import logging
-import random
 from paramiko import SSHClient, AutoAddPolicy, SSHException
 import time
 
@@ -42,11 +41,9 @@ class ssh(ClientBase, Commands):
         logging.debug(
             'Sending %s honeybee to %s:%s. (bee id: %s)' % ('ssh', server_host, server_port, session.id))
         try:
-            self.client.connect(server_host, server_port, login, password)
-            self.comm_chan = self.client.invoke_shell()
-            time.sleep(1)
+            self.connect_login()
             session.did_login = True
-        except SSHException as err:
+        except (SSHException, AuthenticationFailed) as err:
             logging.debug('Caught exception: %s (%s)' % (err, str(type(err))))
         else:
             # Run some commands
@@ -70,9 +67,10 @@ class ssh(ClientBase, Commands):
         time.sleep(1)
         while not self.comm_chan.recv_ready():
             time.sleep(0.5)
-            login_response = self.comm_chan.recv(2048)
-            if not login_response.endswith('$ '):
-                raise AuthenticationFailed
+        login_response = self.comm_chan.recv(2048)
+        if not login_response.endswith('$ '):
+            raise AuthenticationFailed
+        return login_response
 
     def logout(self):
         self.send_command('exit')
