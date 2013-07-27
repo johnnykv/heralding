@@ -180,6 +180,14 @@ class Hive(object):
         shutil.copytree(os.path.join(package_directory, 'hive/data'), os.path.join(work_dir, 'data/'),
                         ignore=Hive._ignore_copy_files)
 
+        #this config file is for standalone operations, it will be overwritten during __init__
+        #if a config url is specified.
+        config_file = os.path.join(work_dir, 'hivecfg.json.dist')
+        if not os.path.isfile(config_file):
+            logging.info('Copying configuration file to workdir.')
+            shutil.copyfile(os.path.join(package_directory, 'hive/hivecfg.json.dist'),
+                            os.path.join(work_dir, 'hivecfg.json'))
+
         logging.info('Creating SSL Certificate and Key.')
         pk = crypto.PKey()
         pk.generate_key(crypto.TYPE_RSA, 1024)

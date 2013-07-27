@@ -87,7 +87,15 @@ if __name__ == '__main__':
     mode = None
     if args.hive:
         mode = Hive
-        if args.configarg and is_url(args.configarg):
+        prepare = False
+        if args.configarg:
+            if is_url(args.configarg):
+                prepare = True
+        #no config file and on data directory
+        elif not os.path.isdir(os.path.join(args.workdir, 'data')):
+            prepare = True
+
+        if prepare:
             #We have a new Hive being used.
             try:
                 mode.prepare_environment(args.workdir)
