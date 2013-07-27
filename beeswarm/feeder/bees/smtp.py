@@ -58,6 +58,7 @@ class smtp(ClientBase):
         else:
             while self.sent_mails <= self.max_mails:
                 from_addr, to_addr, mail_body = self.get_one_mail()
+                self.sent_mails += 1
                 try:
                     self.client.sendmail(from_addr, to_addr, mail_body)
                 except TypeError as e:
