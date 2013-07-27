@@ -291,4 +291,7 @@ class smtp(HandlerBase):
         server = DummySMTPServer(self.vfsystem.opendir('/var/mail'))
         SMTPChannel(server, gsocket, address, session=session_,
                     map=local_map, opts=self._options)
-        asyncore.loop(map=local_map)
+        try:
+            asyncore.loop(map=local_map)
+        except Exception:
+            session_.connected = False
