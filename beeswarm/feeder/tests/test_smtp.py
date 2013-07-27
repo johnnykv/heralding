@@ -43,7 +43,7 @@ class SMTP_Test(unittest.TestCase):
             shutil.rmtree(self.work_dir)
 
     def test_login(self):
-        """Tests if the SMTP bee can login to the SMTP capability"""
+        """Tests if the SMTP bee can login to the SMTP capability and send emails"""
 
         sessions = {}
         users = {'test': HiveUser('test', 'test')}
@@ -69,6 +69,37 @@ class SMTP_Test(unittest.TestCase):
         current_bee = bee_smtp.smtp(beesessions, bee_info)
         current_bee.do_session('127.0.0.1')
         srv.stop()
+
+    def test_retrieve(self):
+        """ Tests if a mail can be properly retrieved from the mail corpus """
+
+        sessions = {}
+        users = {'test': HiveUser('test', 'test')}
+        authenticator = Authenticator(users)
+        Session.authenticator = authenticator
+
+        cap = hive_smtp.smtp(sessions, {'enabled': 'True', 'port': 0, 'banner': 'Test'}, users, self.work_dir)
+        socket = create_socket(('0.0.0.0', 0))
+        srv = StreamServer(socket, cap.handle_session)
+        srv.start()
+
+        bee_info = {
+            'timing': 'regular',
+            'login': 'test',
+            'password': 'test',
+            'port': srv.server_port,
+            'server': '127.0.0.1',
+            'local_hostname': 'testhost'
+        }
+        beesessions = {}
+
+        BeeSession.feeder_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        current_bee = bee_smtp.smtp(beesessions, bee_info)
+
+        from_addr, to_addr, mail_body = current_bee.get_one_mail()
+        self.assertGreater(len(from_addr), 0)
+        self.assertGreater(len(to_addr), 0)
+        self.assertGreater(len(mail_body), 0)
 
 if __name__ == '__main__':
     unittest.main()
