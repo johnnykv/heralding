@@ -88,6 +88,13 @@ class NewFeederConfigForm(Form):
     telnet_login = TextField(default='test')
     telnet_password = TextField(default='password')
 
+    ssh_enabled = BooleanField(default=False)
+    ssh_server = TextField(default='127.0.0.1')
+    ssh_port = IntegerField(default=22)
+    ssh_timing = TextField(default='regular')
+    ssh_login = TextField(default='test')
+    ssh_password = TextField(default='password')
+
     ftp_enabled = BooleanField(default=False)
     ftp_server = TextField(default='127.0.0.1')
     ftp_port = IntegerField(default=21)

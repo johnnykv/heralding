@@ -21,6 +21,7 @@ import re
 import time
 
 from beeswarm.feeder.bees.clientbase import ClientBase
+from beeswarm.feeder.bees.shared.shell import Commands
 
 
 class BeeTelnetClient(telnetlib.Telnet):
@@ -39,7 +40,7 @@ class BeeTelnetClient(telnetlib.Telnet):
             time.sleep(delta/1000.0)  # Convert milliseconds to seconds
 
 
-class telnet(ClientBase):
+class telnet(ClientBase, Commands):
 
     COMMAND_MAP = {
         'pwd': ['ls', 'uname', 'uptime'],
@@ -53,19 +54,9 @@ class telnet(ClientBase):
     }
 
     def __init__(self, sessions, options):
-        super(telnet, self).__init__(sessions, options)
+        ClientBase.__init__(self, sessions, options)
+        Commands.__init__(self)
         self.client = None
-        self.state = {
-            # Hack! Assume that the client has initially performed an echo to avoid KeyErrors
-            'last_command': 'echo',
-            'working_dir': '/',
-            'file_list': [],
-            'dir_list': [],
-        }
-        self.command_count = 0
-        self.command_limit = random.randint(6, 11)
-        self.senses = ['pwd', 'uname', 'uptime', 'ls']
-        self.actions = ['cd', 'cat', 'echo', 'sudo']
 
     def do_session(self, my_ip):
         """ Launch one login session"""
@@ -113,145 +104,6 @@ class telnet(ClientBase):
         self.client.write('exit\r\n')
         self.client.read_all()
         self.client.close()
-
-    def cd(self, params=''):
-        cmd = 'cd {}'.format(params)
-        self.send_command(cmd)
-        data = self.get_response()
-        prompt = data.rsplit('\r\n', 1)[1]
-        pattern = re.compile(r'/[/\w]+')
-        self.state['working_dir'] = pattern.findall(prompt)[0]
-        return data
-
-    def pwd(self, params=''):
-        cmd = 'pwd {}'.format(params)
-        self.send_command(cmd)
-        return self.get_response()
-
-    def uname(self, params=''):
-        cmd = 'uname {}'.format(params)
-        self.send_command(cmd)
-        return self.get_response()
-
-    def cat(self, params=''):
-        cmd = 'cat {}'.format(params)
-        self.send_command(cmd)
-        return self.get_response()
-
-    def uptime(self, params=''):
-        cmd = 'uptime {}'.format(params)
-        self.send_command(cmd)
-        return self.get_response()
-
-    def echo(self, params=''):
-        cmd = 'echo {}'.format(params)
-        self.send_command(cmd)
-        return self.get_response()
-
-    def sudo(self, params=''):
-        cmd = 'sudo {}'.format(params)
-        self.send_command(cmd)
-        return self.get_response()
-
-    def ls(self, params=''):
-        cmd = 'ls {}'.format(params)
-        self.send_command(cmd)
-        resp_raw = self.get_response()
-        resp = resp_raw.split('\r\n')
-        files = []
-        dirs = []
-        if params:
-            # Our Hive capability only accepts "ls -l" or "ls" so params will always be "-l"
-            for line in resp[2:-1]:  # Discard the line with echoed command, total and prompt
-                # 8 Makes sure we have the right result even if filenames have spaces.
-                info = line.split(' ', 8)
-                name = info[-1]
-                if info[0].startswith('d'):
-                    dirs.append(name)
-                else:
-                    files.append(name)
-        else:
-            resp = '\r\n'.join(resp[1:-1])
-            names = resp.split()
-            for name in names:
-                if name.endswith('/'):
-                    dirs.append(name)
-                else:
-                    files.append(name)
-        self.state['file_list'] = files
-        self.state['dir_list'] = dirs
-        return resp_raw
-
-    def sense(self):
-        """ Launch a command in the 'senses' List, and update the current state."""
-
-        cmd_name = random.choice(self.senses)
-        param = ''
-        if cmd_name == 'ls':
-            if random.randint(0, 1):
-                param = '-l'
-        elif cmd_name == 'uname':
-            # Choose options from predefined ones
-            opts = 'asnrvmpio'
-            start = random.randint(0, len(opts)-2)
-            end = random.randint(start+1, len(opts)-1)
-            param = '-{}'.format(opts[start:end])
-        command = getattr(self, cmd_name)
-        self.command_count += 1
-        command(param)
-
-    def decide(self):
-        """ Choose the next command to execute, and its parameters, based on the current
-            state.
-        """
-
-        next_command_name = random.choice(self.COMMAND_MAP[self.state['last_command']])
-        param = ''
-        if next_command_name == 'cd':
-            try:
-                param = random.choice(self.state['dir_list'])
-            except IndexError:
-                next_command_name = 'ls'
-
-        elif next_command_name == 'uname':
-            opts = 'asnrvmpio'
-            start = random.randint(0, len(opts)-2)
-            end = random.randint(start+1, len(opts)-1)
-            param = '-{}'.format(opts[start:end])
-        elif next_command_name == 'ls':
-            if random.randint(0, 1):
-                param = '-l'
-        elif next_command_name == 'cat':
-            try:
-                param = random.choice(self.state['file_list'])
-            except IndexError:
-                param = ''.join(random.choice(string.lowercase) for x in range(3))
-        elif next_command_name == 'echo':
-            param = random.choice([
-                '$http_proxy',
-                '$https_proxy',
-                '$ftp_proxy',
-                '$BROWSER',
-                '$EDITOR',
-                '$SHELL',
-                '$PAGER'
-            ])
-        elif next_command_name == 'sudo':
-            param = random.choice([
-                'pm-hibernate',
-                'shutdown -h',
-                'vim /etc/httpd.conf',
-                'vim /etc/resolve.conf',
-                'service network restart',
-                '/etc/init.d/network-manager restart',
-            ])
-        return next_command_name, param
-
-    def act(self, cmd_name, params):
-        """ Run the specified command with its parameters."""
-
-        command = getattr(self, cmd_name)
-        command(params)
 
     def get_response(self):
         response = self.client.read_until('$ ', 5)
