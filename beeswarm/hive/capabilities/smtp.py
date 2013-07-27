@@ -16,6 +16,7 @@
 # Parts of this code are from secure-smtpd (https://github.com/bcoe/secure-smtpd)
 
 import base64
+import logging
 import time
 import random
 import smtpd
@@ -273,6 +274,7 @@ class DummySMTPServer(object):
         self.mboxpath = self.mail_vfs.getsyspath('mailbox')
 
     def process_message(self, peer, mailfrom, rcpttos, data):
+        logging.info('Got new mail, peer ({}), from ({}), to ({})'.format(peer, mailfrom, rcpttos))
         if self.mboxpath is not None:
             mbox = mailbox.mbox(self.mboxpath, create=True)
             mbox.add(data)
