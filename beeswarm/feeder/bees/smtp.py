@@ -47,11 +47,10 @@ class smtp(ClientBase):
             'Sending %s honeybee to %s:%s. (bee id: %s)' % ('smtp', server_host, server_port, session.id))
 
         try:
-            self.client = smtplib.SMTP(server_host, server_port, local_hostname=self.options['local_hostname'],
-                                       timeout=15)
-            session.source_port = self.client.sock.getsockname()[1]
+            self.connect()
             session.did_connect = True
-            self.client.login(login, password)
+            session.source_port = self.client.sock.getsockname()[1]
+            self.login(login, password)
             session.did_login = True
         except smtplib.SMTPException as error:
             logging.debug('Caught exception: %s (%s)' % (error, str(type(error))))
@@ -80,3 +79,10 @@ class smtp(ClientBase):
         to_addr = mail['To']
         mail_body = mail.get_payload()
         return from_addr, to_addr, mail_body
+
+    def connect(self):
+        self.client = smtplib.SMTP(self.options['server'], self.options['port'],
+                                   local_hostname=self.options['local_hostname'], timeout=15)
+
+    def login(self, username, password):
+        self.client.login(username, password)

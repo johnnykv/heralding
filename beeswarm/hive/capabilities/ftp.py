@@ -149,6 +149,9 @@ class BeeFTPHandler(object):
         else:
             self.respond('550 The system cannot find the path specified.')
 
+    def do_PWD(self, arg):
+        self.respond('257 "%s"' % self.working_dir)
+
     def do_PASV(self, arg):
         self.mode = 'PASV'
         self.serv_sock = HiveSocket()
@@ -162,7 +165,7 @@ class BeeFTPHandler(object):
         self.respond('200 Command Successful.')
 
     def do_SYST(self, arg):
-        self.respond('215 ' + self.syst_type)
+        self.respond('215 %s' % self.syst_type)
 
     def do_QUIT(self, arg):
         self.respond('221 Bye.')

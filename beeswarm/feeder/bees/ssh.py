@@ -46,8 +46,10 @@ class ssh(ClientBase, Commands):
         except (SSHException, AuthenticationFailed) as err:
             logging.debug('Caught exception: %s (%s)' % (err, str(type(err))))
         else:
-            # Run some commands
-            pass
+            self.sense()
+            comm, param = self.decide()
+            self.act(comm, param)
+            time.sleep(10)
         finally:
             session.alldone = True
 

@@ -12,6 +12,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import smtplib
 
 import gevent.monkey
 gevent.monkey.patch_all()
@@ -43,7 +44,7 @@ class SMTP_Test(unittest.TestCase):
             shutil.rmtree(self.work_dir)
 
     def test_login(self):
-        """Tests if the SMTP bee can login to the SMTP capability and send emails"""
+        """Tests if the SMTP bee can login to the SMTP capability"""
 
         sessions = {}
         users = {'test': HiveUser('test', 'test')}
@@ -67,7 +68,39 @@ class SMTP_Test(unittest.TestCase):
 
         BeeSession.feeder_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
         current_bee = bee_smtp.smtp(beesessions, bee_info)
-        current_bee.do_session('127.0.0.1')
+        current_bee.connect()
+        current_bee.login(bee_info['login'], bee_info['password'])
+        srv.stop()
+
+    def test_login(self):
+        """Tests if the SMTP bee can send emails to the SMTP capability"""
+
+        sessions = {}
+        users = {'test': HiveUser('test', 'test')}
+        authenticator = Authenticator(users)
+        Session.authenticator = authenticator
+
+        cap = hive_smtp.smtp(sessions, {'enabled': 'True', 'port': 0, 'banner': 'Test'}, users, self.work_dir)
+        socket = create_socket(('0.0.0.0', 0))
+        srv = StreamServer(socket, cap.handle_session)
+        srv.start()
+
+        bee_info = {
+            'timing': 'regular',
+            'login': 'test',
+            'password': 'test',
+            'port': srv.server_port,
+            'server': '127.0.0.1',
+            'local_hostname': 'testhost'
+        }
+        beesessions = {}
+
+        BeeSession.feeder_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        current_bee = bee_smtp.smtp(beesessions, bee_info)
+        current_bee.connect()
+        current_bee.login(bee_info['login'], bee_info['password'])
+        result = current_bee.client.sendmail('sender@test.com', 'reciever@test.com', 'Just testing the SMTP bee')
+        self.assertEquals(result, {})
         srv.stop()
 
     def test_retrieve(self):

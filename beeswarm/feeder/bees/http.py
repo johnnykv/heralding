@@ -14,10 +14,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import random
-import httplib
-import base64
 import logging
 from datetime import datetime
+from lxml.html import document_fromstring
+import requests
+from requests.auth import HTTPBasicAuth
 
 from beeswarm.feeder.bees.clientbase import ClientBase
 
@@ -26,6 +27,9 @@ class http(ClientBase):
 
     def __init__(self, sessions, options):
         super(http, self).__init__(sessions, options)
+        self.client = requests.Session()
+        self.max_requests = random.randint(3, 4)
+        self.sent_requests = 0
 
     def do_session(self, my_ip):
 
@@ -41,24 +45,36 @@ class http(ClientBase):
         logging.debug(
             'Sending %s honeybee to %s:%s. (bee id: %s)' % ('http', server_host, server_port, session.id))
 
-        # TODO: Automatically detect files in the Hive VFS
-        url_list = ['/base.html']  # List of valid URLs in the Hive
-
         try:
-            client = httplib.HTTPConnection(server_host, server_port)
-            client.putrequest('GET', random.choice(url_list))
-            auth_string = login + ':' + password
-            client.putheader('Authorization', 'Basic ' + base64.b64encode(auth_string))
-            client.endheaders()
-            session.source_port = client.sock.getsockname()[1]
+            url = self._make_url(server_host, '/index.html', server_port)
+            response = self.client.get(url, auth=HTTPBasicAuth(login, password))
             session.did_connect = True
-            response = client.getresponse()
+            if response.status_code == 200:
+                session.did_login = True
+
+            links = self._get_links(response)
+            while self.sent_requests <= self.max_requests and links:
+                url = random.choice(links)
+                response = self.client.get(url, auth=HTTPBasicAuth(login, password))
+                links = self._get_links(response)
+
         except Exception as err:
             logging.debug('Caught exception: %s (%s)' % (err, str(type(err))))
         else:
-            if response.status == 200:
-                session.did_login = True
             session.timestamp = datetime.now()
         finally:
             session.alldone = True
 
+    def _make_url(self, server, path, port=80):
+        if port == 80:
+            url = 'http://{}/{}'.format(server, path)
+        else:
+            url = 'http://{}:{}/{}'.format(server, port, path)
+        return url
+
+    def _get_links(self, response):
+        html_text = response.text.encode('utf-8')
+        doc = document_fromstring(html_text)
+        links = []
+        for e in doc.cssselect('a'):
+            links.append(e.get('href'))
