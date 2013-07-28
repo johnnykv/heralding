@@ -26,6 +26,13 @@ class ftp(ClientBase):
 
     def __init__(self, sessions, options):
         super(ftp, self).__init__(sessions, options)
+        self.state = {
+            'current_dir': '/',
+            'file_list': []
+        }
+        self.senses = ['pwd', 'list']
+        self.actions = ['cd', 'retrieve']
+        self.client = FTP()
 
     def do_session(self, my_ip):
 
@@ -42,30 +49,37 @@ class ftp(ClientBase):
             'Sending %s honeybee to %s:%s. (bee id: %s)' % ('ftp', server_host, server_port, session.id))
 
         self.file_list = []
-        ftp_client = FTP()
         try:
-            ftp_client.connect(server_host, server_port)
+            self.connect()
             session.did_connect = True
-            ftp_client.login(login, password)
+            self.login(login, password)
             session.did_login = True
             session.timestamp = datetime.utcnow()
-            ftp_client.retrlines('LIST', self.create_list)
-            resp = ftp_client.retrbinary('RETR ' + random.choice(self.file_list), self.save_file)
-
-            if resp.startswith('226'):
-                logging.debug('FTP file listing successful')
-                session.did_complete = True
+            session.did_complete = True
         except ftplib.error_perm as err:
             logging.debug('Caught exception: %s (%s)' % (err, str(type(err))))
         finally:
-            ftp_client.quit()
+            self.client.quit()
             session.alldone = True
 
-    def save_file(self, data):
-        """ Dummy function since FTP.retrbinary() needs a callback """
+    def list(self):
+        self.client.retrlines('LIST', self._process_list)
 
-    def create_list(self, list_line):
+    def retrieve(self, filename):
+        self.client.retrbinary(filename, self._save_file)
+
+    def connect(self):
+        self.client.connect(self.options['server'], self.options['port'])
+
+    def login(self, username, password):
+        self.client.login(username, password)
+
+    def _process_list(self, list_line):
         # -rw-r--r-- 1 ftp ftp 68	 May 09 19:37 testftp.txt
         res = list_line.split(' ', 8)
         if res[0].startswith('-'):
-            self.file_list.append(res[-1])
+            self.state['file_list'].append(res[-1])
+
+    def _save_file(self, data):
+        """ Dummy function since FTP.retrbinary() needs a callback """
+
