@@ -1,3 +1,4 @@
+cssselect
 nose
 gevent
 requests
