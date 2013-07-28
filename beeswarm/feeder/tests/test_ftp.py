@@ -107,6 +107,7 @@ class FTP_Test(unittest.TestCase):
 
         current_bee.list()
         self.assertGreater(len(current_bee.state['file_list']), 0)
+        self.assertGreater(len(current_bee.state['dir_list']), 0)
 
         srv.stop()
 
@@ -141,9 +142,11 @@ class FTP_Test(unittest.TestCase):
         current_bee.connect()
         current_bee.login(bee_info['login'], bee_info['password'])
 
+        self.assertEquals('/', current_bee.state['current_dir'])
         current_bee.list()
+        current_bee.cwd(current_bee.state['dir_list'][0])
+        self.assertNotEquals('/', current_bee.state['current_dir'])
 
-        print current_bee.state['file_list']
         srv.stop()
 
 if __name__ == '__main__':
