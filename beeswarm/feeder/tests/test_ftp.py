@@ -150,7 +150,7 @@ class FTP_Test(unittest.TestCase):
         srv.stop()
 
     def test_retr(self):
-        """Tests the FTP CWD command"""
+        """Tests the FTP RETR command"""
 
         sessions = {}
         users = {'test': HiveUser('test', 'test')}
