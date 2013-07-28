@@ -15,7 +15,6 @@
 
 import logging
 import ftplib
-import pprint
 import random
 from datetime import datetime
 
