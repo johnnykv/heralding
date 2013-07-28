@@ -37,10 +37,24 @@ class FTP_Test(unittest.TestCase):
     def setUp(self):
         self.work_dir = tempfile.mkdtemp()
         Hive.prepare_environment(self.work_dir)
+        self.create_file_system()
 
     def tearDown(self):
         if os.path.isdir(self.work_dir):
             shutil.rmtree(self.work_dir)
+
+    def create_file_system(self):
+        ftp_dir = os.path.join(self.work_dir, 'data/vfs/pub/ftp')
+        f1_path = os.path.join(ftp_dir, 'file_one.txt')
+        with open(f1_path, 'w') as f1:
+            f1.write('contents of file one!')
+
+        d1_path = os.path.join(ftp_dir, 'dir_one')
+        os.mkdir(d1_path)
+
+        f2_path = os.path.join(d1_path, 'file_two.txt')
+        with open(f2_path, 'w') as f2:
+            f2.write('contents of file two!')
 
     def test_login(self):
         """FTP: Testing different login combinations"""
