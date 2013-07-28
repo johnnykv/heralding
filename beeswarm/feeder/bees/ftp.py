@@ -28,7 +28,8 @@ class ftp(ClientBase):
         super(ftp, self).__init__(sessions, options)
         self.state = {
             'current_dir': '/',
-            'file_list': []
+            'file_list': [],
+            'dir_list': []
         }
         self.senses = ['pwd', 'list']
         self.actions = ['cd', 'retrieve']
@@ -68,6 +69,13 @@ class ftp(ClientBase):
     def retrieve(self, filename):
         self.client.retrbinary(filename, self._save_file)
 
+    def pwd(self):
+        self.state['current_dir'] = self.client.pwd()
+
+    def cwd(self, newdir):
+        self.client.cwd(newdir)
+        self.state['current_dir'] = self.client.pwd()
+
     def connect(self):
         self.client.connect(self.options['server'], self.options['port'])
 
@@ -79,6 +87,8 @@ class ftp(ClientBase):
         res = list_line.split(' ', 8)
         if res[0].startswith('-'):
             self.state['file_list'].append(res[-1])
+        elif res[0].startswith('d'):
+            self.state['dir_list'].append(res[-1])
 
     def _save_file(self, data):
         """ Dummy function since FTP.retrbinary() needs a callback """
