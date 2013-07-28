@@ -149,5 +149,41 @@ class FTP_Test(unittest.TestCase):
 
         srv.stop()
 
+    def test_retr(self):
+        """Tests the FTP CWD command"""
+
+        sessions = {}
+        users = {'test': HiveUser('test', 'test')}
+        authenticator = Authenticator(users)
+        Session.authenticator = authenticator
+
+        options = {'enabled': 'True', 'port': 0, 'banner': 'Test Banner', 'max_attempts': 3, 'syst_type': 'Test Type'}
+
+        cap = hive_ftp.ftp(sessions, options, users, self.work_dir)
+        socket = create_socket(('0.0.0.0', 0))
+        srv = StreamServer(socket, cap.handle_session)
+        srv.start()
+
+        bee_info = {
+            'enabled': True,
+            'timing': 'regular',
+            'login': 'test',
+            'password': 'test',
+            'port': srv.server_port,
+            'server': '127.0.0.1'
+        }
+        beesessions = {}
+
+        BeeSession.feeder_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        current_bee = bee_ftp.ftp(beesessions, bee_info)
+
+        current_bee.connect()
+        current_bee.login(bee_info['login'], bee_info['password'])
+
+        current_bee.list()
+        current_bee.retrieve(current_bee.state['file_list'][0])
+
+        srv.stop()
+
 if __name__ == '__main__':
     unittest.main()
