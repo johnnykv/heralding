@@ -197,7 +197,7 @@ def hive_data():
             #TODO: not all capabilities delivers login/passwords. This needs to be subclasses...
             username=login_attempt['username'],
             password=login_attempt['password'],
-            destination_ip='aaa',
+            destination_ip=data['honey_ip'],
             destination_port=data['honey_port'],
             source_ip=data['attacker_ip'],
             source_port=data['attacker_source_port'],
