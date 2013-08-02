@@ -189,14 +189,17 @@ def hive_data():
     #create if not found in the database
 
     for login_attempt in data['login_attempts']:
+
+        username = login_attempt['username'] if 'username' in login_attempt else ''
+        password = login_attempt['password'] if 'password' in login_attempt else ''
+
         s = Session(
             id=login_attempt['id'],
             timestamp=datetime.strptime(login_attempt['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
             received=datetime.utcnow(),
             protocol=data['protocol'],
-            #TODO: not all capabilities delivers login/passwords. This needs to be subclasses...
-            username=login_attempt['username'],
-            password=login_attempt['password'],
+            username=username,
+            password=password,
             destination_ip=data['honey_ip'],
             destination_port=data['honey_port'],
             source_ip=data['attacker_ip'],
