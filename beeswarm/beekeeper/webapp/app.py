@@ -143,10 +143,8 @@ def feeder_data():
     logger.debug(data)
     session = database.get_session()
 
-    #_feeder = Feeder.get(id=data['feeder_id'])
     _feeder = session.query(Feeder).filter(Feeder.id == data['feeder_id']).one()
 
-    #_hive = Hive.get(id=data['hive_id'])
     if data['hive_id'] is not None:
         _hive = session.query(Hive).filter(Hive.id == data['hive_id']).one()
     else:
@@ -194,7 +192,7 @@ def hive_data():
         username = None
         password = None
 
-        if login_attempt['type'] is 'plaintext':
+        if login_attempt['type'] == 'plaintext':
             username = login_attempt['username'] if 'username' in login_attempt else ''
             password = login_attempt['password'] if 'password' in login_attempt else ''
         else:
@@ -211,8 +209,11 @@ def hive_data():
             destination_port=data['honey_port'],
             source_ip=data['attacker_ip'],
             source_port=data['attacker_source_port'],
-            hive=_hive,
-            session_data = session_data)
+            hive=_hive)
+
+        if session_data:
+            s.session_data.append(session_data)
+
         session.add(s)
     session.commit()
 

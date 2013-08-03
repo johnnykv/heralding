@@ -118,8 +118,8 @@ class WebappTests(unittest.TestCase):
                  'id': '027bd968-f8ea-4a69-8d4c-6cf21476ca10'},
                 {'username': 'as', 'timestamp': '2013-05-07T22:21:21.150571', 'password': 'd', 'type': 'plaintext',
                  'id': '603f40a4-e7eb-442d-9fde-0cd3ba707af7'},
-                {'username': 'as', 'timestamp': '2013-05-07T22:21:21.431958', 'password': 'd', 'type': 'plaintext',
-                 'id': 'ba24a095-f2c5-4426-84b9-9b7bfb609045'}]
+                {'type': 'some_arbitrary_data', 'data': '123456', 'id': 'dead40a4-a7eb-442d-9fde-0cd3ba707abc',
+                 'timestamp': '2013-05-07T22:21:20.846805'}]
         }
 
         r = self.app.post('/ws/hive_data', data=json.dumps(data_dict), content_type='application/json')

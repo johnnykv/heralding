@@ -48,7 +48,7 @@ class Session(Base):
 
 class SessionData(Base):
     __tablename__ = 'sessiondata'
-    id = Column(String, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     type = Column(String)
     data = Column(String)
     session_id = Column(String, ForeignKey('session.id'))
