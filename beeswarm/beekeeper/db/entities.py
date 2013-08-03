@@ -36,9 +36,12 @@ class Session(Base):
     protocol = Column(String)
     username = Column(String)
     password = Column(String)
+    #this will replace the username and password attributes
+    authentication = relationship('Authentication')
     source_ip = Column(String)
     source_port = Column(Integer)
     session_data = relationship('SessionData', backref='Session')
+    transcript = relationship('Transcript', backref='Session')
     destination_ip = Column(String)
     destination_port = Column(Integer)
     hive_id = Column(String, ForeignKey('hive.id'))
@@ -46,10 +49,32 @@ class Session(Base):
     classification_id = Column(String, ForeignKey('classification.type'))
     classification = relationship('Classification')
 
+
+class Authentication(Base):
+    __tablename__ = 'authentication'
+    id = Column(String, primary_key=True, autoincrement=True)
+    timestamp = Column(DateTime)
+    username = Column(String)
+    password = Column(String)
+    successful = Column(Boolean)
+    session_id = Column(String, ForeignKey('session.id'))
+    session = relationship('Session')
+
+
 class SessionData(Base):
     __tablename__ = 'sessiondata'
     id = Column(Integer, primary_key=True, autoincrement=True)
     type = Column(String)
+    data = Column(String)
+    session_id = Column(String, ForeignKey('session.id'))
+    session = relationship('Session')
+
+
+class Transcript(Base):
+    __tablename__ = 'transcript'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    direction = Column(String)
+    timestamp = Column(DateTime)
     data = Column(String)
     session_id = Column(String, ForeignKey('session.id'))
     session = relationship('Session')

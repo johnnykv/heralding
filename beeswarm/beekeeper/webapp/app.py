@@ -184,8 +184,6 @@ def hive_data():
     session = database.get_session()
     _hive = session.query(Hive).filter(Hive.id == data['hive_id']).one()
 
-    #create if not found in the database
-
     for login_attempt in data['login_attempts']:
 
         session_data = None
