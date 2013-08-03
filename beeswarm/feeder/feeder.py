@@ -86,6 +86,8 @@ class Feeder(object):
                 continue
                 #skip loading if disabled
             if not self.config[bee_name]['enabled']:
+                logger.warning(
+                    "Not loading {0} bee because it is disabled in the configuration file.".format(b.__name__))
                 continue
 
             bee = b(sessions, self.config[bee_name])
