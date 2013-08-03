@@ -24,7 +24,7 @@ from werkzeug.security import check_password_hash
 from wtforms import HiddenField
 from forms import NewHiveConfigForm, NewFeederConfigForm, LoginForm
 from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Hive, User
+from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Hive, User, SessionData
 
 
 def is_hidden_field_filter(field):
@@ -190,8 +190,15 @@ def hive_data():
 
     for login_attempt in data['login_attempts']:
 
-        username = login_attempt['username'] if 'username' in login_attempt else ''
-        password = login_attempt['password'] if 'password' in login_attempt else ''
+        session_data = None
+        username = None
+        password = None
+
+        if login_attempt['type'] is 'plaintext':
+            username = login_attempt['username'] if 'username' in login_attempt else ''
+            password = login_attempt['password'] if 'password' in login_attempt else ''
+        else:
+            session_data = SessionData(type=login_attempt['type'], data=json.dumps(login_attempt))
 
         s = Session(
             id=login_attempt['id'],
@@ -204,7 +211,8 @@ def hive_data():
             destination_port=data['honey_port'],
             source_ip=data['attacker_ip'],
             source_port=data['attacker_source_port'],
-            hive=_hive)
+            hive=_hive,
+            session_data = session_data)
         session.add(s)
     session.commit()
 

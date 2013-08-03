@@ -31,7 +31,6 @@ class Session(Base):
     id = Column(String, primary_key=True)
     discriminator = Column('type', String(50))
     __mapper_args__ = {'polymorphic_on': discriminator}
-
     received = Column(DateTime)
     timestamp = Column(DateTime)
     protocol = Column(String)
@@ -39,12 +38,21 @@ class Session(Base):
     password = Column(String)
     source_ip = Column(String)
     source_port = Column(Integer)
+    session_data = relationship('SessionData', backref='Session')
     destination_ip = Column(String)
     destination_port = Column(Integer)
     hive_id = Column(String, ForeignKey('hive.id'))
     hive = relationship('Hive')
     classification_id = Column(String, ForeignKey('classification.type'))
     classification = relationship('Classification')
+
+class SessionData(Base):
+    __tablename__ = 'sessiondata'
+    id = Column(String, primary_key=True)
+    type = Column(String)
+    data = Column(String)
+    session_id = Column(String, ForeignKey('session.id'))
+    session = relationship('Session')
 
 
 class Honeybee(Session):
