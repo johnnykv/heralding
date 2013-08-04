@@ -1,0 +1,80 @@
+{
+    "public_ip": {
+        "fetch_ip": false
+    },
+    "bee_http": {
+        "enabled": true,
+        "server": "127.0.0.1",
+        "timing": "regular",
+        "login": "test",
+        "password": "test",
+        "port": 0
+    },
+    "bee_ftp": {
+        "enabled": true,
+        "server": "127.0.0.1",
+        "timing": "regular",
+        "login": "test",
+        "password": "test",
+        "port": 0
+    },
+    "bee_vnc": {
+        "enabled": true,
+        "server": "127.0.0.1",
+        "timing": "regular",
+        "login": "test",
+        "password": "test",
+        "port": 0
+    },
+    "bee_pop3": {
+        "enabled": true,
+        "server": "127.0.0.1",
+        "timing": "regular",
+        "login": "test",
+        "password": "test",
+        "port": 0
+    },
+    "bee_pop3s": {
+        "enabled": true,
+        "server": "127.0.0.1",
+        "timing": "regular",
+        "login": "test",
+        "password": "test",
+        "port": 0
+    },
+    "bee_telnet": {
+        "enabled": true,
+        "server": "127.0.0.1",
+        "timing": "regular",
+        "login": "test",
+        "password": "test",
+        "port": 0
+    },
+    "bee_smtp": {
+        "enabled": true,
+        "server": "127.0.0.1",
+        "local_hostname": "localhost",
+        "timing": "regular",
+        "login": "test",
+        "password": "test",
+        "port": 0
+    },
+    "bee_ssh": {
+        "enabled": false,
+        "server": "127.0.0.1",
+        "port": 0,
+        "timing": "regular",
+        "login": "test",
+        "password": "test"
+    },
+    "log_beekeeper": {
+        "beekeeper_url": "https://127.0.0.1:5000/",
+        "cert": "",
+        "beekeeper_pass": "",
+        "enabled": false
+    },
+    "general": {
+        "feeder_id": "e97cc310-2a7c-4237-974d-99f410b3c33c",
+        "hive_id": null
+    }
+}
