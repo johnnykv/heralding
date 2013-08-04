@@ -12,9 +12,10 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import logging
 import random
+import datetime
 import gevent
-from gevent.greenlet import Greenlet
 
 
 class BeeDispatcher(object):
@@ -22,26 +23,42 @@ class BeeDispatcher(object):
     """ Dispatches bees in a realistic fashion (with respect to timings) """
 
     def __init__(self, options, bee, my_ip):
-        self.options = options
+        self.options = options['bee_' + bee.__class__.__name__]
         self.enabled = False
         self.bee = bee
-        self.coarse_flag = True
-        self.fine_flag = True
+        self.run_flag = True
         self.my_ip = my_ip
         self.max_sessions = random.randint(4, 8)
-        sched_pattern = self.options['bee_' + self.bee.__class__.__name__]['timing']
-        self.coarse_interval = sched_pattern['coarse']
-        self.fine_interval = sched_pattern['fine']
+        try:
+            self.set_active_interval()
+        except (ValueError, AttributeError, KeyError, IndexError) as err:
+            logging.debug('Caught exception: %s (%s)' % (err, str(type(err))))
+
+        self.activation_probability = self.options['timing']['activation_probability']
+        self.sleep_interval = float(self.options['timing']['sleep_interval'])
+
+    def set_active_interval(self):
+        interval_string = self.options['timing']['active_range']
+        begin, end = interval_string.split('-')
+        begin = begin.strip()
+        end = end.strip()
+        begin_hours, begin_min = begin.split(':')
+        end_hours, end_min = end.split(':')
+        self.start_time = datetime.time(int(begin_hours), int(begin_min))
+        self.end_time = datetime.time(int(end_hours), int(end_min))
 
     def start(self):
-        while self.coarse_flag:
-            self.dispatch_bee()
-            gevent.sleep(self.coarse_interval)
+        while self.run_flag:
+            while not self.time_in_range():
+                gevent.sleep(15 * 60)  # Wait for 15 minutes before checking if we're in active interval yet
+            while self.time_in_range() and self.activation_probability >= random.random():
+                gevent.spawn(self.bee.do_session, self.my_ip)
+                gevent.sleep(self.sleep_interval)
 
-    def dispatch_bee(self):
-        n = 0
-        while n < self.max_sessions and self.fine_flag:
-            self.greenlet = Greenlet(self.bee.do_session, self.my_ip)
-            self.greenlet.start()
-            gevent.sleep(self.fine_interval)
-            n += 1
+    def time_in_range(self):
+        """Return true if current time is in the active range"""
+        curr = datetime.datetime.now().time()
+        if self.start_time <= self.end_time:
+            return self.start_time <= curr <= self.end_time
+        else:
+            return self.start_time <= curr or curr <= self.end_time

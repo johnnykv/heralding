@@ -68,7 +68,7 @@ class Feeder(object):
         else:
             self.my_ip = '127.0.0.1'
         self.dispatchers = {}
-        self.dispatcher_glets = []
+        self.dispatcher_greenlets = []
 
     def start(self):
         logging.info('Starting feeder.')
@@ -97,18 +97,18 @@ class Feeder(object):
             honeybees.append(bee)
             logging.debug('Adding {0} as a honeybee'.format(bee.__class__.__name__))
 
-        self.dispatcher_glets = []
+        self.dispatcher_greenlets = []
         for bee in honeybees:
             dispatcher = BeeDispatcher(self.config, bee, self.my_ip)
             self.dispatchers[bee.__class__.__name__] = dispatcher
-            glet = Greenlet(dispatcher.start)
-            self.dispatcher_glets.append(glet)
-            glet.start()
+            current_greenlet = Greenlet(dispatcher.start)
+            self.dispatcher_greenlets.append(current_greenlet)
+            current_greenlet.start()
 
-        gevent.joinall(self.dispatcher_glets)
+        gevent.joinall(self.dispatcher_greenlets)
 
     def stop(self):
-        for g in self.dispatcher_glets:
+        for g in self.dispatcher_greenlets:
             g.kill()
         self.sessions_consumer.stop_handling()
         logger.info('All clients stopped')

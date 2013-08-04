@@ -371,7 +371,11 @@ def create_feeder():
                 'enabled': form.http_enabled.data,
                 'server': form.http_server.data,
                 'port': form.http_port.data,
-                'timing': form.http_timing.data,
+                'timing': {
+                    'active_range': form.http_active_range.data,
+                    'sleep_interval': form.http_sleep_interval.data,
+                    'activation_probability': form.http_activation_probability.data
+                },
                 'login': form.http_login.data,
                 'password': form.http_password.data
             },
@@ -379,7 +383,11 @@ def create_feeder():
                 'enabled': form.ftp_enabled.data,
                 'server': form.ftp_server.data,
                 'port': form.ftp_port.data,
-                'timing': form.ftp_timing.data,
+                'timing': {
+                    'active_range': form.ftp_active_range.data,
+                    'sleep_interval': form.ftp_sleep_interval.data,
+                    'activation_probability': form.ftp_activation_probability.data
+                },
                 'login': form.ftp_login.data,
                 'password': form.ftp_password.data
             },
@@ -387,7 +395,11 @@ def create_feeder():
                 'enabled': form.pop3_enabled.data,
                 'server': form.pop3_server.data,
                 'port': form.pop3_port.data,
-                'timing': form.pop3_timing.data,
+                'timing': {
+                    'active_range': form.pop3_active_range.data,
+                    'sleep_interval': form.pop3_sleep_interval.data,
+                    'activation_probability': form.pop3_activation_probability.data
+                },
                 'login': form.pop3_login.data,
                 'password': form.pop3_password.data
             },
@@ -395,7 +407,11 @@ def create_feeder():
                 'enabled': form.ssh_enabled.data,
                 'server': form.ssh_server.data,
                 'port': form.ssh_port.data,
-                'timing': form.ssh_timing.data,
+                'timing': {
+                    'active_range': form.ssh_active_range.data,
+                    'sleep_interval': form.ssh_sleep_interval.data,
+                    'activation_probability': form.ssh_activation_probability.data
+                },
                 'login': form.ssh_login.data,
                 'password': form.ssh_password.data
             },
@@ -403,7 +419,11 @@ def create_feeder():
                 'enabled': form.pop3s_enabled.data,
                 'server': form.pop3s_server.data,
                 'port': form.pop3s_port.data,
-                'timing': form.pop3s_timing.data,
+                'timing': {
+                    'active_range': form.pop3s_active_range.data,
+                    'sleep_interval': form.pop3s_sleep_interval.data,
+                    'activation_probability': form.pop3s_activation_probability.data
+                },
                 'login': form.pop3s_login.data,
                 'password': form.pop3s_password.data
             },
@@ -411,7 +431,11 @@ def create_feeder():
                 'enabled': form.smtp_enabled.data,
                 'server': form.smtp_server.data,
                 'port': form.smtp_port.data,
-                'timing': form.smtp_timing.data,
+                'timing': {
+                    'active_range': form.smtp_active_range.data,
+                    'sleep_interval': form.smtp_sleep_interval.data,
+                    'activation_probability': form.smtp_activation_probability.data
+                },
                 'login': form.smtp_login.data,
                 'local_hostname': form.smtp_local_hostname.data,
                 'password': form.smtp_password.data
@@ -420,7 +444,11 @@ def create_feeder():
                 'enabled': form.vnc_enabled.data,
                 'server': form.vnc_server.data,
                 'port': form.vnc_port.data,
-                'timing': form.vnc_timing.data,
+                'timing': {
+                    'active_range': form.vnc_active_range.data,
+                    'sleep_interval': form.vnc_sleep_interval.data,
+                    'activation_probability': form.vnc_activation_probability.data
+                },
                 'login': form.vnc_login.data,
                 'password': form.vnc_password.data
             },
@@ -428,7 +456,11 @@ def create_feeder():
                 'enabled': form.telnet_enabled.data,
                 'server': form.telnet_server.data,
                 'port': form.telnet_port.data,
-                'timing': form.telnet_timing.data,
+                'timing': {
+                    'active_range': form.telnet_active_range.data,
+                    'sleep_interval': form.telnet_sleep_interval.data,
+                    'activation_probability': form.telnet_activation_probability.data
+                },
                 'login': form.telnet_login.data,
                 'password': form.telnet_password.data
             },
