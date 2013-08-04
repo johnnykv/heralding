@@ -12,13 +12,15 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+from gevent.greenlet import Greenlet
+from mock import Mock
+import time
+from beeswarm.feeder.models.dispatcher import BeeDispatcher
 
 import gevent
 import gevent.monkey
 import tempfile
-import shutil
 import os
-import time
 
 gevent.monkey.patch_all()
 
@@ -27,7 +29,6 @@ from beeswarm.feeder.feeder import Feeder
 
 
 class Feeder_Tests(unittest.TestCase):
-
     def setUp(self):
         self.work_dir = tempfile.mkdtemp()
         self.test_config_file = os.path.join(os.path.dirname(__file__), 'feedercfg.json.test')
@@ -35,3 +36,29 @@ class Feeder_Tests(unittest.TestCase):
     def test_init(self):
         """Tests if the Hive class can be instantiated successfully using the default configuration file"""
         sut = Feeder(self.work_dir, config_arg=self.test_config_file)
+
+    def test_dispatcher(self):
+        options = {
+            # NoneType because we're going to pass a None to the dispatcher.
+            "bee_NoneType": {
+                "enabled": True,
+                "server": "127.0.0.1",
+                "timing": {
+                    "coarse": 1,
+                    "fine": 1
+                },
+                "login": "test",
+                "password": "test",
+                "port": 8080
+            },
+        }
+
+        dispatcher = BeeDispatcher(options, None, '127.0.0.1')
+
+        dispatcher.max_sessions = 1
+        dispatcher.bee = Mock()
+        dis_glet = Greenlet(dispatcher.start)
+        dis_glet.start()
+        time.sleep(1)
+        dis_glet.kill()
+        dispatcher.bee.do_session.assert_called()

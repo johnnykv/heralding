@@ -15,6 +15,7 @@
 import json
 
 import gevent
+from gevent.greenlet import Greenlet
 import gevent.monkey
 import requests
 from beeswarm.feeder.consumer import consumer
@@ -67,6 +68,7 @@ class Feeder(object):
         else:
             self.my_ip = '127.0.0.1'
         self.dispatchers = {}
+        self.dispatcher_glets = []
 
     def start(self):
         logging.info('Starting feeder.')
@@ -95,12 +97,19 @@ class Feeder(object):
             honeybees.append(bee)
             logging.debug('Adding {0} as a honeybee'.format(bee.__class__.__name__))
 
+        self.dispatcher_glets = []
         for bee in honeybees:
             dispatcher = BeeDispatcher(self.config, bee, self.my_ip)
             self.dispatchers[bee.__class__.__name__] = dispatcher
-            dispatcher.start()
+            glet = Greenlet(dispatcher.start)
+            self.dispatcher_glets.append(glet)
+            glet.start()
+
+        gevent.joinall(self.dispatcher_glets)
 
     def stop(self):
+        for g in self.dispatcher_glets:
+            g.kill()
         self.sessions_consumer.stop_handling()
         logger.info('All clients stopped')
         sys.exit(0)

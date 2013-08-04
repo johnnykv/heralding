@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import random
 import gevent
+from gevent.greenlet import Greenlet
 
 
 class BeeDispatcher(object):
@@ -25,6 +26,7 @@ class BeeDispatcher(object):
         self.enabled = False
         self.bee = bee
         self.coarse_flag = True
+        self.fine_flag = True
         self.my_ip = my_ip
         self.max_sessions = random.randint(4, 8)
         sched_pattern = self.options['bee_' + self.bee.__class__.__name__]['timing']
@@ -38,7 +40,8 @@ class BeeDispatcher(object):
 
     def dispatch_bee(self):
         n = 0
-        while n < self.max_sessions:
-            gevent.spawn(self.bee.do_session, self.my_ip)
+        while n < self.max_sessions and self.fine_flag:
+            self.greenlet = Greenlet(self.bee.do_session, self.my_ip)
+            self.greenlet.start()
             gevent.sleep(self.fine_interval)
             n += 1
