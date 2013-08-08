@@ -34,12 +34,14 @@ from beeswarm.hive.capabilities import handlerbase
 from beeswarm.hive.models.session import Session
 from beeswarm.hive.models.authenticator import Authenticator
 from beeswarm.hive.helpers.streamserver import HiveStreamServer
-from beeswarm.hive.helpers.common import drop_privileges, create_socket
+from beeswarm.hive.helpers.common import create_socket
+from beeswarm.shared.helpers import drop_privileges
 from beeswarm.hive.models.user import HiveUser
 from beeswarm.errors import ConfigNotFound
 import requests
 from requests.exceptions import Timeout, ConnectionError
-from beeswarm.shared.helpers import asciify, is_url
+from beeswarm.shared.helpers import is_url
+from beeswarm.shared.asciify import asciify
 
 logger = logging.getLogger(__name__)
 

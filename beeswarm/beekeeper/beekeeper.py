@@ -22,13 +22,13 @@ from gevent.pywsgi import WSGIServer
 from beeswarm.beekeeper.db import database
 from beeswarm.beekeeper.webapp import app
 from beeswarm.beekeeper.webapp.auth import Authenticator
+from beeswarm.shared.helpers import drop_privileges
 
 logger = logging.getLogger(__name__)
 
 
 class Beekeeper(object):
     def __init__(self, work_dir, config_arg='beekeepercfg.json'):
-
         with open(config_arg) as config_file:
             self.config = json.load(config_file)
 
@@ -52,11 +52,13 @@ class Beekeeper(object):
 
         #Out of band import because of premature db implementation
         from beeswarm.beekeeper.classifier.classifier import Classifier
+
         classifier = Classifier()
         classifier_greenlet = gevent.spawn(classifier.start)
         self.servers['classifier'] = classifier
         self.greenlets.append(classifier_greenlet)
 
+        drop_privileges()
         gevent.joinall(self.greenlets)
 
     def stop(self):

@@ -1,65 +1,26 @@
-# Parts of this code are taken from: https://gist.github.com/chris-hailstorm/4989643
-# All credits go to the original author
+# Copyright (C) 2013 Johnny Vestergaard <jkv@unixcluster.dk>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 
-import unicodedata
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import urlparse
+import os
+import pwd
+import grp
+import platform
+import logging
 
-
-def _remove_accents(data):
-    """
-    Changes accented letters to non-accented approximation, like Nestle
-
-    """
-    return unicodedata.normalize('NFKD', data).encode('ascii', 'ignore')
-
-
-def _asciify_list(data):
-    """ Ascii-fies list values """
-    ret = []
-    for item in data:
-        if isinstance(item, unicode):
-            item = _remove_accents(item)
-            item = item.encode('utf-8')
-        elif isinstance(item, list):
-            item = _asciify_list(item)
-        elif isinstance(item, dict):
-            item = _asciify_dict(item)
-        ret.append(item)
-    return ret
-
-
-def _asciify_dict(data):
-    """ Ascii-fies dict keys and values """
-    ret = {}
-    for key, value in data.iteritems():
-        if isinstance(key, unicode):
-            key = _remove_accents(key)
-            key = key.encode('utf-8')
-            ## note new if
-        if isinstance(value, unicode):
-            value = _remove_accents(value)
-            value = value.encode('utf-8')
-        elif isinstance(value, list):
-            value = _asciify_list(value)
-        elif isinstance(value, dict):
-            value = _asciify_dict(value)
-        ret[key] = value
-    return ret
-
-
-def asciify(data):
-
-    if isinstance(data, list):
-        return _asciify_list(data)
-    elif isinstance(data, dict):
-        return _asciify_dict(data)
-    elif isinstance(data, unicode):
-        data = _remove_accents(data)
-        return data.encode('utf-8')
-    elif isinstance(data, str):
-        return data
-    else:
-        raise TypeError('Input must be dict, list, str or unicode')
+logger = logging.getLogger(__name__)
 
 
 def is_url(string):
@@ -67,3 +28,24 @@ def is_url(string):
     if not parts.scheme or not parts.netloc:
         return False
     return True
+
+
+def drop_privileges(uid_name='nobody', gid_name='nogroup'):
+    if os.getuid() != 0:
+        return
+
+    wanted_uid = pwd.getpwnam(uid_name)[2]
+    #special handling for os x. (getgrname has trouble with gid below 0)
+    if platform.mac_ver()[0]:
+        wanted_gid = -2
+    else:
+        wanted_gid = grp.getgrnam(gid_name)[2]
+
+    os.setgid(wanted_gid)
+
+    os.setuid(wanted_uid)
+
+    new_uid_name = pwd.getpwuid(os.getuid())[0]
+    new_gid_name = grp.getgrgid(os.getgid())[0]
+
+    logger.info("Privileges dropped, running as {0}/{1}.".format(new_uid_name, new_gid_name))

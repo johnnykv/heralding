@@ -31,14 +31,12 @@ from beeswarm.feeder.feeder import Feeder
 from beeswarm.errors import ConfigNotFound
 from beeswarm.shared.helpers import is_url
 
-
 gevent.monkey.patch_all()
 
 logger = logging.getLogger()
 
 
 def setuplogging(logfile, verbose):
-
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.DEBUG)
 
@@ -67,6 +65,7 @@ class LogFilter(logging.Filter):
             return False
         else:
             return True
+
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Beeswarm')

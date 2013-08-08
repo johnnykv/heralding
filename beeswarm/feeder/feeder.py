@@ -13,26 +13,25 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import json
+import os
+import sys
+import logging
+import urllib2
 
+import requests
 import gevent
 from gevent.greenlet import Greenlet
 import gevent.monkey
-import requests
-from beeswarm.feeder.consumer import consumer
-
 gevent.monkey.patch_all()
 
-import os
-import sys
-
-import beeswarm
 from beeswarm.feeder.bees import clientbase
 from beeswarm.feeder.models.session import BeeSession
 from beeswarm.errors import ConfigNotFound
 from beeswarm.feeder.models.dispatcher import BeeDispatcher
-from beeswarm.shared.helpers import asciify, is_url
-import logging
-import urllib2
+from beeswarm.shared.helpers import is_url
+from beeswarm.shared.asciify import asciify
+from beeswarm.shared.helpers import drop_privileges
+from beeswarm.feeder.consumer import consumer
 
 # Do not remove this import, it is used to autodetect the bees.
 import beeswarm.feeder.bees
@@ -105,6 +104,7 @@ class Feeder(object):
             self.dispatcher_greenlets.append(current_greenlet)
             current_greenlet.start()
 
+        drop_privileges()
         gevent.joinall(self.dispatcher_greenlets)
 
     def stop(self):
