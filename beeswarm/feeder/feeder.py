@@ -15,6 +15,7 @@
 import json
 
 import gevent
+from gevent.greenlet import Greenlet
 import gevent.monkey
 import requests
 from beeswarm.feeder.consumer import consumer
@@ -23,12 +24,12 @@ gevent.monkey.patch_all()
 
 import os
 import sys
-import shutil
 
 import beeswarm
 from beeswarm.feeder.bees import clientbase
 from beeswarm.feeder.models.session import BeeSession
 from beeswarm.errors import ConfigNotFound
+from beeswarm.feeder.models.dispatcher import BeeDispatcher
 from beeswarm.shared.helpers import asciify, is_url
 import logging
 import urllib2
@@ -66,6 +67,8 @@ class Feeder(object):
             logging.info('Fetched {0} as my external ip.'.format(self.my_ip))
         else:
             self.my_ip = '127.0.0.1'
+        self.dispatchers = {}
+        self.dispatcher_greenlets = []
 
     def start(self):
         logging.info('Starting feeder.')
@@ -86,19 +89,27 @@ class Feeder(object):
                 continue
                 #skip loading if disabled
             if not self.config[bee_name]['enabled']:
+                logger.warning(
+                    "Not loading {0} bee because it is disabled in the configuration file.".format(b.__name__))
                 continue
 
             bee = b(sessions, self.config[bee_name])
             honeybees.append(bee)
             logging.debug('Adding {0} as a honeybee'.format(bee.__class__.__name__))
 
-        while self.run_flag:
-            for bee in honeybees:
-                gevent.spawn(bee.do_session, self.my_ip)
-            gevent.sleep(60)
+        self.dispatcher_greenlets = []
+        for bee in honeybees:
+            dispatcher = BeeDispatcher(self.config, bee, self.my_ip)
+            self.dispatchers[bee.__class__.__name__] = dispatcher
+            current_greenlet = Greenlet(dispatcher.start)
+            self.dispatcher_greenlets.append(current_greenlet)
+            current_greenlet.start()
+
+        gevent.joinall(self.dispatcher_greenlets)
 
     def stop(self):
-        self.run_flag = False
+        for g in self.dispatcher_greenlets:
+            g.kill()
         self.sessions_consumer.stop_handling()
         logger.info('All clients stopped')
         sys.exit(0)
