@@ -50,9 +50,10 @@ class BeeDispatcher(object):
     def start(self):
         while self.run_flag:
             while not self.time_in_range():
-                gevent.sleep(15 * 60)  # Wait for 15 minutes before checking if we're in active interval yet
-            while self.time_in_range() and self.activation_probability >= random.random():
-                gevent.spawn(self.bee.do_session, self.my_ip)
+                gevent.sleep(5)
+            while self.time_in_range():
+                if self.activation_probability >= random.random():
+                    gevent.spawn(self.bee.do_session, self.my_ip)
                 gevent.sleep(self.sleep_interval)
 
     def time_in_range(self):
