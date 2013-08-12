@@ -16,6 +16,8 @@
 from datetime import datetime
 import json
 import logging
+import random
+import string
 import uuid
 from flask import Flask, render_template, request, redirect, flash, Response
 from flask.ext.login import LoginManager, login_user, current_user, login_required, logout_user
@@ -33,7 +35,7 @@ def is_hidden_field_filter(field):
 app = Flask(__name__)
 app.config['DEBUG'] = True
 app.config['CSRF_ENABLED'] = True
-app.config['SECRET_KEY'] = 'beeswarm-is-awesome'
+app.config['SECRET_KEY'] = ''.join(random.choice(string.lowercase) for x in range(random.randint(16, 32)))
 app.jinja_env.filters['bootstrap_is_hidden_field'] = is_hidden_field_filter
 
 login_manager = LoginManager()
