@@ -23,7 +23,6 @@ import json
 
 import gevent
 from gevent import Greenlet
-from OpenSSL import crypto
 from beeswarm.hive.consumer import consumer
 
 import beeswarm
@@ -35,7 +34,7 @@ from beeswarm.hive.models.session import Session
 from beeswarm.hive.models.authenticator import Authenticator
 from beeswarm.hive.helpers.streamserver import HiveStreamServer
 from beeswarm.hive.helpers.common import create_socket
-from beeswarm.shared.helpers import drop_privileges
+from beeswarm.shared.helpers import drop_privileges, create_self_signed_cert
 from beeswarm.hive.models.user import HiveUser
 from beeswarm.errors import ConfigNotFound
 import requests
@@ -190,34 +189,7 @@ class Hive(object):
             shutil.copyfile(os.path.join(package_directory, 'hive/hivecfg.json.dist'),
                             os.path.join(work_dir, 'hivecfg.json'))
 
-        logging.info('Creating SSL Certificate and Key.')
-        pk = crypto.PKey()
-        pk.generate_key(crypto.TYPE_RSA, 1024)
-
-        cert = crypto.X509()
-        sub = cert.get_subject()
-
-        # Later, we'll get these fields from the BeeKeeper
-        sub.C = 'US'
-        sub.ST = 'Default'
-        sub.L = 'Default'
-        sub.O = 'Default Company'
-        sub.OU = 'Default Org'
-        sub.CN = _socket.gethostname()
-        cert.set_serial_number(1000)
-        cert.gmtime_adj_notBefore(0)
-        cert.gmtime_adj_notAfter(365 * 24 * 60 * 60)  # Valid for a year
-        cert.set_issuer(sub)
-        cert.set_pubkey(pk)
-        cert.sign(pk, 'sha1')
-
-        certpath = os.path.join(work_dir, 'server.crt')
-        keypath = os.path.join(work_dir, 'server.key')
-
-        with open(certpath, 'w') as certfile:
-            certfile.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
-        with open(keypath, 'w') as keyfile:
-            keyfile.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, pk))
+        create_self_signed_cert(work_dir, 'server.crt', 'server.key')
 
     @staticmethod
     def _ignore_copy_files(path, content):

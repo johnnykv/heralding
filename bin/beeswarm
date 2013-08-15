@@ -29,7 +29,7 @@ from beeswarm.hive.hive import Hive
 from beeswarm.beekeeper.beekeeper import Beekeeper
 from beeswarm.feeder.feeder import Feeder
 from beeswarm.errors import ConfigNotFound
-from beeswarm.shared.helpers import is_url
+from beeswarm.shared.helpers import is_url, create_self_signed_cert
 
 gevent.monkey.patch_all()
 
@@ -114,6 +114,8 @@ if __name__ == '__main__':
             config_file = os.path.join(args.workdir, 'beekeepercfg.json')
             if not os.path.isfile(config_file):
                 logging.info('Copying configuration file to workdir.')
+                create_self_signed_cert(args.workdir, 'beekeeper.crt', 'beekeeper.key')
+
                 shutil.copyfile(os.path.join(package_directory, 'beekeeper/beekeepercfg.json.dist'),
                                 os.path.join(args.workdir, 'beekeepercfg.json'))
 
