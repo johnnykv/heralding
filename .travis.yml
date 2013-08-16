@@ -9,6 +9,7 @@ before_install:
 # command to install dependencies
 install:
   - pip install -e git+https://github.com/rep/hpfeeds.git#egg=hpfeeds
+  - pip install --upgrade git+https://github.com/msabramo/M2Crypto.git
   - pip install -r requirements.txt
 # command to run tests
 script:
