@@ -34,7 +34,7 @@ def is_hidden_field_filter(field):
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
-app.config['CSRF_ENABLED'] = True
+app.config['WTF_CSRF_ENABLED'] = True
 app.config['SECRET_KEY'] = ''.join(random.choice(string.lowercase) for x in range(random.randint(16, 32)))
 app.jinja_env.filters['bootstrap_is_hidden_field'] = is_hidden_field_filter
 

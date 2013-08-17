@@ -1,6 +1,5 @@
-from flask.ext.wtf import Form, TextField, BooleanField
-from flask.ext.wtf import IntegerField, FileField
-from wtforms import PasswordField, ValidationError
+from flask.ext.wtf import Form
+from wtforms import IntegerField, FileField, PasswordField, TextField, BooleanField, ValidationError
 
 
 def validate_time_range(form, field):
