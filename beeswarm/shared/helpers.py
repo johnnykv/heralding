@@ -12,6 +12,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+from OpenSSL import crypto
 
 import urlparse
 import os
@@ -19,6 +20,7 @@ import pwd
 import grp
 import platform
 import logging
+import _socket
 
 logger = logging.getLogger(__name__)
 
@@ -49,3 +51,40 @@ def drop_privileges(uid_name='nobody', gid_name='nogroup'):
     new_gid_name = grp.getgrgid(os.getgid())[0]
 
     logger.info("Privileges dropped, running as {0}/{1}.".format(new_uid_name, new_gid_name))
+
+
+def create_self_signed_cert(directory, cname, kname):
+    logging.info('Creating SSL Certificate and Key: {}, {}'.format(cname, kname))
+    pk = crypto.PKey()
+    pk.generate_key(crypto.TYPE_RSA, 1024)
+
+    cert = crypto.X509()
+    sub = cert.get_subject()
+
+    # Later, we'll get these fields from the BeeKeeper
+    sub.C = 'US'
+    sub.ST = 'Default'
+    sub.L = 'Default'
+    sub.O = 'Default Company'
+    sub.OU = 'Default Org'
+    sub.CN = _socket.gethostname()
+    cert.set_serial_number(1000)
+    cert.gmtime_adj_notBefore(0)
+    cert.gmtime_adj_notAfter(365 * 24 * 60 * 60)  # Valid for a year
+    cert.set_issuer(sub)
+    cert.set_pubkey(pk)
+    cert.sign(pk, 'sha1')
+
+    certpath = os.path.join(directory, cname)
+    keypath = os.path.join(directory, kname)
+
+    with open(certpath, 'w') as certfile:
+        certfile.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
+    with open(keypath, 'w') as keyfile:
+        keyfile.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, pk))
+
+    # We need to do this because Paramiko wants PKCS #1 RSA Key format.
+    # I would really like to add a few swear words here.
+    from M2Crypto import RSA
+    key = RSA.load_key(keypath)
+    key.save_key(keypath, cipher=None)
