@@ -87,6 +87,9 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
 
 
 class http(HandlerBase):
+
+    HandlerClass = BeeHTTPHandler
+
     def __init__(self, sessions, options, users, workdir):
         super(http, self).__init__(sessions, options, users, workdir)
         self._options = options
@@ -96,7 +99,7 @@ class http(HandlerBase):
         try:
             # The third argument ensures that the BeeHTTPHandler will access
             # only the data in vfs/var/www
-            BeeHTTPHandler(gsocket, address, self.vfsystem.opendir('/var/www'), None, httpsession=session,
-                           options=self._options, users=self.users)
+            self.HandlerClass(gsocket, address, self.vfsystem.opendir('/var/www'), None, httpsession=session,
+                              options=self._options, users=self.users)
         except socket.error as err:
             logger.debug('Unexpected end of http session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
