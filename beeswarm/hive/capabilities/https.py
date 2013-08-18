@@ -15,14 +15,31 @@
 
 
 import logging
-from beeswarm.hive.capabilities.http import http
+from beeswarm.hive.capabilities.http import http, BeeHTTPHandler
 
 from beeswarm.hive.capabilities.handlerbase import HandlerBase
 
 logger = logging.getLogger(__name__)
 
 
+class BeeHTTPSHandler(BeeHTTPHandler):
+    """
+        This class doesn't do anything about HTTPS, the difference is in the way the
+        HTML body is sent. We need smaller chunks for HTTPS apparently.
+    """
+
+    def send_html(self, filename):
+        with self.vfs.open(filename) as f:
+            while True:
+                chunk = f.read(1024)
+                if not chunk:
+                    break
+                self.request.write(chunk)
+
+
 class https(http, HandlerBase):
     """
     This class will get wrapped in SSL. This is possible because we by convention (in run_hive.py) wrap
     all capabilities that ends with the letter 's' in SSL."""
+
+    HandlerClass = BeeHTTPSHandler
