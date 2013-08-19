@@ -110,12 +110,12 @@ class WebappTests(unittest.TestCase):
         data_dict = {
             'id': 'ba9fdb3d-0efb-4764-9a6b-d9b86eccda96',
             'hive_id': self.hive_id,
-            'honey_ip': '192.168.1.1',
-            'honey_port': 8023,
+            'destination_ip': '192.168.1.1',
+            'destination_port': 8023,
             'protocol': 'telnet',
-            'attacker_ip': '127.0.0.1',
+            'source_ip': '127.0.0.1',
             'timestamp': '2013-05-07T22:21:19.453828',
-            'attacker_source_port': 61175,
+            'source_port': 61175,
             'authentication': [
                 {'username': 'qqq', 'timestamp': '2013-05-07T22:21:20.846805', 'password': 'aa',
                  'id': '027bd968-f8ea-4a69-8d4c-6cf21476ca10', 'successful': False},
@@ -137,12 +137,12 @@ class WebappTests(unittest.TestCase):
         data_dict = {
             'id': 'ba9fdb3d-0efb-4764-9a6b-d9b86eccda96',
             'hive_id': self.hive_id,
-            'honey_ip': '192.168.1.1',
-            'honey_port': 8023,
+            'destination_ip': '192.168.1.1',
+            'destination_port': 8023,
             'protocol': 'telnet',
-            'attacker_ip': '127.0.0.1',
+            'source_ip': '127.0.0.1',
             'timestamp': '2013-05-07T22:21:19.453828',
-            'attacker_source_port': 61175,
+            'source_port': 61175,
             'login_attempts': [
                 {'username': 'qqq', 'timestamp': '2013-05-07T22:21:20.846805', 'password': 'aa', 'type': 'plaintext',
                  'id': '027bd968-f8ea-4a69-8d4c-6cf21476ca10'},

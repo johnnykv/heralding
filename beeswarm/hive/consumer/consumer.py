@@ -54,7 +54,7 @@ class Consumer:
                                                      session.id))
                     del self.sessions[session_id]
                     logger.debug('Removed {0} connection from {1}. ({2})'.format(session.protocol,
-                                                                                 session.attacker_ip,
+                                                                                 session.source_ip,
                                                                                  session.id))
                     #make sure the socket is closed
                     session.socket.close()

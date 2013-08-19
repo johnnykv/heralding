@@ -188,10 +188,10 @@ def hive_data():
         timestamp=datetime.strptime(data['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
         received=datetime.utcnow(),
         protocol=data['protocol'],
-        destination_ip=data['honey_ip'],
-        destination_port=data['honey_port'],
-        source_ip=data['attacker_ip'],
-        source_port=data['attacker_source_port'],
+        destination_ip=data['destination_ip'],
+        destination_port=data['destination_port'],
+        source_ip=data['source_ip'],
+        source_port=data['source_port'],
         hive=_hive)
 
     for auth in data['authentication']:
