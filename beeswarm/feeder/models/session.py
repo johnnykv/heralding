@@ -13,34 +13,29 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import uuid
 from datetime import datetime
+from beeswarm.shared.models.base_session import BaseSession
 
 
-class BeeSession(object):
+class BeeSession(BaseSession):
 
     feeder_id = ''
     hive_id = ''
 
-    def __init__(self, protocol, login, password, hive_host, hive_port, my_ip):
+    def __init__(self, protocol, destination_ip, destination_port, my_ip):
+        super(BeeSession, self).__init__(protocol, source_ip=my_ip, destination_ip=destination_ip,
+                                         destination_port=destination_port)
+
         assert BeeSession.feeder_id
 
-        self.id = uuid.uuid4()
         self.feeder_id = BeeSession.feeder_id
         self.hive_id = BeeSession.hive_id
-        self.protocol = protocol
-        self.login = login
-        self.password = password
-        self.server_host = hive_host
-        self.server_port = hive_port
-        self.timestamp = datetime.utcnow()
+
         self.did_connect = False
         self.did_login = False
         self.alldone = False
         self.did_complete = False
         self.protocol_data = {}
-        self.source_ip = my_ip
-        self.source_port = None
 
     def to_dict(self):
         return vars(self)

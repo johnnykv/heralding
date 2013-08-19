@@ -26,14 +26,14 @@ from werkzeug.security import check_password_hash
 from wtforms import HiddenField
 from forms import NewHiveConfigForm, NewFeederConfigForm, LoginForm
 from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Hive, User, SessionData
+from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Hive, User, SessionData, Authentication
 
 
 def is_hidden_field_filter(field):
     return isinstance(field, HiddenField)
 
 app = Flask(__name__)
-app.config['DEBUG'] = True
+app.config['DEBUG'] = False
 app.config['WTF_CSRF_ENABLED'] = True
 app.config['SECRET_KEY'] = ''.join(random.choice(string.lowercase) for x in range(random.randint(16, 32)))
 app.jinja_env.filters['bootstrap_is_hidden_field'] = is_hidden_field_filter
@@ -53,6 +53,7 @@ def user_loader(userid):
     except NoResultFound:
         logging.info('Attempt to load non-existent user: {0}'.format(userid))
     return user
+
 
 logger = logging.getLogger(__name__)
 
@@ -115,32 +116,25 @@ def home():
 @app.route('/sessions')
 @login_required
 def sessions_all():
-    db_session = database.get_session()
-    sessions = db_session.query(Session).all()
-    return render_template('logs.html', sessions=sessions, logtype='All', user=current_user)
+    return render_template('logs.html', logtype='All', user=current_user)
 
 
 @app.route('/sessions/honeybees')
 @login_required
 def sessions_honeybees():
-    db_session = database.get_session()
-    honeybees = db_session.query(Honeybee).all()
-    return render_template('logs.html', sessions=honeybees, logtype='HoneyBees', user=current_user)
+    return render_template('logs.html', logtype='HoneyBees', user=current_user)
 
 
 @app.route('/sessions/attacks')
 @login_required
 def sessions_attacks():
-    db_session = database.get_session()
-    attacks = db_session.query(Session).filter(Session.classification_id != 'honeybee' and
-                                               Session.classification_id is not None).all()
-    return render_template('logs.html', sessions=attacks, logtype='Attacks', user=current_user)
+    return render_template('logs.html', logtype='Attacks', user=current_user)
 
 
 @app.route('/ws/feeder_data', methods=['POST'])
 @login_required
 def feeder_data():
-    #TODO: investigate why the flask provided request.json returns None.
+    #TODO: investigate why the flask provided request.json returns None
     data = json.loads(request.data)
     logger.debug(data)
     session = database.get_session()
@@ -157,10 +151,8 @@ def feeder_data():
         timestamp=datetime.strptime(data['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
         received=datetime.utcnow(),
         protocol=data['protocol'],
-        username=data['login'],
-        password=data['password'],
-        destination_ip=data['server_host'],
-        destination_port=data['server_port'],
+        destination_ip=data['destination_ip'],
+        destination_port=data['destination_port'],
         source_ip=data['source_ip'],
         source_port=data['source_port'],
         did_connect=data['did_connect'],
@@ -170,9 +162,14 @@ def feeder_data():
         hive=_hive
     )
 
+    for auth in data['authentication']:
+        a = Authentication(id=auth['id'], username=auth['username'], password=auth['password'],
+                           successful=auth['successful'],
+                           timestamp=datetime.strptime(auth['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'))
+        h.authentication.append(a)
+
     session.add(h)
     session.commit()
-
     return ''
 
 
@@ -183,39 +180,28 @@ def hive_data():
     data = json.loads(request.data)
     logger.debug('Received: {0}'.format(data))
 
-    session = database.get_session()
-    _hive = session.query(Hive).filter(Hive.id == data['hive_id']).one()
+    db_session = database.get_session()
+    _hive = db_session.query(Hive).filter(Hive.id == data['hive_id']).one()
 
-    for login_attempt in data['login_attempts']:
+    session = Session(
+        id=data['id'],
+        timestamp=datetime.strptime(data['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
+        received=datetime.utcnow(),
+        protocol=data['protocol'],
+        destination_ip=data['honey_ip'],
+        destination_port=data['honey_port'],
+        source_ip=data['attacker_ip'],
+        source_port=data['attacker_source_port'],
+        hive=_hive)
 
-        session_data = None
-        username = None
-        password = None
+    for auth in data['authentication']:
+        a = Authentication(id=auth['id'], username=auth['username'], password=auth['password'],
+                           successful=auth['successful'],
+                           timestamp=datetime.strptime(auth['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'))
+        session.authentication.append(a)
 
-        if login_attempt['type'] == 'plaintext':
-            username = login_attempt['username'] if 'username' in login_attempt else ''
-            password = login_attempt['password'] if 'password' in login_attempt else ''
-        else:
-            session_data = SessionData(type=login_attempt['type'], data=json.dumps(login_attempt))
-
-        s = Session(
-            id=login_attempt['id'],
-            timestamp=datetime.strptime(login_attempt['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
-            received=datetime.utcnow(),
-            protocol=data['protocol'],
-            username=username,
-            password=password,
-            destination_ip=data['honey_ip'],
-            destination_port=data['honey_port'],
-            source_ip=data['attacker_ip'],
-            source_port=data['attacker_source_port'],
-            hive=_hive)
-
-        if session_data:
-            s.session_data.append(session_data)
-
-        session.add(s)
-    session.commit()
+    db_session.add(session)
+    db_session.commit()
 
     return ''
 
@@ -502,6 +488,7 @@ def delete_feeders():
     db_session.commit()
     return ''
 
+
 @app.route('/data/sessions/all', methods=['GET', 'POST'])
 @login_required
 def data_sessions_all():
@@ -509,8 +496,7 @@ def data_sessions_all():
     sessions = db_session.query(Session).all()
     rows = []
     for s in sessions:
-        row = {'time': s.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': s.protocol, 'username': s.username,
-               'password': s.password, 'ip_address': s.source_ip}
+        row = {'time': s.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': s.protocol, 'ip_address': s.source_ip}
         rows.append(row)
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp
@@ -523,8 +509,7 @@ def data_sessions_bees():
     honeybees = db_session.query(Honeybee).all()
     rows = []
     for b in honeybees:
-        row = {'time': b.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': b.protocol, 'username': b.username,
-               'password': b.password, 'ip_address': b.source_ip}
+        row = {'time': b.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': b.protocol, 'ip_address': b.source_ip}
         rows.append(row)
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp
@@ -534,12 +519,10 @@ def data_sessions_bees():
 @login_required
 def data_sessions_attacks():
     db_session = database.get_session()
-    attacks = db_session.query(Session).filter(Session.classification_id != 'honeybee' and
-                                               Session.classification_id is not None).all()
+    attacks = db_session.query(Session).filter(Session.classification_id != 'honeybee').all()
     rows = []
     for a in attacks:
-        row = {'time': a.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': a.protocol, 'username': a.username,
-               'password': a.password, 'ip_address': a.source_ip}
+        row = {'time': a.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': a.protocol, 'ip_address': a.source_ip}
         rows.append(row)
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp
@@ -572,6 +555,7 @@ def data_feeders():
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp
 
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -603,6 +587,7 @@ def logout():
     logout_user()
     flash('Logged out succesfully')
     return redirect('/login')
+
 
 if __name__ == '__main__':
     app.run()

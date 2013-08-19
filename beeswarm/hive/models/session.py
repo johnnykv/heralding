@@ -16,80 +16,43 @@
 import uuid
 import logging
 from datetime import datetime
+from beeswarm.shared.models.base_session import BaseSession
 
 
 logger = logging.getLogger(__name__)
 
 
-class Session(object):
+class Session(BaseSession):
     authenticator = None
     default_timeout = 25
     hive_id = None
 
-    def __init__(self, attacker_ip, attacker_s_port, protocol, socket, honeypot_port=None, honeypot_ip=None):
+    def __init__(self, source_ip, source_port, protocol, socket, destination_port=None, destination_ip=None):
+
+        super(Session, self).__init__(protocol, source_ip, source_port, destination_ip, destination_port)
 
         assert Session.authenticator is not None
 
-        self.attacker_ip = attacker_ip
-        self.attacker_source_port = attacker_s_port
-        self.protocol = protocol
-        self.honey_ip = honeypot_ip
-        self.honey_port = honeypot_port
-
-        self.id = uuid.uuid4()
-        self.timestamp = datetime.utcnow()
         self.connected = True
-
         self.authenticated = False
+        self.hive_id = Session.hive_id
+
         #for session specific volatile data (will not get logged)
         self.vdata = {}
-
-        self.login_attempts = []
         self.socket = socket
 
     def try_auth(self, type, **kwargs):
-        """
-
-        :param username:
-        :param password:
-        :param auth_type: possible values:
-                                plain: plaintext username/password
-        :return:
-        """
-        log_dict = {'timestamp': datetime.utcnow(),
-                    'type': type,
-                    'id': uuid.uuid4()}
-
-        log_string = ''
-        for key, value in kwargs.iteritems():
-            log_dict[key] = value
-            log_string += '{0}:{1}, '.format(key, value)
-
-        self.login_attempts.append(log_dict)
-        logger.debug('{0} authentication attempt from {1}. [{2}] ({3})'
-                     .format(self.protocol, self.attacker_ip, log_string.rstrip(', '), self.id))
 
         if Session.authenticator.try_auth(type, **kwargs):
             self.authenticated = True
+            self.add_auth_attempt(type, True, **kwargs)
             return True
         else:
+            self.add_auth_attempt(type, False, **kwargs)
             return False
 
     def activity(self):
         self.last_activity = datetime.utcnow()
-
-    def to_dict(self):
-        return {
-            'hive_id': Session.hive_id,
-            'id': self.id,
-            'timestamp': self.timestamp,
-            'attacker_ip': self.attacker_ip,
-            'attacker_source_port': self.attacker_source_port,
-            'protocol': self.protocol,
-            'honey_ip': self.honey_ip,
-            'honey_port': self.honey_port,
-            'login_attempts': self.login_attempts,
-        }
 
     def last_activity(self):
         return self.socket.last_update()

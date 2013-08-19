@@ -51,6 +51,7 @@ def fill_dummy_data():
         username = ''.join(random.choice(string.lowercase) for x in range(8))
         password = ''.join(random.choice(string.lowercase) for x in range(8))
         authentication = Authentication(id=str(uuid.uuid4()), username=username, password=password)
+        session.authentication.add(authentication)
 
         authentications.append(authentication)
         sessions.append(session)

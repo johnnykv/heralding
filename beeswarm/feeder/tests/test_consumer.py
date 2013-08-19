@@ -32,7 +32,7 @@ class Consumer_test(unittest.TestCase):
         BeeSession.feeder_id = 'dummy_feeder_id'
         BeeSession.hive_id = 'dummy_hive_id'
 
-        beesession = BeeSession('telnet', 'james', 'bond', 'foo', '1234', '4321')
+        beesession = BeeSession('telnet', '1234', '4321', '123')
         beesession.alldone = True
         sessions[beesession.id] = beesession
 
@@ -62,7 +62,7 @@ class Consumer_test(unittest.TestCase):
         BeeSession.feeder_id = 'dummy_feeder_id'
         BeeSession.hive_id = 'dummy_hive_id'
 
-        beesession = BeeSession('telnet', 'james', 'bond', 'foo', '1234', '4321')
+        beesession = BeeSession('telnet', '123', '1234', '4321')
         beesession.alldone = False
         sessions[beesession.id] = beesession
 

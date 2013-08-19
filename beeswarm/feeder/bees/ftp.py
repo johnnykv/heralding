@@ -52,10 +52,9 @@ class ftp(ClientBase):
         server_host = self.options['server']
         server_port = self.options['port']
 
-        session = self.create_session(login, password, server_host, server_port, my_ip)
+        session = self.create_session(server_host, server_port, my_ip)
 
         self.sessions[session.id] = session
-
         logging.debug(
             'Sending %s honeybee to %s:%s. (bee id: %s)' % ('ftp', server_host, server_port, session.id))
 
@@ -63,7 +62,11 @@ class ftp(ClientBase):
         try:
             self.connect()
             session.did_connect = True
+
+            #TODO: Catch login failure
             self.login(login, password)
+            session.add_auth_attempt('plaintext', True, username=login, password=password)
+
             session.did_login = True
             session.timestamp = datetime.utcnow()
         except ftplib.error_perm as err:

@@ -29,9 +29,9 @@ class hive_tests(unittest.TestCase):
         self.work_dir = tempfile.mkdtemp()
         Hive.prepare_environment(self.work_dir)
 
-        self.test_config_file = os.path.join(os.path.dirname( __file__), 'hivecfg.json.test')
-        self.key = os.path.join(os.path.dirname( __file__), 'dummy_key.key')
-        self.cert = os.path.join(os.path.dirname( __file__), 'dummy_cert.crt')
+        self.test_config_file = os.path.join(os.path.dirname(__file__), 'hivecfg.json.test')
+        self.key = os.path.join(os.path.dirname(__file__), 'dummy_key.key')
+        self.cert = os.path.join(os.path.dirname(__file__), 'dummy_cert.crt')
 
     def tearDown(self):
         if os.path.isdir(self.work_dir):
@@ -43,7 +43,6 @@ class hive_tests(unittest.TestCase):
 
 
     def test_start_serving(self):
-
         sut = Hive(self.work_dir, config_arg=self.test_config_file, key=self.key, cert=self.cert)
         gevent.spawn(sut.start)
         gevent.sleep(1)

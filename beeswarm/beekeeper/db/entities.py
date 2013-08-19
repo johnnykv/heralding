@@ -34,9 +34,6 @@ class Session(Base):
     received = Column(DateTime)
     timestamp = Column(DateTime)
     protocol = Column(String)
-    username = Column(String)
-    password = Column(String)
-    #this will replace the username and password attributes
     authentication = relationship('Authentication')
     source_ip = Column(String)
     source_port = Column(Integer)
@@ -52,7 +49,7 @@ class Session(Base):
 
 class Authentication(Base):
     __tablename__ = 'authentication'
-    id = Column(String, primary_key=True, autoincrement=True)
+    id = Column(String, primary_key=True)
     timestamp = Column(DateTime)
     username = Column(String)
     password = Column(String)

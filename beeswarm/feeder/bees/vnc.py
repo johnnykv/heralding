@@ -27,12 +27,11 @@ class vnc(ClientBase):
 
     def do_session(self, my_ip):
 
-        login = self.options['login']
         password = self.options['password']
         server_host = self.options['server']
         server_port = self.options['port']
 
-        session = self.create_session(login, password, server_host, server_port, my_ip)
+        session = self.create_session(server_host, server_port, my_ip)
         self.sessions[session.id] = session
 
         logging.debug('Sending %s honeybee to %s:%s. (bee id: %s)' % ('vnc', server_host, server_port, session.id))
@@ -60,6 +59,10 @@ class vnc(ClientBase):
             client_socket.send('\x00' * 16)
             auth_status = client_socket.recv(1024)
             if auth_status == AUTH_SUCCESSFUL:
+                session.add_auth_attempt('cram_md5', True, password=password)
                 session.did_login = True
+            else:
+                session.add_auth_attempt('cram_md5', True, password=password)
+
         finally:
             session.alldone = True

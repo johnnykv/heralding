@@ -60,10 +60,10 @@ class Pop3_Tests(unittest.TestCase):
         #expect a single entry in the sessions dict
         self.assertEqual(1, len(sessions))
         session = sessions.values()[0]
-        self.assertEqual(110, session.honey_port)
+        self.assertEqual(110, session.destination_port)
         self.assertEqual('pop3', session.protocol)
-        self.assertEquals('192.168.1.200', session.attacker_ip)
-        self.assertEqual(12000, session.attacker_source_port)
+        self.assertEquals('192.168.1.200', session.source_ip)
+        self.assertEqual(12000, session.source_port)
 
     def test_login(self):
         """Testing different login combinations"""

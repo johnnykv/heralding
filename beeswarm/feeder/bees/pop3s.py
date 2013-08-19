@@ -33,7 +33,7 @@ class pop3s(ClientBase):
         server_host = self.options['server']
         server_port = self.options['port']
 
-        session = self.create_session(login, password, server_host, server_port, my_ip)
+        session = self.create_session(server_host, server_port, my_ip)
 
         try:
             logging.debug(
@@ -47,6 +47,8 @@ class pop3s(ClientBase):
 
             conn.user(login)
             conn.pass_(password)
+            #TODO: Handle failed login
+            session.add_auth_attempt('plaintext', True, username=login, password=password)
             session.did_login = True
             session.timestamp = datetime.utcnow()
         # except (poplib.error_proto, h_socket.error) as err:

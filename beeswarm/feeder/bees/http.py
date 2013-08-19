@@ -38,7 +38,7 @@ class http(ClientBase):
         server_host = self.options['server']
         server_port = self.options['port']
 
-        session = self.create_session(login, password, server_host, server_port, my_ip)
+        session = self.create_session(server_host, server_port, my_ip)
 
         self.sessions[session.id] = session
 
@@ -50,7 +50,10 @@ class http(ClientBase):
             response = self.client.get(url, auth=HTTPBasicAuth(login, password))
             session.did_connect = True
             if response.status_code == 200:
+                session.add_auth_attempt('plaintext', True, username=login, password=password)
                 session.did_login = True
+            else:
+                session.add_auth_attempt('plaintext', False, username=login, password=password)
 
             links = self._get_links(response)
             while self.sent_requests <= self.max_requests and links:

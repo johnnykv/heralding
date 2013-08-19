@@ -41,7 +41,7 @@ class smtp(ClientBase):
         server_host = self.options['server']
         server_port = self.options['port']
 
-        session = self.create_session(login, password, server_host, server_port, my_ip)
+        session = self.create_session(server_host, server_port, my_ip)
 
         logging.debug(
             'Sending %s honeybee to %s:%s. (bee id: %s)' % ('smtp', server_host, server_port, session.id))
@@ -51,7 +51,11 @@ class smtp(ClientBase):
             session.did_connect = True
             session.source_port = self.client.sock.getsockname()[1]
             self.login(login, password)
+
+            #TODO: Handle failed login
+            session.add_auth_attempt('plaintext', True, username=login, password=password)
             session.did_login = True
+
         except smtplib.SMTPException as error:
             logging.debug('Caught exception: %s (%s)' % (error, str(type(error))))
         else:

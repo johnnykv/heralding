@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 
 from beeswarm.beekeeper.db import database
 from beeswarm.beekeeper.db.entities import Feeder, Hive
-from beeswarm.beekeeper.db.entities import Classification, Session, Honeybee
+from beeswarm.beekeeper.db.entities import Classification, Session, Honeybee, Authentication
 from beeswarm.beekeeper.classifier.classifier import Classifier
 
 
@@ -36,10 +36,14 @@ class ClassifierTests(unittest.TestCase):
         db_session = database.get_session()
         feeder = Feeder(id=self.feeder_id)
         hive = Hive(id=self.hive_id)
-        honeybee = Honeybee(id=self.honeybee_id, username='a', password='a', source_ip='321', destination_ip='123',
+        honeybee = Honeybee(id=self.honeybee_id, source_ip='321', destination_ip='123',
                             received=datetime.utcnow(), timestamp=self.honeybee_datetime, protocol='pop3',
                             source_port=1,
                             destination_port=1, did_complete=True, feeder=feeder, hive=hive)
+
+        authentication = Authentication(id=str(uuid.uuid4()), username='a', password='a',
+                                            successful=True, timestamp=datetime.now())
+        honeybee.authentication.append(authentication)
         db_session.add_all([feeder, hive, honeybee])
         db_session.commit()
 
@@ -57,9 +61,11 @@ class ClassifierTests(unittest.TestCase):
 
         #session2 is the matching session
         for id, offset in (('session1', -15), ('session2', 3), ('session3', 15)):
-            s = Session(id=id, username='a', password='a', source_ip='321', destination_ip='123',
+            s = Session(id=id, source_ip='321', destination_ip='123',
                         received=datetime.utcnow(), timestamp=honeybee.timestamp + timedelta(seconds=offset),
                         protocol='pop3', source_port=1, destination_port=1, hive=hive)
+            a = Authentication(id=str(uuid.uuid4()), username='he', password='haha')
+            s.authentication.append(a)
             db_session.add(s)
         db_session.commit()
 
@@ -79,9 +85,11 @@ class ClassifierTests(unittest.TestCase):
         hive = db_session.query(Hive).filter(Hive.id == self.hive_id).one()
 
         s_id = str(uuid.uuid4())
-        s = Session(id=s_id, username='a', password='b', source_ip='321', destination_ip='123',
+        s = Session(id=s_id, source_ip='321', destination_ip='123',
                     received=datetime.now(), timestamp=self.honeybee_datetime - timedelta(seconds=2),
                     protocol='pop3', source_port=1, destination_port=1, hive=hive)
+        a = Authentication(id=str(uuid.uuid4()), username='he', password='haha')
+        s.authentication.append(a)
         db_session.add(s)
         db_session.commit()
 
@@ -105,9 +113,11 @@ class ClassifierTests(unittest.TestCase):
         db_session = database.get_session()
         hive = db_session.query(Hive).filter(Hive.id == self.hive_id).one()
         for id, offset in (('session99', -30), ('session88', -10), ('session77', -2)):
-            s = Session(id=id, username='b', password='b', source_ip='321', destination_ip='123',
+            s = Session(id=id, source_ip='321', destination_ip='123',
                         received=datetime.utcnow(), timestamp=datetime.utcnow() + timedelta(seconds=offset),
                         protocol='pop3', source_port=1, destination_port=1, hive=hive)
+            a = Authentication(id=str(uuid.uuid4()), username='he', password='haha')
+            s.authentication.append(a)
             db_session.add(s)
         db_session.commit()
 
@@ -126,9 +136,12 @@ class ClassifierTests(unittest.TestCase):
         db_session = database.get_session()
         hive = db_session.query(Hive).filter(Hive.id == self.hive_id).one()
 
-        s = Session(id='session1010', username='a', password='a', source_ip='321', destination_ip='123',
+        s = Session(id='session1010', source_ip='321', destination_ip='123',
                     received=datetime.utcnow(), timestamp=datetime.utcnow() + timedelta(seconds=-25),
                     protocol='pop3', source_port=1, destination_port=1, hive=hive)
+        a = Authentication(id=str(uuid.uuid4()), username='a', password='a')
+        s.authentication.append(a)
+        db_session.add(s)
         db_session.add(s)
         db_session.commit()
 

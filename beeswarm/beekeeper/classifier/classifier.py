@@ -17,7 +17,7 @@ import logging
 import datetime
 import gevent
 from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Classification, Honeybee, Session
+from beeswarm.beekeeper.db.entities import Classification, Honeybee, Session, Authentication
 
 
 logger = logging.getLogger(__name__)
@@ -107,23 +107,30 @@ class Classifier(object):
                                             .all()
 
         for s in sessions:
-            if s.password == None or s.username == None:
-                # '== None' is a temporary solution until we have figured out the final model for Session
-                logger.debug('Classifying session with id {0} as bruteforce attempt.'.format(s.id))
-                s.classification = db_session.query(Classification).filter(Classification.type == 'malicious_brute').one()
+            #if s.password == None or s.username == None:
+            #    # '== None' is a temporary solution until we have figured out the final model for Session
+            #    logger.debug('Classifying session with id {0} as bruteforce attempt.'.format(s.id))
+            #    s.classification = db_session.query(Classification).filter(Classification.type == 'malicious_brute').one()
+            #else:
+
+            #TODO: This would be more pretty if done with pure orm
+            honey_matches = []
+            for a in s.authentication:
+                honey_matches = db_session.query(Honeybee).join(Authentication).filter(Authentication.username == a.username) \
+                                                                               .filter(Authentication.password == a.password).all()
+
+            #honey_matches = db_session.query(Honeybee).filter(Honeybee.username == s.username) \
+            #                                          .filter(Honeybee.password == s.password).all()
+            if len(honey_matches) > 0:
+                #username/password has previously been transmitted in a honeybee
+                logger.debug('Classifying session with id {0} as attack which involved the reused '
+                             'of previously transmitted credentials.'.format(s.id))
+                s.classification = db_session.query(Classification).filter(Classification.type == 'mitm_2').one()
             else:
-                honey_matches = db_session.query(Honeybee).filter(Honeybee.username == s.username) \
-                                                          .filter(Honeybee.password == s.password).all()
-                if len(honey_matches) > 0:
-                    #username/password has previously been transmitted in a honeybee
-                    logger.debug('Classifying session with id {0} as attack which involved the reused '
-                                 'of previously transmitted credentials.'.format(s.id))
-                    s.classification = db_session.query(Classification).filter(Classification.type == 'mitm_2').one()
-                else:
-                    #we have never transmitted this username/password combo
-                    logger.debug('Classifying session with id {0} as bruteforce attempt.'.format(s.id))
-                    s.classification = db_session.query(Classification).filter(
-                        Classification.type == 'malicious_brute').one()
+                #we have never transmitted this username/password combo
+                logger.debug('Classifying session with id {0} as bruteforce attempt.'.format(s.id))
+                s.classification = db_session.query(Classification).filter(
+                    Classification.type == 'malicious_brute').one()
         db_session.commit()
 
     def stop(self):

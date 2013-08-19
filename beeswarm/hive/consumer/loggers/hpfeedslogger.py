@@ -25,7 +25,6 @@ logger = logging.getLogger(__name__)
 
 
 class HPFeedsLogger(LoggerBase):
-
     def __init__(self, config):
         super(HPFeedsLogger, self).__init__(config)
         #hpfeeds lib has problems with unicodestring - hence we encode as latin1
@@ -46,7 +45,7 @@ class HPFeedsLogger(LoggerBase):
         self.hpc = hpfeeds.new(host, port, ident, secret)
 
     def log(self, session):
-        session_dict = session.to_dict()
+        session_dict = self.to_old_format(session)
         if session_dict['honey_port'] in self.port_mapping:
             session_dict['honey_port'] = self.port_mapping[session_dict['honey_port']]
         data = json.dumps(session_dict, default=self.json_default)
@@ -54,6 +53,24 @@ class HPFeedsLogger(LoggerBase):
         if error_msg:
             logger.warning('Error while publishing: {0}'.format(error_msg))
         return error_msg
+
+    #to maintain compatibility with honeymap and mnemosyne we ned to convert to legacy format
+    def to_old_format(self, session):
+
+        entry = {
+            'hive_id': session.hive_id,
+            'id': session.id,
+            'timestamp': session.timestamp,
+            'attacker_ip': session.source_ip,
+            'attacker_source_port': session.source_port,
+            'protocol': session.protocol,
+            'honey_ip': session.destination_ip,
+            'honey_port': session.destination_port,
+            'login_attempts': session.login_attempts,
+        }
+
+        return entry
+
 
     def json_default(self, obj):
         if isinstance(obj, datetime):

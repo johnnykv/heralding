@@ -35,13 +35,15 @@ class ssh(ClientBase, Commands):
         password = self.options['password']
         server_host = self.options['server']
         server_port = self.options['port']
-        session = self.create_session(login, password, server_host, server_port, my_ip)
+        session = self.create_session(server_host, server_port, my_ip)
 
         self.sessions[session.id] = session
         logging.debug(
             'Sending %s honeybee to %s:%s. (bee id: %s)' % ('ssh', server_host, server_port, session.id))
         try:
             self.connect_login()
+            #TODO: Handle failed login
+            session.add_auth_attempt('plaintext', True, username=login, password=password)
             session.did_login = True
         except (SSHException, AuthenticationFailed) as err:
             logging.debug('Caught exception: %s (%s)' % (err, str(type(err))))

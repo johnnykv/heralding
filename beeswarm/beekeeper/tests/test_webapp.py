@@ -7,12 +7,13 @@ from datetime import datetime
 import gevent.monkey
 from beeswarm.beekeeper.webapp.auth import Authenticator
 from beeswarm.shared.helpers import is_url
+
 gevent.monkey.patch_all()
 
-
 from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Feeder, Hive, Session, Honeybee, User
+from beeswarm.beekeeper.db.entities import Feeder, Hive, Session, Honeybee, User, Authentication
 from beeswarm.beekeeper.webapp import app
+
 app.app.config['WTF_CSRF_ENABLED'] = False
 app.app.config['CERT_PATH'] = os.path.join(os.path.dirname(__file__), 'beekeepercfg.json.test')
 
@@ -53,17 +54,17 @@ class WebappTests(unittest.TestCase):
             'feeder_id': self.feeder_id,
             'hive_id': self.hive_id,
             'protocol': 'pop3',
-            'login': 'james',
-            'password': 'bond',
-            'server_host': '127.0.0.1',
-            'server_port': '110',
+            'destination_ip': '127.0.0.1',
+            'destination_port': '110',
             'source_ip': '123.123.123.123',
             'source_port': 12345,
             'timestamp': datetime.utcnow().isoformat(),
             'did_connect': True,
             'did_login': True,
             'did_complete': True,
-            'protocol_data': None
+            'protocol_data': None,
+            'authentication': [{'id': str(uuid.uuid4()), 'username': 'james', 'password': 'bond', 'successful': True,
+                                'timestamp': datetime.utcnow().isoformat()}]
         }
 
         r = self.app.post('/ws/feeder_data', data=json.dumps(data_dict), content_type='application/json')
@@ -74,10 +75,12 @@ class WebappTests(unittest.TestCase):
         Tests if a honeybee dict can be posted without exceptions.
         """
 
+        db_session = database.get_session()
+        fuser = db_session.query(User).filter(User.id == self.feeder_id).one()
+        self.login(fuser.id, fuser.password)
+
+        #missing id's
         data_dict = {
-            'id': str(uuid.uuid4()),
-            'feeder_id': self.feeder_id,
-            'hive_id': self.hive_id,
             'protocol': 'pop3',
             'login': 'james',
             'password': 'bond',
@@ -93,7 +96,7 @@ class WebappTests(unittest.TestCase):
         }
 
         r = self.app.post('/ws/feeder_data', data=json.dumps(data_dict), content_type='application/json')
-        self.assertEquals(r.status, '302 FOUND')
+        self.assertEquals(r.status, '500 INTERNAL SERVER ERROR')
 
     def test_basic_hive_post(self):
         """
@@ -113,13 +116,11 @@ class WebappTests(unittest.TestCase):
             'attacker_ip': '127.0.0.1',
             'timestamp': '2013-05-07T22:21:19.453828',
             'attacker_source_port': 61175,
-            'login_attempts': [
-                {'username': 'qqq', 'timestamp': '2013-05-07T22:21:20.846805', 'password': 'aa', 'type': 'plaintext',
-                 'id': '027bd968-f8ea-4a69-8d4c-6cf21476ca10'},
-                {'username': 'as', 'timestamp': '2013-05-07T22:21:21.150571', 'password': 'd', 'type': 'plaintext',
-                 'id': '603f40a4-e7eb-442d-9fde-0cd3ba707af7'},
-                {'type': 'some_arbitrary_data', 'data': '123456', 'id': 'dead40a4-a7eb-442d-9fde-0cd3ba707abc',
-                 'timestamp': '2013-05-07T22:21:20.846805'}],
+            'authentication': [
+                {'username': 'qqq', 'timestamp': '2013-05-07T22:21:20.846805', 'password': 'aa',
+                 'id': '027bd968-f8ea-4a69-8d4c-6cf21476ca10', 'successful': False},
+                {'username': 'as', 'timestamp': '2013-05-07T22:21:21.150571', 'password': 'd',
+                 'id': '603f40a4-e7eb-442d-9fde-0cd3ba707af7', 'successful': False}, ],
             'transcript': [
                 {'timestamp': '2013-05-07T22:21:20.846805', 'direction': 'in', 'data': 'whoami\r\n',
                  'timestamp': '2013-05-07T22:21:21.136800', 'direction': 'out', 'data': 'james_brown\r\n$:~'}]
@@ -434,8 +435,6 @@ class WebappTests(unittest.TestCase):
                 timestamp=datetime.utcnow(),
                 received=datetime.utcnow(),
                 protocol='ssh',
-                username='uuu',
-                password='vvvv',
                 destination_ip='1.2.3.4',
                 destination_port=1234,
                 source_ip='4.3.2.1',
@@ -444,7 +443,12 @@ class WebappTests(unittest.TestCase):
                 did_login=False,
                 did_complete=True
             )
+            a = Authentication(id=str(uuid.uuid4()), username='uuu', password='vvvv',
+                               successful=False,
+                               timestamp=datetime.utcnow())
+            h.authentication.append(a)
             db_session.add(h)
+
         db_session.commit()
 
     def populate_sessions(self):
@@ -457,19 +461,24 @@ class WebappTests(unittest.TestCase):
                 timestamp=datetime.utcnow(),
                 received=datetime.utcnow(),
                 protocol='telnet',
-                username='aaa',
-                password='bbb',
                 destination_ip='123.123.123.123',
                 destination_port=1234,
                 source_ip='12.12.12.12',
                 source_port=12345,
                 classification_id='asd'
             )
+            a = Authentication(id=str(uuid.uuid4()), username='aaa', password='bbb',
+                               successful=False,
+                               timestamp=datetime.utcnow())
+            s.authentication.append(a)
             db_session.add(s)
+
         db_session.commit()
+
 
     def logout(self):
         return self.app.get('/logout', follow_redirects=True)
+
 
 if __name__ == '__main__':
     unittest.main()
