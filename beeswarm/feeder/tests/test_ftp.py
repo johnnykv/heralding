@@ -74,7 +74,7 @@ class FTP_Test(unittest.TestCase):
         bee_info = {
             'enabled': True,
             'timing': 'regular',
-            'login': 'test',
+            'username': 'test',
             'password': 'test',
             'port': srv.server_port,
             'server': '127.0.0.1'
@@ -85,7 +85,7 @@ class FTP_Test(unittest.TestCase):
         current_bee = bee_ftp.ftp(beesessions, bee_info)
 
         current_bee.connect()
-        current_bee.login(bee_info['login'], bee_info['password'])
+        current_bee.login(bee_info['username'], bee_info['password'])
         srv.stop()
 
     def test_list(self):
@@ -106,7 +106,7 @@ class FTP_Test(unittest.TestCase):
         bee_info = {
             'enabled': True,
             'timing': 'regular',
-            'login': 'test',
+            'username': 'test',
             'password': 'test',
             'port': srv.server_port,
             'server': '127.0.0.1'
@@ -117,7 +117,7 @@ class FTP_Test(unittest.TestCase):
         current_bee = bee_ftp.ftp(beesessions, bee_info)
 
         current_bee.connect()
-        current_bee.login(bee_info['login'], bee_info['password'])
+        current_bee.login(bee_info['username'], bee_info['password'])
 
         current_bee.list()
         self.assertGreater(len(current_bee.state['file_list']), 0)
@@ -143,7 +143,7 @@ class FTP_Test(unittest.TestCase):
         bee_info = {
             'enabled': True,
             'timing': 'regular',
-            'login': 'test',
+            'username': 'test',
             'password': 'test',
             'port': srv.server_port,
             'server': '127.0.0.1'
@@ -154,7 +154,7 @@ class FTP_Test(unittest.TestCase):
         current_bee = bee_ftp.ftp(beesessions, bee_info)
 
         current_bee.connect()
-        current_bee.login(bee_info['login'], bee_info['password'])
+        current_bee.login(bee_info['username'], bee_info['password'])
 
         self.assertEquals('/', current_bee.state['current_dir'])
         current_bee.list()
@@ -181,7 +181,7 @@ class FTP_Test(unittest.TestCase):
         bee_info = {
             'enabled': True,
             'timing': 'regular',
-            'login': 'test',
+            'username': 'test',
             'password': 'test',
             'port': srv.server_port,
             'server': '127.0.0.1'
@@ -192,7 +192,7 @@ class FTP_Test(unittest.TestCase):
         current_bee = bee_ftp.ftp(beesessions, bee_info)
 
         current_bee.connect()
-        current_bee.login(bee_info['login'], bee_info['password'])
+        current_bee.login(bee_info['username'], bee_info['password'])
 
         current_bee.list()
         current_bee.retrieve(current_bee.state['file_list'][0])

@@ -62,7 +62,7 @@ class Classifier(object):
             .filter(Session.protocol == honeybee.protocol) \
             .filter(Session.discriminator == None)
 
-        #identify the correct by comparing authentication.
+        #identify the correct session by comparing authentication.
         #this could properly also be done using some fancy ORM/SQL construct.
         for session in sessions:
             for honey_auth in honeybee.authentication:
@@ -131,8 +131,6 @@ class Classifier(object):
                     Authentication.username == a.username) \
                     .filter(Authentication.password == a.password).all()
 
-            #honey_matches = db_session.query(Honeybee).filter(Honeybee.username == s.username) \
-            #                                          .filter(Honeybee.password == s.password).all()
             if len(honey_matches) > 0:
                 #username/password has previously been transmitted in a honeybee
                 logger.debug('Classifying session with id {0} as attack which involved the reused '

@@ -31,7 +31,7 @@ class ssh(ClientBase, Commands):
         self.comm_chan = None
 
     def do_session(self, my_ip):
-        login = self.options['login']
+        username = self.options['username']
         password = self.options['password']
         server_host = self.options['server']
         server_port = self.options['port']
@@ -43,7 +43,7 @@ class ssh(ClientBase, Commands):
         try:
             self.connect_login()
             #TODO: Handle failed login
-            session.add_auth_attempt('plaintext', True, username=login, password=password)
+            session.add_auth_attempt('plaintext', True, username=username, password=password)
             session.did_login = True
         except (SSHException, AuthenticationFailed) as err:
             logging.debug('Caught exception: %s (%s)' % (err, str(type(err))))
@@ -65,7 +65,7 @@ class ssh(ClientBase, Commands):
         return self.comm_chan.recv(2048)
 
     def connect_login(self):
-        self.client.connect(self.options['server'], self.options['port'], self.options['login'],
+        self.client.connect(self.options['server'], self.options['port'], self.options['username'],
                             self.options['password'])
         self.comm_chan = self.client.invoke_shell()
         time.sleep(1)

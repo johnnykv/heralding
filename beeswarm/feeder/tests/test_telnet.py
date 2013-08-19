@@ -58,7 +58,7 @@ class Telnet_Test(unittest.TestCase):
 
         bee_info = {
             'timing': 'regular',
-            'login': 'test',
+            'username': 'test',
             'password': 'test',
             'port': srv.server_port,
             'server': '127.0.0.1'
@@ -68,7 +68,7 @@ class Telnet_Test(unittest.TestCase):
         BeeSession.feeder_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
         current_bee = bee_telnet.telnet(beesessions, bee_info)
         current_bee.connect()
-        current_bee.login(bee_info['login'], bee_info['password'])
+        current_bee.login(bee_info['username'], bee_info['password'])
         srv.stop()
 
     def test_validate_senses(self):
@@ -84,7 +84,7 @@ class Telnet_Test(unittest.TestCase):
 
         bee_info = {
             'timing': 'regular',
-            'login': 'test',
+            'username': 'test',
             'password': 'test',
             'port': srv.server_port,
             'server': '127.0.0.1'
@@ -110,7 +110,7 @@ class Telnet_Test(unittest.TestCase):
 
         bee_info = {
             'timing': 'regular',
-            'login': 'test',
+            'username': 'test',
             'password': 'test',
             'port': srv.server_port,
             'server': '127.0.0.1'
@@ -121,7 +121,7 @@ class Telnet_Test(unittest.TestCase):
         current_bee = bee_telnet.telnet(beesessions, bee_info)
 
         current_bee.connect()
-        current_bee.login(bee_info['login'], bee_info['password'])
+        current_bee.login(bee_info['username'], bee_info['password'])
 
         # Command: cd
         self.assertEquals('/', current_bee.state['working_dir'])
@@ -142,7 +142,7 @@ class Telnet_Test(unittest.TestCase):
 
         bee_info = {
             'timing': 'regular',
-            'login': 'test',
+            'username': 'test',
             'password': 'test',
             'port': srv.server_port,
             'server': '127.0.0.1'
@@ -153,7 +153,7 @@ class Telnet_Test(unittest.TestCase):
         current_bee = bee_telnet.telnet(beesessions, bee_info)
 
         current_bee.connect()
-        current_bee.login(bee_info['login'], bee_info['password'])
+        current_bee.login(bee_info['username'], bee_info['password'])
 
         current_bee.cd('/var')
         resp = current_bee.pwd()
@@ -173,7 +173,7 @@ class Telnet_Test(unittest.TestCase):
 
         bee_info = {
             'timing': 'regular',
-            'login': 'test',
+            'username': 'test',
             'password': 'test',
             'port': srv.server_port,
             'server': '127.0.0.1'
@@ -184,7 +184,7 @@ class Telnet_Test(unittest.TestCase):
         current_bee = bee_telnet.telnet(beesessions, bee_info)
 
         current_bee.connect()
-        current_bee.login(bee_info['login'], bee_info['password'])
+        current_bee.login(bee_info['username'], bee_info['password'])
 
         resp1 = current_bee.uname('-o')
         self.assertTrue('GNU/Linux' in resp1)
@@ -203,7 +203,7 @@ class Telnet_Test(unittest.TestCase):
 
         bee_info = {
             'timing': 'regular',
-            'login': 'test',
+            'username': 'test',
             'password': 'test',
             'port': srv.server_port,
             'server': '127.0.0.1'
@@ -214,7 +214,7 @@ class Telnet_Test(unittest.TestCase):
         current_bee = bee_telnet.telnet(beesessions, bee_info)
 
         current_bee.connect()
-        current_bee.login(bee_info['login'], bee_info['password'])
+        current_bee.login(bee_info['username'], bee_info['password'])
 
         resp = current_bee.cat('/var/www/index.html')
         self.assertTrue('</html>' in resp)
@@ -233,7 +233,7 @@ class Telnet_Test(unittest.TestCase):
 
         bee_info = {
             'timing': 'regular',
-            'login': 'test',
+            'username': 'test',
             'password': 'test',
             'port': srv.server_port,
             'server': '127.0.0.1'
@@ -244,7 +244,7 @@ class Telnet_Test(unittest.TestCase):
         current_bee = bee_telnet.telnet(beesessions, bee_info)
 
         current_bee.connect()
-        current_bee.login(bee_info['login'], bee_info['password'])
+        current_bee.login(bee_info['username'], bee_info['password'])
 
         resp = current_bee.uptime('-V')
         self.assertTrue('procps version 3.2.8' in resp)
@@ -263,7 +263,7 @@ class Telnet_Test(unittest.TestCase):
 
         bee_info = {
             'timing': 'regular',
-            'login': 'test',
+            'username': 'test',
             'password': 'test',
             'port': srv.server_port,
             'server': '127.0.0.1'
@@ -274,7 +274,7 @@ class Telnet_Test(unittest.TestCase):
         current_bee = bee_telnet.telnet(beesessions, bee_info)
 
         current_bee.connect()
-        current_bee.login(bee_info['login'], bee_info['password'])
+        current_bee.login(bee_info['username'], bee_info['password'])
         resp = current_bee.echo('just testing!')
         self.assertTrue('just testing!' in resp)
 
@@ -291,7 +291,7 @@ class Telnet_Test(unittest.TestCase):
 
         bee_info = {
             'timing': 'regular',
-            'login': 'test',
+            'username': 'test',
             'password': 'test',
             'port': srv.server_port,
             'server': '127.0.0.1'
@@ -302,7 +302,7 @@ class Telnet_Test(unittest.TestCase):
         current_bee = bee_telnet.telnet(beesessions, bee_info)
 
         current_bee.connect()
-        current_bee.login(bee_info['login'], bee_info['password'])
+        current_bee.login(bee_info['username'], bee_info['password'])
 
         resp = current_bee.ls()
         self.assertTrue('var' in resp)

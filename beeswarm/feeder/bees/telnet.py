@@ -61,7 +61,7 @@ class telnet(ClientBase, Commands):
     def do_session(self, my_ip):
         """ Launch one login session"""
 
-        login = self.options['login']
+        login = self.options['username']
         password = self.options['password']
         server_host = self.options['server']
         server_port = self.options['port']

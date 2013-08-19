@@ -47,7 +47,7 @@ class ftp(ClientBase):
 
     def do_session(self, my_ip):
 
-        login = self.options['login']
+        username = self.options['username']
         password = self.options['password']
         server_host = self.options['server']
         server_port = self.options['port']
@@ -64,8 +64,8 @@ class ftp(ClientBase):
             session.did_connect = True
 
             #TODO: Catch login failure
-            self.login(login, password)
-            session.add_auth_attempt('plaintext', True, username=login, password=password)
+            self.login(username, password)
+            session.add_auth_attempt('plaintext', True, username=username, password=password)
 
             session.did_login = True
             session.timestamp = datetime.utcnow()

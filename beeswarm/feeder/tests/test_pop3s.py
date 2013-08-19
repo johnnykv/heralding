@@ -58,7 +58,7 @@ class POP3S_Test(unittest.TestCase):
 
         bee_info = {
             'timing': 'regular',
-            'login': 'test',
+            'username': 'test',
             'password': 'test',
             'port': srv.server_port,
             'server': '127.0.0.1'

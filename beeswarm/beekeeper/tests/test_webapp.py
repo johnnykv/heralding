@@ -82,7 +82,7 @@ class WebappTests(unittest.TestCase):
         #missing id's
         data_dict = {
             'protocol': 'pop3',
-            'login': 'james',
+            'username': 'james',
             'password': 'bond',
             'server_host': '127.0.0.1',
             'server_port': '110',
@@ -153,7 +153,7 @@ class WebappTests(unittest.TestCase):
         }
 
         r = self.app.post('/ws/hive_data', data=json.dumps(data_dict), content_type='application/json')
-        self.assertEquals(r.status, '302 FOUND')
+        self.assertEquals(r.status, '500 INTERNAL SERVER ERROR')
 
     def test_new_feeder(self):
         """

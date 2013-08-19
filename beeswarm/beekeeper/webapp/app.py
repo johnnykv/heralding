@@ -40,7 +40,7 @@ app.jinja_env.filters['bootstrap_is_hidden_field'] = is_hidden_field_filter
 
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = 'login'
+login_manager.login_view = 'username'
 
 
 @login_manager.user_loader
@@ -364,7 +364,7 @@ def create_feeder():
                     'sleep_interval': form.http_sleep_interval.data,
                     'activation_probability': form.http_activation_probability.data
                 },
-                'login': form.http_login.data,
+                'username': form.http_login.data,
                 'password': form.http_password.data
             },
             'bee_ftp': {
@@ -376,7 +376,7 @@ def create_feeder():
                     'sleep_interval': form.ftp_sleep_interval.data,
                     'activation_probability': form.ftp_activation_probability.data
                 },
-                'login': form.ftp_login.data,
+                'username': form.ftp_login.data,
                 'password': form.ftp_password.data
             },
             'bee_pop3': {
@@ -388,7 +388,7 @@ def create_feeder():
                     'sleep_interval': form.pop3_sleep_interval.data,
                     'activation_probability': form.pop3_activation_probability.data
                 },
-                'login': form.pop3_login.data,
+                'username': form.pop3_login.data,
                 'password': form.pop3_password.data
             },
             'bee_ssh': {
@@ -400,7 +400,7 @@ def create_feeder():
                     'sleep_interval': form.ssh_sleep_interval.data,
                     'activation_probability': form.ssh_activation_probability.data
                 },
-                'login': form.ssh_login.data,
+                'username': form.ssh_login.data,
                 'password': form.ssh_password.data
             },
             'bee_pop3s': {
@@ -412,7 +412,7 @@ def create_feeder():
                     'sleep_interval': form.pop3s_sleep_interval.data,
                     'activation_probability': form.pop3s_activation_probability.data
                 },
-                'login': form.pop3s_login.data,
+                'username': form.pop3s_login.data,
                 'password': form.pop3s_password.data
             },
             'bee_smtp': {
@@ -424,7 +424,7 @@ def create_feeder():
                     'sleep_interval': form.smtp_sleep_interval.data,
                     'activation_probability': form.smtp_activation_probability.data
                 },
-                'login': form.smtp_login.data,
+                'username': form.smtp_login.data,
                 'local_hostname': form.smtp_local_hostname.data,
                 'password': form.smtp_password.data
             },
@@ -437,7 +437,7 @@ def create_feeder():
                     'sleep_interval': form.vnc_sleep_interval.data,
                     'activation_probability': form.vnc_activation_probability.data
                 },
-                'login': form.vnc_login.data,
+                'username': form.vnc_login.data,
                 'password': form.vnc_password.data
             },
             'bee_telnet': {
@@ -449,7 +449,7 @@ def create_feeder():
                     'sleep_interval': form.telnet_sleep_interval.data,
                     'activation_probability': form.telnet_activation_probability.data
                 },
-                'login': form.telnet_login.data,
+                'username': form.telnet_login.data,
                 'password': form.telnet_password.data
             },
             'log_beekeeper': {

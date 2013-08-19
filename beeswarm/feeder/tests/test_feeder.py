@@ -53,7 +53,7 @@ class Feeder_Tests(unittest.TestCase):
                     'sleep_interval': '1',
                     'activation_probability': '1'
                 },
-                'login': 'test',
+                'username': 'test',
                 'password': 'test',
                 'port': 8080
             },

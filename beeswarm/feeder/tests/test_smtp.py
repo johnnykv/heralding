@@ -58,7 +58,7 @@ class SMTP_Test(unittest.TestCase):
 
         bee_info = {
             'timing': 'regular',
-            'login': 'test',
+            'username': 'test',
             'password': 'test',
             'port': srv.server_port,
             'server': '127.0.0.1',
@@ -69,7 +69,7 @@ class SMTP_Test(unittest.TestCase):
         BeeSession.feeder_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
         current_bee = bee_smtp.smtp(beesessions, bee_info)
         current_bee.connect()
-        current_bee.login(bee_info['login'], bee_info['password'])
+        current_bee.login(bee_info['username'], bee_info['password'])
         srv.stop()
 
     def test_login(self):
@@ -87,7 +87,7 @@ class SMTP_Test(unittest.TestCase):
 
         bee_info = {
             'timing': 'regular',
-            'login': 'test',
+            'username': 'test',
             'password': 'test',
             'port': srv.server_port,
             'server': '127.0.0.1',
@@ -98,7 +98,7 @@ class SMTP_Test(unittest.TestCase):
         BeeSession.feeder_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
         current_bee = bee_smtp.smtp(beesessions, bee_info)
         current_bee.connect()
-        current_bee.login(bee_info['login'], bee_info['password'])
+        current_bee.login(bee_info['username'], bee_info['password'])
         result = current_bee.client.sendmail('sender@test.com', 'reciever@test.com', 'Just testing the SMTP bee')
         self.assertEquals(result, {})
         srv.stop()
@@ -118,7 +118,7 @@ class SMTP_Test(unittest.TestCase):
 
         bee_info = {
             'timing': 'regular',
-            'login': 'test',
+            'username': 'test',
             'password': 'test',
             'port': srv.server_port,
             'server': '127.0.0.1',

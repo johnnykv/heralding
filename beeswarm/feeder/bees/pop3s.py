@@ -28,7 +28,7 @@ class pop3s(ClientBase):
     def do_session(self, my_ip):
         """Login, RETR and DELE all messages"""
 
-        login = self.options['login']
+        username = self.options['username']
         password = self.options['password']
         server_host = self.options['server']
         server_port = self.options['port']
@@ -45,10 +45,10 @@ class pop3s(ClientBase):
             session.protocol_data['banner'] = banner
             session.did_connect = True
 
-            conn.user(login)
+            conn.user(username)
             conn.pass_(password)
             #TODO: Handle failed login
-            session.add_auth_attempt('plaintext', True, username=login, password=password)
+            session.add_auth_attempt('plaintext', True, username=username, password=password)
             session.did_login = True
             session.timestamp = datetime.utcnow()
         # except (poplib.error_proto, h_socket.error) as err:

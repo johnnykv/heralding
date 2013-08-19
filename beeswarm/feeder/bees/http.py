@@ -33,7 +33,7 @@ class http(ClientBase):
 
     def do_session(self, my_ip):
 
-        login = self.options['login']
+        username = self.options['username']
         password = self.options['password']
         server_host = self.options['server']
         server_port = self.options['port']
@@ -47,18 +47,18 @@ class http(ClientBase):
 
         try:
             url = self._make_url(server_host, '/index.html', server_port)
-            response = self.client.get(url, auth=HTTPBasicAuth(login, password))
+            response = self.client.get(url, auth=HTTPBasicAuth(username, password))
             session.did_connect = True
             if response.status_code == 200:
-                session.add_auth_attempt('plaintext', True, username=login, password=password)
+                session.add_auth_attempt('plaintext', True, username=username, password=password)
                 session.did_login = True
             else:
-                session.add_auth_attempt('plaintext', False, username=login, password=password)
+                session.add_auth_attempt('plaintext', False, username=username, password=password)
 
             links = self._get_links(response)
             while self.sent_requests <= self.max_requests and links:
                 url = random.choice(links)
-                response = self.client.get(url, auth=HTTPBasicAuth(login, password))
+                response = self.client.get(url, auth=HTTPBasicAuth(username, password))
                 links = self._get_links(response)
 
         except Exception as err:

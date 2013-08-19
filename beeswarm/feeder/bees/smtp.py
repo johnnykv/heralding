@@ -36,7 +36,7 @@ class smtp(ClientBase):
 
     def do_session(self, my_ip):
 
-        login = self.options['login']
+        username = self.options['username']
         password = self.options['password']
         server_host = self.options['server']
         server_port = self.options['port']
@@ -50,10 +50,10 @@ class smtp(ClientBase):
             self.connect()
             session.did_connect = True
             session.source_port = self.client.sock.getsockname()[1]
-            self.login(login, password)
+            self.login(username, password)
 
             #TODO: Handle failed login
-            session.add_auth_attempt('plaintext', True, username=login, password=password)
+            session.add_auth_attempt('plaintext', True, username=username, password=password)
             session.did_login = True
 
         except smtplib.SMTPException as error:
