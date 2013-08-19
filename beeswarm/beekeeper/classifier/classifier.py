@@ -51,13 +51,29 @@ class Classifier(object):
         if not db_session:
             db_session = database.get_session()
 
-        session_match = db_session.query(Session).filter(Session.protocol == honeybee.protocol) \
+        #default return value
+        match = None
+
+        #get all sessions which matches basic properties.
+        sessions = db_session.query(Session).filter(Session.protocol == honeybee.protocol) \
             .filter(Session.hive == honeybee.hive) \
             .filter(Session.timestamp >= min_datetime) \
             .filter(Session.timestamp <= max_datetime) \
-            .filter(Session.discriminator == None).first()
+            .filter(Session.protocol == honeybee.protocol) \
+            .filter(Session.discriminator == None)
 
-        return session_match
+        #identify the correct by comparing authentication.
+        #this could properly also be done using some fancy ORM/SQL construct.
+        for session in sessions:
+            for honey_auth in honeybee.authentication:
+                for session_auth in session.authentication:
+                    if session_auth.username == honey_auth.username and \
+                                    session_auth.password == honey_auth.password and \
+                                    session_auth.successful == honey_auth.successful:
+                        match = session
+                        break
+
+        return match
 
     def classify_honeybees(self, delay_seconds=30, db_session=None):
         """
@@ -103,33 +119,29 @@ class Classifier(object):
             db_session = database.get_session()
 
         sessions = db_session.query(Session).filter(Session.discriminator == None) \
-                                            .filter(Session.timestamp <= min_datetime) \
-                                            .all()
+            .filter(Session.timestamp <= min_datetime) \
+            .all()
 
-        for s in sessions:
-            #if s.password == None or s.username == None:
-            #    # '== None' is a temporary solution until we have figured out the final model for Session
-            #    logger.debug('Classifying session with id {0} as bruteforce attempt.'.format(s.id))
-            #    s.classification = db_session.query(Classification).filter(Classification.type == 'malicious_brute').one()
-            #else:
+        for session in sessions:
 
             #TODO: This would be more pretty if done with pure orm
             honey_matches = []
-            for a in s.authentication:
-                honey_matches = db_session.query(Honeybee).join(Authentication).filter(Authentication.username == a.username) \
-                                                                               .filter(Authentication.password == a.password).all()
+            for a in session.authentication:
+                honey_matches = db_session.query(Honeybee).join(Authentication).filter(
+                    Authentication.username == a.username) \
+                    .filter(Authentication.password == a.password).all()
 
             #honey_matches = db_session.query(Honeybee).filter(Honeybee.username == s.username) \
             #                                          .filter(Honeybee.password == s.password).all()
             if len(honey_matches) > 0:
                 #username/password has previously been transmitted in a honeybee
                 logger.debug('Classifying session with id {0} as attack which involved the reused '
-                             'of previously transmitted credentials.'.format(s.id))
-                s.classification = db_session.query(Classification).filter(Classification.type == 'mitm_2').one()
+                             'of previously transmitted credentials.'.format(session.id))
+                session.classification = db_session.query(Classification).filter(Classification.type == 'mitm_2').one()
             else:
                 #we have never transmitted this username/password combo
-                logger.debug('Classifying session with id {0} as bruteforce attempt.'.format(s.id))
-                s.classification = db_session.query(Classification).filter(
+                logger.debug('Classifying session with id {0} as bruteforce attempt.'.format(session.id))
+                session.classification = db_session.query(Classification).filter(
                     Classification.type == 'malicious_brute').one()
         db_session.commit()
 

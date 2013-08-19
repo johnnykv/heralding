@@ -42,7 +42,7 @@ class ClassifierTests(unittest.TestCase):
                             destination_port=1, did_complete=True, feeder=feeder, hive=hive)
 
         authentication = Authentication(id=str(uuid.uuid4()), username='a', password='a',
-                                            successful=True, timestamp=datetime.now())
+                                        successful=True, timestamp=datetime.utcnow())
         honeybee.authentication.append(authentication)
         db_session.add_all([feeder, hive, honeybee])
         db_session.commit()
@@ -64,13 +64,15 @@ class ClassifierTests(unittest.TestCase):
             s = Session(id=id, source_ip='321', destination_ip='123',
                         received=datetime.utcnow(), timestamp=honeybee.timestamp + timedelta(seconds=offset),
                         protocol='pop3', source_port=1, destination_port=1, hive=hive)
-            a = Authentication(id=str(uuid.uuid4()), username='he', password='haha')
+            a = Authentication(id=str(uuid.uuid4()), username='a', password='a', successful=True,
+                               timestamp=datetime.utcnow())
             s.authentication.append(a)
             db_session.add(s)
         db_session.commit()
 
-        c = Classifier()
-        result = c.get_matching_session(honeybee)
+        classifier = Classifier()
+        result = classifier.get_matching_session(honeybee)
+
         self.assertEqual('session2', result.id)
 
     def test_correlation_honeybee_session(self):
@@ -88,7 +90,8 @@ class ClassifierTests(unittest.TestCase):
         s = Session(id=s_id, source_ip='321', destination_ip='123',
                     received=datetime.now(), timestamp=self.honeybee_datetime - timedelta(seconds=2),
                     protocol='pop3', source_port=1, destination_port=1, hive=hive)
-        a = Authentication(id=str(uuid.uuid4()), username='he', password='haha')
+        a = Authentication(id=str(uuid.uuid4()), username='a', password='a', successful=True,
+                           timestamp=datetime.utcnow())
         s.authentication.append(a)
         db_session.add(s)
         db_session.commit()
@@ -151,8 +154,3 @@ class ClassifierTests(unittest.TestCase):
         result = db_session.query(Session).filter(Session.classification_id == 'mitm_2').one()
         #we expect the resultset to contain session1010
         self.assertEquals(result.id, 'session1010')
-
-
-
-
-
