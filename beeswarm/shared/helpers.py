@@ -80,11 +80,12 @@ def create_self_signed_cert(directory, cname, kname):
 
     with open(certpath, 'w') as certfile:
         certfile.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
-    with open(keypath, 'w') as keyfile:
-        keyfile.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, pk))
+    priv_key_text = crypto.dump_privatekey(crypto.FILETYPE_PEM, pk)
 
     # We need to do this because Paramiko wants PKCS #1 RSA Key format.
     # I would really like to add a few swear words here.
-    from M2Crypto import RSA
-    key = RSA.load_key(keypath)
-    key.save_key(keypath, cipher=None)
+    from Crypto.PublicKey import RSA
+
+    priv_key = RSA.importKey(priv_key_text)
+    with open(keypath, 'w') as keyfile:
+        keyfile.write(priv_key.exportKey('PEM'))
