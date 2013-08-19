@@ -1,3 +1,4 @@
+Crypto
 cssselect
 nose
 gevent
@@ -16,4 +17,3 @@ hpfeeds
 lxml
 flask-wtf
 mock
-m2crypto
