@@ -52,3 +52,4 @@ beekeeper/beekeeper.sqlite
 
 beekeeper.cfg
 docs/_build
+.noseids
