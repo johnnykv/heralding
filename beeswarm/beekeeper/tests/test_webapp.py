@@ -134,6 +134,10 @@ class WebappTests(unittest.TestCase):
         Tests if a session dict can be posted without exceptions.
         """
 
+        db_session = database.get_session()
+        huser = db_session.query(User).filter(User.id == self.hive_id).one()
+        self.login(huser.id, huser.password)
+
         data_dict = {
             'id': 'ba9fdb3d-0efb-4764-9a6b-d9b86eccda96',
             'hive_id': self.hive_id,
