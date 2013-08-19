@@ -15,5 +15,5 @@ sqlalchemy>=0.8.1
 pyOpenSSL
 hpfeeds
 lxml
-flask-wtf
+flask-wtf>=0.9.0
 mock
