@@ -40,7 +40,7 @@ app.jinja_env.filters['bootstrap_is_hidden_field'] = is_hidden_field_filter
 
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = 'username'
+login_manager.login_view = 'login'
 
 
 @login_manager.user_loader
