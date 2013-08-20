@@ -1,5 +1,6 @@
 from flask.ext.wtf import Form
-from wtforms import IntegerField, FileField, PasswordField, TextField, BooleanField, ValidationError
+from wtforms import IntegerField, FileField, PasswordField, TextField, BooleanField, ValidationError, validators
+
 
 
 def validate_time_range(form, field):
@@ -151,3 +152,17 @@ class LoginForm(Form):
 
     username = TextField()
     password = PasswordField()
+
+
+class SettingsForm(Form):
+
+    honeybee_session_retain = IntegerField('Honeybee retention', default=2,
+                                           description='<small><em>days until legit honeybees are deleted.</em></small>',
+                                           validators=[validators.required(message= u'This field is required'),
+                                                       validators.NumberRange(min=1)])
+    
+    malicious_session_retain = IntegerField('Malicious session retention',default=100,
+                                            description='<small><em>days until malicious sessions are deleted</em></small>',
+                                            validators=[validators.required(message= u'This field is required'),
+                                                        validators.NumberRange(min=1)])
+

@@ -24,7 +24,7 @@ from flask.ext.login import LoginManager, login_user, current_user, login_requir
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.security import check_password_hash
 from wtforms import HiddenField
-from forms import NewHiveConfigForm, NewFeederConfigForm, LoginForm
+from forms import NewHiveConfigForm, NewFeederConfigForm, LoginForm, SettingsForm
 from beeswarm.beekeeper.db import database
 from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Hive, User, SessionData, Authentication
 
@@ -588,6 +588,22 @@ def logout():
     flash('Logged out succesfully')
     return redirect('/login')
 
+@app.route('/settings', methods=['GET', 'POST'])
+@login_required
+def settings():
+    form = SettingsForm()
+
+    if form.validate_on_submit():
+        with open(app.config['BEEKEEPER_CONFIG'], 'r+') as config_file:
+            config = json.load(config_file)
+            config['honeybee_session_retain'] = form.honeybee_session_retain.data
+            config['malicious_session_retain'] = form.malicious_session_retain.data
+            #clear file
+            config_file.seek(0)
+            config_file.truncate(0)
+            config_file.write(json.dumps(config, indent=4))
+
+    return render_template('settings.html', form=form, user=current_user)
 
 if __name__ == '__main__':
     app.run()

@@ -41,6 +41,7 @@ class Beekeeper(object):
         database.setup_db(os.path.join(self.config['sql']['connection_string']))
         self.app = app.app
         self.app.config['CERT_PATH'] = self.config['ssl']['certpath']
+        self.app.config['BEEKEEPER_CONFIG'] = self.config_file
         self.authenticator = Authenticator()
         self.authenticator.ensure_default_user()
 
@@ -88,6 +89,7 @@ class Beekeeper(object):
         while self.started:
             poll_last_modified = os.stat(self.config_file).st_mtime
             if poll_last_modified > config_last_modified:
+                logger.debug('Config file changed, restarting maintenance workers.')
                 config_last_modified = poll_last_modified
                 config = self.get_config(self.config_file)
 
