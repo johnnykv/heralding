@@ -23,7 +23,7 @@ from beeswarm.beekeeper.db import database
 from beeswarm.beekeeper.webapp import app
 from beeswarm.beekeeper.webapp.auth import Authenticator
 from beeswarm.shared.helpers import drop_privileges
-from beeswarm.beekeeper.misc.maintenance import Maintenance
+from beeswarm.beekeeper.misc.scheduler import Scheduler
 
 logger = logging.getLogger(__name__)
 
@@ -55,14 +55,6 @@ class Beekeeper(object):
         self.servers['http'] = http_server
         self.greenlets.append(http_server_greenlet)
 
-        #Out of band import because of premature db implementation
-        from beeswarm.beekeeper.classifier.classifier import Classifier
-
-        classifier = Classifier()
-        classifier_greenlet = gevent.spawn(classifier.start)
-        self.servers['classifier'] = classifier
-        self.greenlets.append(classifier_greenlet)
-
         maintenance_greenlet = gevent.spawn(self.start_maintenance_tasks)
         self.servers['maintenance'] = maintenance_greenlet
         self.greenlets.append(maintenance_greenlet)
@@ -73,7 +65,6 @@ class Beekeeper(object):
     def stop(self):
         self.started = False
         logging.info('Stopping beekeeper.')
-        self.servers['classifier'].stop()
         self.servers['http'].stop(5)
 
     def get_config(self, configfile):
@@ -82,7 +73,7 @@ class Beekeeper(object):
         return config
 
     def start_maintenance_tasks(self):
-        maintenance_worker = Maintenance(self.config)
+        maintenance_worker = Scheduler(self.config)
         maintenance_greenlet = gevent.spawn(maintenance_worker.start)
 
         config_last_modified = os.stat(self.config_file).st_mtime
@@ -98,7 +89,7 @@ class Beekeeper(object):
                 maintenance_greenlet.kill(timeout=2)
 
                 #spawn new worker greenlet and pass the new config
-                maintenance_worker = Maintenance(config)
+                maintenance_worker = Scheduler(config)
                 maintenance_greenlet = gevent.spawn(maintenance_worker.start)
 
             #check config file for changes every 5 second

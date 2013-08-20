@@ -24,17 +24,6 @@ logger = logging.getLogger(__name__)
 
 
 class Classifier(object):
-    def __init__(self):
-        self.enabled = False
-
-    def start(self):
-        self.enabled = True
-        while self.enabled:
-            db_session = database.get_session()
-            self.classify_honeybees(db_session=db_session)
-            self.classify_sessions(db_session=db_session)
-            db_session.commit()
-            gevent.sleep(10)
 
     #match honeybee with session
     def get_matching_session(self, honeybee, timediff=5, db_session=None):

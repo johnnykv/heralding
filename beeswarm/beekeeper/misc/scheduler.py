@@ -21,6 +21,7 @@ from gevent import Greenlet
 
 from beeswarm.beekeeper.db import database
 from beeswarm.beekeeper.db.entities import Session
+from beeswarm.beekeeper.classifier.classifier import Classifier
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,8 @@ class Scheduler(object):
 
         #key: method name.
         #value: parameter for spawn_later (seconds).
-        schedules = {'do_db_maintenance': 3600}
+        schedules = {'do_db_maintenance': 3600,
+                     'do_classification': 10}
 
         #will contain running and stopped (ready()) greenlets.
         greenlets = {}
@@ -45,7 +47,7 @@ class Scheduler(object):
                 if function not in greenlets or greenlets[function].ready():
                     greenlets[function] = Greenlet(getattr(self, function))
                     greenlets[function].start_later(schedules[function])
-            gevent.sleep(2)
+            gevent.sleep(1)
 
     def stop(self):
         self.enabled = False
@@ -67,6 +69,11 @@ class Scheduler(object):
         logger.debug('Database maintenance finished. Deleted {0} honeybees and {1} malicious sessions)' \
                      .format(honeybees_deleted_count, malicious_deleted_count))
 
-
+    def do_classification(self):
+        db_session = database.get_session()
+        classifier = Classifier()
+        classifier.classify_honeybees(db_session=db_session)
+        classifier.classify_sessions(db_session=db_session)
+        db_session.commit()
 
 
