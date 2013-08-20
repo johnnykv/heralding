@@ -9,7 +9,7 @@ ntplib
 fs
 pysendfile
 pyDes
-flask
+flask>=0.10.0
 flask-login
 sqlalchemy>=0.8.1
 pyOpenSSL
