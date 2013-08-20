@@ -25,7 +25,7 @@ from beeswarm.beekeeper.db.entities import Session
 logger = logging.getLogger(__name__)
 
 
-class Maintenance(object):
+class Scheduler(object):
     def __init__(self, config):
         self.config = config
         self.enabled = False
@@ -66,5 +66,7 @@ class Maintenance(object):
 
         logger.debug('Database maintenance finished. Deleted {0} honeybees and {1} malicious sessions)' \
                      .format(honeybees_deleted_count, malicious_deleted_count))
+
+
 
 
