@@ -23,6 +23,7 @@ from beeswarm.beekeeper.db import database
 from beeswarm.beekeeper.webapp import app
 from beeswarm.beekeeper.webapp.auth import Authenticator
 from beeswarm.shared.helpers import drop_privileges
+from beeswarm.beekeeper.misc.maintenance import Maintenance
 
 logger = logging.getLogger(__name__)
 
@@ -30,11 +31,12 @@ logger = logging.getLogger(__name__)
 class Beekeeper(object):
     def __init__(self, work_dir, config_arg='beekeepercfg.json'):
         self.work_dir = work_dir
-        with open(config_arg) as config_file:
-            self.config = json.load(config_file)
+        self.config_file = config_arg
+        self.config = self.get_config(self.config_file)
 
         self.servers = {}
         self.greenlets = []
+        self.started = False
 
         database.setup_db(os.path.join(self.config['sql']['connection_string']))
         self.app = app.app
@@ -44,6 +46,7 @@ class Beekeeper(object):
 
     def start(self, port=5000):
         #management interface
+        self.started = True
         logger.info('Starting Beekeeper listening on port {0}'.format(port))
 
         http_server = WSGIServer(('', 5000), self.app, keyfile='beekeeper.key', certfile='beekeeper.crt')
@@ -59,10 +62,46 @@ class Beekeeper(object):
         self.servers['classifier'] = classifier
         self.greenlets.append(classifier_greenlet)
 
+        maintenance_greenlet = gevent.spawn(self.start_maintenance_tasks)
+        self.servers['maintenance'] = maintenance_greenlet
+        self.greenlets.append(maintenance_greenlet)
+
         drop_privileges()
         gevent.joinall(self.greenlets)
 
     def stop(self):
+        self.started = False
         logging.info('Stopping beekeeper.')
         self.servers['classifier'].stop()
         self.servers['http'].stop(5)
+
+    def get_config(self, configfile):
+        with open(configfile) as config_file:
+            config = json.load(config_file)
+        return config
+
+    def start_maintenance_tasks(self):
+        maintenance_worker = Maintenance(self.config)
+        maintenance_greenlet = gevent.spawn(maintenance_worker.start)
+
+        config_last_modified = os.stat(self.config_file).st_mtime
+        while self.started:
+            poll_last_modified = os.stat(self.config_file).st_mtime
+            if poll_last_modified > config_last_modified:
+                config_last_modified = poll_last_modified
+                config = self.get_config(self.config_file)
+
+                #kill and stop old greenlet
+                maintenance_worker.stop()
+                maintenance_greenlet.kill(timeout=2)
+
+                #spawn new worker greenlet and pass the new config
+                maintenance_worker = Maintenance(config)
+                maintenance_greenlet = gevent.spawn(maintenance_worker.start)
+
+            #check config file for changes every 5 second
+            gevent.sleep(5)
+
+
+
+
