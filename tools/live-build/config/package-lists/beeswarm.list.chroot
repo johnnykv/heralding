@@ -1,0 +1,7 @@
+python2.7
+python-dev
+libevent-dev
+libxml2-dev
+libxslt-dev
+python-pip
+git
