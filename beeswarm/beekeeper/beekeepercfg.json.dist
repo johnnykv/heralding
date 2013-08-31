@@ -7,5 +7,10 @@
         "keypath": "beekeeper.key"
     },
     "honeybee_session_retain": 2,
-    "malicious_session_retain": 100
+    "malicious_session_retain": 100,
+    "iso": {
+        "path": "beeswarm.iso",
+        "write_offset": "0x0"
+    }
+
 }
