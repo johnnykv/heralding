@@ -32,6 +32,7 @@ from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Hive, User
 def is_hidden_field_filter(field):
     return isinstance(field, HiddenField)
 
+
 app = Flask(__name__)
 app.config['DEBUG'] = False
 app.config['WTF_CSRF_ENABLED'] = True
@@ -188,7 +189,7 @@ def hive_data():
 
     session = Session(
         id=data['id'],
-        classification = classification,
+        classification=classification,
         timestamp=datetime.strptime(data['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
         received=datetime.utcnow(),
         protocol=data['protocol'],
@@ -492,22 +493,23 @@ def delete_feeders():
     db_session.commit()
     return ''
 
-@app.route('/data/sessions/<type>', methods=['GET'])
+
+@app.route('/data/sessions/<_type>', methods=['GET'])
 @login_required
-def data_sessions_attacks(type):
+def data_sessions_attacks(_type):
     db_session = database.get_session()
     #the database will not get hit until we start iterating the query object
     query_iterators = {
-                        'all': db_session.query(Session),
-                        'honeybees': db_session.query(Honeybee),
-                        'attacks': db_session.query(Session).filter(Session.classification_id != 'honeybee')
-                      }
+        'all': db_session.query(Session),
+        'honeybees': db_session.query(Honeybee),
+        'attacks': db_session.query(Session).filter(Session.classification_id != 'honeybee')
+    }
 
-    if type not in query_iterators:
+    if _type not in query_iterators:
         return 'Not Found', 404
 
     #select which iterator to use
-    entries = query_iterators[type]
+    entries = query_iterators[_type]
 
     rows = []
     for a in entries:
@@ -579,6 +581,7 @@ def logout():
     flash('Logged out succesfully')
     return redirect('/login')
 
+
 @app.route('/settings', methods=['GET', 'POST'])
 @login_required
 def settings():
@@ -595,6 +598,7 @@ def settings():
             config_file.write(json.dumps(config, indent=4))
 
     return render_template('settings.html', form=form, user=current_user)
+
 
 if __name__ == '__main__':
     app.run()

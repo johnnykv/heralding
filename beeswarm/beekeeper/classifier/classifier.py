@@ -97,7 +97,6 @@ class Classifier(object):
 
         db_session.commit()
 
-
     def classify_sessions(self, delay_seconds=30, db_session=None):
         """
         Will classify all sessions (which are not honeybees) as malicious activity. Note: The classify_honeybees method
