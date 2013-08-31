@@ -500,7 +500,9 @@ def data_sessions_all():
     sessions = db_session.query(Session).all()
     rows = []
     for s in sessions:
-        row = {'time': s.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': s.protocol, 'ip_address': s.source_ip}
+        classification = s.classification_id.replace('_', ' ').capitalize()
+        row = {'time': s.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': s.protocol, 'ip_address': s.source_ip,
+               'classification': classification}
         rows.append(row)
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp
@@ -513,7 +515,9 @@ def data_sessions_bees():
     honeybees = db_session.query(Honeybee).all()
     rows = []
     for b in honeybees:
-        row = {'time': b.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': b.protocol, 'ip_address': b.source_ip}
+        classification = b.classification_id.replace('_', ' ').capitalize()
+        row = {'time': b.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': b.protocol, 'ip_address': b.source_ip,
+               'classification': classification}
         rows.append(row)
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp
@@ -526,7 +530,9 @@ def data_sessions_attacks():
     attacks = db_session.query(Session).filter(Session.classification_id != 'honeybee').all()
     rows = []
     for a in attacks:
-        row = {'time': a.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': a.protocol, 'ip_address': a.source_ip}
+        classification = a.classification_id.replace('_', ' ').capitalize()
+        row = {'time': a.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': a.protocol, 'ip_address': a.source_ip,
+               'classification': classification}
         rows.append(row)
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp
