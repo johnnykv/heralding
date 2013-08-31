@@ -36,11 +36,10 @@ class ClassifierTests(unittest.TestCase):
         db_session = database.get_session()
         feeder = Feeder(id=self.feeder_id)
         hive = Hive(id=self.hive_id)
-        classification = db_session.query(Classification).filter(Classification.type == 'unclassified').one()
+
         honeybee = Honeybee(id=self.honeybee_id, source_ip='321', destination_ip='123',
                             received=datetime.utcnow(), timestamp=self.honeybee_datetime, protocol='pop3',
-                            source_port=1, destination_port=1, did_complete=True, feeder=feeder, hive=hive,
-                            classification=classification)
+                            source_port=1, destination_port=1, did_complete=True, feeder=feeder, hive=hive)
 
         authentication = Authentication(id=str(uuid.uuid4()), username='a', password='a',
                                         successful=True, timestamp=datetime.utcnow())
@@ -59,13 +58,12 @@ class ClassifierTests(unittest.TestCase):
         db_session = database.get_session()
         honeybee = db_session.query(Honeybee).filter(Honeybee.id == self.honeybee_id).one()
         hive = db_session.query(Hive).filter(Hive.id == self.hive_id).one()
-        classification = db_session.query(Classification).filter(Classification.type == 'unclassified').one()
 
         #session2 is the matching session
         for id, offset in (('session1', -15), ('session2', 3), ('session3', 15)):
             s = Session(id=id, source_ip='321', destination_ip='123',
                         received=datetime.utcnow(), timestamp=honeybee.timestamp + timedelta(seconds=offset),
-                        protocol='pop3', source_port=1, destination_port=1, hive=hive, classification=classification)
+                        protocol='pop3', source_port=1, destination_port=1, hive=hive)
             a = Authentication(id=str(uuid.uuid4()), username='a', password='a', successful=True,
                                timestamp=datetime.utcnow())
             s.authentication.append(a)
@@ -87,12 +85,11 @@ class ClassifierTests(unittest.TestCase):
         #setup the hive session we expect to match the honeybee
         db_session = database.get_session()
         hive = db_session.query(Hive).filter(Hive.id == self.hive_id).one()
-        classification = db_session.query(Classification).filter(Classification.type == 'unclassified').one()
 
         s_id = str(uuid.uuid4())
         s = Session(id=s_id, source_ip='321', destination_ip='123',
                     received=datetime.now(), timestamp=self.honeybee_datetime - timedelta(seconds=2),
-                    protocol='pop3', source_port=1, destination_port=1, hive=hive, classification=classification)
+                    protocol='pop3', source_port=1, destination_port=1, hive=hive)
         a = Authentication(id=str(uuid.uuid4()), username='a', password='a', successful=True,
                            timestamp=datetime.utcnow())
         s.authentication.append(a)
@@ -118,11 +115,11 @@ class ClassifierTests(unittest.TestCase):
 
         db_session = database.get_session()
         hive = db_session.query(Hive).filter(Hive.id == self.hive_id).one()
-        classification = db_session.query(Classification).filter(Classification.type == 'unclassified').one()
+
         for id, offset in (('session99', -30), ('session88', -10), ('session77', -2)):
             s = Session(id=id, source_ip='321', destination_ip='123',
                         received=datetime.utcnow(), timestamp=datetime.utcnow() + timedelta(seconds=offset),
-                        protocol='pop3', source_port=1, destination_port=1, hive=hive, classification=classification)
+                        protocol='pop3', source_port=1, destination_port=1, hive=hive)
             a = Authentication(id=str(uuid.uuid4()), username='he', password='haha')
             s.authentication.append(a)
             db_session.add(s)
@@ -142,14 +139,12 @@ class ClassifierTests(unittest.TestCase):
 
         db_session = database.get_session()
         hive = db_session.query(Hive).filter(Hive.id == self.hive_id).one()
-        classification = db_session.query(Classification).filter(Classification.type == 'unclassified').one()
 
         s = Session(id='session1010', source_ip='321', destination_ip='123',
                     received=datetime.utcnow(), timestamp=datetime.utcnow() + timedelta(seconds=-25),
-                    protocol='pop3', source_port=1, destination_port=1, hive=hive, classification=classification)
+                    protocol='pop3', source_port=1, destination_port=1, hive=hive)
         a = Authentication(id=str(uuid.uuid4()), username='a', password='a')
         s.authentication.append(a)
-        db_session.add(s)
         db_session.add(s)
         db_session.commit()
 
