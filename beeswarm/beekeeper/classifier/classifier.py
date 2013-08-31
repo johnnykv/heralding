@@ -15,7 +15,8 @@
 
 import logging
 import datetime
-import gevent
+
+from sqlalchemy.orm import joinedload
 from beeswarm.beekeeper.db import database
 from beeswarm.beekeeper.db.entities import Classification, Honeybee, Session, Authentication
 
@@ -44,12 +45,13 @@ class Classifier(object):
         match = None
 
         #get all sessions which matches basic properties.
-        sessions = db_session.query(Session).filter(Session.protocol == honeybee.protocol) \
-            .filter(Session.hive == honeybee.hive) \
-            .filter(Session.timestamp >= min_datetime) \
-            .filter(Session.timestamp <= max_datetime) \
-            .filter(Session.protocol == honeybee.protocol) \
-            .filter(Session.discriminator == None)
+        sessions = db_session.query(Session).options(joinedload(Session.authentication))\
+                                            .filter(Session.protocol == honeybee.protocol) \
+                                            .filter(Session.hive == honeybee.hive) \
+                                            .filter(Session.timestamp >= min_datetime) \
+                                            .filter(Session.timestamp <= max_datetime) \
+                                            .filter(Session.protocol == honeybee.protocol) \
+                                            .filter(Session.discriminator == None)
 
         #identify the correct session by comparing authentication.
         #this could properly also be done using some fancy ORM/SQL construct.
@@ -76,9 +78,10 @@ class Classifier(object):
         if not db_session:
             db_session = database.get_session()
 
-        honeybees = db_session.query(Honeybee).filter(Honeybee.classification_id == 'unclassified') \
-            .filter(Honeybee.did_complete == True) \
-            .filter(Honeybee.timestamp < min_datetime).all()
+        honeybees = db_session.query(Honeybee).options(joinedload(Honeybee.authentication))\
+                                              .filter(Honeybee.classification_id == 'unclassified') \
+                                              .filter(Honeybee.did_complete == True) \
+                                              .filter(Honeybee.timestamp < min_datetime).all()
 
         for h in honeybees:
             session_match = self.get_matching_session(h, db_session=db_session)
@@ -108,17 +111,17 @@ class Classifier(object):
             db_session = database.get_session()
 
         sessions = db_session.query(Session).filter(Session.discriminator == None) \
-            .filter(Session.timestamp <= min_datetime) \
-            .all()
+                                            .filter(Session.timestamp <= min_datetime) \
+                                            .all()
 
         for session in sessions:
 
             #TODO: This would be more pretty if done with pure orm
             honey_matches = []
             for a in session.authentication:
-                honey_matches = db_session.query(Honeybee).join(Authentication).filter(
-                    Authentication.username == a.username) \
-                    .filter(Authentication.password == a.password).all()
+                honey_matches = db_session.query(Honeybee).join(Authentication)\
+                                                          .filter(Authentication.username == a.username) \
+                                                          .filter(Authentication.password == a.password).all()
 
             if len(honey_matches) > 0:
                 #username/password has previously been transmitted in a honeybee
