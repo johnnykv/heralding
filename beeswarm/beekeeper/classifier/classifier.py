@@ -127,12 +127,12 @@ class Classifier(object):
                 #username/password has previously been transmitted in a honeybee
                 logger.debug('Classifying session with id {0} as attack which involved the reused '
                              'of previously transmitted credentials.'.format(session.id))
-                session.classification = db_session.query(Classification).filter(Classification.type == 'mitm_2').one()
+                session.classification = db_session.query(Classification).filter(Classification.type == 'credentials_reuse').one()
             else:
                 #we have never transmitted this username/password combo
                 logger.debug('Classifying session with id {0} as bruteforce attempt.'.format(session.id))
                 session.classification = db_session.query(Classification).filter(
-                    Classification.type == 'malicious_brute').one()
+                    Classification.type == 'bruteforce').one()
         db_session.commit()
 
     def stop(self):

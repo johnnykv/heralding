@@ -128,7 +128,7 @@ class ClassifierTests(unittest.TestCase):
         c = Classifier()
         c.classify_sessions(5)
 
-        result = db_session.query(Session).filter(Session.classification_id == 'malicious_brute').all()
+        result = db_session.query(Session).filter(Session.classification_id == 'bruteforce').all()
         #we expect the resultset to contain session1 and session2
         self.assertEquals(len(result), 2)
 
@@ -151,6 +151,6 @@ class ClassifierTests(unittest.TestCase):
         c = Classifier()
         c.classify_sessions(0, db_session)
 
-        result = db_session.query(Session).filter(Session.classification_id == 'mitm_2').one()
+        result = db_session.query(Session).filter(Session.classification_id == 'credentials_reuse').one()
         #we expect the resultset to contain session1010
         self.assertEquals(result.id, 'session1010')
