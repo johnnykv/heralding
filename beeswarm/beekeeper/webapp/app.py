@@ -492,44 +492,25 @@ def delete_feeders():
     db_session.commit()
     return ''
 
-
-@app.route('/data/sessions/all', methods=['GET', 'POST'])
+@app.route('/data/sessions/<type>', methods=['GET'])
 @login_required
-def data_sessions_all():
+def data_sessions_attacks(type):
     db_session = database.get_session()
-    sessions = db_session.query(Session).all()
+    #the database will not get hit until we start iterating the query object
+    query_iterators = {
+                        'all': db_session.query(Session),
+                        'honeybees': db_session.query(Honeybee),
+                        'attacks': db_session.query(Session).filter(Session.classification_id != 'honeybee')
+                      }
+
+    if type not in query_iterators:
+        return 'Not Found', 404
+
+    #select which iterator to use
+    entries = query_iterators[type]
+
     rows = []
-    for s in sessions:
-        classification = s.classification_id.replace('_', ' ').capitalize()
-        row = {'time': s.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': s.protocol, 'ip_address': s.source_ip,
-               'classification': classification}
-        rows.append(row)
-    rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
-    return rsp
-
-
-@app.route('/data/sessions/honeybees', methods=['GET', 'POST'])
-@login_required
-def data_sessions_bees():
-    db_session = database.get_session()
-    honeybees = db_session.query(Honeybee).all()
-    rows = []
-    for b in honeybees:
-        classification = b.classification_id.replace('_', ' ').capitalize()
-        row = {'time': b.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': b.protocol, 'ip_address': b.source_ip,
-               'classification': classification}
-        rows.append(row)
-    rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
-    return rsp
-
-
-@app.route('/data/sessions/attacks', methods=['GET', 'POST'])
-@login_required
-def data_sessions_attacks():
-    db_session = database.get_session()
-    attacks = db_session.query(Session).filter(Session.classification_id != 'honeybee').all()
-    rows = []
-    for a in attacks:
+    for a in entries:
         classification = a.classification_id.replace('_', ' ').capitalize()
         row = {'time': a.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': a.protocol, 'ip_address': a.source_ip,
                'classification': classification}
