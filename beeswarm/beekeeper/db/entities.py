@@ -43,7 +43,7 @@ class Session(Base):
     destination_port = Column(Integer)
     hive_id = Column(String, ForeignKey('hive.id'))
     hive = relationship('Hive')
-    classification_id = Column(String, ForeignKey('classification.type'))
+    classification_id = Column(String, ForeignKey('classification.type'), nullable=False)
     classification = relationship('Classification')
 
 

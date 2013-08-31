@@ -4,7 +4,11 @@
         "description_short": "Dummy",
         "description_long": "Classification used for testing purposes."
     },
-
+    {
+        "type": "unclassified",
+        "description_short": "Unclassified session",
+        "description_long": "A session that is pending classification."
+    },
     {
         "type": "honeybee",
         "description_short": "Legit Honeytoken traffic",

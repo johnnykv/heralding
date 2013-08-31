@@ -26,7 +26,7 @@ from werkzeug.security import check_password_hash
 from wtforms import HiddenField
 from forms import NewHiveConfigForm, NewFeederConfigForm, LoginForm, SettingsForm
 from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Hive, User, SessionData, Authentication
+from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Hive, User, Authentication, Classification
 
 
 def is_hidden_field_filter(field):
@@ -138,6 +138,7 @@ def feeder_data():
     data = json.loads(request.data)
     logger.debug(data)
     session = database.get_session()
+    classification = session.query(Classification).filter(Classification.type == 'unclassified').one()
 
     _feeder = session.query(Feeder).filter(Feeder.id == data['feeder_id']).one()
 
@@ -148,6 +149,7 @@ def feeder_data():
 
     h = Honeybee(
         id=data['id'],
+        classification=classification,
         timestamp=datetime.strptime(data['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
         received=datetime.utcnow(),
         protocol=data['protocol'],
@@ -181,10 +183,12 @@ def hive_data():
     logger.debug('Received: {0}'.format(data))
 
     db_session = database.get_session()
+    classification = db_session.query(Classification).filter(Classification.type == 'unclassified').one()
     _hive = db_session.query(Hive).filter(Hive.id == data['hive_id']).one()
 
     session = Session(
         id=data['id'],
+        classification = classification,
         timestamp=datetime.strptime(data['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
         received=datetime.utcnow(),
         protocol=data['protocol'],

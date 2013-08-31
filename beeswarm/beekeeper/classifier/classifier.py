@@ -76,7 +76,7 @@ class Classifier(object):
         if not db_session:
             db_session = database.get_session()
 
-        honeybees = db_session.query(Honeybee).filter(Honeybee.classification == None) \
+        honeybees = db_session.query(Honeybee).filter(Honeybee.classification_id == 'unclassified') \
             .filter(Honeybee.did_complete == True) \
             .filter(Honeybee.timestamp < min_datetime).all()
 
