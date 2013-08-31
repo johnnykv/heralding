@@ -91,7 +91,7 @@ class Honeybee(Session):
 class User(Base):
     __tablename__ = 'user'
     id = Column(String(32), primary_key=True)
-    nickname = Column(String(64), unique=True)
+    nickname = Column(String(64))
     password = Column(String(256))
 
     # User type will be:
