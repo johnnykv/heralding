@@ -10,7 +10,6 @@
     "malicious_session_retain": 100,
     "iso": {
         "path": "beeswarm.iso",
-        "write_offset": "0x0"
     }
 
 }

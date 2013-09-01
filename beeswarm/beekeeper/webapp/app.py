@@ -28,6 +28,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.security import check_password_hash
 from wtforms import HiddenField
 import beeswarm
+from beeswarm.shared.helpers import find_offset
 from forms import NewHiveConfigForm, NewFeederConfigForm, LoginForm, SettingsForm
 from beeswarm.beekeeper.db import database
 from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Hive, User, SessionData, Authentication
@@ -617,9 +618,12 @@ def generate_hive_iso(hive_id):
     with open(config_file_path, 'w') as config_file:
         config_file.write(current_hive.configuration)
 
-    if not write_to_iso(tempdir, current_hive.id):
+    if not write_to_iso(tempdir, current_hive):
         return 'Not Found', 404
-    return send_from_directory(tempdir, 'custom.iso', mimetype='application/iso-image')
+    temp_iso_name = 'beeswarm-{}-{}.iso'.format(current_hive.__class__.__name__,
+                                                current_hive.id)
+
+    return send_from_directory(tempdir, temp_iso_name, mimetype='application/iso-image')
 
 
 @app.route('/iso/feeder/<feeder_id>.iso', methods=['GET'])
@@ -627,7 +631,7 @@ def generate_hive_iso(hive_id):
 def generate_feeder_iso(feeder_id):
     logging.info('Generating new ISO for Feeder ({})'.format(feeder_id))
     db_session = database.get_session()
-    current_hive = db_session.query(Feeder).filter(Feeder.id == feeder_id).one()
+    current_feeder = db_session.query(Feeder).filter(Feeder.id == feeder_id).one()
 
     tempdir = tempfile.mkdtemp()
     custom_config_dir = os.path.join(tempdir, 'custom_config')
@@ -635,11 +639,13 @@ def generate_feeder_iso(feeder_id):
 
     config_file_path = os.path.join(custom_config_dir, 'hivecfg.json')
     with open(config_file_path, 'w') as config_file:
-        config_file.write(current_hive.configuration)
+        config_file.write(current_feeder.configuration)
 
-    if not write_to_iso(tempdir, current_hive.id):
+    if not write_to_iso(tempdir, current_feeder):
         return 'Not Found', 404
-    return send_from_directory(tempdir, 'custom.iso', mimetype='application/iso-image')
+    temp_iso_name = 'beeswarm-{}-{}.iso'.format(current_feeder.__class__.__name__,
+                                                current_feeder.id)
+    return send_from_directory(tempdir, temp_iso_name, mimetype='application/iso-image')
 
 
 @app.route('/settings', methods=['GET', 'POST'])
@@ -660,12 +666,11 @@ def settings():
     return render_template('settings.html', form=form, user=current_user)
 
 
-def write_to_iso(temporary_dir, mode_id):
+def write_to_iso(temporary_dir, mode):
 
     with open(app.config['BEEKEEPER_CONFIG'], 'r+') as config_file:
         config = json.load(config_file)
         iso_file_path = config['iso']['path']
-        offset = int(config['iso']['write_offset'], 16)
 
     if not iso_file_path:
         logging.warning('No base ISO path specified.')
@@ -676,18 +681,19 @@ def write_to_iso(temporary_dir, mode_id):
     # Change directory to create the tar archive in the temp directory
     save_cwd = os.getcwd()
     os.chdir(temporary_dir)
-    config_archive = shutil.make_archive(mode_id, 'gztar', custom_config_dir)
+    config_archive = shutil.make_archive(mode.id, 'gztar', custom_config_dir)
     # Change it back
     os.chdir(save_cwd)
 
-    temp_iso_path = os.path.join(temporary_dir, 'custom.iso')
+    temp_iso_name = 'beeswarm-{}-{}.iso'.format(mode.__class__.__name__, mode.id)
+    temp_iso_path = os.path.join(temporary_dir, temp_iso_name)
     shutil.copyfile(iso_file_path, temp_iso_path)
 
     with open(temp_iso_path, 'r+b') as isofile:
+        offset = find_offset(isofile, '\x07'*30)
         isofile.seek(offset)
         with open(config_archive, 'rb') as tarfile:
             isofile.write(tarfile.read())
-
     return True
 
 if __name__ == '__main__':
