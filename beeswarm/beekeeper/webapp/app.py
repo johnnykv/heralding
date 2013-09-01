@@ -16,14 +16,19 @@
 from datetime import datetime
 import json
 import logging
+import os
 import random
+import shutil
 import string
+import tempfile
 import uuid
-from flask import Flask, render_template, request, redirect, flash, Response
+from flask import Flask, render_template, request, redirect, flash, Response, send_from_directory
 from flask.ext.login import LoginManager, login_user, current_user, login_required, logout_user
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.security import check_password_hash
 from wtforms import HiddenField
+import beeswarm
+from beeswarm.shared.helpers import find_offset
 from forms import NewHiveConfigForm, NewFeederConfigForm, LoginForm, SettingsForm
 from beeswarm.beekeeper.db import database
 from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Hive, User, Authentication, Classification
@@ -318,7 +323,10 @@ def create_hive():
         u = User(id=new_hive_id, nickname='Hive', password=beekeeper_password, utype=1)
         db_session.add_all([h, u])
         db_session.commit()
-        return 'https://localhost:5000/ws/hive/config/{0}'.format(new_hive_id)
+        config_link = '/ws/hive/config/{0}'.format(new_hive_id)
+        iso_link = '/iso/hive/{0}.iso'.format(new_hive_id)
+        return render_template('finish-config.html', mode_name='Hive', user=current_user,
+                               config_link=config_link, iso_link=iso_link)
 
     return render_template('create-config.html', form=form, mode_name='Hive', user=current_user)
 
@@ -471,8 +479,10 @@ def create_feeder():
         u = User(id=new_feeder_id, nickname='Feeder', password=beekeeper_password, utype=2)
         db_session.add_all([f, u])
         db_session.commit()
-
-        return 'https://localhost:5000/ws/feeder/config/{0}'.format(new_feeder_id)
+        config_link = '/ws/feeder/config/{0}'.format(new_feeder_id)
+        iso_link = '/iso/feeder/{0}.iso'.format(new_feeder_id)
+        return render_template('finish-config.html', mode_name='Feeder', user=current_user,
+                               config_link=config_link, iso_link=iso_link)
 
     return render_template('create-config.html', form=form, mode_name='Feeder', user=current_user)
 
@@ -582,6 +592,54 @@ def logout():
     return redirect('/login')
 
 
+@app.route('/iso/hive/<hive_id>.iso', methods=['GET'])
+@login_required
+def generate_hive_iso(hive_id):
+    logging.info('Generating new ISO for Hive ({})'.format(hive_id))
+    db_session = database.get_session()
+    current_hive = db_session.query(Hive).filter(Hive.id == hive_id).one()
+
+    tempdir = tempfile.mkdtemp()
+    custom_config_dir = os.path.join(tempdir, 'custom_config')
+    os.makedirs(custom_config_dir)
+
+    package_directory = os.path.dirname(os.path.abspath(beeswarm.__file__))
+    logging.debug('Copying data files to temporary directory.')
+    shutil.copytree(os.path.join(package_directory, 'hive/data'), os.path.join(custom_config_dir, 'data/'))
+
+    config_file_path = os.path.join(custom_config_dir, 'hivecfg.json')
+    with open(config_file_path, 'w') as config_file:
+        config_file.write(current_hive.configuration)
+
+    if not write_to_iso(tempdir, current_hive):
+        return 'Not Found', 404
+    temp_iso_name = 'beeswarm-{}-{}.iso'.format(current_hive.__class__.__name__,
+                                                current_hive.id)
+
+    return send_from_directory(tempdir, temp_iso_name, mimetype='application/iso-image')
+
+
+@app.route('/iso/feeder/<feeder_id>.iso', methods=['GET'])
+@login_required
+def generate_feeder_iso(feeder_id):
+    logging.info('Generating new ISO for Feeder ({})'.format(feeder_id))
+    db_session = database.get_session()
+    current_feeder = db_session.query(Feeder).filter(Feeder.id == feeder_id).one()
+
+    tempdir = tempfile.mkdtemp()
+    custom_config_dir = os.path.join(tempdir, 'custom_config')
+    os.makedirs(custom_config_dir)
+
+    config_file_path = os.path.join(custom_config_dir, 'hivecfg.json')
+    with open(config_file_path, 'w') as config_file:
+        config_file.write(current_feeder.configuration)
+
+    if not write_to_iso(tempdir, current_feeder):
+        return 'Not Found', 404
+    temp_iso_name = 'beeswarm-{}-{}.iso'.format(current_feeder.__class__.__name__,
+                                                current_feeder.id)
+    return send_from_directory(tempdir, temp_iso_name, mimetype='application/iso-image')
+
 @app.route('/settings', methods=['GET', 'POST'])
 @login_required
 def settings():
@@ -599,6 +657,40 @@ def settings():
 
     return render_template('settings.html', form=form, user=current_user)
 
+
+def write_to_iso(temporary_dir, mode):
+
+    with open(app.config['BEEKEEPER_CONFIG'], 'r+') as config_file:
+        config = json.load(config_file)
+        iso_file_path = config['iso']['path']
+
+    if not iso_file_path:
+        logging.warning('No base ISO path specified.')
+        return False
+
+    custom_config_dir = os.path.join(temporary_dir, 'custom_config')
+
+    # Change directory to create the tar archive in the temp directory
+    save_cwd = os.getcwd()
+    os.chdir(temporary_dir)
+    config_archive = shutil.make_archive(mode.id, 'gztar', custom_config_dir)
+    # Change it back
+    os.chdir(save_cwd)
+
+    temp_iso_name = 'beeswarm-{}-{}.iso'.format(mode.__class__.__name__, mode.id)
+    temp_iso_path = os.path.join(temporary_dir, temp_iso_name)
+    try:
+        shutil.copyfile(iso_file_path, temp_iso_path)
+    except IOError:
+        logging.warning('Couldn\'t find the ISO specified in the config: {}'.format(iso_file_path))
+        return False
+
+    with open(temp_iso_path, 'r+b') as isofile:
+        offset = find_offset(isofile, '\x07'*30)
+        isofile.seek(offset)
+        with open(config_archive, 'rb') as tarfile:
+            isofile.write(tarfile.read())
+    return True
 
 if __name__ == '__main__':
     app.run()

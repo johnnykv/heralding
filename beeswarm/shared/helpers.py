@@ -89,3 +89,43 @@ def create_self_signed_cert(directory, cname, kname):
     priv_key = RSA.importKey(priv_key_text)
     with open(keypath, 'w') as keyfile:
         keyfile.write(priv_key.exportKey('PEM'))
+
+
+def find_offset(fd, needle):
+    """
+        An implementation of the Horspool algorithm in python.
+        Originally implemented by Kamran Khan (http://inspirated.com/about)
+    """
+
+
+    nlen = len(needle)
+    nlast = nlen - 1
+
+    skip = []
+    for k in range(256):
+        skip.append(nlen)
+    for k in range(nlast):
+        skip[ord(needle[k])] = nlast - k
+    skip = tuple(skip)
+
+    pos = 0
+    consumed = 0
+    haystack = bytes()
+    while True:
+        more = nlen - (consumed - pos)
+        morebytes = fd.read(more)
+        haystack = haystack[more:] + morebytes
+
+        if len(morebytes) < more:
+            return -1
+        consumed = consumed + more
+
+        i = nlast
+        while i >= 0 and haystack[i] == needle[i]:
+            i = i - 1
+        if i == -1:
+            return pos
+
+        pos = pos + skip[ord(haystack[nlast])]
+
+    return -1
