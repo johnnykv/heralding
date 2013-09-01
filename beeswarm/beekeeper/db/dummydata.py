@@ -18,7 +18,7 @@ import string
 import random
 import uuid
 
-from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Hive, Authentication, Classification
+from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Hive, Authentication, Classification, Session
 
 from beeswarm.beekeeper.db import database
 
@@ -51,7 +51,25 @@ def fill_dummy_data():
         username = ''.join(random.choice(string.lowercase) for x in range(8))
         password = ''.join(random.choice(string.lowercase) for x in range(8))
         authentication = Authentication(id=str(uuid.uuid4()), username=username, password=password)
-        session.authentication.add(authentication)
+        session.authentication.append(authentication)
+
+        authentications.append(authentication)
+        sessions.append(session)
+
+    while len(sessions) < 200:
+        session = Session(id=str(uuid.uuid4()), timestamp=datetime.now(),
+                           source_ip=random.choice(source_ips), source_port=random.randint(1024, 65535),
+                           destination_ip='4.3.2.1', destination_port='1111')
+
+        session.protocol, session.destination_port = random.choice(protocols)
+        session.hive = random.choice(hives)
+
+        session.classification = db_session.query(Classification).filter(Classification.type == 'credentials_reuse').one()
+
+        username = ''.join(random.choice(string.lowercase) for x in range(8))
+        password = ''.join(random.choice(string.lowercase) for x in range(8))
+        authentication = Authentication(id=str(uuid.uuid4()), username=username, password=password)
+        session.authentication.append(authentication)
 
         authentications.append(authentication)
         sessions.append(session)

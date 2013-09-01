@@ -36,10 +36,10 @@ class ClassifierTests(unittest.TestCase):
         db_session = database.get_session()
         feeder = Feeder(id=self.feeder_id)
         hive = Hive(id=self.hive_id)
+
         honeybee = Honeybee(id=self.honeybee_id, source_ip='321', destination_ip='123',
                             received=datetime.utcnow(), timestamp=self.honeybee_datetime, protocol='pop3',
-                            source_port=1,
-                            destination_port=1, did_complete=True, feeder=feeder, hive=hive)
+                            source_port=1, destination_port=1, did_complete=True, feeder=feeder, hive=hive)
 
         authentication = Authentication(id=str(uuid.uuid4()), username='a', password='a',
                                         successful=True, timestamp=datetime.utcnow())
@@ -115,6 +115,7 @@ class ClassifierTests(unittest.TestCase):
 
         db_session = database.get_session()
         hive = db_session.query(Hive).filter(Hive.id == self.hive_id).one()
+
         for id, offset in (('session99', -30), ('session88', -10), ('session77', -2)):
             s = Session(id=id, source_ip='321', destination_ip='123',
                         received=datetime.utcnow(), timestamp=datetime.utcnow() + timedelta(seconds=offset),
@@ -127,7 +128,7 @@ class ClassifierTests(unittest.TestCase):
         c = Classifier()
         c.classify_sessions(5)
 
-        result = db_session.query(Session).filter(Session.classification_id == 'malicious_brute').all()
+        result = db_session.query(Session).filter(Session.classification_id == 'bruteforce').all()
         #we expect the resultset to contain session1 and session2
         self.assertEquals(len(result), 2)
 
@@ -145,12 +146,11 @@ class ClassifierTests(unittest.TestCase):
         a = Authentication(id=str(uuid.uuid4()), username='a', password='a')
         s.authentication.append(a)
         db_session.add(s)
-        db_session.add(s)
         db_session.commit()
 
         c = Classifier()
         c.classify_sessions(0, db_session)
 
-        result = db_session.query(Session).filter(Session.classification_id == 'mitm_2').one()
+        result = db_session.query(Session).filter(Session.classification_id == 'credentials_reuse').one()
         #we expect the resultset to contain session1010
         self.assertEquals(result.id, 'session1010')

@@ -26,11 +26,12 @@ from werkzeug.security import check_password_hash
 from wtforms import HiddenField
 from forms import NewHiveConfigForm, NewFeederConfigForm, LoginForm, SettingsForm
 from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Hive, User, SessionData, Authentication
+from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Hive, User, Authentication, Classification
 
 
 def is_hidden_field_filter(field):
     return isinstance(field, HiddenField)
+
 
 app = Flask(__name__)
 app.config['DEBUG'] = False
@@ -138,6 +139,7 @@ def feeder_data():
     data = json.loads(request.data)
     logger.debug(data)
     session = database.get_session()
+    classification = session.query(Classification).filter(Classification.type == 'unclassified').one()
 
     _feeder = session.query(Feeder).filter(Feeder.id == data['feeder_id']).one()
 
@@ -148,6 +150,7 @@ def feeder_data():
 
     h = Honeybee(
         id=data['id'],
+        classification=classification,
         timestamp=datetime.strptime(data['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
         received=datetime.utcnow(),
         protocol=data['protocol'],
@@ -181,10 +184,12 @@ def hive_data():
     logger.debug('Received: {0}'.format(data))
 
     db_session = database.get_session()
+    classification = db_session.query(Classification).filter(Classification.type == 'unclassified').one()
     _hive = db_session.query(Hive).filter(Hive.id == data['hive_id']).one()
 
     session = Session(
         id=data['id'],
+        classification=classification,
         timestamp=datetime.strptime(data['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
         received=datetime.utcnow(),
         protocol=data['protocol'],
@@ -489,40 +494,28 @@ def delete_feeders():
     return ''
 
 
-@app.route('/data/sessions/all', methods=['GET', 'POST'])
+@app.route('/data/sessions/<_type>', methods=['GET'])
 @login_required
-def data_sessions_all():
+def data_sessions_attacks(_type):
     db_session = database.get_session()
-    sessions = db_session.query(Session).all()
+    #the database will not get hit until we start iterating the query object
+    query_iterators = {
+        'all': db_session.query(Session),
+        'honeybees': db_session.query(Honeybee),
+        'attacks': db_session.query(Session).filter(Session.classification_id != 'honeybee')
+    }
+
+    if _type not in query_iterators:
+        return 'Not Found', 404
+
+    #select which iterator to use
+    entries = query_iterators[_type]
+
     rows = []
-    for s in sessions:
-        row = {'time': s.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': s.protocol, 'ip_address': s.source_ip}
-        rows.append(row)
-    rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
-    return rsp
-
-
-@app.route('/data/sessions/honeybees', methods=['GET', 'POST'])
-@login_required
-def data_sessions_bees():
-    db_session = database.get_session()
-    honeybees = db_session.query(Honeybee).all()
-    rows = []
-    for b in honeybees:
-        row = {'time': b.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': b.protocol, 'ip_address': b.source_ip}
-        rows.append(row)
-    rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
-    return rsp
-
-
-@app.route('/data/sessions/attacks', methods=['GET', 'POST'])
-@login_required
-def data_sessions_attacks():
-    db_session = database.get_session()
-    attacks = db_session.query(Session).filter(Session.classification_id != 'honeybee').all()
-    rows = []
-    for a in attacks:
-        row = {'time': a.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': a.protocol, 'ip_address': a.source_ip}
+    for a in entries:
+        classification = a.classification_id.replace('_', ' ').capitalize()
+        row = {'time': a.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': a.protocol, 'ip_address': a.source_ip,
+               'classification': classification}
         rows.append(row)
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp
@@ -588,6 +581,7 @@ def logout():
     flash('Logged out succesfully')
     return redirect('/login')
 
+
 @app.route('/settings', methods=['GET', 'POST'])
 @login_required
 def settings():
@@ -604,6 +598,7 @@ def settings():
             config_file.write(json.dumps(config, indent=4))
 
     return render_template('settings.html', form=form, user=current_user)
+
 
 if __name__ == '__main__':
     app.run()
