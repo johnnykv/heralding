@@ -4,11 +4,7 @@ import uuid
 import unittest
 from datetime import datetime
 
-import gevent.monkey
 from beeswarm.beekeeper.webapp.auth import Authenticator
-from beeswarm.shared.helpers import is_url
-
-gevent.monkey.patch_all()
 
 from beeswarm.beekeeper.db import database
 from beeswarm.beekeeper.db.entities import Feeder, Hive, Session, Honeybee, User, Authentication
@@ -26,15 +22,17 @@ class WebappTests(unittest.TestCase):
         database.setup_db('sqlite://')
         session = database.get_session()
 
-        #setup dummy entities
+        #dummy entities
         self.authenticator.add_user('test', 'test', 'Nick Name')
         self.feeder_id = str(uuid.uuid4())
-        feeder = Feeder(id=self.feeder_id, configuration='test_feeder_config')
-        fuser = User(id=self.feeder_id, nickname='Feeder Test', password=str(uuid.uuid4()), utype=2)
         self.hive_id = str(uuid.uuid4())
-        hive = Hive(id=self.hive_id, configuration='test_hive_config')
-        huser = User(id=self.hive_id, nickname='Hive Test', password=str(uuid.uuid4()), utype=1)
-        session.add_all([feeder, hive, fuser, huser])
+        session.add_all([
+                        Feeder(id=self.feeder_id, configuration='test_feeder_config'),
+                        User(id=self.feeder_id, nickname='Feeder Test', password=str(uuid.uuid4()), utype=2),
+                        Hive(id=self.hive_id, configuration='test_hive_config'),
+                        User(id=self.hive_id, nickname='Hive Test', password=str(uuid.uuid4()), utype=1)
+                       ])
+
         session.commit()
 
     def tearDown(self):
@@ -72,7 +70,7 @@ class WebappTests(unittest.TestCase):
 
     def test_basic_unsuccessful_feeder_post(self):
         """
-        Tests if a honeybee dict can be posted without exceptions.
+        Tests if an error is returned when data is posted without ID values.
         """
 
         db_session = database.get_session()
@@ -131,15 +129,15 @@ class WebappTests(unittest.TestCase):
 
     def test_basic_unsuccessful_hive_post(self):
         """
-        Tests if a session dict can be posted without exceptions.
+        Tests if an error is returned when data is posted without ID values.
         """
 
         db_session = database.get_session()
         huser = db_session.query(User).filter(User.id == self.hive_id).one()
         self.login(huser.id, huser.password)
 
+        #missing id
         data_dict = {
-            'id': 'ba9fdb3d-0efb-4764-9a6b-d9b86eccda96',
             'hive_id': self.hive_id,
             'destination_ip': '192.168.1.1',
             'destination_port': 8023,
@@ -147,15 +145,15 @@ class WebappTests(unittest.TestCase):
             'source_ip': '127.0.0.1',
             'timestamp': '2013-05-07T22:21:19.453828',
             'source_port': 61175,
-            'login_attempts': [
-                {'username': 'qqq', 'timestamp': '2013-05-07T22:21:20.846805', 'password': 'aa', 'type': 'plaintext',
-                 'id': '027bd968-f8ea-4a69-8d4c-6cf21476ca10'},
-                {'username': 'as', 'timestamp': '2013-05-07T22:21:21.150571', 'password': 'd', 'type': 'plaintext',
-                 'id': '603f40a4-e7eb-442d-9fde-0cd3ba707af7'},
-                {'username': 'as', 'timestamp': '2013-05-07T22:21:21.431958', 'password': 'd', 'type': 'plaintext',
-                 'id': 'ba24a095-f2c5-4426-84b9-9b7bfb609045'}]
+            'authentication': [
+                {'username': 'qqq', 'timestamp': '2013-05-07T22:21:20.846805', 'password': 'aa',
+                 'id': '027bd968-f8ea-4a69-8d4c-6cf21476ca10', 'successful': False},
+                {'username': 'as', 'timestamp': '2013-05-07T22:21:21.150571', 'password': 'd',
+                 'id': '603f40a4-e7eb-442d-9fde-0cd3ba707af7', 'successful': False}, ],
+            'transcript': [
+                {'timestamp': '2013-05-07T22:21:20.846805', 'direction': 'in', 'data': 'whoami\r\n',
+                 'timestamp': '2013-05-07T22:21:21.136800', 'direction': 'out', 'data': 'james_brown\r\n$:~'}]
         }
-
         r = self.app.post('/ws/hive_data', data=json.dumps(data_dict), content_type='application/json')
         self.assertEquals(r.status, '500 INTERNAL SERVER ERROR')
 
@@ -474,7 +472,6 @@ class WebappTests(unittest.TestCase):
             db_session.add(s)
 
         db_session.commit()
-
 
     def logout(self):
         return self.app.get('/logout', follow_redirects=True)
