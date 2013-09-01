@@ -239,10 +239,7 @@ class WebappTests(unittest.TestCase):
         }
         self.login('test', 'test')
         resp = self.app.post('/ws/feeder', data=post_data)
-        with open('/tmp/out.html', 'w') as a:
-            a.write(resp.data)
-        self.assertTrue(is_url(resp.data))
-        self.assertTrue('/ws/feeder/config/' in resp.data)
+        self.assertTrue(200, resp.status_code)
         self.logout()
 
     def test_new_hive(self):
@@ -288,8 +285,7 @@ class WebappTests(unittest.TestCase):
         }
         self.login('test', 'test')
         resp = self.app.post('/ws/hive', data=post_data)
-        self.assertTrue(is_url(resp.data))
-        self.assertTrue('/ws/hive/config/' in resp.data)
+        self.assertTrue(200, resp.status_code)
         self.logout()
 
     def test_new_hive_config(self):

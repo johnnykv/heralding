@@ -687,7 +687,11 @@ def write_to_iso(temporary_dir, mode):
 
     temp_iso_name = 'beeswarm-{}-{}.iso'.format(mode.__class__.__name__, mode.id)
     temp_iso_path = os.path.join(temporary_dir, temp_iso_name)
-    shutil.copyfile(iso_file_path, temp_iso_path)
+    try:
+        shutil.copyfile(iso_file_path, temp_iso_path)
+    except IOError:
+        logging.warning('Couldn\'t find the ISO specified in the config: {}'.format(iso_file_path))
+        return False
 
     with open(temp_iso_path, 'r+b') as isofile:
         offset = find_offset(isofile, '\x07'*30)
