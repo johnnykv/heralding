@@ -38,10 +38,6 @@ class Feeder_Tests(unittest.TestCase):
         if os.path.isdir(self.work_dir):
             shutil.rmtree(self.work_dir)
 
-    def test_init(self):
-        """Tests if the Hive class can be instantiated successfully using the default configuration file"""
-        sut = Feeder(self.work_dir, config_arg=self.test_config_file)
-
     def test_dispatcher(self):
         options = {
             # NoneType because we're going to pass a None to the dispatcher.
