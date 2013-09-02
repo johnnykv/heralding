@@ -124,19 +124,19 @@ class Hive(object):
         #protocol handlers
         for c in handlerbase.HandlerBase.__subclasses__():
 
-            cap_name = 'cap_' + c.__name__
+            cap_name = c.__name__
 
-            if cap_name not in self.config:
+            if cap_name not in self.config['capabilities']:
                 logger.warning(
                     "Not loading {0} capability because it has no option in configuration file.".format(c.__name__))
                 continue
                 #skip loading if disabled
-            if not self.config[cap_name]['enabled']:
+            if not self.config['capabilities'][cap_name]['enabled']:
                 continue
 
-            port = self.config[cap_name]['port']
+            port = self.config['capabilities'][cap_name]['port']
             #carve out the options for this specific service
-            options = self.config[cap_name]
+            options = self.config['capabilities'][cap_name]
             cap = c(self.sessions, options, self.users, self.work_dir)
 
             try:
