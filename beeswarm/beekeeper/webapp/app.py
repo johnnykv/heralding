@@ -49,6 +49,12 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
+config = None
+
+@app.before_first_request
+def initialize():
+    global config
+    config = json.load(open(app.config['BEEKEEPER_CONFIG'], 'r'))
 
 @login_manager.user_loader
 def user_loader(userid):
@@ -171,14 +177,16 @@ def feeder_data():
         hive=_hive
     )
 
-    for auth in data['authentication']:
-        a = Authentication(id=auth['id'], username=auth['username'], password=auth['password'],
-                           successful=auth['successful'],
-                           timestamp=datetime.strptime(auth['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'))
-        h.authentication.append(a)
+    #ignore the entry if configured to do so.
+    if not h.did_complete and not config['ignore_failed_honeybees']:
+        for auth in data['authentication']:
+            a = Authentication(id=auth['id'], username=auth['username'], password=auth['password'],
+                               successful=auth['successful'],
+                               timestamp=datetime.strptime(auth['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'))
+            h.authentication.append(a)
 
-    session.add(h)
-    session.commit()
+        session.add(h)
+        session.commit()
     return ''
 
 
@@ -648,19 +656,20 @@ def generate_feeder_iso(feeder_id):
 @app.route('/settings', methods=['GET', 'POST'])
 @login_required
 def settings():
-    config = json.load(open(app.config['BEEKEEPER_CONFIG'], 'r'))
     form = SettingsForm(obj=MultiDict(config))
 
     if form.validate_on_submit():
         with open(app.config['BEEKEEPER_CONFIG'], 'r+') as config_file:
-            config = json.load(config_file)
             config['honeybee_session_retain'] = form.honeybee_session_retain.data
             config['malicious_session_retain'] = form.malicious_session_retain.data
-            config['purge_failed_honeybees'] = form.purge_failed_honeybees.data
+            config['ignore_failed_honeybees'] = form.ignore_failed_honeybees.data
             #clear file
             config_file.seek(0)
             config_file.truncate(0)
             config_file.write(json.dumps(config, indent=4))
+            #update the global config reference
+        global config
+        config = json.load(open(app.config['BEEKEEPER_CONFIG'], 'r'))
 
     return render_template('settings.html', form=form, user=current_user)
 

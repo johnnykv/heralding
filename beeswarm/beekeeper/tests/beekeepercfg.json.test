@@ -5,5 +5,11 @@
     "ssl": {
         "certpath": "beekeeper.crt",
         "keypath": "beekeeper.key"
+    },
+    "honeybee_session_retain": 2,
+    "malicious_session_retain": 100,
+    "ignore_failed_honeybees": true,
+    "iso": {
+        "path": "beeswarm.iso"
     }
 }

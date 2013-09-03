@@ -12,6 +12,7 @@ from beeswarm.beekeeper.webapp import app
 
 app.app.config['WTF_CSRF_ENABLED'] = False
 app.app.config['CERT_PATH'] = os.path.join(os.path.dirname(__file__), 'beekeepercfg.json.test')
+app.app.config['BEEKEEPER_CONFIG'] = os.path.join(os.path.dirname(__file__), 'beekeepercfg.json.test')
 
 
 class WebappTests(unittest.TestCase):
