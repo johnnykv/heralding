@@ -26,6 +26,7 @@ from flask import Flask, render_template, request, redirect, flash, Response, se
 from flask.ext.login import LoginManager, login_user, current_user, login_required, logout_user
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.security import check_password_hash
+from werkzeug.datastructures import MultiDict
 from wtforms import HiddenField
 import beeswarm
 from beeswarm.shared.helpers import find_offset
@@ -647,7 +648,8 @@ def generate_feeder_iso(feeder_id):
 @app.route('/settings', methods=['GET', 'POST'])
 @login_required
 def settings():
-    form = SettingsForm()
+    config = json.load(open(app.config['BEEKEEPER_CONFIG'], 'r'))
+    form = SettingsForm(obj=MultiDict(config))
 
     if form.validate_on_submit():
         with open(app.config['BEEKEEPER_CONFIG'], 'r+') as config_file:
