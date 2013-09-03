@@ -8,6 +8,7 @@
     },
     "honeybee_session_retain": 2,
     "malicious_session_retain": 100,
+    "purge_failed_honeybees": true,
     "iso": {
         "path": "beeswarm.iso"
     }

@@ -654,6 +654,7 @@ def settings():
             config = json.load(config_file)
             config['honeybee_session_retain'] = form.honeybee_session_retain.data
             config['malicious_session_retain'] = form.malicious_session_retain.data
+            config['purge_failed_honeybees'] = form.purge_failed_honeybees.data
             #clear file
             config_file.seek(0)
             config_file.truncate(0)

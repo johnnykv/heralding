@@ -158,11 +158,15 @@ class SettingsForm(Form):
 
     honeybee_session_retain = IntegerField('Honeybee retention', default=2,
                                            description='<small><em>days until legit honeybees are deleted.</em></small>',
-                                           validators=[validators.required(message= u'This field is required'),
+                                           validators=[validators.required(message=u'This field is required'),
                                                        validators.NumberRange(min=1)])
     
-    malicious_session_retain = IntegerField('Malicious session retention',default=100,
+    malicious_session_retain = IntegerField('Malicious session retention', default=100,
                                             description='<small><em>days until malicious sessions are deleted</em></small>',
-                                            validators=[validators.required(message= u'This field is required'),
+                                            validators=[validators.required(message=u'This field is required'),
                                                         validators.NumberRange(min=1)])
+
+    purge_failed_honeybees = BooleanField('Purge failed honeybees', default=True,
+                                          description='<small><em>automatically delete honeybees that did not connect</em></small>')
+
 
