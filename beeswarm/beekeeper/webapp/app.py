@@ -537,7 +537,7 @@ def data_sessions_attacks(_type):
     rows = []
     for a in entries:
         classification = a.classification_id.replace('_', ' ').capitalize()
-c        row = {'time': a.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': a.protocol, 'ip_address': a.source_ip,
+        row = {'time': a.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': a.protocol, 'ip_address': a.source_ip,
                'classification': classification}
         rows.append(row)
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
