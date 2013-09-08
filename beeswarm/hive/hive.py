@@ -34,13 +34,14 @@ from beeswarm.hive.models.session import Session
 from beeswarm.hive.models.authenticator import Authenticator
 from beeswarm.hive.helpers.streamserver import HiveStreamServer
 from beeswarm.hive.helpers.common import create_socket
-from beeswarm.shared.helpers import drop_privileges, create_self_signed_cert
+from beeswarm.shared.helpers import drop_privileges, create_self_signed_cert, get_local_ipaddress
 from beeswarm.hive.models.user import HiveUser
 from beeswarm.errors import ConfigNotFound
 import requests
 from requests.exceptions import Timeout, ConnectionError
 from beeswarm.shared.helpers import is_url
 from beeswarm.shared.asciify import asciify
+from beeswarm.shared.models.ui_handler import UIHandler
 
 logger = logging.getLogger(__name__)
 
@@ -49,10 +50,11 @@ class Hive(object):
 
     """ This is the main class, which starts up all the capabilities. """
 
-    def __init__(self, work_dir, config_arg='hivecfg.json', key='server.key', cert='server.crt'):
+    def __init__(self, work_dir, config_arg='hivecfg.json', key='server.key', cert='server.crt', user_interface=False):
         self.work_dir = work_dir
         self.key = key
         self.cert = cert
+        self.show_ui = user_interface
 
         if not is_url(config_arg):
             if not os.path.exists(config_arg):
@@ -70,6 +72,27 @@ class Hive(object):
 
         Session.hive_id = self.config['general']['hive_id']
 
+        if self.config['general']['fetch_ip']:
+            try:
+                url = 'http://api-sth01.exip.org/?call=ip'
+                req = requests.get(url)
+                self.hive_ip = req.text
+                logging.info('Fetched {0} as external ip for Hive.'.format(self.hive_ip))
+            except (Timeout, ConnectionError) as e:
+                logging.warning('Could not fetch public ip: {0}'.format(e))
+
+        else:
+            self.hive_ip = self.config.get('general', 'hive_ip')
+
+        self.status = {
+            'mode': 'Hive',
+            'ip_address': '127.0.0.1',  # Bad assumption?
+            'hive_id': self.config['general']['hive_id'],
+            'bees_sent': 0,
+            'enabled_capabilities': [],
+            'beekeeper_url': ''
+        }
+
         #will contain HiveUser objects
         self.users = create_users()
 
@@ -79,7 +102,14 @@ class Hive(object):
         #spawning time checker
         if self.config['timecheck']['enabled']:
             Greenlet.spawn(self.checktime)
-        
+
+        #show curses UI
+        if self.show_ui:
+            Greenlet.spawn(self.show_status_ui)
+
+    def show_status_ui(self):
+        uihandler = UIHandler(self.status)
+
     #function to check the time offset
     def checktime(self):
         """ Make sure our Hive time is consistent, and not too far off
@@ -104,18 +134,6 @@ class Hive(object):
         self.server_greenlets = []
         #will contain Session objects
         self.sessions = {}
-
-        if self.config['general']['fetch_ip']:
-            try:
-                url = 'http://api-sth01.exip.org/?call=ip'
-                req = requests.get(url)
-                self.hive_ip = req.text
-                logging.info('Fetched {0} as external ip for Hive.'.format(self.hive_ip))
-            except (Timeout, ConnectionError) as e:
-                logging.warning('Could not fetch public ip: {0}'.format(e))
-
-        else:
-            self.hive_ip = self.config.get('general', 'hive_ip')
 
         #greenlet to consume the provided sessions
         self.session_consumer = consumer.Consumer(self.sessions, self.hive_ip, self.config)

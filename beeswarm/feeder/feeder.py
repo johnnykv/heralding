@@ -22,6 +22,8 @@ import requests
 import gevent
 from gevent.greenlet import Greenlet
 import gevent.monkey
+from beeswarm.shared.models.ui_handler import UIHandler
+
 gevent.monkey.patch_all()
 
 from beeswarm.feeder.bees import clientbase
@@ -40,9 +42,10 @@ logger = logging.getLogger(__name__)
 
 
 class Feeder(object):
-    def __init__(self, work_dir, config_arg='feedercfg.json'):
+    def __init__(self, work_dir, config_arg='feedercfg.json', user_interface=False):
 
         self.run_flag = True
+        self.show_ui = user_interface
 
         if not is_url(config_arg):
             if not os.path.exists(config_arg):
@@ -66,8 +69,24 @@ class Feeder(object):
             logging.info('Fetched {0} as my external ip.'.format(self.my_ip))
         else:
             self.my_ip = '127.0.0.1'
+
+        self.status = {
+            'mode': 'Feeder',
+            'bees_sent': 0,
+            'enabled_bees': [],
+            'associated_hive': self.config['general']['hive_id'],
+            'beekeeper_url': self.config['log_beekeeper']['beekeeper_url'],
+            'ip_address': self.my_ip
+        }
+
         self.dispatchers = {}
         self.dispatcher_greenlets = []
+
+        if self.show_ui:
+            Greenlet.spawn(self.show_status_ui)
+
+    def show_status_ui(self):
+        uihandler = UIHandler(self.status)
 
     def start(self):
         logging.info('Starting feeder.')

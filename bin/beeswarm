@@ -36,7 +36,7 @@ gevent.monkey.patch_all()
 logger = logging.getLogger()
 
 
-def setuplogging(logfile, verbose):
+def setuplogging(logfile, verbose, show_ui=False):
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.DEBUG)
 
@@ -48,10 +48,11 @@ def setuplogging(logfile, verbose):
     else:
         loglevel = logging.INFO
 
-    console_log.addFilter(LogFilter())
-    console_log.setLevel(loglevel)
-    console_log.setFormatter(formatter)
-    root_logger.addHandler(console_log)
+    if not show_ui:
+        console_log.addFilter(LogFilter())
+        console_log.setLevel(loglevel)
+        console_log.setFormatter(formatter)
+        root_logger.addHandler(console_log)
 
     file_log = logging.FileHandler(logfile)
     file_log.setLevel(logging.DEBUG)
@@ -79,9 +80,10 @@ if __name__ == '__main__':
     parser.add_argument('--workdir', dest='workdir', default=os.getcwd())
     parser.add_argument('--logfile', dest='logfile', default='beeswarm.log')
     parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Logs debug messages.')
+    parser.add_argument('-ui', '--userinterface', action='store_true', default=False, help='Logs debug messages.')
     args = parser.parse_args()
 
-    setuplogging(args.logfile, args.verbose)
+    setuplogging(args.logfile, args.verbose, args.userinterface)
 
     mode = None
     if args.hive:
@@ -121,9 +123,9 @@ if __name__ == '__main__':
 
     try:
         if args.configarg:
-            m = mode(args.workdir, config_arg=args.configarg)
+            m = mode(args.workdir, config_arg=args.configarg, user_interface=args.userinterface)
         else:
-            m = mode(args.workdir)
+            m = mode(args.workdir, user_interface=args.userinterface)
     except ConfigNotFound as ex:
         logger.error(ex)
         sys.exit(ex)
