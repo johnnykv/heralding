@@ -64,9 +64,9 @@ class Hive(object):
                 raise Exception('Bad syntax for Config File: (%s)%s' % (e, str(type(e))))
         else:
             conf = requests.get(config_arg, verify=False)
-            with open('hivecfg.json', 'w') as local_config:
-                local_config.write(conf.text)
             self.config = json.loads(conf.text, object_hook=asciify)
+            with open('hivecfg.json', 'w') as local_config:
+                local_config.write(json.dumps(self.config, indent=4))
 
         Session.hive_id = self.config['general']['hive_id']
 
