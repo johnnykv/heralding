@@ -327,7 +327,7 @@ def create_hive():
                 "ntp_pool": "pool.ntp.org"
             },
         }
-        config_json = json.dumps(config)
+        config_json = json.dumps(config, indent=4)
 
         db_session = database.get_session()
         h = Hive(id=new_hive_id, configuration=config_json)
@@ -485,7 +485,7 @@ def create_feeder():
                 'cert': cert_str
             },
         }
-        config_json = json.dumps(config)
+        config_json = json.dumps(config, indent=4)
 
         db_session = database.get_session()
         f = Feeder(id=new_feeder_id, configuration=config_json)
