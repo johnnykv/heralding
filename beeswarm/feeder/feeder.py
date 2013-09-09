@@ -83,10 +83,11 @@ class Feeder(object):
         self.dispatcher_greenlets = []
 
         if self.show_ui:
+            self.uihandler = UIHandler(self.status)
             Greenlet.spawn(self.show_status_ui)
 
     def show_status_ui(self):
-        uihandler = UIHandler(self.status)
+        self.uihandler.run()
 
     def start(self):
         logging.info('Starting feeder.')
@@ -130,6 +131,7 @@ class Feeder(object):
     def stop(self):
         for g in self.dispatcher_greenlets:
             g.kill()
+        self.uihandler.stop()
         self.sessions_consumer.stop_handling()
         logger.info('All clients stopped')
         sys.exit(0)

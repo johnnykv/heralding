@@ -105,10 +105,11 @@ class Hive(object):
 
         #show curses UI
         if self.show_ui:
+            self.uihandler = UIHandler(self.status)
             Greenlet.spawn(self.show_status_ui)
 
     def show_status_ui(self):
-        uihandler = UIHandler(self.status)
+        self.uihandler.run()
 
     #function to check the time offset
     def checktime(self):
@@ -188,6 +189,7 @@ class Hive(object):
         for g in self.server_greenlets:
             g.kill()
 
+        self.uihandler.stop()
         self.session_consumer.stop()
         logger.info('All servers stopped.')
 

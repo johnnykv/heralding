@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 class Beekeeper(object):
-    def __init__(self, work_dir, config_arg='beekeepercfg.json'):
+    def __init__(self, work_dir, config_arg='beekeepercfg.json', user_interface=False):
         self.work_dir = work_dir
         self.config_file = config_arg
         self.config = self.get_config(self.config_file)

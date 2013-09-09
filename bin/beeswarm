@@ -13,6 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import curses
 
 import logging
 from argparse import ArgumentParser
@@ -136,5 +137,10 @@ if __name__ == '__main__':
         gevent.joinall([mode_greenlet])
     except KeyboardInterrupt as ex:
         m.stop()
-
-    gevent.joinall([mode_greenlet], 5)
+    finally:
+        gevent.joinall([mode_greenlet], 5)
+        # Restore previous terminal state
+        curses.initscr()
+        curses.nocbreak()
+        curses.echo()
+        curses.endwin()

@@ -27,7 +27,6 @@ class UIHandler(object):
         self.screen.keypad(1)
         self.height, self.width = self.screen.getmaxyx()
         self.run_flag = False
-        self.run()
 
     def run(self):
         self.run_flag = True
@@ -39,8 +38,4 @@ class UIHandler(object):
 
     def stop(self):
         self.run_flag = False
-        curses.initscr()
-        curses.nocbreak()
-        curses.echo()
-        curses.endwin()
 
