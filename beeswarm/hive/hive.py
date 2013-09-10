@@ -34,14 +34,14 @@ from beeswarm.hive.models.session import Session
 from beeswarm.hive.models.authenticator import Authenticator
 from beeswarm.hive.helpers.streamserver import HiveStreamServer
 from beeswarm.hive.helpers.common import create_socket
-from beeswarm.shared.helpers import drop_privileges, create_self_signed_cert, get_local_ipaddress
+from beeswarm.shared.helpers import drop_privileges, create_self_signed_cert
 from beeswarm.hive.models.user import HiveUser
 from beeswarm.errors import ConfigNotFound
 import requests
 from requests.exceptions import Timeout, ConnectionError
 from beeswarm.shared.helpers import is_url
 from beeswarm.shared.asciify import asciify
-from beeswarm.shared.models.ui_handler import UIHandler
+from beeswarm.shared.models.ui_handler import HiveUIHandler
 
 logger = logging.getLogger(__name__)
 
@@ -50,11 +50,12 @@ class Hive(object):
 
     """ This is the main class, which starts up all the capabilities. """
 
-    def __init__(self, work_dir, config_arg='hivecfg.json', key='server.key', cert='server.crt', user_interface=False):
+    def __init__(self, work_dir, config_arg='hivecfg.json', key='server.key', cert='server.crt',
+                 curses_screen=None):
         self.work_dir = work_dir
         self.key = key
         self.cert = cert
-        self.show_ui = user_interface
+        self.curses_screen = curses_screen
 
         if not is_url(config_arg):
             if not os.path.exists(config_arg):
@@ -86,9 +87,10 @@ class Hive(object):
 
         self.status = {
             'mode': 'Hive',
-            'ip_address': '127.0.0.1',  # Bad assumption?
+            'ip_address': self.hive_ip,
             'hive_id': self.config['general']['hive_id'],
-            'bees_sent': 0,
+            'total_sessions': 0,
+            'active_sessions': 0,
             'enabled_capabilities': [],
             'beekeeper_url': ''
         }
@@ -104,8 +106,8 @@ class Hive(object):
             Greenlet.spawn(self.checktime)
 
         #show curses UI
-        if self.show_ui:
-            self.uihandler = UIHandler(self.status)
+        if self.curses_screen is not None:
+            self.uihandler = HiveUIHandler(self.status, self.curses_screen)
             Greenlet.spawn(self.show_status_ui)
 
     def show_status_ui(self):
@@ -168,6 +170,7 @@ class Hive(object):
                     server = HiveStreamServer(socket, cap.handle_session)
 
                 self.servers.append(server)
+                self.status['enabled_capabilities'].append(cap_name)
                 server_greenlet = Greenlet(server.start())
                 self.server_greenlets.append(server_greenlet)
 
@@ -189,7 +192,8 @@ class Hive(object):
         for g in self.server_greenlets:
             g.kill()
 
-        self.uihandler.stop()
+        if self.curses_screen is not None:
+            self.uihandler.stop()
         self.session_consumer.stop()
         logger.info('All servers stopped.')
 

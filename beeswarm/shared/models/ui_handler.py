@@ -14,28 +14,116 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import curses
+import logging
 import time
 
 
-class UIHandler(object):
+HIVE_TITLE = """._...._._............
+| |..| (_)...........
+| |__| |___..._____..
+|  __  | \ \./ / _ \.
+| |..| | |\ V /  __/.
+|_|..|_|_|.\_/.\___|.
+"""
 
-    def __init__(self, status):
+FEEDER_TITLE = """..______............_............
+.|  ____|..........| |...........
+.| |__.___..___..__| |.___._.__..
+.|  __/ _ \/ _ \/ _` |/ _ \ '__|.
+.| |.|  __/  __/ (_| |  __/ |....
+.|_|..\___|\___|\__,_|\___|_|....
+"""
+
+
+class CursesLogHandler(logging.Handler):
+    def __init__(self, win, level=logging.DEBUG):
+        logging.Handler.__init__(self, level)
+        self.win = win
+        maxy, maxx = win.getmaxyx()
+        self.height = maxy
+        self.formatter = logging.Formatter("%(levelname)s")
+
+    def emit(self, record):
+        y, x = self.win.getyx()
+        if x != 0:
+            #self.win.move(y+1,0)
+            y += 1
+        if y + 1 >= self.height:
+            self.win.addstr(self.height - 1, 0, "--more--")
+            self.win.getch()
+            self.win.erase()
+            y = 0
+
+        self.win.addstr(y, 0, record.getMessage())
+        self.win.refresh()
+
+
+class _UIHandler(object):
+    def __init__(self, status, screen):
+        with open('shit', 'w') as s:
+            s.write('handlr')
         self.status = status
-        self.screen = curses.initscr()
-        curses.noecho()
-        curses.cbreak()
-        self.screen.keypad(1)
-        self.height, self.width = self.screen.getmaxyx()
+        self.height, self.width = screen.getmaxyx()
+        self.screen = screen.subwin(self.height-10, self.width, 0, 0)
         self.run_flag = False
+        self._draw_height = 0  # Used by the draw method to keep track of lines already drawn
 
     def run(self):
         self.run_flag = True
+        logging.critical('RUNNING!!!!')
         while True:
             self.screen.clear()
-            self.screen.addstr(0, (self.width-len(self.status['mode']))/2, self.status['mode'])
+            self._draw_height = 0
+            self.height, self.width = self.screen.getmaxyx()
+            self.draw()
             self.screen.refresh()
             time.sleep(1)
 
     def stop(self):
         self.run_flag = False
 
+    def addstring_middle(self, string):
+        self.screen.addstr(self._draw_height, (self.width - len(string)) / 2, string)
+        self._draw_height += 1
+
+    def addstring_left(self, string):
+        string = '  {}'.format(string)
+        self.screen.addstr(self._draw_height, 0, string)
+
+    def addstring_right(self, string):
+        string = '{}  '.format(string)
+        self.screen.addstr(self._draw_height, self.width - len(string), string)
+        self._draw_height += 1
+
+    def draw(self):
+        raise Exception('Do not call base class!')
+
+    def draw_title(self, title_string):
+        for line in title_string.split('\n'):
+            line.strip('\n')
+            self.addstring_middle(line)
+
+
+class HiveUIHandler(_UIHandler):
+    def draw(self):
+        self.draw_title(HIVE_TITLE)
+        self.addstring_middle('Running: ' + ' '.join(self.status['enabled_capabilities']))
+        self._draw_height += 1
+        self.addstring_left('IP Address: {}'.format(self.status['ip_address']))
+        self.addstring_right('Hive ID: {}'.format(self.status['hive_id']))
+        self.addstring_left('Total Sessions: {}'.format(self.status['total_sessions']))
+        self.addstring_right('Active Sessions: {}'.format(self.status['active_sessions']))
+
+
+class FeederUIHandler(_UIHandler):
+    def draw(self):
+        pass
+
+
+def tail_log(fd, nlines=10):
+    lines = [''] * nlines
+    c = 0
+    for line in fd:
+        lines[c % nlines] = line
+        c += 1
+    return lines[c % nlines:]

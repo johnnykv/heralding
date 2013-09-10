@@ -31,6 +31,7 @@ from beeswarm.beekeeper.beekeeper import Beekeeper
 from beeswarm.feeder.feeder import Feeder
 from beeswarm.errors import ConfigNotFound
 from beeswarm.shared.helpers import is_url, create_self_signed_cert
+from beeswarm.shared.models.ui_handler import CursesLogHandler
 
 gevent.monkey.patch_all()
 
@@ -38,27 +39,41 @@ logger = logging.getLogger()
 
 
 def setuplogging(logfile, verbose, show_ui=False):
+
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.DEBUG)
 
     formatter = logging.Formatter('%(asctime)-15s (%(name)s) %(message)s')
-    console_log = logging.StreamHandler()
 
     if verbose:
         loglevel = logging.DEBUG
     else:
         loglevel = logging.INFO
 
+    curses_screen = None
     if not show_ui:
+        console_log = logging.StreamHandler()
         console_log.addFilter(LogFilter())
         console_log.setLevel(loglevel)
         console_log.setFormatter(formatter)
         root_logger.addHandler(console_log)
+    else:
+        curses_screen = curses.initscr()
+        curses.noecho()
+        curses.cbreak()
+        h, w = curses_screen.getmaxyx()
+        log_win = curses_screen.subwin(10, w, h-10, 0)
+        curses_log = CursesLogHandler(log_win)
+        curses_log.addFilter(LogFilter())
+        curses_log.setLevel(loglevel)
+        curses_log.setFormatter(formatter)
+        root_logger.addHandler(curses_log)
 
     file_log = logging.FileHandler(logfile)
     file_log.setLevel(logging.DEBUG)
     file_log.setFormatter(formatter)
     root_logger.addHandler(file_log)
+    return curses_screen
 
 
 class LogFilter(logging.Filter):
@@ -84,7 +99,7 @@ if __name__ == '__main__':
     parser.add_argument('-ui', '--userinterface', action='store_true', default=False, help='Logs debug messages.')
     args = parser.parse_args()
 
-    setuplogging(args.logfile, args.verbose, args.userinterface)
+    curses_screen = setuplogging(args.logfile, args.verbose, args.userinterface)
 
     mode = None
     if args.hive:
@@ -124,9 +139,9 @@ if __name__ == '__main__':
 
     try:
         if args.configarg:
-            m = mode(args.workdir, config_arg=args.configarg, user_interface=args.userinterface)
+            m = mode(args.workdir, config_arg=args.configarg, curses_screen=curses_screen)
         else:
-            m = mode(args.workdir, user_interface=args.userinterface)
+            m = mode(args.workdir, curses_screen=curses_screen)
     except ConfigNotFound as ex:
         logger.error(ex)
         sys.exit(ex)
