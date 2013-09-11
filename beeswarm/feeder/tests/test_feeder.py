@@ -40,19 +40,22 @@ class Feeder_Tests(unittest.TestCase):
 
     def test_dispatcher(self):
         options = {
-            # NoneType because we're going to pass a None to the dispatcher.
-            'bee_NoneType': {
-                'enabled': True,
-                'server': '127.0.0.1',
-                'timing': {
-                    'active_range': '00:00 - 23:59',
-                    'sleep_interval': '1',
-                    'activation_probability': '1'
+            'honeybees': {
+                # NoneType because we're going to pass a None to the dispatcher.
+                'NoneType': {
+                    'enabled': True,
+                    'server': '127.0.0.1',
+                    'timing': {
+                        'active_range': '00:00 - 23:59',
+                        'sleep_interval': '1',
+                        'activation_probability': '1'
+                    },
+                    'username': 'test',
+                    'password': 'test',
+                    'port': 8080
                 },
-                'username': 'test',
-                'password': 'test',
-                'port': 8080
-            },
+
+            }
         }
 
         dispatcher = BeeDispatcher(options, None, '127.0.0.1')

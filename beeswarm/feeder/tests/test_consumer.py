@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 
 import unittest
+import uuid
 
 from mock import Mock
 import gevent
@@ -41,7 +42,17 @@ class Consumer_test(unittest.TestCase):
         log_mock = Mock()
         dummy_logger.log = log_mock
 
-        consumer = Consumer(sessions, {})
+        status = {
+            'mode': 'Feeder',
+            'total_bees': 0,
+            'active_bees': 0,
+            'enabled_bees': [],
+            'feeder_id': uuid.uuid4(),
+            'beekeeper_url': '',
+            'ip_address': '127.0.0.1'
+        }
+
+        consumer = Consumer(sessions, {}, status)
         #inject the dummy logger into the consumer
         consumer.active_loggers = [dummy_logger]
         gevent.spawn(consumer.start_handling)
@@ -71,8 +82,17 @@ class Consumer_test(unittest.TestCase):
         log_mock = Mock()
         dummy_logger.log = log_mock
 
-        consumer = Consumer(sessions, {})
-        #inject the dummy logger into the consumer
+        status = {
+            'mode': 'Feeder',
+            'total_bees': 0,
+            'active_bees': 0,
+            'enabled_bees': [],
+            'feeder_id': uuid.uuid4(),
+            'beekeeper_url': '',
+            'ip_address': '127.0.0.1'
+        }
+
+        consumer = Consumer(sessions, {}, status)
         consumer.active_loggers = [dummy_logger]
         gevent.spawn(consumer.start_handling)
         #forcing cooperative yield.
