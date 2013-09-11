@@ -24,12 +24,20 @@ logger = logging.getLogger(__name__)
 
 
 class Consumer:
-    def __init__(self, sessions,  hive_ip, config):
+    def __init__(self, sessions,  hive_ip, config, status):
+        """
+            Processes completed/disconnected sessions from the sessions dict.
+
+        :param sessions: The sessions dict, which holds the currently active sessions.
+        :param hive_ip: IP Address of the Hive
+        :param config: Hive configuration
+        :param status: The Hive status dict. This is updated by the consumer.
+        """
         logging.debug('Consumer created.')
         self.config = config
         self.enabled = True
         self.hive_ip = hive_ip
-
+        self.status = status
         self.sessions = sessions
 
     def start(self):
@@ -38,6 +46,7 @@ class Consumer:
         active_loggers = self.start_loggers(self.get_enabled_loggers())
         
         while self.enabled:
+            self.status['active_sessions'] = len(self.sessions)
             for session_id in self.sessions.keys():
                 session = self.sessions[session_id]
                 if not session.is_connected():
@@ -53,6 +62,7 @@ class Consumer:
                                                      session.protocol,
                                                      session.id))
                     del self.sessions[session_id]
+                    self.status['total_sessions'] += 1
                     logger.debug('Removed {0} connection from {1}. ({2})'.format(session.protocol,
                                                                                  session.source_ip,
                                                                                  session.id))

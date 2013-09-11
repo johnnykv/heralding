@@ -12,6 +12,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import struct
 from OpenSSL import crypto
 
 import urlparse
@@ -20,7 +21,9 @@ import pwd
 import grp
 import platform
 import logging
+import socket
 import _socket
+import fcntl
 
 logger = logging.getLogger(__name__)
 
@@ -129,3 +132,15 @@ def find_offset(fd, needle):
         pos = pos + skip[ord(haystack[nlast])]
 
     return -1
+
+
+# Shamelessly stolen from
+# http://code.activestate.com/recipes/439094-get-the-ip-address-associated-with-a-network-inter/
+def get_local_ipaddress(ifname):
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    return socket.inet_ntoa(fcntl.ioctl(
+        s.fileno(),
+        0x8915,  # SIOCGIFADDR
+        struct.pack('256s', ifname[:15])
+    )[20:24])

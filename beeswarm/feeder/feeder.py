@@ -22,6 +22,8 @@ import requests
 import gevent
 from gevent.greenlet import Greenlet
 import gevent.monkey
+from beeswarm.shared.models.ui_handler import FeederUIHandler
+
 gevent.monkey.patch_all()
 
 from beeswarm.feeder.bees import clientbase
@@ -40,9 +42,18 @@ logger = logging.getLogger(__name__)
 
 
 class Feeder(object):
-    def __init__(self, work_dir, config_arg='feedercfg.json'):
+    def __init__(self, work_dir, config_arg='feedercfg.json', curses_screen=None):
 
+        """
+            Main class which runs Beeswarm in Feeder mode.
+
+        :param work_dir: Working directory (usually the current working directory)
+        :param config_arg: Can be a URL,from where the configuration is fetched, or a file name, in case
+                           the config file exists.
+        :param curses_screen: Contains a curses screen object, if UI is enabled. Default is None.
+        """
         self.run_flag = True
+        self.curses_screen = curses_screen
 
         if not is_url(config_arg):
             if not os.path.exists(config_arg):
@@ -66,8 +77,26 @@ class Feeder(object):
             logging.info('Fetched {0} as my external ip.'.format(self.my_ip))
         else:
             self.my_ip = '127.0.0.1'
+
+        self.status = {
+            'mode': 'Feeder',
+            'total_bees': 0,
+            'active_bees': 0,
+            'enabled_bees': [],
+            'feeder_id': self.config['general']['feeder_id'],
+            'beekeeper_url': self.config['log_beekeeper']['beekeeper_url'],
+            'ip_address': self.my_ip
+        }
+
         self.dispatchers = {}
         self.dispatcher_greenlets = []
+
+        if self.curses_screen is not None:
+            self.uihandler = FeederUIHandler(self.status, self.curses_screen)
+            Greenlet.spawn(self.show_status_ui)
+
+    def show_status_ui(self):
+        self.uihandler.run()
 
     def start(self):
         logging.info('Starting feeder.')
@@ -75,7 +104,7 @@ class Feeder(object):
         sessions = {}
 
         #greenlet to consume and maintain data in sessions list
-        self.sessions_consumer = consumer.Consumer(sessions, self.config)
+        self.sessions_consumer = consumer.Consumer(sessions, self.config, self.status)
         gevent.spawn(self.sessions_consumer.start_handling)
 
         honeybees = []
@@ -95,6 +124,7 @@ class Feeder(object):
             options = self.config['honeybees'][bee_name]
             bee = b(sessions, options)
             honeybees.append(bee)
+            self.status['enabled_bees'].append(bee_name)
             logging.debug('Adding {0} as a honeybee'.format(bee.__class__.__name__))
 
         self.dispatcher_greenlets = []
@@ -111,6 +141,8 @@ class Feeder(object):
     def stop(self):
         for g in self.dispatcher_greenlets:
             g.kill()
+        if self.curses_screen is not None:
+            self.uihandler.stop()
         self.sessions_consumer.stop_handling()
         logger.info('All clients stopped')
         sys.exit(0)

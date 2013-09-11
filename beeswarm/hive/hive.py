@@ -41,6 +41,7 @@ import requests
 from requests.exceptions import Timeout, ConnectionError
 from beeswarm.shared.helpers import is_url
 from beeswarm.shared.asciify import asciify
+from beeswarm.shared.models.ui_handler import HiveUIHandler
 
 logger = logging.getLogger(__name__)
 
@@ -49,10 +50,22 @@ class Hive(object):
 
     """ This is the main class, which starts up all the capabilities. """
 
-    def __init__(self, work_dir, config_arg='hivecfg.json', key='server.key', cert='server.crt'):
+    def __init__(self, work_dir, config_arg='hivecfg.json', key='server.key', cert='server.crt',
+                 curses_screen=None):
+        """
+            Main class which runs Beeswarm in Feeder mode.
+
+        :param work_dir: Working directory (usually the current working directory)
+        :param config_arg: Can be a URL,from where the configuration is fetched, or a file name, in case
+                           the config file exists.
+        :param key: Key file used for SSL enabled capabilities
+        :param cert: Cert file used for SSL enabled capabilities
+        :param curses_screen: Contains a curses screen object, if UI is enabled. Default is None.
+        """
         self.work_dir = work_dir
         self.key = key
         self.cert = cert
+        self.curses_screen = curses_screen
 
         if not is_url(config_arg):
             if not os.path.exists(config_arg):
@@ -70,6 +83,28 @@ class Hive(object):
 
         Session.hive_id = self.config['general']['hive_id']
 
+        if self.config['general']['fetch_ip']:
+            try:
+                url = 'http://api-sth01.exip.org/?call=ip'
+                req = requests.get(url)
+                self.hive_ip = req.text
+                logging.info('Fetched {0} as external ip for Hive.'.format(self.hive_ip))
+            except (Timeout, ConnectionError) as e:
+                logging.warning('Could not fetch public ip: {0}'.format(e))
+
+        else:
+            self.hive_ip = self.config.get('general', 'hive_ip')
+
+        self.status = {
+            'mode': 'Hive',
+            'ip_address': self.hive_ip,
+            'hive_id': self.config['general']['hive_id'],
+            'total_sessions': 0,
+            'active_sessions': 0,
+            'enabled_capabilities': [],
+            'beekeeper_url': ''
+        }
+
         #will contain HiveUser objects
         self.users = create_users()
 
@@ -79,7 +114,15 @@ class Hive(object):
         #spawning time checker
         if self.config['timecheck']['enabled']:
             Greenlet.spawn(self.checktime)
-        
+
+        #show curses UI
+        if self.curses_screen is not None:
+            self.uihandler = HiveUIHandler(self.status, self.curses_screen)
+            Greenlet.spawn(self.show_status_ui)
+
+    def show_status_ui(self):
+        self.uihandler.run()
+
     #function to check the time offset
     def checktime(self):
         """ Make sure our Hive time is consistent, and not too far off
@@ -105,20 +148,8 @@ class Hive(object):
         #will contain Session objects
         self.sessions = {}
 
-        if self.config['general']['fetch_ip']:
-            try:
-                url = 'http://api-sth01.exip.org/?call=ip'
-                req = requests.get(url)
-                self.hive_ip = req.text
-                logging.info('Fetched {0} as external ip for Hive.'.format(self.hive_ip))
-            except (Timeout, ConnectionError) as e:
-                logging.warning('Could not fetch public ip: {0}'.format(e))
-
-        else:
-            self.hive_ip = self.config.get('general', 'hive_ip')
-
         #greenlet to consume the provided sessions
-        self.session_consumer = consumer.Consumer(self.sessions, self.hive_ip, self.config)
+        self.session_consumer = consumer.Consumer(self.sessions, self.hive_ip, self.config, self.status)
         Greenlet.spawn(self.session_consumer.start)
 
         #protocol handlers
@@ -149,6 +180,7 @@ class Hive(object):
                     server = HiveStreamServer(socket, cap.handle_session)
 
                 self.servers.append(server)
+                self.status['enabled_capabilities'].append(cap_name)
                 server_greenlet = Greenlet(server.start())
                 self.server_greenlets.append(server_greenlet)
 
@@ -170,6 +202,8 @@ class Hive(object):
         for g in self.server_greenlets:
             g.kill()
 
+        if self.curses_screen is not None:
+            self.uihandler.stop()
         self.session_consumer.stop()
         logger.info('All servers stopped.')
 
