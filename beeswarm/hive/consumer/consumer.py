@@ -25,6 +25,14 @@ logger = logging.getLogger(__name__)
 
 class Consumer:
     def __init__(self, sessions,  hive_ip, config, status):
+        """
+            Processes completed/disconnected sessions from the sessions dict.
+
+        :param sessions: The sessions dict, which holds the currently active sessions.
+        :param hive_ip: IP Address of the Hive
+        :param config: Hive configuration
+        :param status: The Hive status dict. This is updated by the consumer.
+        """
         logging.debug('Consumer created.')
         self.config = config
         self.enabled = True

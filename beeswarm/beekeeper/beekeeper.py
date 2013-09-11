@@ -29,7 +29,16 @@ logger = logging.getLogger(__name__)
 
 
 class Beekeeper(object):
-    def __init__(self, work_dir, config_arg='beekeepercfg.json', user_interface=False):
+    def __init__(self, work_dir, config_arg='beekeepercfg.json', curses_screen=None):
+        """
+            Main class for the Beekeeper Web-Interface. It takes care of setting up
+            the database, managing the users, etc.
+
+        :param work_dir: The working directory (usually the current working directory).
+        :param config_arg: Specifies the name of the config file.
+        :param curses_screen: This parameter is to maintain a similar interface for
+                               all the modes. It is ignored for the Beekeeper.
+        """
         self.work_dir = work_dir
         self.config_file = config_arg
         self.config = self.get_config(self.config_file)

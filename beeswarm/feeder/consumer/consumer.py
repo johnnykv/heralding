@@ -22,6 +22,13 @@ from beeswarm.feeder.consumer.loggers.beekeeper import Beekeeper
 
 class Consumer:
     def __init__(self, sessions, config, status):
+        """
+            Processes completed sessions from the sessions dict.
+
+        :param sessions: The sessions dict, which holds the currently active sessions.
+        :param config: The Feeder configuration.
+        :param status: The Feeder status dict. This is updated by the consumer.
+        """
         logging.debug('Consumer created.')
         self.sessions = sessions
         self.config = config

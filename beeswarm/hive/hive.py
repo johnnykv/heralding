@@ -52,6 +52,16 @@ class Hive(object):
 
     def __init__(self, work_dir, config_arg='hivecfg.json', key='server.key', cert='server.crt',
                  curses_screen=None):
+        """
+            Main class which runs Beeswarm in Feeder mode.
+
+        :param work_dir: Working directory (usually the current working directory)
+        :param config_arg: Can be a URL,from where the configuration is fetched, or a file name, in case
+                           the config file exists.
+        :param key: Key file used for SSL enabled capabilities
+        :param cert: Cert file used for SSL enabled capabilities
+        :param curses_screen: Contains a curses screen object, if UI is enabled. Default is None.
+        """
         self.work_dir = work_dir
         self.key = key
         self.cert = cert
