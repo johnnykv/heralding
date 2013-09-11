@@ -139,7 +139,7 @@ class Hive(object):
         self.sessions = {}
 
         #greenlet to consume the provided sessions
-        self.session_consumer = consumer.Consumer(self.sessions, self.hive_ip, self.config)
+        self.session_consumer = consumer.Consumer(self.sessions, self.hive_ip, self.config, self.status)
         Greenlet.spawn(self.session_consumer.start)
 
         #protocol handlers
