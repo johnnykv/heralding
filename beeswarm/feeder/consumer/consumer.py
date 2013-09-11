@@ -19,11 +19,13 @@ import gevent
 from beeswarm.feeder.consumer.loggers import loggerbase
 from beeswarm.feeder.consumer.loggers.beekeeper import Beekeeper
 
+
 class Consumer:
-    def __init__(self, sessions, config):
+    def __init__(self, sessions, config, status):
         logging.debug('Consumer created.')
         self.sessions = sessions
         self.config = config
+        self.status = status
         self.enabled = True
         self.active_loggers = None
 
@@ -32,6 +34,7 @@ class Consumer:
             self.active_loggers = self.get_loggers()
 
         while self.enabled:
+            self.status['active_bees'] = len(self.sessions)
             for session_id in self.sessions.keys():
                 session = self.sessions[session_id]
                 if session.alldone:
@@ -40,6 +43,7 @@ class Consumer:
                         logging.debug(
                             'Logging honeybee with %s (session id: %s)' % (logger.__class__.__name__, session.id))
                         logger.log(session)
+                    self.status['total_bees'] += 1
                     del self.sessions[session_id]
             gevent.sleep(sleep_time)
 
