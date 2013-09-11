@@ -61,6 +61,7 @@ def setuplogging(logfile, verbose, show_ui=False):
         curses_screen = curses.initscr()
         curses.noecho()
         curses.cbreak()
+        curses.curs_set(0)
         h, w = curses_screen.getmaxyx()
         log_win = curses_screen.subwin(10, w, h-10, 0)
         curses_log = CursesLogHandler(log_win)

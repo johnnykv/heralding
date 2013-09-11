@@ -41,7 +41,6 @@ class CursesLogHandler(logging.Handler):
         self.win = win
         maxy, maxx = win.getmaxyx()
         self.height = maxy
-        self.formatter = logging.Formatter("%(levelname)s")
 
     def emit(self, record):
         y, x = self.win.getyx()
@@ -49,8 +48,6 @@ class CursesLogHandler(logging.Handler):
             #self.win.move(y+1,0)
             y += 1
         if y + 1 >= self.height:
-            self.win.addstr(self.height - 1, 0, "--more--")
-            self.win.getch()
             self.win.erase()
             y = 0
 
@@ -60,8 +57,6 @@ class CursesLogHandler(logging.Handler):
 
 class _UIHandler(object):
     def __init__(self, status, screen):
-        with open('shit', 'w') as s:
-            s.write('handlr')
         self.status = status
         self.height, self.width = screen.getmaxyx()
         self.screen = screen.subwin(self.height-10, self.width, 0, 0)
@@ -70,7 +65,6 @@ class _UIHandler(object):
 
     def run(self):
         self.run_flag = True
-        logging.critical('RUNNING!!!!')
         while True:
             self.screen.clear()
             self._draw_height = 0
@@ -117,7 +111,13 @@ class HiveUIHandler(_UIHandler):
 
 class FeederUIHandler(_UIHandler):
     def draw(self):
-        pass
+        self.draw_title(FEEDER_TITLE)
+        self.addstring_middle('Running: ' + ' '.join(self.status['enabled_bees']))
+        self._draw_height += 1
+        self.addstring_left('IP Address: {}'.format(self.status['ip_address']))
+        self.addstring_right('Feeder ID: {}'.format(self.status['feeder_id']))
+        self.addstring_left('Total Bees Sent: {}'.format(self.status['total_bees']))
+        self.addstring_right('Successful Bees: {}'.format(self.status['active_bees']))
 
 
 def tail_log(fd, nlines=10):
