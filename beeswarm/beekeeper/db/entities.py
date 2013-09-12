@@ -114,3 +114,9 @@ class User(Base):
 
     def __repr__(self):
         return '<User %r>' % self.nickname
+
+
+class HiveUser(Base):
+    __tablename__ = 'hiveuser'
+    username = Column(String(32), primary_key=True)
+    password = Column(String(32))

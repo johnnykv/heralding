@@ -106,7 +106,7 @@ class Hive(object):
         }
 
         #will contain HiveUser objects
-        self.users = create_users()
+        self.users = self.create_users()
 
         #inject authentication mechanism
         Session.authenticator = Authenticator(self.users)
@@ -233,13 +233,12 @@ class Hive(object):
                 to_ignore.append(file_)
         return to_ignore
 
+    def create_users(self):
+        """Creates the users for the Hive."""
 
-def create_users():
-    """Creates the users for the Hive."""
-
-    users = {}
-    #TODO: Read from database or file
-    username = 'test'
-    password = 'test'
-    users[username] = HiveUser(username, password)
-    return users
+        users = {}
+        for username in self.config['users']:
+            password = self.config['users'][username]
+            huser = HiveUser(username, password)
+            users[username] = huser
+        return users

@@ -12,12 +12,14 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import logging
 
 import os
 import json
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from entities import Classification
+from entities import HiveUser
 import entities
 
 DB_Session = None
@@ -44,6 +46,13 @@ def setup_db(connection_string):
         else:
             c.description_short = entry['description_short']
             c.description_long = entry['description_long']
+    for username in data['hive_users']:
+        u = session.query(HiveUser).filter(HiveUser.username == username).first()
+        if not u:
+            logging.debug('Creating default HiveUser: {}'.format(username))
+            password = data['hive_users'][username]
+            huser = HiveUser(username=username, password=password)
+            session.add(huser)
     session.commit()
 
 

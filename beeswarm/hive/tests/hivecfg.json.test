@@ -68,11 +68,13 @@
 			"enabled": true,
 			"port": 0
 		}
-	}
-	,
+	},
     "timecheck": {
         "enabled": true,
         "poll": 5,
         "ntp_pool": "pool.ntp.org"
+    },
+    "users": {
+        "test": "test"
     }
 }
