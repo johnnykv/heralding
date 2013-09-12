@@ -1,32 +1,40 @@
-{"classifications": [
-    {
-        "type": "dummy",
-        "description_short": "Dummy",
-        "description_long": "Classification used for testing purposes."
-    },
-    {
-        "type": "unclassified",
-        "description_short": "Unclassified session",
-        "description_long": "A session that is pending classification."
-    },
-    {
-        "type": "honeybee",
-        "description_short": "Legit Honeytoken traffic",
-        "description_long": "A session where a Feeder instance successfully transmitted information to a Hive with no indication of malicious activity."
-    },
-    {
-        "type": "hive_impersonation",
-        "description_short": "Attacker impersonating Hive instance.",
-        "description_long": "A feeder instance successfully communicated with an attacker impersonating a Hive instance."
-    },
-    {
-        "type": "credentials_reuse",
-        "description_short": "Attacker used honeytoken.",
-        "description_long": "An attacker tried authenticating using credentials previously transmitted in a honeybee."
-    },
-    {
-        "type": "bruteforce",
-        "description_short": "Attacker brute-forcing",
-        "description_long": "An attacker connected to a Hive instance and tried to authenticate using credentials not transmitted in any recorded honeybee."
+{
+    "classifications": [
+        {
+            "type": "dummy",
+            "description_short": "Dummy",
+            "description_long": "Classification used for testing purposes."
+        },
+        {
+            "type": "unclassified",
+            "description_short": "Unclassified session",
+            "description_long": "A session that is pending classification."
+        },
+        {
+            "type": "honeybee",
+            "description_short": "Legit Honeytoken traffic",
+            "description_long": "A session where a Feeder instance successfully transmitted information to a Hive with no indication of malicious activity."
+        },
+        {
+            "type": "hive_impersonation",
+            "description_short": "Attacker impersonating Hive instance.",
+            "description_long": "A feeder instance successfully communicated with an attacker impersonating a Hive instance."
+        },
+        {
+            "type": "credentials_reuse",
+            "description_short": "Attacker used honeytoken.",
+            "description_long": "An attacker tried authenticating using credentials previously transmitted in a honeybee."
+        },
+        {
+            "type": "bruteforce",
+            "description_short": "Attacker brute-forcing",
+            "description_long": "An attacker connected to a Hive instance and tried to authenticate using credentials not transmitted in any recorded honeybee."
+        }
+    ],
+    "hive_users": {
+        "username": "password",
+        "abc": "passw0rd",
+        "gdd12": "askdk"
     }
-]}
+
+}
