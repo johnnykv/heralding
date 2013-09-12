@@ -32,9 +32,28 @@
         }
     ],
     "hive_users": {
-        "username": "password",
-        "abc": "passw0rd",
-        "gdd12": "askdk"
+        "johnny": "password",
+        "julia": "qweasd",
+        "nagios": "nagios",
+        "dariuszs": "ZAQ!2wsxcde3",
+        "turner": "admin",
+        "irene": "qwerty",
+        "kevin": "kevin123",
+        "khan": "test123",
+        "personnel": "personnel",
+        "content": "qwe123",
+        "pad": "root",
+        "1234": "koch",
+        "game": "game!@#$",
+        "kennedy": "12345678",
+        "root": "kn0whack234",
+        "adine": "123456",
+        "kelly": "qwe",
+        "adalberto": "123",
+        "minecraft": "minecraftpass",
+        "ruslan": "123456",
+        "www9": "www9",
+        "alec": "alec123"
     }
 
 }
