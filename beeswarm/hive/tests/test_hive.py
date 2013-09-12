@@ -41,6 +41,11 @@ class hive_tests(unittest.TestCase):
         """Tests if the Hive class can be instantiated successfully using the default configuration file"""
         sut = Hive(self.work_dir, config_arg=self.test_config_file, key=self.key, cert=self.cert)
 
+    def test_user_creation(self):
+        """Tests proper generation of HiveUsers from the data in the config file"""
+        sut = Hive(self.work_dir, config_arg=self.test_config_file, key=self.key, cert=self.cert)
+        sut.create_users()
+        self.assertEquals(1, len(sut.users))
 
     def test_start_serving(self):
         sut = Hive(self.work_dir, config_arg=self.test_config_file, key=self.key, cert=self.cert)
