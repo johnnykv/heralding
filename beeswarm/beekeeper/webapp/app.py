@@ -32,7 +32,7 @@ import beeswarm
 from beeswarm.shared.helpers import find_offset
 from forms import NewHiveConfigForm, NewFeederConfigForm, LoginForm, SettingsForm
 from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Hive, User, Authentication, Classification
+from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Hive, User, Authentication, Classification, HiveUser
 
 
 def is_hidden_field_filter(field):
@@ -248,6 +248,12 @@ def create_hive():
         with open(app.config['CERT_PATH']) as cert:
             cert_str = cert.read()
         beekeeper_password = str(uuid.uuid4())
+        db_session = database.get_session()
+        hive_users = db_session.query(HiveUser).all()
+        users_dict = {}
+        for u in hive_users:
+            users_dict[u.username] = u.password
+
         config = {
             'general': {
                 'hive_id': new_hive_id,
@@ -273,63 +279,63 @@ def create_hive():
                 'enabled': False,
                 'socket': '/dev/log'
             },
-            "capabilities": {
-                "ftp": {
-                    "enabled": form.ftp_enabled.data,
-                    "port": form.ftp_port.data,
-                    "max_attempts": form.ftp_max_attempts.data,
-                    "banner": form.ftp_banner.data,
-                    "syst_type": form.ftp_syst_type.data
+            'capabilities': {
+                'ftp': {
+                    'enabled': form.ftp_enabled.data,
+                    'port': form.ftp_port.data,
+                    'max_attempts': form.ftp_max_attempts.data,
+                    'banner': form.ftp_banner.data,
+                    'syst_type': form.ftp_syst_type.data
                 },
-                "telnet": {
-                    "enabled": form.telnet_enabled.data,
-                    "port": form.telnet_port.data,
-                    "max_attempts": form.telnet_max_attempts.data
+                'telnet': {
+                    'enabled': form.telnet_enabled.data,
+                    'port': form.telnet_port.data,
+                    'max_attempts': form.telnet_max_attempts.data
                 },
-                "pop3": {
-                    "enabled": form.pop3_enabled.data,
-                    "port": form.pop3_port.data,
-                    "max_attempts": form.pop3_max_attempts.data
+                'pop3': {
+                    'enabled': form.pop3_enabled.data,
+                    'port': form.pop3_port.data,
+                    'max_attempts': form.pop3_max_attempts.data
                 },
-                "pop3s": {
-                    "enabled": form.pop3s_enabled.data,
-                    "port": form.pop3s_port.data,
-                    "max_attempts": form.pop3s_max_attempts.data
+                'pop3s': {
+                    'enabled': form.pop3s_enabled.data,
+                    'port': form.pop3s_port.data,
+                    'max_attempts': form.pop3s_max_attempts.data
                 },
-                "ssh": {
-                    "enabled": form.ssh_enabled.data,
-                    "port": form.ssh_port.data,
-                    "key": form.ssh_key.data
+                'ssh': {
+                    'enabled': form.ssh_enabled.data,
+                    'port': form.ssh_port.data,
+                    'key': form.ssh_key.data
                 },
-                "http": {
-                    "enabled": form.http_enabled.data,
-                    "port": form.http_port.data,
-                    "banner": form.http_banner.data
+                'http': {
+                    'enabled': form.http_enabled.data,
+                    'port': form.http_port.data,
+                    'banner': form.http_banner.data
                 },
-                "https": {
-                    "enabled": form.https_enabled.data,
-                    "port": form.https_port.data,
-                    "banner": form.https_banner.data
+                'https': {
+                    'enabled': form.https_enabled.data,
+                    'port': form.https_port.data,
+                    'banner': form.https_banner.data
                 },
-                "smtp": {
-                    "enabled": form.smtp_enabled.data,
-                    "port": form.smtp_port.data,
-                    "banner": form.smtp_banner.data
+                'smtp': {
+                    'enabled': form.smtp_enabled.data,
+                    'port': form.smtp_port.data,
+                    'banner': form.smtp_banner.data
                 },
-                "vnc": {
-                    "enabled": form.vnc_enabled.data,
-                    "port": form.vnc_port.data
+                'vnc': {
+                    'enabled': form.vnc_enabled.data,
+                    'port': form.vnc_port.data
                 }
             },
-            "timecheck": {
-                "enabled": True,
-                "poll": 5,
-                "ntp_pool": "pool.ntp.org"
+            'users': users_dict,
+            'timecheck': {
+                'enabled': True,
+                'poll': 5,
+                'ntp_pool': 'pool.ntp.org'
             },
         }
         config_json = json.dumps(config, indent=4)
 
-        db_session = database.get_session()
         h = Hive(id=new_hive_id, configuration=config_json)
         u = User(id=new_hive_id, nickname='Hive', password=beekeeper_password, utype=1)
         db_session.add_all([h, u])
