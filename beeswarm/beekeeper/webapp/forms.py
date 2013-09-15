@@ -2,7 +2,6 @@ from flask.ext.wtf import Form
 from wtforms import IntegerField, FileField, PasswordField, TextField, BooleanField, ValidationError, validators
 
 
-
 def validate_time_range(form, field):
     """ Makes sure the form data is in 'hh:mm - hh:mm' format and  the start time is less than end time."""
 
@@ -26,126 +25,126 @@ def validate_time_range(form, field):
 
 class NewHiveConfigForm(Form):
 
-    http_enabled = BooleanField(default=False)
-    http_port = IntegerField(default=80)
-    http_banner = TextField(default='Microsoft-IIS/5.0')
+    http_enabled = BooleanField(default=False, label='Enabled')
+    http_port = IntegerField(default=80, label='Port')
+    http_banner = TextField(default='Microsoft-IIS/5.0', label='Server Banner')
 
-    https_enabled = BooleanField(default=False)
-    https_port = IntegerField(default=443)
-    https_banner = TextField(default='Microsoft-IIS/5.0')
+    https_enabled = BooleanField(default=False, label='Enabled')
+    https_port = IntegerField(default=443, label='Port')
+    https_banner = TextField(default='Microsoft-IIS/5.0', label='Server Banner')
 
-    ftp_enabled = BooleanField(default=False)
-    ftp_port = IntegerField(default=21)
-    ftp_max_attempts = IntegerField(default=3)
-    ftp_syst_type = TextField(default='Windows-NT')
-    ftp_banner = TextField(default='Microsoft FTP Server')
+    ftp_enabled = BooleanField(default=False, label='Enabled')
+    ftp_port = IntegerField(default=21, label='Port')
+    ftp_max_attempts = IntegerField(default=3, label='Login Attempts')
+    ftp_syst_type = TextField(default='Windows-NT', label='System Type')
+    ftp_banner = TextField(default='Microsoft FTP Server', label='Server Banner')
 
-    smtp_enabled = BooleanField(default=False)
-    smtp_port = IntegerField(default=25)
-    smtp_banner = TextField(default='Microsoft ESMTP MAIL service ready')
+    smtp_enabled = BooleanField(default=False, label='Enabled')
+    smtp_port = IntegerField(default=25, label='Port')
+    smtp_banner = TextField(default='Microsoft ESMTP MAIL service ready', label='Server Banner')
 
-    vnc_enabled = BooleanField(default=False)
-    vnc_port = IntegerField(default=5900)
+    vnc_enabled = BooleanField(default=False, label='Enabled')
+    vnc_port = IntegerField(default=5900, label='Port')
 
-    telnet_enabled = BooleanField(default=False)
-    telnet_port = IntegerField(default=23)
-    telnet_max_attempts = IntegerField(default=3)
+    telnet_enabled = BooleanField(default=False, label='Enabled')
+    telnet_port = IntegerField(default=23, label='Port')
+    telnet_max_attempts = IntegerField(default=3, label='Login Attempts')
 
-    pop3_enabled = BooleanField(default=False)
-    pop3_port = IntegerField(default=110)
-    pop3_max_attempts = IntegerField(default=3)
+    pop3_enabled = BooleanField(default=False, label='Enabled')
+    pop3_port = IntegerField(default=110, label='Port')
+    pop3_max_attempts = IntegerField(default=3, label='Login Attempts')
 
-    pop3s_enabled = BooleanField(default=False)
-    pop3s_port = IntegerField(default=995)
-    pop3s_max_attempts = IntegerField(default=3)
+    pop3s_enabled = BooleanField(default=False, label='Enabled')
+    pop3s_port = IntegerField(default=995, label='Port')
+    pop3s_max_attempts = IntegerField(default=3, label='Port')
 
-    ssh_enabled = BooleanField(default=False)
-    ssh_port = IntegerField(default=22)
-    ssh_key = FileField(default='server.key')
+    ssh_enabled = BooleanField(default=False, label='Enabled')
+    ssh_port = IntegerField(default=22, label='Port')
+    ssh_key = FileField(default='server.key', label='Key File')
 
 
 class NewFeederConfigForm(Form):
 
-    http_enabled = BooleanField(default=False)
-    http_server = TextField(default='127.0.0.1')
-    http_port = IntegerField(default=80)
+    http_enabled = BooleanField(default=False, label='Enabled')
+    http_server = TextField(default='127.0.0.1', label='Server IP')
+    http_port = IntegerField(default=80, label='Port')
     http_active_range = TextField(validators=[validate_time_range], default='00:00 - 23:59',
-                                  description='<small><em>hh:mm - hh:mm</em></small>')
-    http_sleep_interval = TextField(default=720)
-    http_activation_probability = TextField(default=0.4)
-    http_login = TextField(default='test')
-    http_password = TextField(default='password')
+                                  description='<small><em>hh:mm - hh:mm</em></small>', label='Activity Time')
+    http_sleep_interval = TextField(default=720, label='Sleep Interval')
+    http_activation_probability = TextField(default=0.4, label='Activation Probability')
+    http_login = TextField(default='test', label='Login')
+    http_password = TextField(default='password', label='Password')
 
-    pop3_enabled = BooleanField(default=False)
-    pop3_server = TextField(default='127.0.0.1')
-    pop3_port = IntegerField(default=110)
+    pop3_enabled = BooleanField(default=False, label='Enabled')
+    pop3_server = TextField(default='127.0.0.1', label='Server IP')
+    pop3_port = IntegerField(default=110, label='Port')
     pop3_active_range = TextField(validators=[validate_time_range], default='00:00 - 23:59',
-                                  description='<small><em>hh:mm - hh:mm</em></small>')
-    pop3_sleep_interval = TextField(default=720)
-    pop3_activation_probability = TextField(default=0.4)
-    pop3_login = TextField(default='test')
-    pop3_password = TextField(default='password')
+                                  description='<small><em>hh:mm - hh:mm</em></small>', label='Activity Time')
+    pop3_sleep_interval = TextField(default=720, label='Sleep Interval')
+    pop3_activation_probability = TextField(default=0.4, label='Activation Probability')
+    pop3_login = TextField(default='test', label='Login')
+    pop3_password = TextField(default='password', label='Password')
 
-    pop3s_enabled = BooleanField(default=False)
-    pop3s_server = TextField(default='127.0.0.1')
-    pop3s_port = IntegerField(default=995)
+    pop3s_enabled = BooleanField(default=False, label='Enabled')
+    pop3s_server = TextField(default='127.0.0.1', label='Server IP')
+    pop3s_port = IntegerField(default=995, label='Port')
     pop3s_active_range = TextField(validators=[validate_time_range], default='00:00 - 23:59',
-                                   description='<small><em>hh:mm - hh:mm</em></small>')
-    pop3s_sleep_interval = TextField(default=720)
-    pop3s_activation_probability = TextField(default=0.4)
-    pop3s_login = TextField(default='test')
-    pop3s_password = TextField(default='password')
+                                   description='<small><em>hh:mm - hh:mm</em></small>', label='Activity Time')
+    pop3s_sleep_interval = TextField(default=720, label='Sleep Interval')
+    pop3s_activation_probability = TextField(default=0.4, label='Activation Probability')
+    pop3s_login = TextField(default='test', label='Login')
+    pop3s_password = TextField(default='password', label='Password')
 
-    smtp_enabled = BooleanField(default=False)
-    smtp_server = TextField(default='127.0.0.1')
-    smtp_port = IntegerField(default=25)
+    smtp_enabled = BooleanField(default=False, label='Enabled')
+    smtp_server = TextField(default='127.0.0.1', label='Server IP')
+    smtp_port = IntegerField(default=25, label='Port')
     smtp_active_range = TextField(validators=[validate_time_range], default='00:00 - 23:59',
-                                  description='<small><em>hh:mm - hh:mm</em></small>')
-    smtp_sleep_interval = TextField(default=720)
-    smtp_activation_probability = TextField(default=0.4)
-    smtp_login = TextField(default='test')
-    smtp_local_hostname = TextField(default='localhost')
-    smtp_password = TextField(default='password')
+                                  description='<small><em>hh:mm - hh:mm</em></small>', label='Activity Time')
+    smtp_sleep_interval = TextField(default=720, label='Sleep Interval')
+    smtp_activation_probability = TextField(default=0.4, label='Activation Probability')
+    smtp_login = TextField(default='test', label='Login')
+    smtp_local_hostname = TextField(default='localhost', label='Hostname')
+    smtp_password = TextField(default='password', label='Password')
 
-    vnc_enabled = BooleanField(default=False)
-    vnc_server = TextField(default='127.0.0.1')
-    vnc_port = IntegerField(default=5900)
+    vnc_enabled = BooleanField(default=False, label='Enabled')
+    vnc_server = TextField(default='127.0.0.1', label='Server IP')
+    vnc_port = IntegerField(default=5900, label='Port')
     vnc_active_range = TextField(validators=[validate_time_range], default='00:00 - 23:59',
-                                 description='<small><em>hh:mm - hh:mm</em></small>')
-    vnc_sleep_interval = TextField(default=720)
-    vnc_activation_probability = TextField(default=0.4)
-    vnc_login = TextField(default='test')
-    vnc_password = TextField(default='password')
+                                 description='<small><em>hh:mm - hh:mm</em></small>', label='Activity Time')
+    vnc_sleep_interval = TextField(default=720, label='Sleep Interval')
+    vnc_activation_probability = TextField(default=0.4, label='Activation Probability')
+    vnc_login = TextField(default='test', label='Login')
+    vnc_password = TextField(default='password', label='Password')
 
-    telnet_enabled = BooleanField(default=False)
-    telnet_server = TextField(default='127.0.0.1')
-    telnet_port = IntegerField(default=23)
+    telnet_enabled = BooleanField(default=False, label='Enabled')
+    telnet_server = TextField(default='127.0.0.1', label='Server IP')
+    telnet_port = IntegerField(default=23, label='Port')
     telnet_active_range = TextField(validators=[validate_time_range], default='00:00 - 23:59',
-                                    description='<small><em>hh:mm - hh:mm</em></small>')
-    telnet_sleep_interval = TextField(default=720)
-    telnet_activation_probability = TextField(default=0.4)
-    telnet_login = TextField(default='test')
-    telnet_password = TextField(default='password')
+                                    description='<small><em>hh:mm - hh:mm</em></small>', label='Activity Time')
+    telnet_sleep_interval = TextField(default=720, label='Sleep Interval')
+    telnet_activation_probability = TextField(default=0.4, label='Activation Probability')
+    telnet_login = TextField(default='test', label='Login')
+    telnet_password = TextField(default='password', label='Password')
 
-    ssh_enabled = BooleanField(default=False)
-    ssh_server = TextField(default='127.0.0.1')
-    ssh_port = IntegerField(default=22)
+    ssh_enabled = BooleanField(default=False, label='Enabled')
+    ssh_server = TextField(default='127.0.0.1', label='Server IP')
+    ssh_port = IntegerField(default=22, label='Port')
     ssh_active_range = TextField(validators=[validate_time_range], default='00:00 - 23:59',
-                                 description='<small><em>hh:mm - hh:mm</em></small>')
-    ssh_sleep_interval = TextField(default=720)
-    ssh_activation_probability = TextField(default=0.4)
-    ssh_login = TextField(default='test')
-    ssh_password = TextField(default='password')
+                                 description='<small><em>hh:mm - hh:mm</em></small>', label='Activity Time')
+    ssh_sleep_interval = TextField(default=720, label='Sleep Interval')
+    ssh_activation_probability = TextField(default=0.4, label='Activation Probability')
+    ssh_login = TextField(default='test', label='Login')
+    ssh_password = TextField(default='password', label='Password')
 
-    ftp_enabled = BooleanField(default=False)
-    ftp_server = TextField(default='127.0.0.1')
-    ftp_port = IntegerField(default=21)
+    ftp_enabled = BooleanField(default=False, label='Enabled')
+    ftp_server = TextField(default='127.0.0.1', label='Server IP')
+    ftp_port = IntegerField(default=21, label='Port')
     ftp_active_range = TextField(validators=[validate_time_range], default='00:00 - 23:59',
-                                 description='<small><em>hh:mm - hh:mm</em></small>')
-    ftp_sleep_interval = TextField(default=720)
-    ftp_activation_probability = TextField(default=0.4)
-    ftp_login = TextField(default='test')
-    ftp_password = TextField(default='password')
+                                 description='<small><em>hh:mm - hh:mm</em></small>', label='Activity Time')
+    ftp_sleep_interval = TextField(default=720, label='Sleep Interval')
+    ftp_activation_probability = TextField(default=0.4, label='Activation Probability')
+    ftp_login = TextField(default='test', label='Login')
+    ftp_password = TextField(default='password', label='Password')
 
 
 class LoginForm(Form):
@@ -168,5 +167,3 @@ class SettingsForm(Form):
 
     ignore_failed_honeybees = BooleanField('Ignore failed honeybees', default=True,
                                           description='<small><em>Ignore honeybees that did not connect</em></small>')
-
-
