@@ -345,7 +345,7 @@ def create_hive():
         return render_template('finish-config.html', mode_name='Hive', user=current_user,
                                config_link=config_link, iso_link=iso_link)
 
-    return render_template('create-config.html', form=form, mode_name='Hive', user=current_user)
+    return render_template('create-hive.html', form=form, mode_name='Hive', user=current_user)
 
 
 @app.route('/ws/hive/delete', methods=['POST'])
@@ -503,7 +503,7 @@ def create_feeder():
         return render_template('finish-config.html', mode_name='Feeder', user=current_user,
                                config_link=config_link, iso_link=iso_link)
 
-    return render_template('create-config.html', form=form, mode_name='Feeder', user=current_user)
+    return render_template('create-feeder.html', form=form, mode_name='Feeder', user=current_user)
 
 
 @app.route('/ws/feeder/delete', methods=['POST'])
