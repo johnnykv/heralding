@@ -58,7 +58,7 @@ class http(ClientBase):
 
         try:
             url = self._make_url(server_host, '/index.html', server_port)
-            response = self.client.get(url, auth=HTTPBasicAuth(username, password))
+            response = self.client.get(url, auth=HTTPBasicAuth(username, password), verify=False)
             session.did_connect = True
             if response.status_code == 200:
                 session.add_auth_attempt('plaintext', True, username=username, password=password)
@@ -69,7 +69,7 @@ class http(ClientBase):
             links = self._get_links(response)
             while self.sent_requests <= self.max_requests and links:
                 url = random.choice(links)
-                response = self.client.get(url, auth=HTTPBasicAuth(username, password))
+                response = self.client.get(url, auth=HTTPBasicAuth(username, password), verify=False)
                 links = self._get_links(response)
 
         except Exception as err:
