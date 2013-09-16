@@ -25,6 +25,7 @@
         <div class="tabbable tabs-left">
             <ul class="nav nav-tabs" id="formtabs">
                 <li><a href="#http" data-toggle="tab">HTTP</a></li>
+                <li><a href="#https" data-toggle="tab">HTTPs</a></li>
                 <li><a href="#ftp" data-toggle="tab">FTP</a></li>
                 <li><a href="#smtp" data-toggle="tab">SMTP</a></li>
                 <li><a href="#vnc" data-toggle="tab">VNC</a></li>
@@ -41,6 +42,19 @@
                         {% for field in [form.http_enabled, form.http_server,
                             form.http_port, form.http_active_range, form.http_sleep_interval,
                             form.http_activation_probability, form.http_login, form.http_password] %}
+                            {% if not field|bootstrap_is_hidden_field %}
+                                {{ macros.horizontal_field(field) }}
+                            {%- endif %}
+                        {% endfor %}
+                    </fieldset>
+                </div>
+
+                <div id="https" class="tab-pane">
+                    <fieldset>
+                        <legend>HTTPs Options</legend>
+                        {% for field in [form.https_enabled, form.https_server,
+                            form.https_port, form.https_active_range, form.https_sleep_interval,
+                            form.https_activation_probability, form.https_login, form.https_password] %}
                             {% if not field|bootstrap_is_hidden_field %}
                                 {{ macros.horizontal_field(field) }}
                             {%- endif %}

@@ -75,6 +75,16 @@ class NewFeederConfigForm(Form):
     http_login = TextField(default='test', label='Login')
     http_password = TextField(default='password', label='Password')
 
+    https_enabled = BooleanField(default=False, label='Enabled')
+    https_server = TextField(default='127.0.0.1', label='Server IP')
+    https_port = IntegerField(default=443, label='Port')
+    https_active_range = TextField(validators=[validate_time_range], default='00:00 - 23:59',
+                                   description='<small><em>hh:mm - hh:mm</em></small>', label='Activity Time')
+    https_sleep_interval = TextField(default=720, label='Sleep Interval')
+    https_activation_probability = TextField(default=0.4, label='Activation Probability')
+    https_login = TextField(default='test', label='Login')
+    https_password = TextField(default='password', label='Password')
+
     pop3_enabled = BooleanField(default=False, label='Enabled')
     pop3_server = TextField(default='127.0.0.1', label='Server IP')
     pop3_port = IntegerField(default=110, label='Port')
