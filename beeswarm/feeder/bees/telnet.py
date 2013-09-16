@@ -15,9 +15,7 @@
 
 import logging
 import random
-import string
 import telnetlib
-import re
 import time
 
 from beeswarm.feeder.bees.clientbase import ClientBase
@@ -25,23 +23,21 @@ from beeswarm.feeder.bees.shared.shell import Commands
 
 
 class BeeTelnetClient(telnetlib.Telnet):
-
     IAC = chr(255)
 
     def write_human(self, buffer_):
         """ Emulates human typing speed """
 
         if self.IAC in buffer_:
-            buffer_ = buffer_.replace(self.IAC, self.IAC+self.IAC)
+            buffer_ = buffer_.replace(self.IAC, self.IAC + self.IAC)
         self.msg("send %r", buffer_)
         for char in buffer_:
             delta = random.gauss(80, 20)
             self.sock.sendall(char)
-            time.sleep(delta/1000.0)  # Convert milliseconds to seconds
+            time.sleep(delta / 1000.0)  # Convert milliseconds to seconds
 
 
 class telnet(ClientBase, Commands):
-
     COMMAND_MAP = {
         'pwd': ['ls', 'uname', 'uptime'],
         'cd': ['ls'],
@@ -54,12 +50,22 @@ class telnet(ClientBase, Commands):
     }
 
     def __init__(self, sessions, options):
+        """
+            Initialize the SSH Bee, and the Base classes.
+
+        :param sessions: A dict which is updated every time a new session is created.
+        :param options: A dict containing all options
+        """
         ClientBase.__init__(self, sessions, options)
         Commands.__init__(self)
         self.client = None
 
     def do_session(self, my_ip):
-        """ Launch one login session"""
+        """
+            Launches a new Telnet client session on the server taken from the `self.options` dict.
+
+        :param my_ip: IP of this Feeder itself
+        """
 
         login = self.options['username']
         password = self.options['password']
@@ -92,10 +98,20 @@ class telnet(ClientBase, Commands):
             session.alldone = True
 
     def connect(self):
+        """
+            Open a new telnet session on the remote server.
+        """
         self.client = BeeTelnetClient(self.options['server'], self.options['port'])
         self.client.set_option_negotiation_callback(self.process_options)
 
     def login(self, login, password):
+        """
+            Login to the remote telnet server.
+
+        :param login: Username to use for logging in
+        :param password: Password to use for logging in
+        :raise: `InvalidLogin` on failed login
+        """
         self.client.read_until('Username: ')
         self.client.write(login + '\r\n')
         self.client.read_until('Password: ')
@@ -105,6 +121,9 @@ class telnet(ClientBase, Commands):
             raise InvalidLogin
 
     def logout(self):
+        """
+            Logout from the remote server.
+        """
         self.client.write('exit\r\n')
         self.client.read_all()
         self.client.close()

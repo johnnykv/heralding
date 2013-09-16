@@ -40,6 +40,14 @@ logger = logging.getLogger()
 
 def setuplogging(logfile, verbose, show_ui=False):
 
+    """
+        Sets up logging to the logfiles/console. If show_ui is true, a curses screen is
+        initialized and returned.
+    :param logfile: Path of the file to write logs to.
+    :param verbose: If True, enables verbose logging.
+    :param show_ui: If True, displays a status screen using curses, with a running log.
+    :return: If show_ui is True, returns a `curses.Window` object representing the entire screen
+    """
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.DEBUG)
 

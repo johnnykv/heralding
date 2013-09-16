@@ -26,6 +26,11 @@ from beeswarm.feeder.bees.clientbase import ClientBase
 class smtp(ClientBase):
 
     def __init__(self, sessions, options):
+        """
+            Initializes common values.
+        :param sessions: A dict which is updated every time a new session is created.
+        :param options: A dict containing all options
+        """
         super(smtp, self).__init__(sessions, options)
         self.client = None
         self.sent_mails = 0
@@ -35,6 +40,11 @@ class smtp(ClientBase):
         self.mailbox = mailbox.mbox(mbox_archive)
 
     def do_session(self, my_ip):
+        """
+            Launches a new SMTP client session on the server taken from the `self.options` dict.
+
+        :param my_ip: IP of this Feeder itself
+        """
 
         username = self.options['username']
         password = self.options['password']
@@ -77,6 +87,11 @@ class smtp(ClientBase):
             session.alldone = True
 
     def get_one_mail(self):
+        """
+            Choose and return a random email from the mail archive.
+
+        :return: Tuple containing From Address, To Address and the mail body.
+        """
         mail_key = random.choice(self.mailbox.keys())
         mail = self.mailbox[mail_key]
         from_addr = mail.get_from()
@@ -85,8 +100,16 @@ class smtp(ClientBase):
         return from_addr, to_addr, mail_body
 
     def connect(self):
+        """
+            Connect to the SMTP server.
+        """
         self.client = smtplib.SMTP(self.options['server'], self.options['port'],
                                    local_hostname=self.options['local_hostname'], timeout=15)
 
     def login(self, username, password):
+        """
+            Login to the remote SMTP server using the specified username and password.
+        :param username:
+        :param password:
+        """
         self.client.login(username, password)

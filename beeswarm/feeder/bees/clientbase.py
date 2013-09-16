@@ -18,7 +18,14 @@ from beeswarm.feeder.models.session import BeeSession
 
 class ClientBase(object):
 
+    """ Base class for Bees. This should only be used after sub-classing. """
+
     def __init__(self, sessions, options):
+        """
+            Initializes common values.
+        :param sessions: A dict which is updated every time a new session is created.
+        :param options: A dict containing all options
+        """
         self.sessions = sessions
         self.options = options
 
@@ -26,6 +33,14 @@ class ClientBase(object):
         raise Exception('Do not call base class!')
 
     def create_session(self, server_host, server_port, my_ip):
+        """
+            Creates a new session and adds it to the sessions directory.
+
+        :param server_host: IP address of the server
+        :param server_port: Server port
+        :param my_ip: IP of this Feeder itself
+        :return: A new `BeeSession` object.
+        """
         protocol = self.__class__.__name__
         session = BeeSession(protocol, server_host, server_port, my_ip)
         self.sessions[session.id] = session

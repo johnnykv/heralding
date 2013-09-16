@@ -56,6 +56,10 @@ class Beekeeper(object):
 
     def start(self, port=5000):
         #management interface
+        """
+            Starts the Beekeeper web-app on the specified port.
+        :param port: The port on which the web-app is to run.
+        """
         self.started = True
         logger.info('Starting Beekeeper listening on port {0}'.format(port))
 
@@ -72,11 +76,18 @@ class Beekeeper(object):
         gevent.joinall(self.greenlets)
 
     def stop(self):
+        """
+            Stops the web-app.
+        """
         self.started = False
         logging.info('Stopping beekeeper.')
         self.servers['http'].stop(5)
 
     def get_config(self, configfile):
+        """
+            Loads the configuration from the JSON file, and returns it.
+        :param configfile: Path to the configuration file
+        """
         with open(configfile) as config_file:
             config = json.load(config_file)
         return config

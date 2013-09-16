@@ -23,10 +23,20 @@ from beeswarm.feeder.bees.clientbase import ClientBase
 class pop3(ClientBase):
 
     def __init__(self, sessions, options):
+        """
+            Initializes common values.
+
+        :param sessions: A dict which is updated every time a new session is created.
+        :param options: A dict containing all options
+        """
         super(pop3, self).__init__(sessions, options)
 
     def do_session(self, my_ip):
-        """Login, RETR and DELE all messages"""
+        """
+            Launches a new POP3 client session on the server taken from the `self.options` dict.
+
+        :param my_ip: IP of this Feeder itself
+        """
 
         username = self.options['username']
         password = self.options['password']
