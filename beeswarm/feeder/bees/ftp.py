@@ -32,6 +32,12 @@ class ftp(ClientBase):
     }
 
     def __init__(self, sessions, options):
+        """
+            Initializes common values.
+
+        :param sessions: A dict which is updated every time a new session is created.
+        :param options: A dict containing all options
+        """
         super(ftp, self).__init__(sessions, options)
         self.state = {
             'current_dir': '/',
@@ -47,6 +53,11 @@ class ftp(ClientBase):
 
     def do_session(self, my_ip):
 
+        """
+            Launches a new FTP client session on the server taken from the `self.options` dict.
+
+        :param my_ip: IP of this Feeder itself
+        """
         username = self.options['username']
         password = self.options['password']
         server_host = self.options['server']
@@ -86,12 +97,21 @@ class ftp(ClientBase):
             session.alldone = True
 
     def sense(self):
+        """
+            Launches a few "sensing" commands such as 'ls', or 'pwd'
+            and updates the current Bee state.
+        """
         cmd_name = random.choice(self.senses)
         command = getattr(self, cmd_name)
         self.state['last_command'] = cmd_name
         command()
 
     def decide(self):
+        """
+            Decides the next command to be launched based on the current state.
+
+        :return: Tuple containing the next command name, and it's parameters.
+        """
         next_command_name = random.choice(self.COMMAND_MAP[self.state['last_command']])
         param = ''
         if next_command_name == 'retrieve':
@@ -101,6 +121,12 @@ class ftp(ClientBase):
         return next_command_name, param
 
     def act(self, cmd_name, param):
+        """
+            Run the command with the parameters.
+
+        :param cmd_name: The name of command to run
+        :param param: Params for the command
+        """
         command = getattr(self, cmd_name)
         if param:
             command(param)
@@ -108,36 +134,69 @@ class ftp(ClientBase):
             command()
 
     def list(self):
+        """
+            Run the FTP LIST command, and update the state.
+        """
         logging.debug('Sending FTP list command.')
         self.state['file_list'] = []
         self.state['dir_list'] = []
         self.client.retrlines('LIST', self._process_list)
 
     def retrieve(self, filename):
+        """
+            Run the FTP RETR command, and download the file
+
+        :param filename: Name of the file to download
+        """
         logging.debug('Sending FTP retr command. Filename: {}'.format(filename))
         self.client.retrbinary('RETR {}'.format(filename), self._save_file)
 
     def pwd(self):
+        """
+            Send the FTP PWD command.
+        """
         logging.debug('Sending FTP pwd command.')
         self.state['current_dir'] = self.client.pwd()
 
     def cwd(self, newdir):
+        """
+            Send the FTP CWD command
+
+        :param newdir: Directory to change to
+        """
         logging.debug('Sending FTP cwd command. New Workding Directory: {}'.format(newdir))
         self.client.cwd(newdir)
         self.state['current_dir'] = self.client.pwd()
 
     def quit(self):
+        """
+            End the current FTP session.
+        """
         logging.debug('Sending FTP quit command.')
         self.client.quit()
 
     def connect(self):
+        """
+            Connect to the remote FTP server (Hive).
+        """
         self.client.connect(self.options['server'], self.options['port'])
 
     def login(self, username, password):
+        """
+            Login to the remote server
+
+        :param username: The username to use for login
+        :param password: The password to use for login
+        """
         self.client.login(username, password)
 
     def _process_list(self, list_line):
         # -rw-r--r-- 1 ftp ftp 68	 May 09 19:37 testftp.txt
+        """
+            Processes a line of 'ls -l' output, and updates state accordingly.
+
+        :param list_line: Line to process
+        """
         res = list_line.split(' ', 8)
         if res[0].startswith('-'):
             self.state['file_list'].append(res[-1])
@@ -146,4 +205,3 @@ class ftp(ClientBase):
 
     def _save_file(self, data):
         """ Dummy function since FTP.retrbinary() needs a callback """
-

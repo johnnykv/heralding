@@ -410,6 +410,18 @@ def create_feeder():
                     'username': form.ftp_login.data,
                     'password': form.ftp_password.data
                 },
+                'https': {
+                    'enabled': form.https_enabled.data,
+                    'server': form.https_server.data,
+                    'port': form.https_port.data,
+                    'timing': {
+                        'active_range': form.https_active_range.data,
+                        'sleep_interval': form.https_sleep_interval.data,
+                        'activation_probability': form.https_activation_probability.data
+                    },
+                    'username': form.https_login.data,
+                    'password': form.https_password.data
+                },
                 'pop3': {
                     'enabled': form.pop3_enabled.data,
                     'server': form.pop3_server.data,

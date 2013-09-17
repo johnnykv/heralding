@@ -26,6 +26,12 @@ from beeswarm.feeder.bees.clientbase import ClientBase
 class http(ClientBase):
 
     def __init__(self, sessions, options):
+        """
+            Initializes common values.
+
+        :param sessions: A dict which is updated every time a new session is created.
+        :param options: A dict containing all options
+        """
         super(http, self).__init__(sessions, options)
         self.client = requests.Session()
         self.max_requests = random.randint(3, 4)
@@ -33,6 +39,11 @@ class http(ClientBase):
 
     def do_session(self, my_ip):
 
+        """
+            Launches a new HTTP client session on the server taken from the `self.options` dict.
+
+        :param my_ip: IP of this Feeder itself
+        """
         username = self.options['username']
         password = self.options['password']
         server_host = self.options['server']
@@ -47,7 +58,7 @@ class http(ClientBase):
 
         try:
             url = self._make_url(server_host, '/index.html', server_port)
-            response = self.client.get(url, auth=HTTPBasicAuth(username, password))
+            response = self.client.get(url, auth=HTTPBasicAuth(username, password), verify=False)
             session.did_connect = True
             if response.status_code == 200:
                 session.add_auth_attempt('plaintext', True, username=username, password=password)
@@ -58,7 +69,7 @@ class http(ClientBase):
             links = self._get_links(response)
             while self.sent_requests <= self.max_requests and links:
                 url = random.choice(links)
-                response = self.client.get(url, auth=HTTPBasicAuth(username, password))
+                response = self.client.get(url, auth=HTTPBasicAuth(username, password), verify=False)
                 links = self._get_links(response)
 
         except Exception as err:
@@ -76,6 +87,11 @@ class http(ClientBase):
         return url
 
     def _get_links(self, response):
+        """
+            Parses the response text and returns all the links in it.
+
+        :param response: The Response object.
+        """
         html_text = response.text.encode('utf-8')
         doc = document_fromstring(html_text)
         links = []

@@ -24,6 +24,12 @@ from beeswarm.hive.capabilities.telnet import AuthenticationFailed
 class ssh(ClientBase, Commands):
 
     def __init__(self, sessions, options):
+        """
+            Initialize the SSH Bee, and the Base classes.
+
+        :param sessions: A dict which is updated every time a new session is created.
+        :param options: A dict containing all options
+        """
         ClientBase.__init__(self, sessions, options)
         Commands.__init__(self)
         self.client = SSHClient()
@@ -31,6 +37,11 @@ class ssh(ClientBase, Commands):
         self.comm_chan = None
 
     def do_session(self, my_ip):
+        """
+            Launches a new SSH client session on the server taken from the `self.options` dict.
+
+        :param my_ip: IP of this Feeder itself
+        """
         username = self.options['username']
         password = self.options['password']
         server_host = self.options['server']
@@ -56,19 +67,35 @@ class ssh(ClientBase, Commands):
             session.alldone = True
 
     def send_command(self, cmd):
+        """
+            Send a command to the remote SSH server.
+
+        :param cmd: The command to send
+        """
         logging.debug('Sending %s command.' % cmd)
         self.comm_chan.sendall(cmd + '\n')
 
     def get_response(self):
+        """
+            Get the response from the server. *This may not return the full response*
+
+        :return: Response data
+        """
         while not self.comm_chan.recv_ready():
             time.sleep(0.5)
         return self.comm_chan.recv(2048)
 
     def connect_login(self):
+        """
+            Try to login to the Remote SSH Server.
+
+        :return: Response text on successful login
+        :raise: `AuthenticationFailed` on unsuccessful login
+        """
         self.client.connect(self.options['server'], self.options['port'], self.options['username'],
                             self.options['password'])
         self.comm_chan = self.client.invoke_shell()
-        time.sleep(1)
+        time.sleep(1)  # Let the server take some time to get ready.
         while not self.comm_chan.recv_ready():
             time.sleep(0.5)
         login_response = self.comm_chan.recv(2048)
@@ -77,6 +104,9 @@ class ssh(ClientBase, Commands):
         return login_response
 
     def logout(self):
+        """
+            Logout from the remote server
+        """
         self.send_command('exit')
         self.get_response()
         self.comm_chan.close()

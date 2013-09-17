@@ -53,7 +53,7 @@ class Hive(object):
     def __init__(self, work_dir, config_arg='hivecfg.json', key='server.key', cert='server.crt',
                  curses_screen=None):
         """
-            Main class which runs Beeswarm in Feeder mode.
+            Main class which runs Beeswarm in Hive mode.
 
         :param work_dir: Working directory (usually the current working directory)
         :param config_arg: Can be a URL,from where the configuration is fetched, or a file name, in case
@@ -209,6 +209,13 @@ class Hive(object):
 
     @staticmethod
     def prepare_environment(work_dir):
+        """
+            Performs a few maintenance tasks before the Hive is run. Copies the data directory,
+            and the config file to the cwd. The config file copied here is overwritten if
+            the __init__ method is called with a configuration URL.
+
+        :param work_dir: The directory to copy files to.
+        """
         package_directory = os.path.dirname(os.path.abspath(beeswarm.__file__))
 
         logging.info('Copying data files to workdir.')
@@ -234,7 +241,8 @@ class Hive(object):
         return to_ignore
 
     def create_users(self):
-        """Creates the users for the Hive."""
+        """Creates the users for the Hive. A Feeder client or an attacker can log in
+        using the credentials supplied in the Hive Configuration. """
 
         users = {}
         for username in self.config['users']:

@@ -27,6 +27,11 @@ engine = None
 
 
 def setup_db(connection_string):
+    """
+        Sets up the database schema and adds defaults.
+    :param connection_string: Database URL. e.g: sqlite:///filename.db
+                              This is usually taken from the config file.
+    """
     global DB_Session, engine
     engine = create_engine(connection_string)
     entities.Base.metadata.create_all(engine)

@@ -26,7 +26,11 @@ class pop3s(ClientBase):
         super(pop3s, self).__init__(sessions, options)
 
     def do_session(self, my_ip):
-        """Login, RETR and DELE all messages"""
+        """
+            Launches a new POP3 client session on the server taken from the `self.options` dict.
+
+        :param my_ip: IP of this Feeder itself
+        """
 
         username = self.options['username']
         password = self.options['password']

@@ -99,6 +99,9 @@ class Feeder(object):
         self.uihandler.run()
 
     def start(self):
+        """
+            Starts sending client bees to the configured Hive.
+        """
         logging.info('Starting feeder.')
 
         sessions = {}
@@ -139,6 +142,9 @@ class Feeder(object):
         gevent.joinall(self.dispatcher_greenlets)
 
     def stop(self):
+        """
+            Stop sending bees.
+        """
         for g in self.dispatcher_greenlets:
             g.kill()
         if self.curses_screen is not None:

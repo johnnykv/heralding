@@ -26,7 +26,12 @@ class vnc(ClientBase):
         super(vnc, self).__init__(sessions, options)
 
     def do_session(self, my_ip):
+        """
+            Launches a new Telnet client session on the server taken from the `self.options` dict.
+            This session always fails.
 
+        :param my_ip: IP of this Feeder itself
+        """
         password = self.options['password']
         server_host = self.options['server']
         server_port = self.options['port']
