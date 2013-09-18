@@ -54,10 +54,11 @@ class Beekeeper(object):
         self.authenticator = Authenticator()
         self.authenticator.ensure_default_user()
 
-    def start(self, port=5000):
-        #management interface
+    def start(self, port=5000, maintenance=True):
         """
             Starts the Beekeeper web-app on the specified port.
+            Beekeeper is the maintenance interface.
+
         :param port: The port on which the web-app is to run.
         """
         self.started = True
@@ -68,9 +69,10 @@ class Beekeeper(object):
         self.servers['http'] = http_server
         self.greenlets.append(http_server_greenlet)
 
-        maintenance_greenlet = gevent.spawn(self.start_maintenance_tasks)
-        self.servers['maintenance'] = maintenance_greenlet
-        self.greenlets.append(maintenance_greenlet)
+        if maintenance:
+            maintenance_greenlet = gevent.spawn(self.start_maintenance_tasks)
+            self.servers['maintenance'] = maintenance_greenlet
+            self.greenlets.append(maintenance_greenlet)
 
         drop_privileges()
         gevent.joinall(self.greenlets)
@@ -114,7 +116,3 @@ class Beekeeper(object):
 
             #check config file for changes every 5 second
             gevent.sleep(5)
-
-
-
-

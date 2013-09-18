@@ -3,6 +3,7 @@ import os
 import uuid
 import unittest
 from datetime import datetime
+import gevent
 
 from beeswarm.beekeeper.webapp.auth import Authenticator
 
@@ -28,11 +29,11 @@ class WebappTests(unittest.TestCase):
         self.feeder_id = str(uuid.uuid4())
         self.hive_id = str(uuid.uuid4())
         session.add_all([
-                        Feeder(id=self.feeder_id, configuration='test_feeder_config'),
-                        User(id=self.feeder_id, nickname='Feeder Test', password=str(uuid.uuid4()), utype=2),
-                        Hive(id=self.hive_id, configuration='test_hive_config'),
-                        User(id=self.hive_id, nickname='Hive Test', password=str(uuid.uuid4()), utype=1)
-                       ])
+            Feeder(id=self.feeder_id, configuration='test_feeder_config'),
+            User(id=self.feeder_id, nickname='Feeder Test', password=str(uuid.uuid4()), utype=2),
+            Hive(id=self.hive_id, configuration='test_hive_config'),
+            User(id=self.hive_id, nickname='Hive Test', password=str(uuid.uuid4()), utype=1)
+        ])
 
         session.commit()
 
@@ -121,8 +122,9 @@ class WebappTests(unittest.TestCase):
                 {'username': 'as', 'timestamp': '2013-05-07T22:21:21.150571', 'password': 'd',
                  'id': '603f40a4-e7eb-442d-9fde-0cd3ba707af7', 'successful': False}, ],
             'transcript': [
-                {'timestamp': '2013-05-07T22:21:20.846805', 'direction': 'in', 'data': 'whoami\r\n',
-                 'timestamp': '2013-05-07T22:21:21.136800', 'direction': 'out', 'data': 'james_brown\r\n$:~'}]
+                {'timestamp': '2013-05-07T22:21:20.846805', 'direction': 'in', 'data': 'whoami\r\n'},
+                {'timestamp': '2013-05-07T22:21:21.136800', 'direction': 'out', 'data': 'james_brown\r\n$:~'}
+            ]
         }
 
         r = self.app.post('/ws/hive_data', data=json.dumps(data_dict), content_type='application/json')
@@ -152,8 +154,9 @@ class WebappTests(unittest.TestCase):
                 {'username': 'as', 'timestamp': '2013-05-07T22:21:21.150571', 'password': 'd',
                  'id': '603f40a4-e7eb-442d-9fde-0cd3ba707af7', 'successful': False}, ],
             'transcript': [
-                {'timestamp': '2013-05-07T22:21:20.846805', 'direction': 'in', 'data': 'whoami\r\n',
-                 'timestamp': '2013-05-07T22:21:21.136800', 'direction': 'out', 'data': 'james_brown\r\n$:~'}]
+                {'timestamp': '2013-05-07T22:21:20.846805', 'direction': 'in', 'data': 'whoami\r\n'},
+                {'timestamp': '2013-05-07T22:21:21.136800', 'direction': 'out', 'data': 'james_brown\r\n$:~'}
+            ]
         }
         r = self.app.post('/ws/hive_data', data=json.dumps(data_dict), content_type='application/json')
         self.assertEquals(r.status, '500 INTERNAL SERVER ERROR')
@@ -172,6 +175,15 @@ class WebappTests(unittest.TestCase):
             'http_activation_probability': 1,
             'http_login': 'test',
             'http_password': 'test',
+
+            'https_enabled': True,
+            'https_server': '127.0.0.1',
+            'https_port': 80,
+            'https_active_range': '13:40 - 16:30',
+            'https_sleep_interval': 0,
+            'https_activation_probability': 1,
+            'https_login': 'test',
+            'https_password': 'test',
 
             'pop3s_enabled': True,
             'pop3s_server': '127.0.0.1',
@@ -329,6 +341,44 @@ class WebappTests(unittest.TestCase):
         self.assertEquals(len(table_data), 4)
         self.logout()
 
+    def test_data_hive(self):
+        """ Tests if Hive information is returned properly """
+
+        self.login('test', 'test')
+        self.populate_hives()
+        resp = self.app.get('/data/hives')
+        table_data = json.loads(resp.data)
+        self.assertEquals(len(table_data), 5)  # One is added in the setup method, and 4 in populate
+
+    def test_data_feeder(self):
+        """ Tests if Feeder information is returned properly """
+
+        self.login('test', 'test')
+        self.populate_feeders()
+        resp = self.app.get('/data/feeders')
+        table_data = json.loads(resp.data)
+        self.assertEquals(len(table_data), 5)  # One is added in the setup method, and 4 in populate
+
+    def test_settings(self):
+        """ Tests if new settings are successfully written to the config file """
+
+        self.login('test', 'test')
+        with open(app.app.config['BEEKEEPER_CONFIG'], 'r') as conf:
+            original_config = conf.read()
+        config_modified = os.stat(app.app.config['BEEKEEPER_CONFIG']).st_mtime
+        data = {
+            'honeybee_session_retain': 3,
+            'malicious_session_retain': 50,
+            'ignore_failed_honeybees': False
+        }
+        self.app.post('/settings', data=data, follow_redirects=True)
+        config_next_modified = os.stat(app.app.config['BEEKEEPER_CONFIG']).st_mtime
+        self.assertTrue(config_next_modified > config_modified)
+
+        # Restore original configuration
+        with open(app.app.config['BEEKEEPER_CONFIG'], 'w') as conf:
+            conf.write(original_config)
+
     def test_login_logout(self):
         """ Tests basic login/logout """
 
@@ -390,7 +440,7 @@ class WebappTests(unittest.TestCase):
 
         db_session = database.get_session()
         self.feeders = []
-        for i in xrange(4):
+        for i in xrange(4):  # We add 4 here, but one is added in the setup method
             curr_id = str(uuid.uuid4())
             curr_id = curr_id.encode('utf-8')
             self.feeders.append(curr_id)
@@ -405,7 +455,7 @@ class WebappTests(unittest.TestCase):
 
         db_session = database.get_session()
         self.hives = []
-        for i in xrange(4):
+        for i in xrange(4):  # We add 4 here, but one is added in the setup method
             curr_id = str(uuid.uuid4())
             curr_id = curr_id.encode('utf-8')
             self.hives.append(curr_id)
