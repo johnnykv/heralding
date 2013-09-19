@@ -34,7 +34,7 @@ class BeeHTTPSHandler(BeeHTTPHandler):
                 chunk = f.read(1024)
                 if not chunk:
                     break
-                self.request.write(chunk)
+                self.request.send(chunk)
 
 
 class https(http, HandlerBase):

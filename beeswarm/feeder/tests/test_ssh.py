@@ -72,6 +72,35 @@ class SSH_Test(unittest.TestCase):
         current_bee.connect_login()
         srv.stop()
 
+    def test_logout(self):
+        """Tests if the SSH bee can Logout from the SSH capability"""
+
+        sessions = {}
+        users = {'test': HiveUser('test', 'test')}
+        authenticator = Authenticator(users)
+        Session.authenticator = authenticator
+
+        cap = hive_ssh.ssh(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3, 'key': self.key}, users,
+                           self.work_dir)
+        socket = create_socket(('0.0.0.0', 0))
+        srv = StreamServer(socket, cap.handle_session)
+        srv.start()
+
+        bee_info = {
+            'timing': 'regular',
+            'username': 'test',
+            'password': 'test',
+            'port': srv.server_port,
+            'server': '127.0.0.1'
+        }
+        beesessions = {}
+
+        BeeSession.feeder_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        current_bee = bee_ssh.ssh(beesessions, bee_info)
+        current_bee.connect_login()
+        current_bee.logout()
+        srv.stop()
+
     def test_validate_senses(self):
         sessions = {}
         users = {'test': HiveUser('test', 'test')}
