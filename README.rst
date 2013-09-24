@@ -6,7 +6,7 @@ Beeswarm |Build Status| |coverage|
 .. |coverage| image:: https://coveralls.io/repos/honeynet/beeswarm/badge.png?brance=master
                        :target: https://coveralls.io/r/honeynet/beeswarm
 
-A honeypot project which provides easy configuration, deployment and managment of honeytokens.
+A honeypot project which provides easy configuration, deployment and managment of honeypots.
 Beeswarm operates by deploying fake end-user systems and services. Beeswarm uses these systems to provides 
 IoC (Indication of Compromise) by observing the difference between expected and actual traffic. 
 An IoC could be a certificate mismatch or the unexpected reuse of credentials (honeytokens).
