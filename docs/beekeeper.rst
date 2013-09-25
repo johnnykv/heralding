@@ -45,11 +45,23 @@ Then enter the ``tools/live-build`` directory...
 
     $ cd tools/live-build
 
+Create a directory called ``includes.chroot``. All files in this directory are
+placed on the ISO outside the squashfs. Make a dummy tarball file in this
+directory (this file is later written over by custom configurations).
+
+.. code-block:: shell
+
+    $ mkdir config/includes.binary
+    $ cd config/includes.binary
+    $ # Create a 10MB file full of "0x07"
+    $ tr '\000' '\007' < /dev/zero | dd of=dummy.tar.gz bs=1024 count=10k
+
 And create the ISO:
 
 .. code-block:: shell
 
+    $ cd ../..  # This should end you up inside the live-build folder
     # lb build
 
-That should take some time. Once the ISO is built, put it in the working directory
+That will take some time. Once the ISO is built, put it in the working directory
 (or update the path in the Beekeeper configuration file).
