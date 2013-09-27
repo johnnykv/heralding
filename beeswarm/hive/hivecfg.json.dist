@@ -68,6 +68,7 @@
 			"port": 5900
 		}
 	},
+	"users": {},
     "timecheck": {
         "enabled": true,
         "poll": 5,
