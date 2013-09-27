@@ -14,8 +14,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import logging
 from fs.osfs import OSFS
 from beeswarm.hive.models.session import Session
+
+logger = logging.getLogger(__name__)
 
 
 class HandlerBase(object):
@@ -42,6 +45,7 @@ class HandlerBase(object):
         session = Session(address[0], address[1], protocol, socket)
         session.destination_port = self.port
         self.sessions[session.id] = session
+        logger.info('Accepted {0} session on port {1} from {2}:{3}'.format(protocol, self.port, address[0], address[1]))
         return session
 
     def handle_session(self, socket, address):
