@@ -53,10 +53,8 @@ class BaseSession(object):
             entry[key] = value
             log_string += '{0}:{1}, '.format(key, value)
 
-        logger.debug('{0} authentication attempt from {1} to {2}. [{3}] ({4})'
-                     .format(self.protocol, self.source_ip,
-                             self.destination_ip,log_string.rstrip(', '),
-                             self.id))
+        logger.debug('{0} authentication attempt from {1}. [{2}] ({3})'
+                     .format(self.protocol, self.source_ip, log_string.rstrip(', '), self.id))
 
         self.login_attempts.append(entry)
 

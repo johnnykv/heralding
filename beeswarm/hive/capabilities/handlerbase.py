@@ -45,7 +45,8 @@ class HandlerBase(object):
         session = Session(address[0], address[1], protocol, socket)
         session.destination_port = self.port
         self.sessions[session.id] = session
-        logger.info('Accepted {0} session on port {1} from {2}:{3}'.format(protocol, self.port, address[0], address[1]))
+        logger.info('Accepted {0} session on port {1} from {2}:{3}. ({4})'.format(protocol, self.port, address[0],
+                                                                                  address[1], str(session.id)))
         return session
 
     def handle_session(self, socket, address):
