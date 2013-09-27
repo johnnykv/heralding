@@ -51,7 +51,7 @@ class Consumer:
                 session = self.sessions[session_id]
                 if not session.is_connected():
                     for log in active_loggers:
-                        session.source_ip = self.hive_ip
+                        session.destination_ip = self.hive_ip
                         try:
                             log.log(session)
                         #make sure this greenlet does not crash on errors while calling loggers
