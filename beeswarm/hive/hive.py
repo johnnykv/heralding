@@ -93,7 +93,7 @@ class Hive(object):
                 logging.warning('Could not fetch public ip: {0}'.format(e))
 
         else:
-            self.hive_ip = self.config.get('general', 'hive_ip')
+            self.hive_ip = self.config['general']['hive_ip']
 
         self.status = {
             'mode': 'Hive',
