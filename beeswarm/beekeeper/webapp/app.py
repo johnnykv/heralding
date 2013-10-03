@@ -27,6 +27,7 @@ from flask.ext.login import LoginManager, login_user, current_user, login_requir
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.security import check_password_hash
 from werkzeug.datastructures import MultiDict
+from beeswarm.beekeeper.webapp.auth import Authenticator
 from wtforms import HiddenField
 import beeswarm
 from beeswarm.shared.helpers import find_offset
@@ -52,6 +53,8 @@ login_manager.login_view = 'login'
 config = None
 
 logger = logging.getLogger(__name__)
+
+authenticator = Authenticator()
 
 @app.before_first_request
 def initialize():
@@ -245,7 +248,7 @@ def create_hive():
     if form.validate_on_submit():
         with open(app.config['CERT_PATH']) as cert:
             cert_str = cert.read()
-        beekeeper_password = str(uuid.uuid4())
+        hive_password = str(uuid.uuid4())
         db_session = database.get_session()
         hive_users = db_session.query(HiveUser).all()
         users_dict = {}
@@ -270,7 +273,7 @@ def create_hive():
             'log_beekeeper': {
                 'enabled': False,
                 'beekeeper_url': 'https://127.0.0.1:5000/',
-                'beekeeper_pass': beekeeper_password,
+                'beekeeper_pass': hive_password,
                 'cert': cert_str
             },
             'log_syslog': {
@@ -335,9 +338,9 @@ def create_hive():
         config_json = json.dumps(config, indent=4)
 
         h = Hive(id=new_hive_id, configuration=config_json)
-        u = User(id=new_hive_id, nickname='Hive', password=beekeeper_password, utype=1)
-        db_session.add_all([h, u])
+        db_session.add(h)
         db_session.commit()
+        authenticator.add_user(new_hive_id, hive_password, 2)
         config_link = '/ws/hive/config/{0}'.format(new_hive_id)
         iso_link = '/iso/hive/{0}.iso'.format(new_hive_id)
         return render_template('finish-config.html', mode_name='Hive', user=current_user,
@@ -354,15 +357,14 @@ def delete_hives():
     for hive in hive_ids:
         hive_id = hive['hive_id']
         to_delete = db_session.query(Hive).filter(Hive.id == hive_id).one()
-        huser = db_session.query(User).filter(User.id == hive_id).one()
         bees = db_session.query(Honeybee).filter(Honeybee.hive_id == hive_id)
         for s in to_delete.sessions:
             db_session.delete(s)
         for b in bees:
             db_session.delete(b)
         db_session.delete(to_delete)
-        db_session.delete(huser)
-    db_session.commit()
+        db_session.commit()
+        authenticator.remove_user(hive_id)
     return ''
 
 
@@ -374,7 +376,7 @@ def create_feeder():
     if form.validate_on_submit():
         with open(app.config['CERT_PATH']) as cert:
             cert_str = cert.read()
-        beekeeper_password = str(uuid.uuid4())
+        feeder_password = str(uuid.uuid4())
         config = {
             'general': {
                 'feeder_id': new_feeder_id,
@@ -497,7 +499,7 @@ def create_feeder():
             'log_beekeeper': {
                 'enabled': False,
                 'beekeeper_url': 'https://127.0.0.1:5000/',
-                'beekeeper_pass': beekeeper_password,
+                'beekeeper_pass': feeder_password,
                 'cert': cert_str
             },
         }
@@ -505,9 +507,9 @@ def create_feeder():
 
         db_session = database.get_session()
         f = Feeder(id=new_feeder_id, configuration=config_json)
-        u = User(id=new_feeder_id, nickname='Feeder', password=beekeeper_password, utype=2)
-        db_session.add_all([f, u])
+        db_session.add(f)
         db_session.commit()
+        authenticator.add_user(new_feeder_id, feeder_password, 2)
         config_link = '/ws/feeder/config/{0}'.format(new_feeder_id)
         iso_link = '/iso/feeder/{0}.iso'.format(new_feeder_id)
         return render_template('finish-config.html', mode_name='Feeder', user=current_user,
@@ -524,12 +526,11 @@ def delete_feeders():
     for feeder in feeder_ids:
         feeder_id = feeder['feeder_id']
         to_delete = db_session.query(Feeder).filter(Feeder.id == feeder_id).one()
-        fuser = db_session.query(User).filter(User.id == feeder_id).one()
         for b in to_delete.honeybees:
             db_session.delete(b)
         db_session.delete(to_delete)
-        db_session.delete(fuser)
-    db_session.commit()
+        db_session.commit()
+        authenticator.remove_user(feeder_id)
     return ''
 
 
@@ -577,6 +578,7 @@ def data_hives():
 @app.route('/data/feeders', methods=['GET'])
 @login_required
 def data_feeders():
+    logger.debug('hejhej')
     db_session = database.get_session()
     feeders = db_session.query(Feeder).all()
     rows = []

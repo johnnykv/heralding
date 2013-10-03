@@ -37,11 +37,11 @@ class Authenticator(object):
             logger.info('Created default admin account for the BeeKeeper.')
             print 'Default password for the admin account is: {0}'.format(password)
 
-    def add_user(self, username, password, nickname=''):
+    def add_user(self, username, password, user_type, nickname=''):
         session = database.get_session()
         userid = username
         pw_hash = generate_password_hash(password)
-        u = User(id=userid, nickname=nickname, password=pw_hash)
+        u = User(id=userid, nickname=nickname, password=pw_hash, utype=user_type)
         session.add(u)
         session.commit()
 

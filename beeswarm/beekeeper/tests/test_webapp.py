@@ -25,7 +25,7 @@ class WebappTests(unittest.TestCase):
         session = database.get_session()
 
         #dummy entities
-        self.authenticator.add_user('test', 'test', 'Nick Name')
+        self.authenticator.add_user('test', 'test', 0)
         self.feeder_id = str(uuid.uuid4())
         self.hive_id = str(uuid.uuid4())
         session.add_all([
