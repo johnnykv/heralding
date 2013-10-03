@@ -21,6 +21,7 @@ import time
 from beeswarm.feeder.bees.clientbase import ClientBase
 from beeswarm.feeder.bees.shared.shell import Commands
 
+logger = logging.getLogger(__name__)
 
 class BeeTelnetClient(telnetlib.Telnet):
     IAC = chr(255)
@@ -73,7 +74,7 @@ class telnet(ClientBase, Commands):
         server_port = self.options['port']
         session = self.create_session(server_host, server_port, my_ip)
         self.sessions[session.id] = session
-        logging.debug(
+        logger.debug(
             'Sending %s honeybee to %s:%s. (bee id: %s)' % ('telnet', server_host, server_port, session.id))
 
         try:
@@ -87,7 +88,7 @@ class telnet(ClientBase, Commands):
             session.source_port = self.client.sock.getsockname()[1]
             session.did_login = True
         except Exception as err:
-            logging.debug('Caught exception: %s (%s)' % (err, str(type(err))))
+            logger.debug('Caught exception: %s (%s)' % (err, str(type(err))))
         else:
             while self.command_count < self.command_limit:
                 self.sense()
@@ -136,7 +137,7 @@ class telnet(ClientBase, Commands):
         if self.command_count > self.command_limit:
             self.logout()
             return
-        logging.debug('Sending %s command.' % cmd)
+        logger.debug('Sending %s command.' % cmd)
         self.command_count += 1
         self.client.write_human(cmd + '\r\n')
 

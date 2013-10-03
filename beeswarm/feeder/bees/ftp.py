@@ -16,11 +16,13 @@
 import logging
 import ftplib
 import random
+import logging
 from datetime import datetime
 
 from ftplib import FTP
 from beeswarm.feeder.bees.clientbase import ClientBase
 
+logger = logging.getLogger(__name__)
 
 class ftp(ClientBase):
 
@@ -66,7 +68,7 @@ class ftp(ClientBase):
         session = self.create_session(server_host, server_port, my_ip)
 
         self.sessions[session.id] = session
-        logging.debug(
+        logger.debug(
             'Sending %s honeybee to %s:%s. (bee id: %s)' % ('ftp', server_host, server_port, session.id))
 
         self.file_list = []
@@ -81,7 +83,7 @@ class ftp(ClientBase):
             session.did_login = True
             session.timestamp = datetime.utcnow()
         except ftplib.error_perm as err:
-            logging.debug('Caught exception: %s (%s)' % (err, str(type(err))))
+            logger.debug('Caught exception: %s (%s)' % (err, str(type(err))))
         else:
             while self.command_count <= self.command_limit:
                 self.command_count += 1
@@ -137,7 +139,7 @@ class ftp(ClientBase):
         """
             Run the FTP LIST command, and update the state.
         """
-        logging.debug('Sending FTP list command.')
+        logger.debug('Sending FTP list command.')
         self.state['file_list'] = []
         self.state['dir_list'] = []
         self.client.retrlines('LIST', self._process_list)
@@ -148,14 +150,14 @@ class ftp(ClientBase):
 
         :param filename: Name of the file to download
         """
-        logging.debug('Sending FTP retr command. Filename: {}'.format(filename))
+        logger.debug('Sending FTP retr command. Filename: {}'.format(filename))
         self.client.retrbinary('RETR {}'.format(filename), self._save_file)
 
     def pwd(self):
         """
             Send the FTP PWD command.
         """
-        logging.debug('Sending FTP pwd command.')
+        logger.debug('Sending FTP pwd command.')
         self.state['current_dir'] = self.client.pwd()
 
     def cwd(self, newdir):
@@ -164,7 +166,7 @@ class ftp(ClientBase):
 
         :param newdir: Directory to change to
         """
-        logging.debug('Sending FTP cwd command. New Workding Directory: {}'.format(newdir))
+        logger.debug('Sending FTP cwd command. New Workding Directory: {}'.format(newdir))
         self.client.cwd(newdir)
         self.state['current_dir'] = self.client.pwd()
 
@@ -172,7 +174,7 @@ class ftp(ClientBase):
         """
             End the current FTP session.
         """
-        logging.debug('Sending FTP quit command.')
+        logger.debug('Sending FTP quit command.')
         self.client.quit()
 
     def connect(self):

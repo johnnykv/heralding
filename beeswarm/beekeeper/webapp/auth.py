@@ -19,6 +19,7 @@ from beeswarm.beekeeper.db import database
 from beeswarm.beekeeper.db.entities import User
 from werkzeug.security import generate_password_hash
 
+logger = logging.getLogger(__name__)
 
 class Authenticator(object):
     """ Handles BeeKeeper authentications """
@@ -33,7 +34,7 @@ class Authenticator(object):
             u = User(id=userid, nickname='admin', password=pw_hash)
             session.add(u)
             session.commit()
-            logging.info('Created default admin account for the BeeKeeper.')
+            logger.info('Created default admin account for the BeeKeeper.')
             print 'Default password for the admin account is: {0}'.format(password)
 
     def add_user(self, username, password, nickname=''):

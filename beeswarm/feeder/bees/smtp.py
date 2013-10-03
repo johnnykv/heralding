@@ -22,6 +22,7 @@ import time
 import beeswarm
 from beeswarm.feeder.bees.clientbase import ClientBase
 
+logger = logging.getLogger(__name__)
 
 class smtp(ClientBase):
 
@@ -53,7 +54,7 @@ class smtp(ClientBase):
 
         session = self.create_session(server_host, server_port, my_ip)
 
-        logging.debug(
+        logger.debug(
             'Sending %s honeybee to %s:%s. (bee id: %s)' % ('smtp', server_host, server_port, session.id))
 
         try:
@@ -67,7 +68,7 @@ class smtp(ClientBase):
             session.did_login = True
 
         except smtplib.SMTPException as error:
-            logging.debug('Caught exception: %s (%s)' % (error, str(type(error))))
+            logger.debug('Caught exception: %s (%s)' % (error, str(type(error))))
         else:
             while self.sent_mails <= self.max_mails:
                 from_addr, to_addr, mail_body = self.get_one_mail()
@@ -75,15 +76,15 @@ class smtp(ClientBase):
                 try:
                     self.client.sendmail(from_addr, to_addr, mail_body)
                 except TypeError as e:
-                    logging.debug('Malformed email in mbox archive, skipping.')
+                    logger.debug('Malformed email in mbox archive, skipping.')
                     continue
                 else:
-                    logging.debug('Sent mail from (%s) to (%s)' % (from_addr, to_addr))
+                    logger.debug('Sent mail from (%s) to (%s)' % (from_addr, to_addr))
                 time.sleep(1)
             self.client.quit()
             session.did_complete = True
         finally:
-            logging.debug('SMTP Session complete.')
+            logger.debug('SMTP Session complete.')
             session.alldone = True
 
     def get_one_mail(self):

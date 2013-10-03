@@ -33,7 +33,7 @@ class Consumer:
         :param config: Hive configuration
         :param status: The Hive status dict. This is updated by the consumer.
         """
-        logging.debug('Consumer created.')
+        logger.debug('Consumer created.')
         self.config = config
         self.enabled = True
         self.hive_ip = hive_ip

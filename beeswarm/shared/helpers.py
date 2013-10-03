@@ -57,7 +57,7 @@ def drop_privileges(uid_name='nobody', gid_name='nogroup'):
 
 
 def create_self_signed_cert(directory, cname, kname):
-    logging.info('Creating SSL Certificate and Key: {}, {}'.format(cname, kname))
+    logger.info('Creating SSL Certificate and Key: {}, {}'.format(cname, kname))
     pk = crypto.PKey()
     pk.generate_key(crypto.TYPE_RSA, 1024)
 

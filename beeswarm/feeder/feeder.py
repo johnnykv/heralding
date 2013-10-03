@@ -74,7 +74,7 @@ class Feeder(object):
 
         if self.config['public_ip']['fetch_ip']:
             self.my_ip = urllib2.urlopen('http://api-sth01.exip.org/?call=ip').read()
-            logging.info('Fetched {0} as my external ip.'.format(self.my_ip))
+            logger.info('Fetched {0} as my external ip.'.format(self.my_ip))
         else:
             self.my_ip = '127.0.0.1'
 
@@ -102,7 +102,7 @@ class Feeder(object):
         """
             Starts sending client bees to the configured Hive.
         """
-        logging.info('Starting feeder.')
+        logger.info('Starting feeder.')
 
         sessions = {}
 
@@ -128,7 +128,7 @@ class Feeder(object):
             bee = b(sessions, options)
             honeybees.append(bee)
             self.status['enabled_bees'].append(bee_name)
-            logging.debug('Adding {0} as a honeybee'.format(bee.__class__.__name__))
+            logger.debug('Adding {0} as a honeybee'.format(bee.__class__.__name__))
 
         self.dispatcher_greenlets = []
         for bee in honeybees:

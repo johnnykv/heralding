@@ -22,6 +22,7 @@ from requests.auth import HTTPBasicAuth
 
 from beeswarm.feeder.bees.clientbase import ClientBase
 
+logger = logging.getLogger(__name__)
 
 class http(ClientBase):
 
@@ -53,7 +54,7 @@ class http(ClientBase):
 
         self.sessions[session.id] = session
 
-        logging.debug(
+        logger.debug(
             'Sending %s honeybee to %s:%s. (bee id: %s)' % ('http', server_host, server_port, session.id))
 
         try:
@@ -73,7 +74,7 @@ class http(ClientBase):
                 links = self._get_links(response)
 
         except Exception as err:
-            logging.debug('Caught exception: %s (%s)' % (err, str(type(err))))
+            logger.debug('Caught exception: %s (%s)' % (err, str(type(err))))
         else:
             session.timestamp = datetime.now()
         finally:

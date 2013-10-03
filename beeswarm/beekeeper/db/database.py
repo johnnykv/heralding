@@ -16,6 +16,7 @@ import logging
 
 import os
 import json
+import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from entities import Classification
@@ -25,6 +26,7 @@ import entities
 DB_Session = None
 engine = None
 
+logger = logging.getLogger(__name__)
 
 def setup_db(connection_string):
     """
@@ -54,7 +56,7 @@ def setup_db(connection_string):
     for username in data['hive_users']:
         u = session.query(HiveUser).filter(HiveUser.username == username).first()
         if not u:
-            logging.debug('Creating default HiveUser: {}'.format(username))
+            logger.debug('Creating default HiveUser: {}'.format(username))
             password = data['hive_users'][username]
             huser = HiveUser(username=username, password=password)
             session.add(huser)

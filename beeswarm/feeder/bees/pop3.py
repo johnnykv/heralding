@@ -19,6 +19,7 @@ import logging
 
 from beeswarm.feeder.bees.clientbase import ClientBase
 
+logger = logging.getLogger(__name__)
 
 class pop3(ClientBase):
 
@@ -46,7 +47,7 @@ class pop3(ClientBase):
         session = self.create_session(server_host, server_port, my_ip)
 
         try:
-            logging.debug(
+            logger.debug(
                 'Sending %s honeybee to %s:%s. (bee id: %s)' % ('pop3', server_host, server_port, session.id))
             conn = poplib.POP3(server_host, server_port)
             session.source_port = conn.sock.getsockname()[1]
@@ -63,14 +64,14 @@ class pop3(ClientBase):
             session.timestamp = datetime.utcnow()
         # except (poplib.error_proto, h_socket.error) as err:
         except Exception as err:
-            logging.debug('Caught exception: %s (%s)' % (err, str(type(err))))
+            logger.debug('Caught exception: %s (%s)' % (err, str(type(err))))
         else:
             list_entries = conn.list()[1]
             for entry in list_entries:
                 index, octets = entry.split(' ')
                 conn.retr(index)
                 conn.dele(index)
-            logging.debug('Found and deleted %i messages on %s' % (len(list_entries), server_host))
+            logger.debug('Found and deleted %i messages on %s' % (len(list_entries), server_host))
             conn.quit()
             session.did_complete = True
         finally:

@@ -51,6 +51,8 @@ login_manager.login_view = 'login'
 
 config = None
 
+logger = logging.getLogger(__name__)
+
 @app.before_first_request
 def initialize():
     global config
@@ -64,12 +66,8 @@ def user_loader(userid):
     try:
         user = db_session.query(User).filter(User.id == userid).one()
     except NoResultFound:
-        logging.info('Attempt to load non-existent user: {0}'.format(userid))
+        logger.info('Attempt to load non-existent user: {0}'.format(userid))
     return user
-
-
-logger = logging.getLogger(__name__)
-
 
 @app.route('/')
 @login_required
@@ -599,17 +597,17 @@ def login():
         try:
             user = db_session.query(User).filter(User.id == form.username.data).one()
         except NoResultFound:
-            logging.info('Attempt to log in as non-existant user: {0}'.format(form.username.data))
+            logger.info('Attempt to log in as non-existant user: {0}'.format(form.username.data))
         if user:
             if user.utype != 0:
                 if form.password.data == user.password:
                     login_user(user)
-                    logging.info('User {0} logged in.'.format(user.id))
+                    logger.info('User {0} logged in.'.format(user.id))
                     flash('Logged in successfully')
                     return redirect(request.args.get("next") or '/')
             elif check_password_hash(user.password, form.password.data):
                 login_user(user)
-                logging.info('User {0} logged in.'.format(user.id))
+                logger.info('User {0} logged in.'.format(user.id))
                 flash('Logged in successfully')
                 return redirect(request.args.get("next") or '/')
     return render_template('login.html', form=form)
@@ -626,7 +624,7 @@ def logout():
 @app.route('/iso/hive/<hive_id>.iso', methods=['GET'])
 @login_required
 def generate_hive_iso(hive_id):
-    logging.info('Generating new ISO for Hive ({})'.format(hive_id))
+    logger.info('Generating new ISO for Hive ({})'.format(hive_id))
     db_session = database.get_session()
     current_hive = db_session.query(Hive).filter(Hive.id == hive_id).one()
 
@@ -635,7 +633,7 @@ def generate_hive_iso(hive_id):
     os.makedirs(custom_config_dir)
 
     package_directory = os.path.dirname(os.path.abspath(beeswarm.__file__))
-    logging.debug('Copying data files to temporary directory.')
+    logger.debug('Copying data files to temporary directory.')
     shutil.copytree(os.path.join(package_directory, 'hive/data'), os.path.join(custom_config_dir, 'data/'))
 
     config_file_path = os.path.join(custom_config_dir, 'hivecfg.json')
@@ -653,7 +651,7 @@ def generate_hive_iso(hive_id):
 @app.route('/iso/feeder/<feeder_id>.iso', methods=['GET'])
 @login_required
 def generate_feeder_iso(feeder_id):
-    logging.info('Generating new ISO for Feeder ({})'.format(feeder_id))
+    logger.info('Generating new ISO for Feeder ({})'.format(feeder_id))
     db_session = database.get_session()
     current_feeder = db_session.query(Feeder).filter(Feeder.id == feeder_id).one()
 
@@ -699,7 +697,7 @@ def write_to_iso(temporary_dir, mode):
         iso_file_path = config['iso']['path']
 
     if not iso_file_path:
-        logging.warning('No base ISO path specified.')
+        logger.warning('No base ISO path specified.')
         return False
 
     custom_config_dir = os.path.join(temporary_dir, 'custom_config')
@@ -716,7 +714,7 @@ def write_to_iso(temporary_dir, mode):
     try:
         shutil.copyfile(iso_file_path, temp_iso_path)
     except IOError:
-        logging.warning('Couldn\'t find the ISO specified in the config: {}'.format(iso_file_path))
+        logger.warning('Couldn\'t find the ISO specified in the config: {}'.format(iso_file_path))
         return False
 
     with open(temp_iso_path, 'r+b') as isofile:

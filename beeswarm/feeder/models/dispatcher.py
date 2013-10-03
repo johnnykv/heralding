@@ -17,6 +17,8 @@ import random
 import datetime
 import gevent
 
+logger = logging.getLogger(__name__)
+
 
 class BeeDispatcher(object):
 
@@ -32,7 +34,7 @@ class BeeDispatcher(object):
         try:
             self.set_active_interval()
         except (ValueError, AttributeError, KeyError, IndexError) as err:
-            logging.debug('Caught exception: %s (%s)' % (err, str(type(err))))
+            logger.debug('Caught exception: %s (%s)' % (err, str(type(err))))
 
         self.activation_probability = self.options['timing']['activation_probability']
         self.sleep_interval = float(self.options['timing']['sleep_interval'])

@@ -88,9 +88,9 @@ class Hive(object):
                 url = 'http://api-sth01.exip.org/?call=ip'
                 req = requests.get(url)
                 self.hive_ip = req.text
-                logging.info('Fetched {0} as external ip for Hive.'.format(self.hive_ip))
+                logger.info('Fetched {0} as external ip for Hive.'.format(self.hive_ip))
             except (Timeout, ConnectionError) as e:
-                logging.warning('Could not fetch public ip: {0}'.format(e))
+                logger.warning('Could not fetch public ip: {0}'.format(e))
 
         else:
             self.hive_ip = self.config['general']['hive_ip']
@@ -218,7 +218,7 @@ class Hive(object):
         """
         package_directory = os.path.dirname(os.path.abspath(beeswarm.__file__))
 
-        logging.info('Copying data files to workdir.')
+        logger.info('Copying data files to workdir.')
         shutil.copytree(os.path.join(package_directory, 'hive/data'), os.path.join(work_dir, 'data/'),
                         ignore=Hive._ignore_copy_files)
 
@@ -226,7 +226,7 @@ class Hive(object):
         #if a config url is specified.
         config_file = os.path.join(work_dir, 'hivecfg.json.dist')
         if not os.path.isfile(config_file):
-            logging.info('Copying configuration file to workdir.')
+            logger.info('Copying configuration file to workdir.')
             shutil.copyfile(os.path.join(package_directory, 'hive/hivecfg.json.dist'),
                             os.path.join(work_dir, 'hivecfg.json'))
 

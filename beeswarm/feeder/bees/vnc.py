@@ -19,6 +19,8 @@ import socket
 from beeswarm.feeder.bees.clientbase import ClientBase
 from beeswarm.shared.vnc_constants import *
 
+logger = logging.getLogger(__name__)
+
 
 class vnc(ClientBase):
 
@@ -39,14 +41,14 @@ class vnc(ClientBase):
         session = self.create_session(server_host, server_port, my_ip)
         self.sessions[session.id] = session
 
-        logging.debug('Sending %s honeybee to %s:%s. (bee id: %s)' % ('vnc', server_host, server_port, session.id))
+        logger.debug('Sending %s honeybee to %s:%s. (bee id: %s)' % ('vnc', server_host, server_port, session.id))
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             client_socket.connect((server_host, int(server_port)))
             session.source_port = client_socket.getsockname()[1]
 
         except socket.error as e:
-            logging.debug('Caught exception: %s (%s)' % (e, str(type(e))))
+            logger.debug('Caught exception: %s (%s)' % (e, str(type(e))))
         else:
             session.did_connect = True
             protocol_version = client_socket.recv(1024)

@@ -20,6 +20,8 @@ from beeswarm.feeder.bees.clientbase import ClientBase
 from beeswarm.feeder.bees.shared.shell import Commands
 from beeswarm.hive.capabilities.telnet import AuthenticationFailed
 
+logger = logging.getLogger(__name__)
+
 
 class ssh(ClientBase, Commands):
 
@@ -49,7 +51,7 @@ class ssh(ClientBase, Commands):
         session = self.create_session(server_host, server_port, my_ip)
 
         self.sessions[session.id] = session
-        logging.debug(
+        logger.debug(
             'Sending %s honeybee to %s:%s. (bee id: %s)' % ('ssh', server_host, server_port, session.id))
         try:
             self.connect_login()
@@ -57,7 +59,7 @@ class ssh(ClientBase, Commands):
             session.add_auth_attempt('plaintext', True, username=username, password=password)
             session.did_login = True
         except (SSHException, AuthenticationFailed) as err:
-            logging.debug('Caught exception: %s (%s)' % (err, str(type(err))))
+            logger.debug('Caught exception: %s (%s)' % (err, str(type(err))))
         else:
             self.sense()
             comm, param = self.decide()
@@ -72,7 +74,7 @@ class ssh(ClientBase, Commands):
 
         :param cmd: The command to send
         """
-        logging.debug('Sending %s command.' % cmd)
+        logger.debug('Sending %s command.' % cmd)
         self.comm_chan.sendall(cmd + '\n')
 
     def get_response(self):
