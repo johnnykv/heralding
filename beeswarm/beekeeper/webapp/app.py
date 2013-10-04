@@ -708,8 +708,7 @@ def write_to_iso(temporary_dir, mode):
         # Change directory to create the tar archive in the temp directory
         save_cwd = os.getcwd()
         os.chdir(temporary_dir)
-        config_archive = shutil.make_archive(mode.id, 'gztar', custom_config_dir)
-        # Change it back
+        config_archive = shutil.make_archive(str(mode.id), 'gztar', custom_config_dir, verbose=True)
     finally:
         os.chdir(save_cwd)
 
