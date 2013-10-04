@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='Beeswarm',
-    version='0.3-dev',
+    version='0.1-dev',
     packages=find_packages(exclude=['bin', 'docs']),
     scripts=['bin/beeswarm'],
     url='https://github.com/honeynet/beeswarm',
