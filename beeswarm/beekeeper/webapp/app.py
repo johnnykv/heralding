@@ -704,12 +704,14 @@ def write_to_iso(temporary_dir, mode):
 
     custom_config_dir = os.path.join(temporary_dir, 'custom_config')
 
-    # Change directory to create the tar archive in the temp directory
-    save_cwd = os.getcwd()
-    os.chdir(temporary_dir)
-    config_archive = shutil.make_archive(mode.id, 'gztar', custom_config_dir)
-    # Change it back
-    os.chdir(save_cwd)
+    try:
+        # Change directory to create the tar archive in the temp directory
+        save_cwd = os.getcwd()
+        os.chdir(temporary_dir)
+        config_archive = shutil.make_archive(mode.id, 'gztar', custom_config_dir)
+        # Change it back
+    finally:
+        os.chdir(save_cwd)
 
     temp_iso_name = 'beeswarm-{}-{}.iso'.format(mode.__class__.__name__, mode.id)
     temp_iso_path = os.path.join(temporary_dir, temp_iso_name)
