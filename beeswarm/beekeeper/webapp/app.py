@@ -30,7 +30,6 @@ from werkzeug.datastructures import MultiDict
 from beeswarm.beekeeper.webapp.auth import Authenticator
 from wtforms import HiddenField
 import beeswarm
-from beeswarm.shared.helpers import find_offset
 from forms import NewHiveConfigForm, NewFeederConfigForm, LoginForm, SettingsForm
 from beeswarm.beekeeper.db import database
 from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Hive, User, Authentication, Classification, HiveUser
@@ -56,6 +55,7 @@ logger = logging.getLogger(__name__)
 
 authenticator = Authenticator()
 
+
 @app.before_first_request
 def initialize():
     global config
@@ -71,6 +71,7 @@ def user_loader(userid):
     except NoResultFound:
         logger.info('Attempt to load non-existent user: {0}'.format(userid))
     return user
+
 
 @app.route('/')
 @login_required
@@ -578,7 +579,6 @@ def data_hives():
 @app.route('/data/feeders', methods=['GET'])
 @login_required
 def data_feeders():
-    logger.debug('hejhej')
     db_session = database.get_session()
     feeders = db_session.query(Feeder).all()
     rows = []
@@ -671,6 +671,7 @@ def generate_feeder_iso(feeder_id):
                                                 current_feeder.id)
     return send_from_directory(tempdir, temp_iso_name, mimetype='application/iso-image')
 
+
 @app.route('/settings', methods=['GET', 'POST'])
 @login_required
 def settings():
@@ -693,13 +694,10 @@ def settings():
 
 
 def write_to_iso(temporary_dir, mode):
+    iso_file_path = config['iso']['path']
 
-    with open(app.config['BEEKEEPER_CONFIG'], 'r+') as config_file:
-        config = json.load(config_file)
-        iso_file_path = config['iso']['path']
-
-    if not iso_file_path:
-        logger.warning('No base ISO path specified.')
+    if config['iso']['offset'] == -1:
+        logger.warning('Invalid offset in config file.')
         return False
 
     custom_config_dir = os.path.join(temporary_dir, 'custom_config')
@@ -721,11 +719,11 @@ def write_to_iso(temporary_dir, mode):
         return False
 
     with open(temp_iso_path, 'r+b') as isofile:
-        offset = find_offset(isofile, '\x07'*30)
-        isofile.seek(offset)
+        isofile.seek(config['iso']['offset'])
         with open(config_archive, 'rb') as tarfile:
             isofile.write(tarfile.read())
     return True
+
 
 if __name__ == '__main__':
     app.run()

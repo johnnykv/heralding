@@ -10,7 +10,8 @@
     "malicious_session_retain": 100,
     "ignore_failed_honeybees": true,
     "iso": {
-        "path": "beeswarm_client.iso"
+        "path": "beeswarm_client.iso",
+        "offset": -1
     }
 
 }

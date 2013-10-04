@@ -24,6 +24,7 @@ from beeswarm.beekeeper.webapp import app
 from beeswarm.beekeeper.webapp.auth import Authenticator
 from beeswarm.shared.helpers import drop_privileges
 from beeswarm.beekeeper.misc.scheduler import Scheduler
+from beeswarm.shared.helpers import find_offset
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +96,23 @@ class Beekeeper(object):
         return config
 
     def start_maintenance_tasks(self):
+        # one-off task to ensure we have the correct offset
+
+        logger.info('Hang on, calculating binary offset - this can take a while!')
+        config_tar_offset = find_offset(self.config['iso']['path'], '\x07' * 30)
+
+        if not config_tar_offset:
+            raise Exception('Expected binary pattern not found in ISO file.')
+        else:
+            logger.debug('Binary pattern found in ISO at: {0}'.format(config_tar_offset))
+            with open(self.config_file, 'r+') as config_file:
+                self.config['iso']['offset'] = config_tar_offset
+                #clear file
+                config_file.seek(0)
+                config_file.truncate(0)
+                # and  write again
+                config_file.write(json.dumps(self.config, indent=4))
+
         maintenance_worker = Scheduler(self.config)
         maintenance_greenlet = gevent.spawn(maintenance_worker.start)
 
