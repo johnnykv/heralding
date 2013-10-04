@@ -4,4 +4,6 @@ libevent-dev
 libxml2-dev
 libxslt-dev
 python-pip
+ntp
+ntpdate
 git
