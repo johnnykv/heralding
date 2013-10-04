@@ -39,29 +39,16 @@ In order to create the ISO, one must first clone the Beeswarm GitHub repository.
 
     $ git clone https://github.com/honeynet/beeswarm.git
 
-Then enter the ``tools/live-build`` directory...
+Then enter the ``tools/live-build`` directory and execute the build_iso.sh script:
 
 .. code-block:: shell
 
     $ cd tools/live-build
+    $ sudo sh build_iso.sh
 
-Create a directory called ``includes.chroot``. All files in this directory are
-placed on the ISO outside the squashfs. Make a dummy tarball file in this
-directory (this file is later written over by custom configurations).
-
-.. code-block:: shell
-
-    $ mkdir config/includes.binary
-    $ cd config/includes.binary
-    $ # Create a 10MB file full of "0x07"
-    $ tr '\000' '\007' < /dev/zero | dd of=dummy.tar.gz bs=1024 count=10k
-
-And create the ISO:
+Afterwards you can find the generated ISO as beeswarm_client.iso:
 
 .. code-block:: shell
 
-    $ cd ../..  # This should end you up inside the live-build folder
-    # lb build
-
-That will take some time. Once the ISO is built, put it in the working directory
-(or update the path in the Beekeeper configuration file).
+    $ ls -la beeswarm_client.iso
+    -rw-r--r-- 1 root root 305135616 Oct  4 19:04 beeswarm_client.iso
