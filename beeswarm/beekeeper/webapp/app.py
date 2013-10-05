@@ -272,7 +272,7 @@ def create_hive():
                 'port_mapping': '{}'
             },
             'log_beekeeper': {
-                'enabled': False,
+                'enabled': True,
                 'beekeeper_url': 'https://127.0.0.1:5000/',
                 'beekeeper_pass': hive_password,
                 'cert': cert_str
@@ -498,7 +498,7 @@ def create_feeder():
                 }
             },
             'log_beekeeper': {
-                'enabled': False,
+                'enabled': True,
                 'beekeeper_url': 'https://127.0.0.1:5000/',
                 'beekeeper_pass': feeder_password,
                 'cert': cert_str
