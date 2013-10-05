@@ -23,6 +23,7 @@ import string
 import tempfile
 import uuid
 from flask import Flask, render_template, request, redirect, flash, Response, send_from_directory
+import flask
 from flask.ext.login import LoginManager, login_user, current_user, login_required, logout_user
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.security import check_password_hash
@@ -151,7 +152,7 @@ def sessions_attacks():
 def feeder_data():
     #TODO: investigate why the flask provided request.json returns None
     data = json.loads(request.data)
-    logger.debug(data)
+    logger.debug('Received feeder data from {0}: {1}'.format(flask.session['user_id'], data))
     session = database.get_session()
     classification = session.query(Classification).filter(Classification.type == 'unclassified').one()
 
@@ -197,7 +198,7 @@ def feeder_data():
 def hive_data():
     #TODO: investigate why the flask provided request.json returns None.
     data = json.loads(request.data)
-    logger.debug('Received: {0}'.format(data))
+    logger.debug('Received hive data from {0}: {1}'.format(flask.session['user_id'], data))
 
     db_session = database.get_session()
     classification = db_session.query(Classification).filter(Classification.type == 'unclassified').one()
