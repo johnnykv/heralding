@@ -148,7 +148,19 @@ class Beekeeper(object):
         config_file = os.path.join(work_dir, 'beekeepercfg.json')
         if not os.path.isfile(config_file):
             logging.info('Copying configuration file to workdir.')
-            create_self_signed_cert(work_dir, 'beekeeper.crt', 'beekeeper.key')
+            print "*** Please answer a few configuration options ***"
+            print "*** IMPORTANT: Please make sure that 'Common Name' is the IP address or fully qualified host name " \
+                  " that you want to use for the beekeeper API. ***"
+            cert_cn = raw_input('Common Name: ')
+            cert_country = raw_input('Country: ')
+            cert_state = raw_input('State: ')
+            cert_locality = raw_input('Locality/City: ')
+            cert_org = raw_input('Organization: ')
+            cert_org_unit = raw_input('Organizational unit: ')
+
+
+            create_self_signed_cert(work_dir, 'beekeeper.crt', 'beekeeper.key', cert_country, cert_state, cert_org,
+                                    cert_locality, cert_org_unit, cert_cn)
 
             shutil.copyfile(os.path.join(package_directory, 'beekeeper/beekeepercfg.json.dist'),
                             os.path.join(work_dir, 'beekeepercfg.json'))
