@@ -26,14 +26,18 @@ class WebappTests(unittest.TestCase):
 
         #dummy entities
         self.authenticator.add_user('test', 'test', 0)
+
         self.feeder_id = str(uuid.uuid4())
+        self.feeder_password = str(uuid.uuid4())
+        self.authenticator.add_user(self.feeder_id, self.feeder_password, 2)
+
         self.hive_id = str(uuid.uuid4())
-        session.add_all([
-            Feeder(id=self.feeder_id, configuration='test_feeder_config'),
-            User(id=self.feeder_id, nickname='Feeder Test', password=str(uuid.uuid4()), utype=2),
-            Hive(id=self.hive_id, configuration='test_hive_config'),
-            User(id=self.hive_id, nickname='Hive Test', password=str(uuid.uuid4()), utype=1)
-        ])
+        self.hive_password = str(uuid.uuid4())
+        self.authenticator.add_user(self.hive_id, self.hive_password, 1)
+
+        session.add_all([ Feeder(id=self.feeder_id, configuration='test_feeder_config'),
+                          Hive(id=self.hive_id, configuration='test_hive_config')
+                        ])
 
         session.commit()
 
@@ -45,9 +49,7 @@ class WebappTests(unittest.TestCase):
         Tests if a honeybee dict can be posted without exceptions.
         """
 
-        db_session = database.get_session()
-        fuser = db_session.query(User).filter(User.id == self.feeder_id).one()
-        self.login(fuser.id, fuser.password)
+        self.login(self.feeder_id, self.feeder_password)
 
         data_dict = {
             'id': str(uuid.uuid4()),
@@ -406,28 +408,6 @@ class WebappTests(unittest.TestCase):
         db_session = database.get_session()
         nfeeders = db_session.query(Feeder).count()
         self.assertEquals(3, nfeeders)
-
-    def test_hive_login(self):
-        """ Tests if one can log in as a Hive """
-
-        self.populate_hives()
-        db_session = database.get_session()
-        hive = db_session.query(Hive).first()
-        huser = db_session.query(User).filter(User.id == hive.id).one()
-        self.assertEquals(huser.utype, 1)
-
-        self.login(huser.id, huser.password)
-
-    def test_feeder_login(self):
-        """ Tests if one can log in as a Hive """
-
-        self.populate_feeders()
-        db_session = database.get_session()
-        feeder = db_session.query(Feeder).first()
-        fuser = db_session.query(User).filter(User.id == feeder.id).one()
-        self.assertEquals(fuser.utype, 2)
-        self.login(fuser.id, fuser.password)
-        self.logout()
 
     def populate_feeders(self):
         """ Populates the database with 4 Feeders """

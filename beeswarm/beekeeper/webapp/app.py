@@ -601,20 +601,12 @@ def login():
             user = db_session.query(User).filter(User.id == form.username.data).one()
         except NoResultFound:
             logger.info('Attempt to log in as non-existant user: {0}'.format(form.username.data))
-        if user:
-            if user.utype != 0:
-                if form.password.data == user.password:
-                    login_user(user)
-                    logger.info('User {0} logged in.'.format(user.id))
-                    flash('Logged in successfully')
-                    return redirect(request.args.get("next") or '/')
-            elif check_password_hash(user.password, form.password.data):
-                login_user(user)
-                logger.info('User {0} logged in.'.format(user.id))
-                flash('Logged in successfully')
-                return redirect(request.args.get("next") or '/')
+        if user and check_password_hash(user.password, form.password.data):
+            login_user(user)
+            logger.info('User {0} logged in.'.format(user.id))
+            flash('Logged in successfully')
+            return redirect(request.args.get("next") or '/')
     return render_template('login.html', form=form)
-
 
 @app.route('/logout', methods=['GET'])
 @login_required
