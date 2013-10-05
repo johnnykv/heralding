@@ -16,15 +16,18 @@ import json
 
 import logging
 import os
+import shutil
 
 import gevent
 from gevent.pywsgi import WSGIServer
+import beeswarm
 from beeswarm.beekeeper.db import database
 from beeswarm.beekeeper.webapp import app
 from beeswarm.beekeeper.webapp.auth import Authenticator
 from beeswarm.shared.helpers import drop_privileges
 from beeswarm.beekeeper.misc.scheduler import Scheduler
 from beeswarm.shared.helpers import find_offset
+from beeswarm.shared.helpers import create_self_signed_cert
 
 logger = logging.getLogger(__name__)
 
@@ -138,3 +141,14 @@ class Beekeeper(object):
 
             #check config file for changes every 5 second
             gevent.sleep(5)
+
+    @staticmethod
+    def prepare_environment(work_dir):
+        package_directory = os.path.dirname(os.path.abspath(beeswarm.__file__))
+        config_file = os.path.join(work_dir, 'beekeepercfg.json')
+        if not os.path.isfile(config_file):
+            logging.info('Copying configuration file to workdir.')
+            create_self_signed_cert(work_dir, 'beekeeper.crt', 'beekeeper.key')
+
+            shutil.copyfile(os.path.join(package_directory, 'beekeeper/beekeepercfg.json.dist'),
+                            os.path.join(work_dir, 'beekeepercfg.json'))

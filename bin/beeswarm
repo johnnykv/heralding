@@ -17,7 +17,6 @@ import curses
 
 import logging
 from argparse import ArgumentParser
-import shutil
 import sys
 import os
 
@@ -30,7 +29,7 @@ from beeswarm.hive.hive import Hive
 from beeswarm.beekeeper.beekeeper import Beekeeper
 from beeswarm.feeder.feeder import Feeder
 from beeswarm.errors import ConfigNotFound
-from beeswarm.shared.helpers import is_url, create_self_signed_cert
+from beeswarm.shared.helpers import is_url
 from beeswarm.shared.models.ui_handler import CursesLogHandler
 
 gevent.monkey.patch_all()
@@ -137,14 +136,7 @@ if __name__ == '__main__':
         if not args.configarg:
             # User hasn't specified a config file, so check if the default exists.
             # if not, copy the default file to the work-dir
-            package_directory = os.path.dirname(os.path.abspath(beeswarm.__file__))
-            config_file = os.path.join(args.workdir, 'beekeepercfg.json')
-            if not os.path.isfile(config_file):
-                logging.info('Copying configuration file to workdir.')
-                create_self_signed_cert(args.workdir, 'beekeeper.crt', 'beekeeper.key')
-
-                shutil.copyfile(os.path.join(package_directory, 'beekeeper/beekeepercfg.json.dist'),
-                                os.path.join(args.workdir, 'beekeepercfg.json'))
+            mode.prepare_environment(args.workdir)
 
     try:
         if args.configarg:

@@ -56,7 +56,8 @@ def drop_privileges(uid_name='nobody', gid_name='nogroup'):
     logger.info("Privileges dropped, running as {0}/{1}.".format(new_uid_name, new_gid_name))
 
 
-def create_self_signed_cert(directory, cname, kname):
+def create_self_signed_cert(directory, cname, kname, cert_country='US', cert_state='state', cert_organization='org',
+                            cert_locality='local', cert_organizational_unit='unit', cert_common_name='common name'):
     logger.info('Creating SSL Certificate and Key: {}, {}'.format(cname, kname))
     pk = crypto.PKey()
     pk.generate_key(crypto.TYPE_RSA, 1024)
@@ -65,12 +66,19 @@ def create_self_signed_cert(directory, cname, kname):
     sub = cert.get_subject()
 
     # Later, we'll get these fields from the BeeKeeper
-    sub.C = 'US'
-    sub.ST = 'Default'
-    sub.L = 'Default'
-    sub.O = 'Default Company'
-    sub.OU = 'Default Org'
-    sub.CN = _socket.gethostname()
+    # country
+    sub.C = cert_country
+    # state or province name
+    sub.ST = cert_state
+    # locality
+    sub.L = cert_locality
+    # organization
+    sub.O = cert_organization
+    # organizational unit
+    sub.OU = cert_organizational_unit
+    # common name
+    sub.CN = cert_common_name
+
     cert.set_serial_number(1000)
     cert.gmtime_adj_notBefore(0)
     cert.gmtime_adj_notAfter(365 * 24 * 60 * 60)  # Valid for a year
