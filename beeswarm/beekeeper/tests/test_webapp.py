@@ -63,7 +63,7 @@ class WebappTests(unittest.TestCase):
             'did_login': True,
             'did_complete': True,
             'protocol_data': None,
-            'authentication': [{'id': str(uuid.uuid4()), 'username': 'james', 'password': 'bond', 'successful': True,
+            'login_attempts': [{'id': str(uuid.uuid4()), 'username': 'james', 'password': 'bond', 'successful': True,
                                 'timestamp': datetime.utcnow().isoformat()}]
         }
 
@@ -75,9 +75,7 @@ class WebappTests(unittest.TestCase):
         Tests if an error is returned when data is posted without ID values.
         """
 
-        db_session = database.get_session()
-        fuser = db_session.query(User).filter(User.id == self.feeder_id).one()
-        self.login(fuser.id, fuser.password)
+        self.login(self.feeder_id, self.feeder_password)
 
         #missing id's
         data_dict = {
@@ -103,9 +101,7 @@ class WebappTests(unittest.TestCase):
         Tests if a session dict can be posted without exceptions.
         """
 
-        db_session = database.get_session()
-        huser = db_session.query(User).filter(User.id == self.hive_id).one()
-        self.login(huser.id, huser.password)
+        self.login(self.hive_id, self.hive_password)
 
         data_dict = {
             'id': 'ba9fdb3d-0efb-4764-9a6b-d9b86eccda96',
@@ -116,7 +112,7 @@ class WebappTests(unittest.TestCase):
             'source_ip': '127.0.0.1',
             'timestamp': '2013-05-07T22:21:19.453828',
             'source_port': 61175,
-            'authentication': [
+            'login_attempts': [
                 {'username': 'qqq', 'timestamp': '2013-05-07T22:21:20.846805', 'password': 'aa',
                  'id': '027bd968-f8ea-4a69-8d4c-6cf21476ca10', 'successful': False},
                 {'username': 'as', 'timestamp': '2013-05-07T22:21:21.150571', 'password': 'd',
@@ -135,9 +131,7 @@ class WebappTests(unittest.TestCase):
         Tests if an error is returned when data is posted without ID values.
         """
 
-        db_session = database.get_session()
-        huser = db_session.query(User).filter(User.id == self.hive_id).one()
-        self.login(huser.id, huser.password)
+        self.login(self.hive_id, self.hive_password)
 
         #missing id
         data_dict = {
@@ -148,7 +142,7 @@ class WebappTests(unittest.TestCase):
             'source_ip': '127.0.0.1',
             'timestamp': '2013-05-07T22:21:19.453828',
             'source_port': 61175,
-            'authentication': [
+            'login_attempts': [
                 {'username': 'qqq', 'timestamp': '2013-05-07T22:21:20.846805', 'password': 'aa',
                  'id': '027bd968-f8ea-4a69-8d4c-6cf21476ca10', 'successful': False},
                 {'username': 'as', 'timestamp': '2013-05-07T22:21:21.150571', 'password': 'd',

@@ -216,7 +216,7 @@ def hive_data():
         source_port=data['source_port'],
         hive=_hive)
 
-    for auth in data['authentication']:
+    for auth in data['login_attempts']:
         a = Authentication(id=auth['id'], username=auth['username'], password=auth['password'],
                            successful=auth['successful'],
                            timestamp=datetime.strptime(auth['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'))
