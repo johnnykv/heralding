@@ -99,19 +99,23 @@ class Beekeeper(object):
         # one-off task to ensure we have the correct offset
 
         logger.info('Hang on, calculating binary offset - this can take a while!')
-        config_tar_offset = find_offset(self.config['iso']['path'], '\x07' * 30)
+        if os.path.isfile(self.config['iso']['path']):
+            config_tar_offset = find_offset(self.config['iso']['path'], '\x07' * 30)
 
-        if not config_tar_offset:
-            raise Exception('Expected binary pattern not found in ISO file.')
+            if not config_tar_offset:
+                logger.warning('Beekeeper client ISO was found but is invalid. Bootable clients can not be generated.')
+                raise Exception('Expected binary pattern not found in ISO file.')
+            else:
+                logger.debug('Binary pattern found in ISO at: {0}'.format(config_tar_offset))
+                with open(self.config_file, 'r+') as config_file:
+                    self.config['iso']['offset'] = config_tar_offset
+                    #clear file
+                    config_file.seek(0)
+                    config_file.truncate(0)
+                    # and  write again
+                    config_file.write(json.dumps(self.config, indent=4))
         else:
-            logger.debug('Binary pattern found in ISO at: {0}'.format(config_tar_offset))
-            with open(self.config_file, 'r+') as config_file:
-                self.config['iso']['offset'] = config_tar_offset
-                #clear file
-                config_file.seek(0)
-                config_file.truncate(0)
-                # and  write again
-                config_file.write(json.dumps(self.config, indent=4))
+            logger.warning('Beekeeper client ISO was NOT found. Bootable clients can not be generated.')
 
         maintenance_worker = Scheduler(self.config)
         maintenance_greenlet = gevent.spawn(maintenance_worker.start)
