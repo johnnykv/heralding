@@ -34,11 +34,11 @@ import beeswarm
 from forms import NewHiveConfigForm, NewFeederConfigForm, LoginForm, SettingsForm
 from beeswarm.beekeeper.db import database
 from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Hive, User, Authentication, Classification, HiveUser
+from beeswarm.shared.helpers import update_config_file, get_config_dict
 
 
 def is_hidden_field_filter(field):
     return isinstance(field, HiddenField)
-
 
 app = Flask(__name__)
 app.config['DEBUG'] = False
@@ -50,7 +50,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-config = None
+config = {}
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ authenticator = Authenticator()
 @app.before_first_request
 def initialize():
     global config
-    config = json.load(open(app.config['BEEKEEPER_CONFIG'], 'r'))
+    config = get_config_dict(app.config['BEEKEEPER_CONFIG'])
 
 @login_manager.user_loader
 def user_loader(userid):
@@ -250,6 +250,7 @@ def create_hive():
     if form.validate_on_submit():
         with open(app.config['CERT_PATH']) as cert:
             cert_str = cert.read()
+        beekeeper_url = 'https://{0}:{1}/'.format(config['network']['host'], config['network']['port'])
         hive_password = str(uuid.uuid4())
         db_session = database.get_session()
         hive_users = db_session.query(HiveUser).all()
@@ -257,7 +258,7 @@ def create_hive():
         for u in hive_users:
             users_dict[u.username] = u.password
 
-        config = {
+        hive_config = {
             'general': {
                 'hive_id': new_hive_id,
                 'hive_ip': '192.168.1.1',
@@ -274,7 +275,7 @@ def create_hive():
             },
             'log_beekeeper': {
                 'enabled': True,
-                'beekeeper_url': 'https://127.0.0.1:5000/',
+                'beekeeper_url': beekeeper_url,
                 'beekeeper_pass': hive_password,
                 'cert': cert_str
             },
@@ -337,13 +338,13 @@ def create_hive():
                 'ntp_pool': 'pool.ntp.org'
             },
         }
-        config_json = json.dumps(config, indent=4)
+        config_json = json.dumps(hive_config, indent=4)
 
         h = Hive(id=new_hive_id, configuration=config_json)
         db_session.add(h)
         db_session.commit()
         authenticator.add_user(new_hive_id, hive_password, 2)
-        config_link = '/ws/hive/config/{0}'.format(new_hive_id)
+        config_link = '{0}ws/hive/config/{1}'.format(beekeeper_url, new_hive_id)
         iso_link = '/iso/hive/{0}.iso'.format(new_hive_id)
         return render_template('finish-config.html', mode_name='Hive', user=current_user,
                                config_link=config_link, iso_link=iso_link)
@@ -378,8 +379,9 @@ def create_feeder():
     if form.validate_on_submit():
         with open(app.config['CERT_PATH']) as cert:
             cert_str = cert.read()
+        beekeeper_url = 'https://{0}:{1}/'.format(config['network']['host'], config['network']['port'])
         feeder_password = str(uuid.uuid4())
-        config = {
+        feeder_config = {
             'general': {
                 'feeder_id': new_feeder_id,
                 'hive_id': None
@@ -500,19 +502,19 @@ def create_feeder():
             },
             'log_beekeeper': {
                 'enabled': True,
-                'beekeeper_url': 'https://127.0.0.1:5000/',
+                'beekeeper_url': beekeeper_url,
                 'beekeeper_pass': feeder_password,
                 'cert': cert_str
             },
         }
-        config_json = json.dumps(config, indent=4)
+        config_json = json.dumps(feeder_config, indent=4)
 
         db_session = database.get_session()
         f = Feeder(id=new_feeder_id, configuration=config_json)
         db_session.add(f)
         db_session.commit()
         authenticator.add_user(new_feeder_id, feeder_password, 2)
-        config_link = '/ws/feeder/config/{0}'.format(new_feeder_id)
+        config_link = '{0}ws/feeder/config/{1}'.format(beekeeper_url, new_feeder_id)
         iso_link = '/iso/feeder/{0}.iso'.format(new_feeder_id)
         return render_template('finish-config.html', mode_name='Feeder', user=current_user,
                                config_link=config_link, iso_link=iso_link)
@@ -668,20 +670,17 @@ def generate_feeder_iso(feeder_id):
 @app.route('/settings', methods=['GET', 'POST'])
 @login_required
 def settings():
+    global config
     form = SettingsForm(obj=MultiDict(config))
 
     if form.validate_on_submit():
-        with open(app.config['BEEKEEPER_CONFIG'], 'r+') as config_file:
-            config['honeybee_session_retain'] = form.honeybee_session_retain.data
-            config['malicious_session_retain'] = form.malicious_session_retain.data
-            config['ignore_failed_honeybees'] = form.ignore_failed_honeybees.data
-            #clear file
-            config_file.seek(0)
-            config_file.truncate(0)
-            config_file.write(json.dumps(config, indent=4))
-            #update the global config reference
-        global config
-        config = json.load(open(app.config['BEEKEEPER_CONFIG'], 'r'))
+        # the potential updates that we want to save to config file.
+        options = {'honeybee_session_retain': form.honeybee_session_retain.data,
+                   'malicious_session_retain': form.malicious_session_retain.data,
+                   'ignore_failed_honeybees': form.ignore_failed_honeybees.data}
+        update_config_file(app.config['BEEKEEPER_CONFIG'], options)
+        # update the global config dict.
+        config = get_config_dict(app.config['BEEKEEPER_CONFIG'])
 
     return render_template('settings.html', form=form, user=current_user)
 

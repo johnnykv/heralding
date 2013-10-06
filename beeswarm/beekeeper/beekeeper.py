@@ -26,8 +26,7 @@ from beeswarm.beekeeper.webapp import app
 from beeswarm.beekeeper.webapp.auth import Authenticator
 from beeswarm.shared.helpers import drop_privileges
 from beeswarm.beekeeper.misc.scheduler import Scheduler
-from beeswarm.shared.helpers import find_offset
-from beeswarm.shared.helpers import create_self_signed_cert
+from beeswarm.shared.helpers import find_offset, create_self_signed_cert, update_config_file
 
 logger = logging.getLogger(__name__)
 
@@ -148,19 +147,34 @@ class Beekeeper(object):
         config_file = os.path.join(work_dir, 'beekeepercfg.json')
         if not os.path.isfile(config_file):
             logging.info('Copying configuration file to workdir.')
-            print "*** Please answer a few configuration options ***"
-            print "*** IMPORTANT: Please make sure that 'Common Name' is the IP address or fully qualified host name " \
-                  " that you want to use for the beekeeper API. ***"
+            print '*** Please answer a few configuration options ***'
+            print ''
+            print '* Certificate Information *'
+            print 'IMPORTANT: Please make sure that "Common Name" is the IP address or fully qualified host name ' \
+                  ' that you want to use for the beekeeper API.'
             cert_cn = raw_input('Common Name: ')
             cert_country = raw_input('Country: ')
             cert_state = raw_input('State: ')
             cert_locality = raw_input('Locality/City: ')
             cert_org = raw_input('Organization: ')
             cert_org_unit = raw_input('Organizational unit: ')
-
+            print ''
+            print '* Network *'
+            tcp_port = raw_input('Port for UI/API (default: 5000): ')
+            if tcp_port:
+                tcp_port = int(tcp_port)
+            else:
+                tcp_port = 5000
+            # to keep things simple we just use the CN for host for now.
+            tcp_host = cert_cn
 
             create_self_signed_cert(work_dir, 'beekeeper.crt', 'beekeeper.key', cert_country, cert_state, cert_org,
                                     cert_locality, cert_org_unit, cert_cn)
 
             shutil.copyfile(os.path.join(package_directory, 'beekeeper/beekeepercfg.json.dist'),
-                            os.path.join(work_dir, 'beekeepercfg.json'))
+                            config_file)
+
+            # update the config file
+            update_config_file(config_file, {'network': {'port': tcp_port, 'host': tcp_host}})
+
+

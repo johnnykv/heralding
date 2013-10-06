@@ -23,6 +23,7 @@ import platform
 import logging
 import socket
 import _socket
+import json
 import fcntl
 
 logger = logging.getLogger(__name__)
@@ -152,3 +153,20 @@ def get_local_ipaddress(ifname):
         0x8915,  # SIOCGIFADDR
         struct.pack('256s', ifname[:15])
     )[20:24])
+
+
+def update_config_file(configfile, options):
+
+    config = get_config_dict(configfile)
+
+    with open(configfile, 'r+') as config_file:
+        for k, v in options.items():
+            config[k] = v
+        config_file.seek(0)
+        config_file.truncate(0)
+        config_file.write(json.dumps(config, indent=4))
+
+
+def get_config_dict(configfile):
+    config = json.load(open(configfile, 'r'))
+    return config
