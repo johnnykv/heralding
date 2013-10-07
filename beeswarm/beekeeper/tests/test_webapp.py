@@ -119,10 +119,7 @@ class WebappTests(unittest.TestCase):
                  'id': '027bd968-f8ea-4a69-8d4c-6cf21476ca10', 'successful': False},
                 {'username': 'as', 'timestamp': '2013-05-07T22:21:21.150571', 'password': 'd',
                  'id': '603f40a4-e7eb-442d-9fde-0cd3ba707af7', 'successful': False}, ],
-            'transcript': [
-                {'timestamp': '2013-05-07T22:21:20.846805', 'direction': 'in', 'data': 'whoami\r\n'},
-                {'timestamp': '2013-05-07T22:21:21.136800', 'direction': 'out', 'data': 'james_brown\r\n$:~'}
-            ]
+            'transcript': 'touch /var/i/am/evil'
         }
 
         r = self.app.post('/ws/hive_data', data=json.dumps(data_dict), content_type='application/json')
