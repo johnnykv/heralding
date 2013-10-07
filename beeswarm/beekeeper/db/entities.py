@@ -38,7 +38,7 @@ class Session(Base):
     source_ip = Column(String)
     source_port = Column(Integer)
     session_data = relationship('SessionData', backref='Session')
-    transcript = relationship('Transcript', backref='Session')
+    transcript = relationship('Transcript', uselist=False, backref='Session')
     destination_ip = Column(String)
     destination_port = Column(Integer)
     hive_id = Column(String, ForeignKey('hive.id'))
@@ -70,11 +70,8 @@ class SessionData(Base):
 class Transcript(Base):
     __tablename__ = 'transcript'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    direction = Column(String)
-    timestamp = Column(DateTime)
     data = Column(String)
     session_id = Column(String, ForeignKey('session.id'))
-    session = relationship('Session')
 
 
 class Honeybee(Session):

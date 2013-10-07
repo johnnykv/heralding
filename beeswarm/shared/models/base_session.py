@@ -33,6 +33,7 @@ class BaseSession(object):
         self.destination_port = destination_port
         self.timestamp = datetime.utcnow()
         self.login_attempts = []
+        self.transcript = ''
 
     def add_auth_attempt(self, type, successful, **kwargs):
         """

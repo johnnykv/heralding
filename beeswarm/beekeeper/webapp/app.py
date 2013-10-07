@@ -33,7 +33,8 @@ from wtforms import HiddenField
 import beeswarm
 from forms import NewHiveConfigForm, NewFeederConfigForm, LoginForm, SettingsForm
 from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Hive, User, Authentication, Classification, HiveUser
+from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Hive, User, Authentication, Classification,\
+                                           HiveUser, Transcript
 from beeswarm.shared.helpers import update_config_file, get_config_dict
 
 
@@ -216,15 +217,16 @@ def hive_data():
         source_port=data['source_port'],
         hive=_hive)
 
+    if data['transcript']:
+        session.transcript = Transcript(data=data['transcript'])
+
     for auth in data['login_attempts']:
         a = Authentication(id=auth['id'], username=auth['username'], password=auth['password'],
                            successful=auth['successful'],
                            timestamp=datetime.strptime(auth['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'))
         session.authentication.append(a)
-
     db_session.add(session)
     db_session.commit()
-
     return ''
 
 

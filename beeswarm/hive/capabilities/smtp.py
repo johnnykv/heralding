@@ -32,21 +32,13 @@ class SMTPChannel(smtpd.SMTPChannel):
     def __init__(self, smtp_server, newsocket, fromaddr,
                  map=None, session=None, opts=None):
         self.options = opts
-
-        # A sad hack because SMTPChannel doesn't 
+        # A sad hack because SMTPChannel doesn't
         # allow custom banners, and sends it's own through its
         # __init__() method. When the initflag is False,
         # the push() method is effectively disabled, so the 
         # superclass banner is not sent.
         self._initflag = False
         self.banner = self.options['banner']
-        smtpd.SMTPChannel.__init__(self, smtp_server, newsocket, fromaddr)
-        asynchat.async_chat.__init__(self, newsocket, map=map)
-
-        # Now we set the initflag, so that push() will work again.
-        # And we push.
-        self._initflag = True
-        self.push("220 %s" % self.banner)
 
         # States
         self.login_pass_authenticating = False
@@ -60,14 +52,23 @@ class SMTPChannel(smtpd.SMTPChannel):
         self.digest = None
 
         self.sent_cram_challenge = None
-
         self.session = session
         self.options = opts
+
+        smtpd.SMTPChannel.__init__(self, smtp_server, newsocket, fromaddr)
+        asynchat.async_chat.__init__(self, newsocket, map=map)
+
+        # Now we set the initflag, so that push() will work again.
+        # And we push.
+        self._initflag = True
+        self.push("220 %s" % self.banner)
 
     def push(self, msg):
         # Only send data after superclass initialization
         if self._initflag:
-            asynchat.async_chat.push(self, msg + '\r\n')
+            transmit_msg = msg + '\r\n'
+            self.session.transcript += transmit_msg
+            asynchat.async_chat.push(self, transmit_msg)
 
     def close_quit(self):
         self.close_when_done()
@@ -79,6 +80,7 @@ class SMTPChannel(smtpd.SMTPChannel):
         self.close_quit()
 
     def collect_incoming_data(self, data):
+        self.session.transcript += data + self.terminator
         self.__line.append(data)
 
     def smtp_EHLO(self, arg):
@@ -294,4 +296,7 @@ class smtp(HandlerBase):
         try:
             asyncore.loop(map=local_map)
         except Exception:
+            # im sooooo evil!
+            pass
+        finally:
             session_.connected = False
