@@ -26,7 +26,8 @@
 			"enabled": true,
 			"port": 21,
 			"max_attempts": 3,
-			"banner": "Microsoft FTP Server"
+			"banner": "Microsoft FTP Server",
+			"syst_type": "WINDOWS-NT-6.1"
 		},
 		"telnet": {
 			"enabled": true,
