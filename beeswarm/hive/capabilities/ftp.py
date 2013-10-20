@@ -59,6 +59,7 @@ class BeeFTPHandler(object):
     def serve(self):
         while self.serve_flag:
             resp = self.getcmd()
+            self.session.transcript_outgoing(resp)
             if not resp:
                 self.stop()
                 break
@@ -206,6 +207,7 @@ class BeeFTPHandler(object):
 
     def respond(self, msg):
         msg += TERMINATOR
+        self.session.transcript_outgoing(msg)
         self.conn.send(msg)
 
     def stop(self):
