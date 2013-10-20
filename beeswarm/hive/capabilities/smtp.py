@@ -67,7 +67,7 @@ class SMTPChannel(smtpd.SMTPChannel):
         # Only send data after superclass initialization
         if self._initflag:
             transmit_msg = msg + '\r\n'
-            self.session.transcript += transmit_msg
+            self.session.transcript_outgoing(transmit_msg)
             asynchat.async_chat.push(self, transmit_msg)
 
     def close_quit(self):
@@ -80,7 +80,7 @@ class SMTPChannel(smtpd.SMTPChannel):
         self.close_quit()
 
     def collect_incoming_data(self, data):
-        self.session.transcript += data + self.terminator
+        self.session.transcript_incoming(data + self.terminator)
         self.__line.append(data)
 
     def smtp_EHLO(self, arg):

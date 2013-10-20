@@ -59,6 +59,15 @@ class BaseSession(object):
 
         self.login_attempts.append(entry)
 
+    # in the near future we want to annotate incomming/outgoing, hence the two transcript_ methods.
+    def transcript_incoming(self, log_line):
+        log_line = "[{0} I] {1}".format((datetime.utcnow() - self.timestamp).total_seconds(), log_line)
+        self.transcript += log_line
+
+    def transcript_outgoing(self, log_line):
+        log_line = "[{0} O] {1}".format((datetime.utcnow() - self.timestamp).total_seconds(), log_line)
+        self.transcript += log_line
+
     def to_dict(self):
         return vars(self)
 
