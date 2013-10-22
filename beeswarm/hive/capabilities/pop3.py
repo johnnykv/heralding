@@ -48,7 +48,7 @@ class pop3(HandlerBase):
                 break
 
             session.activity()
-
+            session.transcript_incoming(raw_msg)
             cmd_msg = raw_msg.rstrip().split(' ', 1)
             if len(cmd_msg) == 0:
                 continue
@@ -213,6 +213,7 @@ class pop3(HandlerBase):
 
     def send_message(self, session, gsocket, msg):
         try:
+            session.transcript_outgoing(msg + '\n')
             gsocket.sendall(msg + "\n")
         except socket.error, (value, msg):
             session.connected = False

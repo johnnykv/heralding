@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import curses
+import sys
 
 import logging
 import socket
@@ -84,3 +85,35 @@ class telnet_wrapper(Commands):
         self.CODES['INS'] = curses.tigetstr('ich1')
         self.CODES['CSRLEFT'] = curses.tigetstr('cub1')
         self.CODES['CSRRIGHT'] = curses.tigetstr('cuf1')
+
+    def handle(self):
+        "The actual service to which the user has connected."
+        if not self.authentication_ok():
+            return
+        if self.DOECHO:
+            self.writeline(self.WELCOME)
+        self.session_start()
+        while self.RUNSHELL:
+            raw_input = self.readline(prompt=self.PROMPT).strip()
+            self.session.transcript_incoming(raw_input + '\n')
+            self.input = self.input_reader(self, raw_input)
+            self.raw_input = self.input.raw
+            if self.input.cmd:
+                cmd = self.input.cmd.upper()
+                params = self.input.params
+                if self.COMMANDS.has_key(cmd):
+                    try:
+                        self.COMMANDS[cmd](params)
+                    except:
+                        logger.exception('Error calling %s.' % cmd)
+                        (t, p, tb) = sys.exc_info()
+                        if self.handleException(t, p, tb):
+                            break
+                else:
+                    logger.writeerror("Unknown command '%s'" % cmd)
+        logger.debug("Exiting handler")
+
+    def writecooked(self, text):
+        #TODO: Figure out way to log outgoing without logging "echo"
+        #self.session.transcript_outgoing(text)
+        Commands.writecooked(self, text)
