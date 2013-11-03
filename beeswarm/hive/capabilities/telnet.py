@@ -110,7 +110,7 @@ class telnet_wrapper(Commands):
                         if self.handleException(t, p, tb):
                             break
                 else:
-                    logger.writeerror("Unknown command '%s'" % cmd)
+                    logger.error("Unknown command '%s'" % cmd)
         logger.debug("Exiting handler")
 
     def writecooked(self, text):
