@@ -15,6 +15,8 @@
 
 import argparse
 import os
+import logging
+import sys
 from fs.errors import ResourceNotFoundError
 from fs.path import dirname
 from fs.utils import isdir
@@ -23,6 +25,7 @@ from telnetsrv.telnetsrvlib import command
 from beeswarm.hive.helpers.common import path_to_ls
 from datetime import timedelta
 
+logger = logging.getLogger(__name__)
 
 class Commands(TelnetHandler):
     """This class implements the shell functionality for the telnet and SSH capabilities"""
@@ -46,8 +49,9 @@ class Commands(TelnetHandler):
     authNeedUser = True
     authNeedPass = True
 
-    def __init__(self, request, client_address, server, vfs):
+    def __init__(self, request, client_address, server, vfs, session):
         self.vfs = vfs
+        self.session = session
         with self.vfs.open('/etc/motd') as motd:
             Commands.WELCOME = motd.read()
         self.working_dir = '/'
@@ -204,4 +208,31 @@ class Commands(TelnetHandler):
         for dirname, info in self.vfs.ilistdirinfo(path):
             size += info['st_blocks']
         self.total_file_size = size
+
+    def handle(self):
+        "The actual service to which the user has connected."
+        if not self.authentication_ok():
+            return
+        if self.DOECHO:
+            self.writeline(self.WELCOME)
+        self.session_start()
+        while self.RUNSHELL:
+            raw_input = self.readline(prompt=self.PROMPT).strip()
+            self.session.transcript_incoming(raw_input + '\n')
+            self.input = self.input_reader(self, raw_input)
+            self.raw_input = self.input.raw
+            if self.input.cmd:
+                cmd = self.input.cmd.upper()
+                params = self.input.params
+                if self.COMMANDS.has_key(cmd):
+                    try:
+                        self.COMMANDS[cmd](params)
+                    except:
+                        logger.exception('Error calling %s.' % cmd)
+                        (t, p, tb) = sys.exc_info()
+                        if self.handleException(t, p, tb):
+                            break
+                else:
+                    logger.error("Unknown command '%s'" % cmd)
+        logger.debug("Exiting handler")
 

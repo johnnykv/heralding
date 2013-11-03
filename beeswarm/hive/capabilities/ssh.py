@@ -15,9 +15,10 @@
 
 import logging
 
-from telnetsrv.paramiko_ssh import SSHHandler
+from telnetsrv.paramiko_ssh import SSHHandler, TelnetToPtyHandler
 from paramiko import RSAKey
 from paramiko.ssh_exception import SSHException
+
 
 from beeswarm.hive.capabilities.handlerbase import HandlerBase
 from beeswarm.hive.capabilities.shared.shell import Commands
@@ -43,8 +44,8 @@ class ssh(HandlerBase):
 
 class BeeTelnetHandler(Commands):
 
-    def __init__(self, request, client_address, server, vfs):
-        Commands.__init__(self, request, client_address, server, vfs)
+    def __init__(self, request, client_address, server, vfs, session):
+        Commands.__init__(self, request, client_address, server, vfs, session)
 
 
 class ssh_wrapper(SSHHandler):
@@ -68,7 +69,14 @@ class ssh_wrapper(SSHHandler):
         ssh_wrapper.host_key = RSAKey(filename=server_key)
         request = ssh_wrapper.dummy_request()
         request._sock = socket
+
         SSHHandler.__init__(self, request, client_address, server)
+
+        class __MixedPtyHandler(TelnetToPtyHandler, BeeTelnetHandler):
+            # BaseRequestHandler does not inherit from object, must call the __init__ directly
+            def __init__(self, *args):
+                TelnetToPtyHandler.__init__(self, *args)
+        self.pty_handler = __MixedPtyHandler
 
     def authCallbackUsername(self, username):
         #make sure no one can logon
@@ -115,7 +123,7 @@ class ssh_wrapper(SSHHandler):
         request.username = self.username
 
         # This should block until the user quits the pty
-        self.pty_handler(request, self.client_address, self.tcp_server, self.vfs)
+        self.pty_handler(request, self.client_address, self.tcp_server, self.vfs, self.session)
 
         # Shutdown the entire session
         self.transport.close()
