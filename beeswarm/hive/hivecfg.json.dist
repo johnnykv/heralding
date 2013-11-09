@@ -1,5 +1,6 @@
 {
     "general": {
+        "mode": "hive",
         "hive_id": "standalone",
         "hive_ip": "",
         "fetch_ip": true

@@ -262,6 +262,7 @@ def create_hive():
 
         hive_config = {
             'general': {
+                'mode': 'hive',
                 'hive_id': new_hive_id,
                 'hive_ip': '192.168.1.1',
                 'fetch_ip': False
@@ -385,6 +386,7 @@ def create_feeder():
         feeder_password = str(uuid.uuid4())
         feeder_config = {
             'general': {
+                'mode': 'feeder',
                 'feeder_id': new_feeder_id,
                 'hive_id': None
             },

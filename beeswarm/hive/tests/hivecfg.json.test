@@ -1,5 +1,6 @@
 {
     "general": {
+        "mode": "hive",
         "hive_id": "h11141df-b2f6-baf4-86c0-f4e163cf69aa",
         "hive_ip": "192.168.1.1",
         "fetch_ip": false
