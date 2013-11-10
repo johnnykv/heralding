@@ -39,7 +39,6 @@ from beeswarm.hive.models.user import HiveUser
 from beeswarm.errors import ConfigNotFound
 import requests
 from requests.exceptions import Timeout, ConnectionError
-from beeswarm.shared.helpers import is_url
 from beeswarm.shared.asciify import asciify
 from beeswarm.shared.models.ui_handler import HiveUIHandler
 
@@ -50,36 +49,43 @@ class Hive(object):
 
     """ This is the main class, which starts up all the capabilities. """
 
-    def __init__(self, work_dir, config_arg='hivecfg.json', key='server.key', cert='server.crt',
+    def __init__(self, work_dir, config, key='server.key', cert='server.crt',
                  curses_screen=None):
         """
             Main class which runs Beeswarm in Hive mode.
 
         :param work_dir: Working directory (usually the current working directory)
-        :param config_arg: Can be a URL,from where the configuration is fetched, or a file name, in case
-                           the config file exists.
+        :param config_arg: Beeswarm configuration dictionary, None if not configuration was supplied.
         :param key: Key file used for SSL enabled capabilities
         :param cert: Cert file used for SSL enabled capabilities
         :param curses_screen: Contains a curses screen object, if UI is enabled. Default is None.
         """
+        if config is None or not os.path.isdir(os.path.join(work_dir, 'data')):
+            Hive.prepare_environment(work_dir)
+            with open('beeswarmcfg.json', 'r') as config_file:
+                config = json.load(config_file, object_hook=asciify)
+        else:
+            print config
+
         self.work_dir = work_dir
+        self.config = config
         self.key = key
         self.cert = cert
         self.curses_screen = curses_screen
 
-        if not is_url(config_arg):
-            if not os.path.exists(config_arg):
-                raise ConfigNotFound('Configuration file could not be found. ({0})'.format(config_arg))
-            try:
-                with open(config_arg, 'r') as cfg:
-                    self.config = json.load(cfg, object_hook=asciify)
-            except (ValueError, TypeError) as e:
-                raise Exception('Bad syntax for Config File: (%s)%s' % (e, str(type(e))))
-        else:
-            conf = requests.get(config_arg, verify=False)
-            self.config = json.loads(conf.text, object_hook=asciify)
-            with open('hivecfg.json', 'w') as local_config:
-                local_config.write(json.dumps(self.config, indent=4))
+        #if not is_url(config_arg):
+        #    if not os.path.exists(config_arg):
+        #        raise ConfigNotFound('Configuration file could not be found. ({0})'.format(config_arg))
+        #    try:
+        #        with open(config_arg, 'r') as cfg:
+        #            self.config = json.load(cfg, object_hook=asciify)
+        #    except (ValueError, TypeError) as e:
+        #        raise Exception('Bad syntax for Config File: (%s)%s' % (e, str(type(e))))
+        #else:
+        #    conf = requests.get(config_arg, verify=False)
+        #    self.config = json.loads(conf.text, object_hook=asciify)
+        #    with open('hivecfg.json', 'w') as local_config:
+        #        local_config.write(json.dumps(self.config, indent=4))
 
         Session.hive_id = self.config['general']['hive_id']
 
@@ -224,10 +230,10 @@ class Hive(object):
 
         #this config file is for standalone operations, it will be overwritten during __init__
         #if a config url is specified.
-        config_file = os.path.join(work_dir, 'hivecfg.json.dist')
+        config_file = os.path.join(work_dir, 'beeswarmcfg.json.dist')
         if not os.path.isfile(config_file):
             logger.info('Copying configuration file to workdir.')
-            shutil.copyfile(os.path.join(package_directory, 'hive/hivecfg.json.dist'),
+            shutil.copyfile(os.path.join(package_directory, 'hive/beeswarmcfg.json.dist'),
                             os.path.join(work_dir, 'hivecfg.json'))
 
         create_self_signed_cert(work_dir, 'server.crt', 'server.key')

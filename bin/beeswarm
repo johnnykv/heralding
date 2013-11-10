@@ -16,6 +16,7 @@
 import curses
 
 import logging
+import json
 from argparse import ArgumentParser
 import sys
 import os
@@ -23,6 +24,8 @@ import os
 import gevent
 import gevent.monkey
 from gevent import Greenlet
+import requests
+from requests.exceptions import Timeout, ConnectionError
 import beeswarm
 
 from beeswarm.hive.hive import Hive
@@ -31,6 +34,8 @@ from beeswarm.feeder.feeder import Feeder
 from beeswarm.errors import ConfigNotFound
 from beeswarm.shared.helpers import is_url
 from beeswarm.shared.models.ui_handler import CursesLogHandler
+from beeswarm.shared.asciify import asciify
+from beeswarm.shared.helpers import is_url
 
 gevent.monkey.patch_all()
 
@@ -95,12 +100,12 @@ class LogFilter(logging.Filter):
 if __name__ == '__main__':
     parser = ArgumentParser(description='Beeswarm')
 
-    group = parser.add_mutually_exclusive_group(required=True)
+    group = parser.add_argument_group()
     group.add_argument('-hi', '--hive', action='store_true', help='Starts beeswarm in hive mode.')
     group.add_argument('-fe', '--feeder', action='store_true', help='Starts beeswarm in feeder mode.')
     group.add_argument('-be', '--beekeeper', action='store_true', help='Starts beeswarm in beekeeper mode.')
 
-    parser.add_argument('--config', dest='configarg', help='Name of the config file or URL if configured remotely')
+    parser.add_argument('--config', dest='configurl', default='', help='Configuration URL to the beekeeper service.')
     parser.add_argument('--workdir', dest='workdir', default=os.getcwd())
     parser.add_argument('--logfile', dest='logfile', default='beeswarm.log')
     parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Logs debug messages.')
@@ -110,39 +115,37 @@ if __name__ == '__main__':
     curses_screen = setuplogging(args.logfile, args.verbose, args.userinterface)
 
     mode = None
-    if args.hive:
+    config = None
+    config_file = None
+
+    if is_url(args.configurl):
+        conf = requests.get(args.configurl, verify=False)
+        config = json.loads(conf.text, object_hook=asciify)
+        with open('beeswarmcfg.json', 'w') as local_config:
+            local_config.write(json.dumps(config, indent=4))
+
+    if os.path.isfile('beeswarmcfg.json'):
+        with open('beeswarmcfg.json', 'r') as config_file:
+            config = json.load(config_file, object_hook=asciify)
+            if 'general' in config:
+                _mode = config['general']['mode']
+                if _mode == 'hive':
+                    mode = Hive
+                elif _mode == 'beekeeper':
+                    mode = Beekeeper
+                elif _mode == 'feeder':
+                    mode = Feeder
+    elif args.hive:
         mode = Hive
-        prepare = False
-        if args.configarg:
-            if is_url(args.configarg):
-                prepare = True
-        #no config file and on data directory
-        elif not os.path.isdir(os.path.join(args.workdir, 'data')):
-            prepare = True
-
-        if prepare:
-            #We have a new Hive being used.
-            try:
-                mode.prepare_environment(args.workdir)
-            except OSError as ex:
-                logger.error('Error while preparing work directory, please make sure '
-                             'the work directory is empty. ({0})'.format(ex))
-                sys.exit(1)
-
     elif args.feeder:
         mode = Feeder
     elif args.beekeeper:
         mode = Beekeeper
-        if not args.configarg:
-            # User hasn't specified a config file, so check if the default exists.
-            # if not, copy the default file to the work-dir
-            mode.prepare_environment(args.workdir)
+
+    assert mode is not None
 
     try:
-        if args.configarg:
-            m = mode(args.workdir, config_arg=args.configarg, curses_screen=curses_screen)
-        else:
-            m = mode(args.workdir, curses_screen=curses_screen)
+        m = mode(args.workdir, config, curses_screen=curses_screen)
     except ConfigNotFound as ex:
         logger.error(ex)
         sys.exit(ex)

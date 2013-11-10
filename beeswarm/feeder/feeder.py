@@ -28,9 +28,7 @@ gevent.monkey.patch_all()
 
 from beeswarm.feeder.bees import clientbase
 from beeswarm.feeder.models.session import BeeSession
-from beeswarm.errors import ConfigNotFound
 from beeswarm.feeder.models.dispatcher import BeeDispatcher
-from beeswarm.shared.helpers import is_url
 from beeswarm.shared.asciify import asciify
 from beeswarm.shared.helpers import drop_privileges
 from beeswarm.feeder.consumer import consumer
@@ -42,32 +40,20 @@ logger = logging.getLogger(__name__)
 
 
 class Feeder(object):
-    def __init__(self, work_dir, config_arg='feedercfg.json', curses_screen=None):
+    def __init__(self, work_dir, config, curses_screen=None):
 
         """
             Main class which runs Beeswarm in Feeder mode.
 
         :param work_dir: Working directory (usually the current working directory)
-        :param config_arg: Can be a URL,from where the configuration is fetched, or a file name, in case
-                           the config file exists.
+        :param config_arg: Beeswarm configuration dictionary.
         :param curses_screen: Contains a curses screen object, if UI is enabled. Default is None.
         """
         self.run_flag = True
         self.curses_screen = curses_screen
 
-        if not is_url(config_arg):
-            if not os.path.exists(config_arg):
-                raise ConfigNotFound('Configuration file could not be found. ({0})'.format(config_arg))
-            try:
-                with open(config_arg, 'r') as cfg:
-                    self.config = json.load(cfg, object_hook=asciify)
-            except (ValueError, TypeError) as e:
-                raise Exception('Bad syntax for Config File: (%s)%s' % (e, str(type(e))))
-        else:
-            conf = requests.get(config_arg, verify=False)
-            self.config = json.loads(conf.text, object_hook=asciify)
-            with open('feedercfg.json', 'w') as local_config:
-                local_config.write(json.dumps(self.config, indent=4))
+        with open('beeswarmcfg.json', 'r') as config_file:
+            self.config = json.load(config_file, object_hook=asciify)
 
         BeeSession.feeder_id = self.config['general']['feeder_id']
         BeeSession.hive_id = self.config['general']['hive_id']

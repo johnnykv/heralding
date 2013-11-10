@@ -27,24 +27,30 @@ from beeswarm.beekeeper.webapp.auth import Authenticator
 from beeswarm.shared.helpers import drop_privileges
 from beeswarm.beekeeper.misc.scheduler import Scheduler
 from beeswarm.shared.helpers import find_offset, create_self_signed_cert, update_config_file
+from beeswarm.shared.asciify import asciify
 
 logger = logging.getLogger(__name__)
 
 
 class Beekeeper(object):
-    def __init__(self, work_dir, config_arg='beekeepercfg.json', curses_screen=None):
+    def __init__(self, work_dir, config, curses_screen=None):
         """
             Main class for the Beekeeper Web-Interface. It takes care of setting up
             the database, managing the users, etc.
 
         :param work_dir: The working directory (usually the current working directory).
-        :param config_arg: Specifies the name of the config file.
+        :param config_arg: Beeswarm configuration dictionary, None if not configuration was supplied.
         :param curses_screen: This parameter is to maintain a similar interface for
                                all the modes. It is ignored for the Beekeeper.
         """
+        if config is None:
+            Beekeeper.prepare_environment(work_dir)
+            with open('beeswarmcfg.json', 'r') as config_file:
+                config = json.load(config_file, object_hook=asciify)
+
         self.work_dir = work_dir
-        self.config_file = config_arg
-        self.config = self.get_config(self.config_file)
+        self.config = config
+        self.config_file = 'beeswarmcfg.json'
 
         self.servers = {}
         self.greenlets = []
@@ -53,7 +59,7 @@ class Beekeeper(object):
         database.setup_db(os.path.join(self.config['sql']['connection_string']))
         self.app = app.app
         self.app.config['CERT_PATH'] = self.config['ssl']['certpath']
-        self.app.config['BEEKEEPER_CONFIG'] = self.config_file
+        self.app.config['BEEKEEPER_CONFIG'] = 'beeswarmcfg.json'
         self.authenticator = Authenticator()
         self.authenticator.ensure_default_user()
 
@@ -144,7 +150,7 @@ class Beekeeper(object):
     @staticmethod
     def prepare_environment(work_dir):
         package_directory = os.path.dirname(os.path.abspath(beeswarm.__file__))
-        config_file = os.path.join(work_dir, 'beekeepercfg.json')
+        config_file = os.path.join(work_dir, 'beeswarmcfg.json')
         if not os.path.isfile(config_file):
             logging.info('Copying configuration file to workdir.')
             print '*** Please answer a few configuration options ***'
@@ -171,7 +177,7 @@ class Beekeeper(object):
             create_self_signed_cert(work_dir, 'beekeeper.crt', 'beekeeper.key', cert_country, cert_state, cert_org,
                                     cert_locality, cert_org_unit, cert_cn)
 
-            shutil.copyfile(os.path.join(package_directory, 'beekeeper/beekeepercfg.json.dist'),
+            shutil.copyfile(os.path.join(package_directory, 'beekeeper/beeswarmcfg.json.dist'),
                             config_file)
 
             # update the config file
