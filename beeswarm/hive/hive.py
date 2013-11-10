@@ -55,7 +55,7 @@ class Hive(object):
             Main class which runs Beeswarm in Hive mode.
 
         :param work_dir: Working directory (usually the current working directory)
-        :param config_arg: Beeswarm configuration dictionary, None if not configuration was supplied.
+        :param config_arg: Beeswarm configuration dictionary, None if no configuration was supplied.
         :param key: Key file used for SSL enabled capabilities
         :param cert: Cert file used for SSL enabled capabilities
         :param curses_screen: Contains a curses screen object, if UI is enabled. Default is None.

@@ -45,7 +45,7 @@ class Beekeeper(object):
         """
         if config is None:
             Beekeeper.prepare_environment(work_dir)
-            with open('beeswarmcfg.json', 'r') as config_file:
+            with open(os.path.join(work_dir, 'beeswarmcfg.json'), 'r') as config_file:
                 config = json.load(config_file, object_hook=asciify)
 
         self.work_dir = work_dir

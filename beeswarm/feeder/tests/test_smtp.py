@@ -115,7 +115,7 @@ class SMTP_Test(unittest.TestCase):
         socket = create_socket(('0.0.0.0', 0))
         srv = StreamServer(socket, cap.handle_session)
         srv.start()
-
+        gevent.sleep()
         bee_info = {
             'timing': 'regular',
             'username': 'test',

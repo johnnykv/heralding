@@ -16,12 +16,14 @@ import gevent
 import gevent.monkey
 import tempfile
 import shutil
+import json
 import os
 
 gevent.monkey.patch_all()
 
 import unittest
 from beeswarm.hive.hive import Hive
+from beeswarm.shared.asciify import asciify
 
 
 class hive_tests(unittest.TestCase):
@@ -29,7 +31,9 @@ class hive_tests(unittest.TestCase):
         self.work_dir = tempfile.mkdtemp()
         Hive.prepare_environment(self.work_dir)
 
-        self.test_config_file = os.path.join(os.path.dirname(__file__), 'hivecfg.json.test')
+        test_config_file = os.path.join(os.path.dirname(__file__), 'hivecfg.json.test')
+        with open(test_config_file, 'r') as config_file:
+            self.config_dict = json.load(config_file, object_hook=asciify)
         self.key = os.path.join(os.path.dirname(__file__), 'dummy_key.key')
         self.cert = os.path.join(os.path.dirname(__file__), 'dummy_cert.crt')
 
@@ -39,16 +43,16 @@ class hive_tests(unittest.TestCase):
 
     def test_init(self):
         """Tests if the Hive class can be instantiated successfully using the default configuration file"""
-        sut = Hive(self.work_dir, config_arg=self.test_config_file, key=self.key, cert=self.cert)
+        sut = Hive(self.work_dir, self.config_dict, key=self.key, cert=self.cert)
 
     def test_user_creation(self):
         """Tests proper generation of HiveUsers from the data in the config file"""
-        sut = Hive(self.work_dir, config_arg=self.test_config_file, key=self.key, cert=self.cert)
+        sut = Hive(self.work_dir, self.config_dict, key=self.key, cert=self.cert)
         sut.create_users()
         self.assertEquals(1, len(sut.users))
 
     def test_start_serving(self):
-        sut = Hive(self.work_dir, config_arg=self.test_config_file, key=self.key, cert=self.cert)
+        sut = Hive(self.work_dir, self.config_dict, key=self.key, cert=self.cert)
         gevent.spawn(sut.start)
         gevent.sleep(1)
         #number of capabilities (servers). This value must be updated when adding new capabilities

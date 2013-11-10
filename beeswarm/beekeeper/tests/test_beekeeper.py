@@ -17,6 +17,7 @@ import gevent
 import gevent.monkey
 import tempfile
 import os
+import shutil
 from beeswarm.beekeeper.beekeeper import Beekeeper
 
 gevent.monkey.patch_all()
@@ -28,15 +29,16 @@ class Beekeeper_Tests(unittest.TestCase):
 
     def setUp(self):
         self.work_dir = tempfile.mkdtemp()
-        self.test_config_file = os.path.join(os.path.dirname(__file__), 'beekeepercfg.json.test')
+        test_config_file = os.path.join(os.path.dirname(__file__), 'beeswarmcfg.json.test')
+        shutil.copy(test_config_file, os.path.join(self.work_dir, 'beeswarmcfg.json'))
         self.key = os.path.join(os.path.dirname(__file__), 'dummy_key.key')
         self.cert = os.path.join(os.path.dirname(__file__), 'dummy_cert.crt')
 
     def test_init(self):
-        bk = Beekeeper(self.work_dir, config_arg=self.test_config_file)
+        bk = Beekeeper(self.work_dir, None)
 
     def test_start(self):
-        bk = Beekeeper(self.work_dir, config_arg=self.test_config_file)
+        bk = Beekeeper(self.work_dir, None)
         gevent.spawn(bk.start, maintenance=False)
         gevent.sleep(1)
         self.assertNotEquals(bk.servers, {})

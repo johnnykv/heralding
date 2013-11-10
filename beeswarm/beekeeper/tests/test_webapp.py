@@ -3,6 +3,7 @@ import os
 import uuid
 import unittest
 from datetime import datetime
+import shutil
 import gevent
 
 from beeswarm.beekeeper.webapp.auth import Authenticator
@@ -11,13 +12,14 @@ from beeswarm.beekeeper.db import database
 from beeswarm.beekeeper.db.entities import Feeder, Hive, Session, Honeybee, User, Authentication
 from beeswarm.beekeeper.webapp import app
 
-app.app.config['WTF_CSRF_ENABLED'] = False
-app.app.config['CERT_PATH'] = os.path.join(os.path.dirname(__file__), 'beekeepercfg.json.test')
-app.app.config['BEEKEEPER_CONFIG'] = os.path.join(os.path.dirname(__file__), 'beekeepercfg.json.test')
 
 
 class WebappTests(unittest.TestCase):
     def setUp(self):
+        app.app.config['WTF_CSRF_ENABLED'] = False
+        app.app.config['CERT_PATH'] = os.path.join(os.path.dirname(__file__), 'beeswarmcfg.json.test')
+        app.app.config['BEEKEEPER_CONFIG'] = os.path.join(os.path.dirname(__file__), 'beeswarmcfg.json.test')
+
         self.app = app.app.test_client()
         self.authenticator = Authenticator()
 
