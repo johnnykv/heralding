@@ -217,8 +217,9 @@ def hive_data():
         source_port=data['source_port'],
         hive=_hive)
 
-    if data['transcript']:
-        session.transcript = Transcript(data=data['transcript'])
+    for entry in data['transcript']:
+        transcript = Transcript(timestamp=entry['timestamp'], direction=entry['direction'], data=entry[log_line])
+        session.transcript.append(transcript)
 
     for auth in data['login_attempts']:
         a = Authentication(id=auth['id'], username=auth['username'], password=auth['password'],

@@ -71,6 +71,8 @@ class Transcript(Base):
     __tablename__ = 'transcript'
     id = Column(Integer, primary_key=True, autoincrement=True)
     data = Column(String)
+    direction = Column(String)
+    timestamp = Column(DateTime)
     session_id = Column(String, ForeignKey('session.id'))
 
 

@@ -33,7 +33,7 @@ class BaseSession(object):
         self.destination_port = destination_port
         self.timestamp = datetime.utcnow()
         self.login_attempts = []
-        self.transcript = ''
+        self.transcript = []
 
     def add_auth_attempt(self, type, successful, **kwargs):
         """
@@ -59,14 +59,14 @@ class BaseSession(object):
 
         self.login_attempts.append(entry)
 
-    # in the near future we want to annotate incomming/outgoing, hence the two transcript_ methods.
+    def _add_transcript(self, direction, log_line):
+        self.transcript.append({'timestamp': datetime.utcnow(), 'direction': direction, 'log_line': log_line})
+
     def transcript_incoming(self, log_line):
-        log_line = "[{0} I] {1}".format((datetime.utcnow() - self.timestamp).total_seconds(), log_line)
-        self.transcript += log_line
+        self._add_transcript('incoming', log_line)
 
     def transcript_outgoing(self, log_line):
-        log_line = "[{0} O] {1}".format((datetime.utcnow() - self.timestamp).total_seconds(), log_line)
-        self.transcript += log_line
+        self._add_transcript('outgoing', log_line)
 
     def to_dict(self):
         return vars(self)
