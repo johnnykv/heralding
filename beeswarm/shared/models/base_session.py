@@ -59,14 +59,14 @@ class BaseSession(object):
 
         self.login_attempts.append(entry)
 
-    def _add_transcript(self, direction, log_line):
-        self.transcript.append({'timestamp': datetime.utcnow(), 'direction': direction, 'log_line': log_line})
+    def _add_transcript(self, direction, data):
+        self.transcript.append({'timestamp': datetime.utcnow(), 'direction': direction, 'data': data})
 
-    def transcript_incoming(self, log_line):
-        self._add_transcript('incoming', log_line)
+    def transcript_incoming(self, data):
+        self._add_transcript('incoming', data)
 
-    def transcript_outgoing(self, log_line):
-        self._add_transcript('outgoing', log_line)
+    def transcript_outgoing(self, data):
+        self._add_transcript('outgoing', data)
 
     def to_dict(self):
         return vars(self)

@@ -218,7 +218,8 @@ def hive_data():
         hive=_hive)
 
     for entry in data['transcript']:
-        transcript = Transcript(timestamp=entry['timestamp'], direction=entry['direction'], data=entry[log_line])
+        transcript_timestamp = datetime.strptime(entry['timestamp'], '%Y-%m-%dT%H:%M:%S.%f')
+        transcript = Transcript(timestamp=transcript_timestamp, direction=entry['direction'], data=entry['data'])
         session.transcript.append(transcript)
 
     for auth in data['login_attempts']:

@@ -38,7 +38,7 @@ class Session(Base):
     source_ip = Column(String)
     source_port = Column(Integer)
     session_data = relationship('SessionData', backref='Session')
-    transcript = relationship('Transcript', uselist=False, backref='Session')
+    transcript = relationship('Transcript', backref='Session')
     destination_ip = Column(String)
     destination_port = Column(Integer)
     hive_id = Column(String, ForeignKey('hive.id'))
