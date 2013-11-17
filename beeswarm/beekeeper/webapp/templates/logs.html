@@ -1,59 +1,120 @@
 {% extends "base.html" %}
 {% block css %}
-    {{ super() }}
-    <link rel="stylesheet" href="/static/css/watable.css">
+{{ super() }}
+<link rel="stylesheet" href="/static/css/watable.css">
 {% endblock css %}
 {% block javascript %}
-    {{ super() }}
-    <script src="/static/js/jquery.watable.js"></script>
+{{ super() }}
+<script src="/static/js/jquery.watable.js">
+    var clickedSessionId = "";
+</script>
 {% endblock javascript %}
 {% if logtype == 'All' %}
-    {% set dataurl = '/data/sessions/all' %}
+{% set dataurl = '/data/sessions/all' %}
 {% elif logtype == 'HoneyBees' %}
-    {% set dataurl = '/data/sessions/honeybees' %}
+{% set dataurl = '/data/sessions/honeybees' %}
 {% elif logtype == 'Attacks' %}
-    {% set dataurl = '/data/sessions/attacks' %}
+{% set dataurl = '/data/sessions/attacks' %}
 {% endif %}
 {% block content %}
-    <h3>Logs - {{ logtype }} <a class="btn btn-info pull-right" href="{{ dataurl }}"><i
-            class="icon-download-alt"></i> Export</a></h3>
-    <div id="logtable" class="cont"></div>
-    <script type="text/javascript">
-        tableData = {
-            "rows": "",
-            "cols": {
-                "ip_address": {
-                    "index": 3,
-                    "type": "string",
-                    "friendly": "IP Address"
-                },
-                "protocol": {
-                    "index": 2,
-                    "type": "string",
-                    "friendly": "Protocol"
-                },
-                "classification": {
-                    "index": 4,
-                    "type": "string",
-                    "friendly": "Classification",
-                    "sortOrder": "desc"
-                },
-                "time": {
-                    "index": 1,
-                    "type": "string",
-                    "friendly": "Time",
-                    "sortOrder": "desc"
-                }
+<h3>Logs - {{ logtype }} <a class="btn btn-info pull-right" href="{{ dataurl }}"><i
+        class="icon-download-alt"></i> Export</a></h3>
+<div id="logtable" class="cont"></div>
+<script type="text/javascript">
+    tableData = {
+        "rows": "",
+        "cols": {
+            "ip_address": {
+                "index": 3,
+                "type": "string",
+                "friendly": "IP Address"
+            },
+            "protocol": {
+                "index": 2,
+                "type": "string",
+                "friendly": "Protocol"
+            },
+            "classification": {
+                "index": 4,
+                "type": "string",
+                "friendly": "Classification",
+                "sortOrder": "desc"
+            },
+            "time": {
+                "index": 1,
+                "type": "string",
+                "friendly": "Time",
+                "sortOrder": "desc"
+            },
+            "id": {
+                "index": 5,
+                "type": "string",
+                "friendly": "Id",
+                "hidden": true,
+                "unique": true
             }
-        };
-        var waTable = $("#logtable").WATable({preFill: true}).data('WATable');
-        jQuery.ajax('{{ dataurl }}', {
+        }
+    };
+    var waTable = $("#logtable").WATable({preFill: true, rowClicked: handleRowClicked }).data('WATable');
+    jQuery.ajax('{{ dataurl }}', {
+        success: function (response, status) {
+            if ('success' == status) {
+                tableData.rows = response;
+                waTable.setData(tableData);
+            }
+        }
+    });
+
+    function handleRowClicked(data) {
+        clickedSessionId = data.row.id;
+        jQuery.ajax('/data/session/' + data.row.id + '/transcript', {
             success: function (response, status) {
+                console.log('aha');
                 if ('success' == status) {
-                    tableData.rows = response;
-                    waTable.setData(tableData);
+                    h_tableData.rows = response;
+                    h_waTable.setData(h_tableData);
                 }
             }
         });
+        $('#transcriptmodal').modal('show');
+    }
+    ;
+</script>
+
+<div id="transcriptmodal" class="modal hide fade" tabindex="-1">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">x</button>
+        <h2>Session Transcript</h2>
+    </div>
+    <div id="hivetable" class="modal-body"></div>
+    <script type="text/javascript">
+        h_tableData = {
+            "rows": "",
+            "cols": {
+                "time": {
+                    "index": 1,
+                    "type": "string",
+                    "friendly": "Direction"
+                },
+                "direction": {
+                    "index": 1,
+                    "type": "string",
+                    "friendly": "Direction"
+                },
+                "data": {
+                    "index": 1,
+                    "type": "string",
+                    "friendly": "Data"
+                }
+            }
+        };
+        var h_waTable = $("#hivetable").WATable({preFill: true, checkboxes: true}).data('WATable');
+
     </script>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal">Close</button>
+    </div>
+</div>
+
+
 {% endblock content %}
