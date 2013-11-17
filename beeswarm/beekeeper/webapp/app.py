@@ -570,6 +570,18 @@ def data_sessions_attacks(_type):
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp
 
+@app.route('/data/session/<_id>/transcript')
+@login_required
+def data_session_transcript(_id):
+    db_session = database.get_session()
+
+    transcripts = db_session.query(Transcript).filter(Transcript.session_id == _id)
+    return_rows = []
+    for t in transcripts:
+        row = {'time': t.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'direction': t.direction, 'data': t.data}
+        return_rows.append(row)
+    rsp = Response(response=json.dumps(return_rows, indent=4), status=200, mimetype='application/json')
+    return rsp
 
 @app.route('/data/hives', methods=['GET'])
 @login_required

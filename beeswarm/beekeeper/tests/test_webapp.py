@@ -9,7 +9,7 @@ import gevent
 from beeswarm.beekeeper.webapp.auth import Authenticator
 
 from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Feeder, Hive, Session, Honeybee, User, Authentication
+from beeswarm.beekeeper.db.entities import Feeder, Hive, Session, Honeybee, User, Authentication, Transcript
 from beeswarm.beekeeper.webapp import app
 
 
@@ -355,6 +355,25 @@ class WebappTests(unittest.TestCase):
         resp = self.app.get('/data/feeders')
         table_data = json.loads(resp.data)
         self.assertEquals(len(table_data), 5)  # One is added in the setup method, and 4 in populate
+
+    def test_data_transcripts(self):
+        """ Tests that if given a session ID we can extract the relevant transcripts"""
+        db_session = database.get_session()
+        self.login('test', 'test')
+        session_id = str(uuid.uuid4())
+
+        timestamp = datetime.utcnow()
+
+        db_session.add(Transcript(timestamp=timestamp, direction='outgoing', data='whoami', session_id=session_id))
+        db_session.add(Transcript(timestamp=timestamp, direction='outgoing', data='root\r\n', session_id=session_id))
+        db_session.commit()
+        resp = self.app.get('/data/session/{0}/transcript'.format(session_id))
+        data = json.loads(resp.data)
+        string_timestamp = timestamp.strftime('%Y-%m-%d %H:%M:%S')
+        expected_result = [{u'direction': u'outgoing', u'data': u'whoami', u'time': u'{0}'.format(string_timestamp)},
+                           {u'direction': u'outgoing', u'data': u'root\r\n', u'time': u'{0}'.format(string_timestamp)}]
+        self.assertDictEqual(sorted(data)[0], sorted(expected_result)[0])
+
 
     def test_settings(self):
         """ Tests if new settings are successfully written to the config file """
