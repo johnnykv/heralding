@@ -8,14 +8,14 @@ Base = declarative_base()
 class Feeder(Base):
     __tablename__ = 'feeder'
     id = Column(String, primary_key=True)
-    honeybees = relationship("Honeybee", backref='Feeder')
+    honeybees = relationship("Honeybee", cascade="all, delete-orphan", backref='Feeder')
     configuration = Column(String)
 
 
 class Hive(Base):
     __tablename__ = 'hive'
     id = Column(String, primary_key=True)
-    sessions = relationship("Session", backref='Hive')
+    sessions = relationship("Session", cascade="all, delete-orphan", backref='Hive')
     configuration = Column(String)
 
 
@@ -34,11 +34,11 @@ class Session(Base):
     received = Column(DateTime)
     timestamp = Column(DateTime)
     protocol = Column(String)
-    authentication = relationship('Authentication')
+    authentication = relationship('Authentication', cascade="all, delete-orphan")
     source_ip = Column(String)
     source_port = Column(Integer)
-    session_data = relationship('SessionData', backref='Session')
-    transcript = relationship('Transcript', backref='Session')
+    session_data = relationship('SessionData', cascade="all, delete-orphan", backref='Session')
+    transcript = relationship('Transcript', cascade="all, delete-orphan", backref='Session')
     destination_ip = Column(String)
     destination_port = Column(Integer)
     hive_id = Column(String, ForeignKey('hive.id'))
