@@ -29,13 +29,15 @@ class Authenticator(object):
         userid = 'admin'
         count = session.query(User).filter(User.id == userid).count()
         if not count:
-            password = ''.join([random.choice(string.letters[:26]) for i in xrange(4)])
+            password = ''.join([random.choice(string.letters[:26]) for i in xrange(14)])
             pw_hash = generate_password_hash(password)
             u = User(id=userid, nickname='admin', password=pw_hash)
             session.add(u)
             session.commit()
             logger.info('Created default admin account for the BeeKeeper.')
+            print '****************************************************************************'
             print 'Default password for the admin account is: {0}'.format(password)
+            print '****************************************************************************'
 
     def add_user(self, username, password, user_type, nickname=''):
         session = database.get_session()
