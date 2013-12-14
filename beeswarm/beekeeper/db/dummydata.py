@@ -18,7 +18,7 @@ import string
 import random
 import uuid
 
-from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Hive, Authentication, Classification, Session
+from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Hive, Authentication, Classification, Session, Transcript
 
 from beeswarm.beekeeper.db import database
 
@@ -52,6 +52,12 @@ def fill_dummy_data():
         password = ''.join(random.choice(string.lowercase) for x in range(8))
         authentication = Authentication(id=str(uuid.uuid4()), username=username, password=password)
         session.authentication.append(authentication)
+
+        for x in range(10):
+            data = ''.join(random.choice(string.lowercase) for x in range(15))
+            direction = ('in', 'out')[x % 2]
+            transcript = Transcript(timestamp=datetime.now(), direction=direction, data=data)
+            session.transcript.append(transcript)
 
         authentications.append(authentication)
         sessions.append(session)
