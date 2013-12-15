@@ -1,14 +1,4 @@
 {% extends "base.html" %}
-{% block css %}
-{{ super() }}
-<link rel="stylesheet" href="/static/css/watable.css">
-{% endblock css %}
-{% block javascript %}
-{{ super() }}
-<script src="/static/js/jquery.watable.js">
-    var clickedSessionId = "";
-</script>
-{% endblock javascript %}
 {% if logtype == 'All' %}
 {% set dataurl = '/data/sessions/all' %}
 {% elif logtype == 'HoneyBees' %}
@@ -16,69 +6,101 @@
 {% elif logtype == 'Attacks' %}
 {% set dataurl = '/data/sessions/attacks' %}
 {% endif %}
+
+{% block javascript %}
+{{ super() }}
+<script src="/static/js/main.js">
+    var clickedSessionId = "";
+</script>
+
+{% endblock javascript %}
+
 {% block content %}
 <h3>Logs - {{ logtype }} <a class="btn btn-info pull-right" href="{{ dataurl }}"><i
         class="icon-download-alt"></i> Export</a></h3>
-<div id="logtable" class="cont"></div>
-<script type="text/javascript">
-    tableData = {
-        "rows": "",
-        "cols": {
-            "ip_address": {
-                "index": 3,
-                "type": "string",
-                "friendly": "IP Address"
-            },
-            "protocol": {
-                "index": 2,
-                "type": "string",
-                "friendly": "Protocol"
-            },
-            "classification": {
-                "index": 4,
-                "type": "string",
-                "friendly": "Classification",
-                "sortOrder": "desc"
-            },
-            "time": {
-                "index": 1,
-                "type": "string",
-                "friendly": "Time",
-                "sortOrder": "desc"
-            },
-            "id": {
-                "index": 5,
-                "type": "string",
-                "friendly": "Id",
-                "hidden": true,
-                "unique": true
-            }
-        }
-    };
-    var waTable = $("#logtable").WATable({preFill: true, rowClicked: handleRowClicked }).data('WATable');
-    jQuery.ajax('{{ dataurl }}', {
-        success: function (response, status) {
-            if ('success' == status) {
-                tableData.rows = response;
-                waTable.setData(tableData);
-            }
-        }
-    });
+<table id="logtable" class="table table-bordered datagrid">
+    	<thead/>
 
-    function handleRowClicked(data) {
-        clickedSessionId = data.row.id;
-        jQuery.ajax('/data/session/' + data.row.id + '/transcript', {
-            success: function (response, status) {
-                console.log('aha');
-                if ('success' == status) {
-                    h_tableData.rows = response;
-                    h_waTable.setData(h_tableData);
-                }
-            }
+		<tfoot>
+		<tr>
+			<th>
+				<div class="datagrid-footer-left" style="display:none;">
+					<div class="grid-controls">
+						<span><span class="grid-start"></span> - <span class="grid-end"></span> of <span class="grid-count"></span></span>
+						<select class="grid-pagesize"><option>5</option><option>20</option><option>50</option></select>
+						<span>Per Page</span>
+					</div>
+				</div>
+				<div class="datagrid-footer-right" style="display:none;">
+					<div class="grid-pager">
+						<button class="btn grid-prevpage"><i class="icon-chevron-left"></i></button>
+						<span>Page</span>
+						<div class="input-append dropdown combobox">
+							<input class="span1" type="text">
+						</div>
+						<span>of <span class="grid-pages"></span></span>
+						<button class="btn grid-nextpage"><i class="icon-chevron-right"></i></button>
+					</div>
+				</div>
+			</th>
+		</tr>
+		</tfoot>
+</table>
+
+<script type="text/javascript">
+
+$('#logtable').datagrid({
+  dataSource: new GenericDataSource({
+    columns: [{
+      property: 'time',
+      label: 'Time',
+      sortable: true
+    },{
+      property: 'protocol',
+      label: 'Protocol',
+      sortable: true
+    },{
+      property: 'ip_address',
+      label: 'Source IP',
+      sortable: false
+    },{
+      property: 'classification',
+      label: 'Classification',
+      sortable: false
+    }],
+    url: '{{ dataurl }}',
+    formatter: function(items) {
+        $.each(items, function(index, item) {
+        item.time = item.time + '<span style="visibility: hidden;" data-id="' + item.id + '"/>';
+  });
+}
+  })
+}).on('click', 'tbody > tr', (function() {
+            var id = $(this).find('> td > span').attr('data-id');
+
+            //$('#hivetable').datagrid('reload');
+            $('#hivetable').datagrid({
+            dataSource: new GenericDataSource({
+            columns: [{
+              property: 'time',
+              label: 'Time',
+              sortable: true
+            },{
+              property: 'direction',
+              label: 'Direction',
+              sortable: true
+            },{
+              property: 'data',
+              label: 'Data',
+              sortable: false
+            }],
+            url: '/data/session/' + id + '/transcript'
+          })
         });
         $('#transcriptmodal').modal('show');
-    }
-    ;
+        $('#hivetable').datagrid('reload');
+        }));
+
 </script>
 
 <div id="transcriptmodal" class="modal hide fade" tabindex="-1">
@@ -86,31 +108,33 @@
         <button type="button" class="close" data-dismiss="modal">x</button>
         <h2>Session Transcript</h2>
     </div>
-    <div id="hivetable" class="modal-body"></div>
-    <script type="text/javascript">
-        h_tableData = {
-            "rows": "",
-            "cols": {
-                "time": {
-                    "index": 1,
-                    "type": "string",
-                    "friendly": "Direction"
-                },
-                "direction": {
-                    "index": 1,
-                    "type": "string",
-                    "friendly": "Direction"
-                },
-                "data": {
-                    "index": 1,
-                    "type": "string",
-                    "friendly": "Data"
-                }
-            }
-        };
-        var h_waTable = $("#hivetable").WATable({preFill: true, checkboxes: true}).data('WATable');
-
-    </script>
+<table id="hivetable" class="table table-bordered datagrid">
+    	<thead/>
+		<tfoot>
+		<tr>
+			<th>
+				<div class="datagrid-footer-left" style="display:none;">
+					<div class="grid-controls">
+						<span><span class="grid-start"></span> - <span class="grid-end"></span> of <span class="grid-count"></span></span>
+						<select class="grid-pagesize"><option>5</option><option>20</option><option>50</option></select>
+						<span>Per Page</span>
+					</div>
+				</div>
+				<div class="datagrid-footer-right" style="display:none;">
+					<div class="grid-pager">
+						<button class="btn grid-prevpage"><i class="icon-chevron-left"></i></button>
+						<span>Page</span>
+						<div class="input-append dropdown combobox">
+							<input class="span1" type="text">
+						</div>
+						<span>of <span class="grid-pages"></span></span>
+						<button class="btn grid-nextpage"><i class="icon-chevron-right"></i></button>
+					</div>
+				</div>
+			</th>
+		</tr>
+		</tfoot>
+</table>
     <div class="modal-footer">
         <button class="btn" data-dismiss="modal">Close</button>
     </div>
