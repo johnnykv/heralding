@@ -7,14 +7,6 @@
 {% set dataurl = '/data/sessions/attacks' %}
 {% endif %}
 
-{% block javascript %}
-{{ super() }}
-<script src="/static/js/main.js">
-    var clickedSessionId = "";
-</script>
-
-{% endblock javascript %}
-
 {% block content %}
 <h3>Logs - {{ logtype }} <a class="btn btn-info pull-right" href="{{ dataurl }}"><i
         class="icon-download-alt"></i> Export</a></h3>
@@ -78,8 +70,7 @@ $('#logtable').datagrid({
 }).on('click', 'tbody > tr', (function() {
             var id = $(this).find('> td > span').attr('data-id');
 
-            //$('#hivetable').datagrid('reload');
-            $('#hivetable').datagrid({
+            $('#sessionTranscriptTable').datagrid({
             dataSource: new GenericDataSource({
             columns: [{
               property: 'time',
@@ -98,7 +89,7 @@ $('#logtable').datagrid({
           })
         });
         $('#transcriptmodal').modal('show');
-        $('#hivetable').datagrid('reload');
+        $('#sessionLogTable').datagrid('reload');
         }));
 
 </script>
@@ -108,7 +99,7 @@ $('#logtable').datagrid({
         <button type="button" class="close" data-dismiss="modal">x</button>
         <h2>Session Transcript</h2>
     </div>
-<table id="hivetable" class="table table-bordered datagrid">
+<table id="sessionTranscriptTable" class="table table-bordered datagrid">
     	<thead/>
 		<tfoot>
 		<tr>

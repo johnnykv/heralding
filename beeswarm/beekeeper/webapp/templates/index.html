@@ -1,241 +1,284 @@
 {% extends "base.html" %}
-{% block css %}
-    {{ super() }}
-    <link rel="stylesheet" href="/static/css/watable.css">
-{% endblock css %}
-{% block javascript %}
-    {{ super() }}
-    <script src="/static/js/jquery.watable.js"></script>
-{% endblock javascript %}
 {% block content %}
-    <div class="row-fluid">
-        <ul class="thumbnails">
-            <li class="thumbnail span6 text-center">
-                <a class="btn-link" href="#hivemodal" data-toggle="modal">
-                    <h1>{{ status.nhives }}
-                        <small>Hives</small>
-                    </h1>
-                </a>
-                <hr>
-                <div class="row-fluid">
-                    <h2 class="alert alert-error">{{ status.nattacks }}
-                        <small>Attacks Recorded</small>
-                    </h2>
-                    <h2 class="alert alert-success">{{ status.nattacks }}
-                        <small>Bees Classified</small>
-                    </h2>
-                </div>
-                <table class="table table-bordered">
-                    <tr>
-                        <th>Capability</th>
-                        <th>Attacks</th>
-                        <th>%</th>
-                    </tr>
-                    <tr>
-                        <td>http</td>
-                        <td>{{ status.attacks.http }}</td>
-                        {% if status.nattacks > 0 %}
-                            <td>{{ '%0.2f' % (status.attacks.http/status.nattacks * 100) }}%</td>
-                        {% else %}
-                            <td>No Attacks</td>
-                        {% endif %}
-                    </tr>
-                    <tr>
-                        <td>vnc</td>
-                        <td>{{ status.attacks.vnc }}</td>
-                        {% if status.nattacks > 0 %}
-                            <td>{{ '%0.2f' % (status.attacks.vnc/status.nattacks * 100) }}%</td>
-                        {% else %}
-                            <td>No Attacks</td>
-                        {% endif %}
+<div class="row-fluid">
+    <ul class="thumbnails">
+        <li class="thumbnail span6 text-center">
+            <a class="btn-link" href="#hivemodal" data-toggle="modal">
+                <h1>{{ status.nhives }}
+                    <small>Hives</small>
+                </h1>
+            </a>
+            <hr>
+            <div class="row-fluid">
+                <h2 class="alert alert-error">{{ status.nattacks }}
+                    <small>Attacks Recorded</small>
+                </h2>
+                <h2 class="alert alert-success">{{ status.nattacks }}
+                    <small>Bees Classified</small>
+                </h2>
+            </div>
+            <table class="table table-bordered">
+                <tr>
+                    <th>Capability</th>
+                    <th>Attacks</th>
+                    <th>%</th>
+                </tr>
+                <tr>
+                    <td>http</td>
+                    <td>{{ status.attacks.http }}</td>
+                    {% if status.nattacks > 0 %}
+                    <td>{{ '%0.2f' % (status.attacks.http/status.nattacks * 100) }}%</td>
+                    {% else %}
+                    <td>No Attacks</td>
+                    {% endif %}
+                </tr>
+                <tr>
+                    <td>vnc</td>
+                    <td>{{ status.attacks.vnc }}</td>
+                    {% if status.nattacks > 0 %}
+                    <td>{{ '%0.2f' % (status.attacks.vnc/status.nattacks * 100) }}%</td>
+                    {% else %}
+                    <td>No Attacks</td>
+                    {% endif %}
 
-                    </tr>
-                    <tr>
-                        <td>ssh</td>
-                        <td>{{ status.attacks.ssh }}</td>
-                        {% if status.nattacks > 0 %}
-                            <td>{{ '%0.2f' % (status.attacks.ssh/status.nattacks * 100) }}%</td>
-                        {% else %}
-                            <td>No Attacks</td>
-                        {% endif %}
-                    </tr>
-                    <tr>
-                        <td>ftp</td>
-                        <td>{{ status.attacks.ftp }}</td>
-                        {% if status.nattacks > 0 %}
-                            <td>{{ '%0.2f' % (status.attacks.ftp/status.nattacks * 100) }}%</td>
-                        {% else %}
-                            <td>No Attacks</td>
-                        {% endif %}
-                    </tr>
-                    <tr>
-                        <td>pop3s</td>
-                        <td>{{ status.attacks.pop3s }}</td>
-                        {% if status.nattacks > 0 %}
-                            <td>{{ '%0.2f' % (status.attacks.pop3s/status.nattacks * 100) }}%</td>
-                        {% else %}
-                            <td>No Attacks</td>
-                        {% endif %}
-                    </tr>
-                    <tr>
-                        <td>pop3</td>
-                        <td>{{ status.attacks.pop3 }}</td>
-                        {% if status.nattacks > 0 %}
-                            <td>{{ '%0.2f' % (status.attacks.pop3/status.nattacks * 100) }}%</td>
-                        {% else %}
-                            <td>No Attacks</td>
-                        {% endif %}
-                    </tr>
-                    <tr>
-                        <td>telnet</td>
-                        <td>{{ status.attacks.telnet }}</td>
-                        {% if status.nattacks > 0 %}
-                            <td>{{ '%0.2f' % (status.attacks.telnet/status.nattacks * 100) }}%</td>
-                        {% else %}
-                            <td>No Attacks</td>
-                        {% endif %}
-                    </tr>
-                    <tr>
-                        <td>smtp</td>
-                        <td>{{ status.attacks.smtp }}</td>
-                        {% if status.nattacks > 0 %}
-                            <td>{{ '%0.2f' % (status.attacks.smtp/status.nattacks * 100) }}%</td>
-                        {% else %}
-                            <td>No Attacks</td>
-                        {% endif %}
-                    </tr>
-                </table>
-            </li>
-            <li class="thumbnail span6 text-center pull-right">
-                <a class="btn-link" href="#feedermodal" data-toggle="modal">
-                    <h1>{{ status.nfeeders }}
-                        <small>Feeders</small>
-                    </h1>
-                </a>
-                <hr>
-                <div class="row-fluid">
-                    <h2 class="alert alert-success">{{ status.bees.successful }}
-                        <small>HoneyBees successful</small>
-                    </h2>
-                    <h2 class="alert alert-error">{{ status.bees.failed }}
-                        <small>HoneyBees failed</small>
-                    </h2>
-                </div>
-            </li>
-        </ul>
+                </tr>
+                <tr>
+                    <td>ssh</td>
+                    <td>{{ status.attacks.ssh }}</td>
+                    {% if status.nattacks > 0 %}
+                    <td>{{ '%0.2f' % (status.attacks.ssh/status.nattacks * 100) }}%</td>
+                    {% else %}
+                    <td>No Attacks</td>
+                    {% endif %}
+                </tr>
+                <tr>
+                    <td>ftp</td>
+                    <td>{{ status.attacks.ftp }}</td>
+                    {% if status.nattacks > 0 %}
+                    <td>{{ '%0.2f' % (status.attacks.ftp/status.nattacks * 100) }}%</td>
+                    {% else %}
+                    <td>No Attacks</td>
+                    {% endif %}
+                </tr>
+                <tr>
+                    <td>pop3s</td>
+                    <td>{{ status.attacks.pop3s }}</td>
+                    {% if status.nattacks > 0 %}
+                    <td>{{ '%0.2f' % (status.attacks.pop3s/status.nattacks * 100) }}%</td>
+                    {% else %}
+                    <td>No Attacks</td>
+                    {% endif %}
+                </tr>
+                <tr>
+                    <td>pop3</td>
+                    <td>{{ status.attacks.pop3 }}</td>
+                    {% if status.nattacks > 0 %}
+                    <td>{{ '%0.2f' % (status.attacks.pop3/status.nattacks * 100) }}%</td>
+                    {% else %}
+                    <td>No Attacks</td>
+                    {% endif %}
+                </tr>
+                <tr>
+                    <td>telnet</td>
+                    <td>{{ status.attacks.telnet }}</td>
+                    {% if status.nattacks > 0 %}
+                    <td>{{ '%0.2f' % (status.attacks.telnet/status.nattacks * 100) }}%</td>
+                    {% else %}
+                    <td>No Attacks</td>
+                    {% endif %}
+                </tr>
+                <tr>
+                    <td>smtp</td>
+                    <td>{{ status.attacks.smtp }}</td>
+                    {% if status.nattacks > 0 %}
+                    <td>{{ '%0.2f' % (status.attacks.smtp/status.nattacks * 100) }}%</td>
+                    {% else %}
+                    <td>No Attacks</td>
+                    {% endif %}
+                </tr>
+            </table>
+        </li>
+        <li class="thumbnail span6 text-center pull-right">
+            <a class="btn-link" href="#feedermodal" data-toggle="modal">
+                <h1>{{ status.nfeeders }}
+                    <small>Feeders</small>
+                </h1>
+            </a>
+            <hr>
+            <div class="row-fluid">
+                <h2 class="alert alert-success">{{ status.bees.successful }}
+                    <small>HoneyBees successful</small>
+                </h2>
+                <h2 class="alert alert-error">{{ status.bees.failed }}
+                    <small>HoneyBees failed</small>
+                </h2>
+            </div>
+        </li>
+    </ul>
+</div>
+<script>
+    var thumbs = $('.thumbnail');
+    thumbs.css({
+        'height': thumbs.height()
+    });
+</script>
+
+{#--- modals ---#}
+<div id="hivemodal" class="modal hide fade" tabindex="-1">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">x</button>
+        <h2>Hives</h2>
     </div>
-    <script>
-        var thumbs = $('.thumbnail');
-        thumbs.css({
-            'height': thumbs.height()
+    <table id="hivesTable" class="table table-bordered datagrid">
+        <thead/>
+        <tfoot>
+        <tr>
+            <th>
+                <div class="datagrid-footer-left" style="display:none;">
+                    <div class="grid-controls">
+                        <span><span class="grid-start"></span> - <span class="grid-end"></span> of <span
+                                class="grid-count"></span></span>
+                        <select class="grid-pagesize">
+                            <option>5</option>
+                            <option>20</option>
+                            <option>50</option>
+                        </select>
+                        <span>Per Page</span>
+                    </div>
+                </div>
+                <div class="datagrid-footer-right" style="display:none;">
+                    <div class="grid-pager">
+                        <button class="btn grid-prevpage"><i class="icon-chevron-left"></i></button>
+                        <span>Page</span>
+
+                        <div class="input-append dropdown combobox">
+                            <input class="span1" type="text">
+                        </div>
+                        <span>of <span class="grid-pages"></span></span>
+                        <button class="btn grid-nextpage"><i class="icon-chevron-right"></i></button>
+                    </div>
+                </div>
+            </th>
+        </tr>
+        </tfoot>
+    </table>
+
+    <script type="text/javascript">
+        $('#hivesTable').datagrid({
+            dataSource: new GenericDataSource({
+                columns: [
+                    {
+                        property: 'hive_id',
+                        label: 'Hive ID',
+                        sortable: true
+                    },
+                    {
+                        property: 'attacks',
+                        label: 'Attacks',
+                        sortable: true
+                    }
+                ],
+                url: '/data/hives' })
         });
+        //            TODO: Make delete work again
+        //            $("body").on('click', '.delete_hive', function (e) {
+        //                e.preventDefault();
+        //                var data = h_waTable.getData(true);
+        //                var rows = data.rows;
+        //                $.ajax({
+        //                    url: '/ws/hive/delete',
+        //                    type: 'POST',
+        //                    contentType: 'application/json; charset=utf-8',
+        //                    data: JSON.stringify(rows)
+        //                });
+        //                $("#hivemodal").modal('hide');
+        //                location.reload();
+        //            });
+
     </script>
-
-    {#--- modals ---#}
-    <div id="hivemodal" class="modal hide fade" tabindex="-1">
-        <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal">x</button>
-            <h2>Hives</h2>
-        </div>
-        <div id="hivetable" class="modal-body"></div>
-        <script type="text/javascript">
-            h_tableData = {
-                "rows": "",
-                "cols": {
-                    "hive_id": {
-                        "index": 1,
-                        "type": "string",
-                        "unique": true,
-                        "friendly": "Hive ID"
-                    },
-                    "attacks": {
-                        "index": 5,
-                        "type": "number",
-                        "friendly": "Attacks"
-                    }
-                }
-            };
-            var h_waTable = $("#hivetable").WATable({preFill: true, checkboxes: true}).data('WATable');
-            jQuery.ajax('{{ urls.hivedata }}', {
-                success: function (response, status) {
-                    if ('success' == status) {
-                        h_tableData.rows = response;
-                        h_waTable.setData(h_tableData);
-                    }
-                }
-            });
-            $("body").on('click', '.delete_hive', function (e) {
-                e.preventDefault();
-                var data = h_waTable.getData(true);
-                var rows = data.rows;
-                $.ajax({
-                    url: '/ws/hive/delete',
-                    type: 'POST',
-                    contentType: 'application/json; charset=utf-8',
-                    data: JSON.stringify(rows)
-                });
-                $("#hivemodal").modal('hide');
-                location.reload();
-            });
-
-        </script>
-        <div class="modal-footer">
-            <a href="#" class="btn btn-primary delete_hive">Delete</a>
-            <button class="btn" data-dismiss="modal">Close</button>
-        </div>
+    <div class="modal-footer">
+        <a href="#" class="btn btn-primary delete_hive">Delete</a>
+        <button class="btn" data-dismiss="modal">Close</button>
     </div>
+</div>
 
-    <div id="feedermodal" class="modal hide fade" tabindex="-1">
-        <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal">x</button>
-            <h2>Feeder</h2>
-        </div>
-        <div id="feedertable" class="modal-body"></div>
-        <script type="text/javascript">
-            f_tableData = {
-                "rows": "",
-                "cols": {
-                    "feeder_id": {
-                        "index": 1,
-                        "type": "string",
-                        "unique": true,
-                        "friendly": "Feeder ID"
-                    },
-                    "bees": {
-                        "index": 5,
-                        "type": "number",
-                        "friendly": "HoneyBees"
-                    }
-                }
-            };
-            var f_waTable = $("#feedertable").WATable({preFill: true, checkboxes: true}).data('WATable');
-            jQuery.ajax('{{ urls.feederdata }}', {
-                success: function (response, status) {
-                    if ('success' == status) {
-                        f_tableData.rows = response;
-                        f_waTable.setData(f_tableData);
-                    }
-                }
-            });
-            $("body").on('click', '.delete_feeder', function (e) {
-                e.preventDefault();
-                var data = f_waTable.getData(true);
-                var rows = data.rows;
-                $.ajax({
-                    url: '/ws/feeder/delete',
-                    type: 'POST',
-                    contentType: 'application/json; charset=utf-8',
-                    data: JSON.stringify(rows)
-                });
-                $("#feedermodal").modal('hide');
-                location.reload();
-            });
-
-        </script>
-        <div class="modal-footer">
-            <a href="#" class="btn btn-primary delete_feeder">Delete</a>
-            <button class="btn" data-dismiss="modal">Close</button>
-        </div>
+<div id="feedermodal" class="modal hide fade" tabindex="-1">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">x</button>
+        <h2>Feeder</h2>
     </div>
+    <table id="feedersTable" class="table table-bordered datagrid">
+        <thead/>
+        <tfoot>
+        <tr>
+            <th>
+                <div class="datagrid-footer-left" style="display:none;">
+                    <div class="grid-controls">
+                        <span><span class="grid-start"></span> - <span class="grid-end"></span> of <span
+                                class="grid-count"></span></span>
+                        <select class="grid-pagesize">
+                            <option>5</option>
+                            <option>20</option>
+                            <option>50</option>
+                        </select>
+                        <span>Per Page</span>
+                    </div>
+                </div>
+                <div class="datagrid-footer-right" style="display:none;">
+                    <div class="grid-pager">
+                        <button class="btn grid-prevpage"><i class="icon-chevron-left"></i></button>
+                        <span>Page</span>
+
+                        <div class="input-append dropdown combobox">
+                            <input class="span1" type="text">
+                        </div>
+                        <span>of <span class="grid-pages"></span></span>
+                        <button class="btn grid-nextpage"><i class="icon-chevron-right"></i></button>
+                    </div>
+                </div>
+            </th>
+        </tr>
+        </tfoot>
+    </table>
+
+    <script type="text/javascript">
+        $('#feedersTable').datagrid({
+            dataSource: new GenericDataSource({
+                columns: [
+                    {
+                        property: 'feeder_id',
+                        label: 'Feeder Id',
+                        sortable: true
+                    },
+                    {
+                        property: 'bees',
+                        label: 'Honeybees',
+                        sortable: true
+                    }
+                ],
+                url: '/data/feeders' })
+        });
+        // TODO: make delete work
+        //
+        //        $("body").on('click', '.delete_feeder', function (e) {
+        //            e.preventDefault();
+        //            var data = f_waTable.getData(true);
+        //            var rows = data.rows;
+        //            $.ajax({
+        //                url: '/ws/feeder/delete',
+        //                type: 'POST',
+        //                contentType: 'application/json; charset=utf-8',
+        //                data: JSON.stringify(rows)
+        //            });
+        //            $("#feedermodal").modal('hide');
+        //            location.reload();
+        //        });
+
+    </script>
+    <div class="modal-footer">
+        <a href="#" class="btn btn-primary delete_feeder">Delete</a>
+        <button class="btn" data-dismiss="modal">Close</button>
+    </div>
+</div>
 
 {% endblock %}
