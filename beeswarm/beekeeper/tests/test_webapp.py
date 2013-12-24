@@ -406,10 +406,7 @@ class WebappTests(unittest.TestCase):
 
         self.login('test', 'test')
         self.populate_hives()
-        data = [
-            {'attacks': 0, 'checked': False, 'hive_id': self.hives[0]},
-            {'attacks': 0, 'checked': False, 'hive_id': self.hives[1]}
-        ]
+        data = [ self.hives[0], self.hives[1]]
         self.app.post('/ws/hive/delete', data=json.dumps(data))
         db_session = database.get_session()
         nhives = db_session.query(Hive).count()
@@ -420,10 +417,7 @@ class WebappTests(unittest.TestCase):
 
         self.login('test', 'test')
         self.populate_feeders()
-        data = [
-            {'feeder_id': self.feeders[0], 'bees': 0, 'checked': False},
-            {'feeder_id': self.feeders[1], 'bees': 0, 'checked': False}
-        ]
+        data = [self.feeders[0], self.feeders[1]]
         self.app.post('/ws/feeder/delete', data=json.dumps(data))
         db_session = database.get_session()
         nfeeders = db_session.query(Feeder).count()
