@@ -360,10 +360,10 @@ def create_hive():
 @app.route('/ws/hive/delete', methods=['POST'])
 @login_required
 def delete_hives():
+    # list of hive id's'
     hive_ids = json.loads(request.data)
     db_session = database.get_session()
-    for hive in hive_ids:
-        hive_id = hive['hive_id']
+    for hive_id in hive_ids:
         db_session.query(Hive).filter(Hive.id == hive_id).delete()
         db_session.commit()
         authenticator.remove_user(hive_id)
@@ -527,8 +527,7 @@ def create_feeder():
 def delete_feeders():
     feeder_ids = json.loads(request.data)
     db_session = database.get_session()
-    for feeder in feeder_ids:
-        feeder_id = feeder['feeder_id']
+    for feeder_id in feeder_ids:
         db_session.query(Feeder).filter(Feeder.id == feeder_id).delete()
         db_session.commit()
         authenticator.remove_user(feeder_id)
@@ -586,7 +585,6 @@ def data_hives():
         rows.append(row)
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp
-
 
 @app.route('/data/feeders', methods=['GET'])
 @login_required

@@ -164,40 +164,48 @@
     </table>
 
     <script type="text/javascript">
-        $('#hivesTable').datagrid({
-            dataSource: new GenericDataSource({
-                columns: [
-                    {
-                        property: 'hive_id',
-                        label: 'Hive ID',
-                        sortable: true
-                    },
-                    {
-                        property: 'attacks',
-                        label: 'Attacks',
-                        sortable: true
-                    }
-                ],
-                url: '/data/hives' })
-        });
-        //            TODO: Make delete work again
-        //            $("body").on('click', '.delete_hive', function (e) {
-        //                e.preventDefault();
-        //                var data = h_waTable.getData(true);
-        //                var rows = data.rows;
-        //                $.ajax({
-        //                    url: '/ws/hive/delete',
-        //                    type: 'POST',
-        //                    contentType: 'application/json; charset=utf-8',
-        //                    data: JSON.stringify(rows)
-        //                });
-        //                $("#hivemodal").modal('hide');
-        //                location.reload();
-        //            });
 
+        $('#hivemodal').on('shown', function () {
+            $('#hivesTable').datagrid({
+                dataSource: new GenericDataSource({
+                    columns: [
+                        {
+                            property: 'hive_id',
+                            label: 'Hive ID',
+                            sortable: true
+                        },
+                        {
+                            property: 'attacks',
+                            label: 'Attacks',
+                            sortable: true
+                        },
+                        {
+                            property: 'actions',
+                            label: 'Actions',
+                            sortable: false
+                        }
+                    ],
+                    url: '/data/hives',
+                    formatter: function (items) {
+                        $.each(items, function (index, item) {
+                            item.actions = '<i class="fa fa-trash-o fa-fw"></i>';
+                        })
+                    }
+                })
+            }).on('click', 'i.fa', function () {
+                        var id = $(this).parent().parent().find("td").eq(0).html();
+                        console.log(JSON.stringify([id]));
+                        $.ajax({
+                            url: '/ws/hive/delete',
+                            type: 'POST',
+                            contentType: 'application/json; charset=utf-8',
+                            data: JSON.stringify([id, ])
+                        });
+                        $('#hivesTable').datagrid('reload');
+                    });
+        });
     </script>
     <div class="modal-footer">
-        <a href="#" class="btn btn-primary delete_hive">Delete</a>
         <button class="btn" data-dismiss="modal">Close</button>
     </div>
 </div>
@@ -242,41 +250,46 @@
     </table>
 
     <script type="text/javascript">
-        $('#feedersTable').datagrid({
-            dataSource: new GenericDataSource({
-                columns: [
-                    {
-                        property: 'feeder_id',
-                        label: 'Feeder Id',
-                        sortable: true
-                    },
-                    {
-                        property: 'bees',
-                        label: 'Honeybees',
-                        sortable: true
+        $('#feedermodal').on('shown', function () {
+            $('#feedersTable').datagrid({
+                dataSource: new GenericDataSource({
+                    columns: [
+                        {
+                            property: 'feeder_id',
+                            label: 'Feeder Id',
+                            sortable: true
+                        },
+                        {
+                            property: 'bees',
+                            label: 'Honeybees',
+                            sortable: true
+                        },
+                        {
+                            property: 'actions',
+                            label: 'Actions',
+                            sortable: false
+                        }
+                    ],
+                    url: '/data/feeders',
+                    formatter: function (items) {
+                        $.each(items, function (index, item) {
+                            item.actions = '<i class="fa fa-trash-o fa-fw"></i>';
+                        })
                     }
-                ],
-                url: '/data/feeders' })
+                })
+            }).on('click', 'i.fa', function () {
+                        var id = $(this).parent().parent().find("td").eq(0).html();
+                        $.ajax({
+                            url: '/ws/feeder/delete',
+                            type: 'POST',
+                            contentType: 'application/json; charset=utf-8',
+                            data: JSON.stringify([id, ])
+                        });
+                        $('#feedersTable').datagrid('reload');
+                    });
         });
-        // TODO: make delete work
-        //
-        //        $("body").on('click', '.delete_feeder', function (e) {
-        //            e.preventDefault();
-        //            var data = f_waTable.getData(true);
-        //            var rows = data.rows;
-        //            $.ajax({
-        //                url: '/ws/feeder/delete',
-        //                type: 'POST',
-        //                contentType: 'application/json; charset=utf-8',
-        //                data: JSON.stringify(rows)
-        //            });
-        //            $("#feedermodal").modal('hide');
-        //            location.reload();
-        //        });
-
     </script>
     <div class="modal-footer">
-        <a href="#" class="btn btn-primary delete_feeder">Delete</a>
         <button class="btn" data-dismiss="modal">Close</button>
     </div>
 </div>
