@@ -364,7 +364,8 @@ def delete_hives():
     hive_ids = json.loads(request.data)
     db_session = database.get_session()
     for hive_id in hive_ids:
-        db_session.query(Hive).filter(Hive.id == hive_id).delete()
+        hive_to_delete = db_session.query(Hive).filter(Hive.id == hive_id).one()
+        db_session.delete(hive_to_delete)
         db_session.commit()
         authenticator.remove_user(hive_id)
     return ''
@@ -528,7 +529,8 @@ def delete_feeders():
     feeder_ids = json.loads(request.data)
     db_session = database.get_session()
     for feeder_id in feeder_ids:
-        db_session.query(Feeder).filter(Feeder.id == feeder_id).delete()
+        feeder_to_delete = db_session.query(Feeder).filter(Feeder.id == feeder_id).one()
+        db_session.delete(feeder_to_delete)
         db_session.commit()
         authenticator.remove_user(feeder_id)
     return ''
