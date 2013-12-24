@@ -71,7 +71,7 @@
 		}
 	},
     "timecheck": {
-        "enabled": true,
+        "enabled": false,
         "poll": 5,
         "ntp_pool": "pool.ntp.org"
     },

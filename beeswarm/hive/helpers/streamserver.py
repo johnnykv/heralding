@@ -20,9 +20,6 @@ class HiveStreamServer(StreamServer):
             ssl_args.setdefault('server_side', True)
             self.wrap_socket = wrap_socket
             self.ssl_args = ssl_args
-            self.ssl_enabled = True
-        else:
-            self.ssl_enabled = False
 
     def exception_logger(self, greenlet):
 
