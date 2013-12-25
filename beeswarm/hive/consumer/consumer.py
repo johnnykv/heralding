@@ -47,6 +47,7 @@ class Consumer:
         
         while self.enabled:
             self.status['active_sessions'] = len(self.sessions)
+
             for session_id in self.sessions.keys():
                 session = self.sessions[session_id]
                 if not session.is_connected():
@@ -61,14 +62,12 @@ class Consumer:
                                                      log.__class__.__name__,
                                                      session.protocol,
                                                      session.id))
+
                     del self.sessions[session_id]
                     self.status['total_sessions'] += 1
                     logger.debug('Removed {0} connection from {1}. ({2})'.format(session.protocol,
                                                                                  session.source_ip,
                                                                                  session.id))
-                    #make sure the socket is closed
-                    session.socket.close()
-
             gevent.sleep(1)
         self.stop_loggers(active_loggers)
 

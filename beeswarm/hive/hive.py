@@ -23,6 +23,7 @@ import json
 
 import gevent
 from gevent import Greenlet
+from gevent.server import StreamServer
 from beeswarm.hive.consumer import consumer
 
 import beeswarm
@@ -32,8 +33,6 @@ from beeswarm.hive.capabilities import handlerbase
 
 from beeswarm.hive.models.session import Session
 from beeswarm.hive.models.authenticator import Authenticator
-from beeswarm.hive.helpers.streamserver import HiveStreamServer
-from beeswarm.hive.helpers.common import create_socket
 from beeswarm.shared.helpers import drop_privileges, create_self_signed_cert
 from beeswarm.hive.models.user import HiveUser
 from beeswarm.errors import ConfigNotFound
@@ -72,20 +71,6 @@ class Hive(object):
         self.key = key
         self.cert = cert
         self.curses_screen = curses_screen
-
-        #if not is_url(config_arg):
-        #    if not os.path.exists(config_arg):
-        #        raise ConfigNotFound('Configuration file could not be found. ({0})'.format(config_arg))
-        #    try:
-        #        with open(config_arg, 'r') as cfg:
-        #            self.config = json.load(cfg, object_hook=asciify)
-        #    except (ValueError, TypeError) as e:
-        #        raise Exception('Bad syntax for Config File: (%s)%s' % (e, str(type(e))))
-        #else:
-        #    conf = requests.get(config_arg, verify=False)
-        #    self.config = json.loads(conf.text, object_hook=asciify)
-        #    with open('hivecfg.json', 'w') as local_config:
-        #        local_config.write(json.dumps(self.config, indent=4))
 
         Session.hive_id = self.config['general']['hive_id']
 
@@ -176,13 +161,13 @@ class Hive(object):
             cap = c(self.sessions, options, self.users, self.work_dir)
 
             try:
-                socket = create_socket(('0.0.0.0', port))
+                #socket = create_socket(('0.0.0.0', port))
                 #Convention: All capability names which end in 's' will be wrapped in ssl.
                 if cap_name.endswith('s'):
-                    server = HiveStreamServer(socket, cap.handle_session,
+                    server = StreamServer(('0.0.0.0', port), cap.handle_session,
                                               keyfile=self.key, certfile=self.cert)
                 else:
-                    server = HiveStreamServer(socket, cap.handle_session)
+                    server = StreamServer(('0.0.0.0', port), cap.handle_session)
 
                 self.servers.append(server)
                 self.status['enabled_capabilities'].append(cap_name)

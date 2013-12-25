@@ -4,8 +4,6 @@ import os
 import _socket
 
 from sendfile import sendfile
-from beeswarm.hive.helpers.h_socket import HiveSocket
-
 
 logger = logging.getLogger(__name__)
 
@@ -24,16 +22,6 @@ def send_whole_file(sockfd, filefd):
         if sent == 0:
             break
         offset += sent
-
-
-def create_socket(address, backlog=50):
-    sock = HiveSocket()
-    sock.setsockopt(_socket.SOL_SOCKET, _socket.SO_REUSEADDR, 1)
-    sock.bind(address)
-    sock.listen(backlog)
-    sock.setblocking(0)
-    return sock
-
 
 def path_to_ls(fn):
     """ Converts an absolute path to an entry resembling the output of
