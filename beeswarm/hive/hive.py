@@ -91,13 +91,12 @@ class Hive(object):
 
         if self.config['general']['fetch_ip']:
             try:
-                url = 'http://api-sth01.exip.org/?call=ip'
+                url = 'http://api.externalip.net/ip'
                 req = requests.get(url)
                 self.hive_ip = req.text
                 logger.info('Fetched {0} as external ip for Hive.'.format(self.hive_ip))
             except (Timeout, ConnectionError) as e:
                 logger.warning('Could not fetch public ip: {0}'.format(e))
-
         else:
             self.hive_ip = self.config['general']['hive_ip']
 
@@ -234,7 +233,7 @@ class Hive(object):
         if not os.path.isfile(config_file):
             logger.info('Copying configuration file to workdir.')
             shutil.copyfile(os.path.join(package_directory, 'hive/beeswarmcfg.json.dist'),
-                            os.path.join(work_dir, 'hivecfg.json'))
+                            os.path.join(work_dir, 'beeswarmcfg.json'))
 
         create_self_signed_cert(work_dir, 'server.crt', 'server.key')
 

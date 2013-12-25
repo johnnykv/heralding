@@ -642,7 +642,7 @@ def generate_hive_iso(hive_id):
     logger.debug('Copying data files to temporary directory.')
     shutil.copytree(os.path.join(package_directory, 'hive/data'), os.path.join(custom_config_dir, 'data/'))
 
-    config_file_path = os.path.join(custom_config_dir, 'hivecfg.json')
+    config_file_path = os.path.join(custom_config_dir, 'beeswarmcfg.json')
     with open(config_file_path, 'w') as config_file:
         config_file.write(current_hive.configuration)
 
@@ -665,7 +665,7 @@ def generate_feeder_iso(feeder_id):
     custom_config_dir = os.path.join(tempdir, 'custom_config')
     os.makedirs(custom_config_dir)
 
-    config_file_path = os.path.join(custom_config_dir, 'hivecfg.json')
+    config_file_path = os.path.join(custom_config_dir, 'beeswarmcfg.json')
     with open(config_file_path, 'w') as config_file:
         config_file.write(current_feeder.configuration)
 

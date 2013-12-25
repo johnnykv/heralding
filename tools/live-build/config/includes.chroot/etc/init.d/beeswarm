@@ -35,12 +35,7 @@ do_start()
     cd /opt/beeswarm
     tar -xf dummy.tar.gz 2>/dev/null || true
     rm dummy.tar.gz
-    if [ -f ./hivecfg.json ]
-    then
-        beeswarm -hi -v &
-    else
-        beeswarm -fe -v &
-    fi
+    beeswarm -v --config beeswarmcfg.json
 }
 
 
