@@ -1,7 +1,7 @@
 Crypto
 cssselect
 nose
-gevent<1.0
+gevent>=1.0
 requests
 telnetsrv
 paramiko
