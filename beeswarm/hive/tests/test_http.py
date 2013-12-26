@@ -19,7 +19,6 @@ from beeswarm.hive.models.user import HiveUser
 gevent.monkey.patch_all()
 
 from gevent.server import StreamServer
-from beeswarm.hive.helpers.common import create_socket
 from beeswarm.hive.capabilities import http
 
 import unittest
@@ -56,8 +55,7 @@ class HTTP_Test(unittest.TestCase):
         # is running.
         options = {'enabled': 'True', 'port': 0}
         cap = http.http(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         client = httplib.HTTPConnection('127.0.0.1', srv.server_port)
@@ -75,8 +73,7 @@ class HTTP_Test(unittest.TestCase):
         sessions = {}
         users = {'test': HiveUser('test', 'test')}
         cap = http.http(sessions, {'enabled': 'True', 'port': 0}, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         client = httplib.HTTPConnection('127.0.0.1', srv.server_port)

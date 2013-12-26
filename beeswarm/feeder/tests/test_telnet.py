@@ -28,7 +28,6 @@ from beeswarm.hive.models.authenticator import Authenticator
 from beeswarm.hive.models.session import Session
 from beeswarm.hive.capabilities import telnet as hive_telnet
 from beeswarm.hive.models.user import HiveUser
-from beeswarm.hive.helpers.common import create_socket
 
 from beeswarm.feeder.bees import telnet as bee_telnet
 from beeswarm.feeder.models.session import BeeSession
@@ -52,8 +51,8 @@ class Telnet_Test(unittest.TestCase):
         Session.authenticator = authenticator
 
         cap = hive_telnet.telnet(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         bee_info = {
@@ -78,8 +77,8 @@ class Telnet_Test(unittest.TestCase):
         Session.authenticator = authenticator
 
         cap = hive_telnet.telnet(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         bee_info = {
@@ -104,8 +103,7 @@ class Telnet_Test(unittest.TestCase):
         Session.authenticator = authenticator
 
         cap = hive_telnet.telnet(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         bee_info = {
@@ -136,8 +134,7 @@ class Telnet_Test(unittest.TestCase):
         Session.authenticator = authenticator
 
         cap = hive_telnet.telnet(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         bee_info = {
@@ -167,8 +164,7 @@ class Telnet_Test(unittest.TestCase):
         Session.authenticator = authenticator
 
         cap = hive_telnet.telnet(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         bee_info = {
@@ -197,8 +193,7 @@ class Telnet_Test(unittest.TestCase):
         Session.authenticator = authenticator
 
         cap = hive_telnet.telnet(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         bee_info = {
@@ -227,8 +222,7 @@ class Telnet_Test(unittest.TestCase):
         Session.authenticator = authenticator
 
         cap = hive_telnet.telnet(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         bee_info = {
@@ -257,8 +251,7 @@ class Telnet_Test(unittest.TestCase):
         Session.authenticator = authenticator
 
         cap = hive_telnet.telnet(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         bee_info = {
@@ -285,8 +278,7 @@ class Telnet_Test(unittest.TestCase):
         Session.authenticator = authenticator
 
         cap = hive_telnet.telnet(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         bee_info = {

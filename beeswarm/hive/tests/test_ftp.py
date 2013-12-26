@@ -27,7 +27,6 @@ import ftplib
 from ftplib import FTP
 from gevent.server import StreamServer
 from beeswarm.hive.hive import Hive
-from beeswarm.hive.helpers.common import create_socket
 from beeswarm.hive.capabilities import ftp
 from beeswarm.hive.models.authenticator import Authenticator
 from beeswarm.hive.models.session import Session
@@ -54,8 +53,7 @@ class ftp_Tests(unittest.TestCase):
 
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test Banner', 'max_attempts': 3, 'syst_type': 'Test Type'}
         cap = ftp.ftp(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         ftp_client = FTP()

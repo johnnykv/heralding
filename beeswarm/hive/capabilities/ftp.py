@@ -155,7 +155,7 @@ class BeeFTPHandler(object):
 
     def do_PASV(self, arg):
         self.mode = 'PASV'
-        self.serv_sock = socket()
+        self.serv_sock = socket.socket()
         self.serv_sock.bind((self.local_ip, 0))
         self.serv_sock.listen(1)
         ip, port = self.serv_sock.getsockname()
@@ -197,7 +197,7 @@ class BeeFTPHandler(object):
         if self.mode == 'PASV':
             self.client_sock, (self.cli_ip, self.cli_port) = self.serv_sock.accept()
         else:
-            self.client_sock = socket()
+            self.client_sock = socket.socket()
             self.client_sock.connect((self.cli_ip, self.cli_port))
 
     def stop_data_conn(self):

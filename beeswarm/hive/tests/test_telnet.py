@@ -15,7 +15,6 @@
 
 import gevent
 import gevent.monkey
-from beeswarm.hive.helpers.common import create_socket
 from beeswarm.hive.models.user import HiveUser
 from beeswarm.hive.capabilities import telnet
 
@@ -59,8 +58,7 @@ class Telnet_Tests(unittest.TestCase):
 
         options = {'enabled': 'True', 'port': 2503, 'max_attempts': 3}
         cap = telnet.telnet(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 2503))
-        server = StreamServer(socket, cap.handle_session)
+        server = StreamServer(('0.0.0.0', 2503), cap.handle_session)
         server.start()
 
         client = telnetlib.Telnet('localhost', 2503)
@@ -100,8 +98,7 @@ class Telnet_Tests(unittest.TestCase):
 
         options = {'enabled': 'True', 'port': 0, 'max_attempts': 3}
         cap = telnet.telnet(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        server = StreamServer(socket, cap.handle_session)
+        server = StreamServer(('0.0.0.0', 0), cap.handle_session)
         server.start()
 
         client = telnetlib.Telnet('localhost', server.server_port)
@@ -141,8 +138,7 @@ class Telnet_Tests(unittest.TestCase):
 
         options = {'enabled': 'True', 'port': 0, 'max_attempts': 3}
         cap = telnet.telnet(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        server = StreamServer(socket, cap.handle_session)
+        server = StreamServer(('0.0.0.0', 0), cap.handle_session)
         server.start()
 
         client = telnetlib.Telnet('localhost', server.server_port)

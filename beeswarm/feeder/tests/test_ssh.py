@@ -27,7 +27,6 @@ from beeswarm.hive.models.authenticator import Authenticator
 from beeswarm.hive.models.session import Session
 from beeswarm.hive.capabilities import ssh as hive_ssh
 from beeswarm.hive.models.user import HiveUser
-from beeswarm.hive.helpers.common import create_socket
 
 from beeswarm.feeder.bees import ssh as bee_ssh
 from beeswarm.feeder.models.session import BeeSession
@@ -54,8 +53,7 @@ class SSH_Test(unittest.TestCase):
 
         cap = hive_ssh.ssh(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3, 'key': self.key}, users,
                            self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         bee_info = {
@@ -82,8 +80,7 @@ class SSH_Test(unittest.TestCase):
 
         cap = hive_ssh.ssh(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3, 'key': self.key}, users,
                            self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         bee_info = {
@@ -109,8 +106,7 @@ class SSH_Test(unittest.TestCase):
 
         cap = hive_ssh.ssh(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3, 'key': self.key}, users,
                            self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         bee_info = {
@@ -137,8 +133,7 @@ class SSH_Test(unittest.TestCase):
 
         cap = hive_ssh.ssh(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3, 'key': self.key}, users,
                            self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         bee_info = {
@@ -168,8 +163,7 @@ class SSH_Test(unittest.TestCase):
 
         cap = hive_ssh.ssh(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3, 'key': self.key}, users,
                            self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         bee_info = {
@@ -198,8 +192,7 @@ class SSH_Test(unittest.TestCase):
 
         cap = hive_ssh.ssh(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3, 'key': self.key}, users,
                            self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         bee_info = {
@@ -227,8 +220,7 @@ class SSH_Test(unittest.TestCase):
 
         cap = hive_ssh.ssh(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3, 'key': self.key}, users,
                            self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         bee_info = {
@@ -256,8 +248,7 @@ class SSH_Test(unittest.TestCase):
 
         cap = hive_ssh.ssh(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3, 'key': self.key}, users,
                            self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         bee_info = {
@@ -285,8 +276,7 @@ class SSH_Test(unittest.TestCase):
 
         cap = hive_ssh.ssh(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3, 'key': self.key}, users,
                            self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         bee_info = {
@@ -313,8 +303,7 @@ class SSH_Test(unittest.TestCase):
 
         cap = hive_ssh.ssh(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3, 'key': self.key}, users,
                            self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         bee_info = {

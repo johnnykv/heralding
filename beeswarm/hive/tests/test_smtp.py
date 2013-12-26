@@ -24,7 +24,6 @@ import gevent.monkey
 from gevent.server import StreamServer
 
 from beeswarm.hive.hive import Hive
-from beeswarm.hive.helpers.common import create_socket
 from beeswarm.hive.capabilities import smtp
 from beeswarm.hive.models.user import HiveUser
 
@@ -59,8 +58,7 @@ class SMTP_Test(unittest.TestCase):
         # Use uncommon port so that we can run test even if the Hive is running.
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test'}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         smtp_ = smtplib.SMTP('127.0.0.1', srv.server_port, local_hostname='localhost', timeout=15)
@@ -82,8 +80,7 @@ class SMTP_Test(unittest.TestCase):
 
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test'}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
         
         def encode_cram_md5(challenge, user, password):
@@ -110,8 +107,7 @@ class SMTP_Test(unittest.TestCase):
 
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test'}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         smtp_ = smtplib.SMTP('127.0.0.1', srv.server_port, local_hostname='localhost', timeout=15)
@@ -133,8 +129,7 @@ class SMTP_Test(unittest.TestCase):
 
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test'}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         smtp_ = smtplib.SMTP('127.0.0.1', srv.server_port, local_hostname='localhost', timeout=15)
@@ -157,8 +152,7 @@ class SMTP_Test(unittest.TestCase):
 
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test'}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         def encode_cram_md5(challenge, user, password):
@@ -186,8 +180,7 @@ class SMTP_Test(unittest.TestCase):
 
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test'}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         smtp_ = smtplib.SMTP('127.0.0.1', srv.server_port, local_hostname='localhost', timeout=15)
@@ -208,8 +201,7 @@ class SMTP_Test(unittest.TestCase):
         Session.authenticator = authenticator
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test'}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         smtp_ = smtplib.SMTP('127.0.0.1', srv.server_port, local_hostname='localhost', timeout=15)

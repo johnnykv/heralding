@@ -28,7 +28,6 @@ from beeswarm.hive.models.authenticator import Authenticator
 from beeswarm.hive.models.session import Session
 from beeswarm.hive.capabilities import smtp as hive_smtp
 from beeswarm.hive.models.user import HiveUser
-from beeswarm.hive.helpers.common import create_socket
 
 from beeswarm.feeder.bees import smtp as bee_smtp
 from beeswarm.feeder.models.session import BeeSession
@@ -52,8 +51,7 @@ class SMTP_Test(unittest.TestCase):
         Session.authenticator = authenticator
 
         cap = hive_smtp.smtp(sessions, {'enabled': 'True', 'port': 0, 'banner': 'Test'}, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         bee_info = {
@@ -81,8 +79,7 @@ class SMTP_Test(unittest.TestCase):
         Session.authenticator = authenticator
 
         cap = hive_smtp.smtp(sessions, {'enabled': 'True', 'port': 0, 'banner': 'Test'}, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         bee_info = {
@@ -112,8 +109,7 @@ class SMTP_Test(unittest.TestCase):
         Session.authenticator = authenticator
 
         cap = hive_smtp.smtp(sessions, {'enabled': 'True', 'port': 0, 'banner': 'Test'}, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
         gevent.sleep()
         bee_info = {

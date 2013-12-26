@@ -27,7 +27,6 @@ from beeswarm.hive.models.authenticator import Authenticator
 from beeswarm.hive.models.session import Session
 from beeswarm.hive.capabilities import vnc as hive_vnc
 from beeswarm.hive.models.user import HiveUser
-from beeswarm.hive.helpers.common import create_socket
 
 from beeswarm.feeder.bees import vnc as bee_vnc
 from beeswarm.feeder.models.session import BeeSession
@@ -51,8 +50,7 @@ class VNC_Test(unittest.TestCase):
         Session.authenticator = authenticator
 
         cap = hive_vnc.vnc(sessions, {'enabled': 'True', 'port': 0}, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         bee_info = {

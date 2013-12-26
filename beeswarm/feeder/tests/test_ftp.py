@@ -27,7 +27,6 @@ from beeswarm.hive.models.authenticator import Authenticator
 from beeswarm.hive.models.session import Session
 from beeswarm.hive.capabilities import ftp as hive_ftp
 from beeswarm.hive.models.user import HiveUser
-from beeswarm.hive.helpers.common import create_socket
 
 from beeswarm.feeder.bees import ftp as bee_ftp
 from beeswarm.feeder.models.session import BeeSession
@@ -67,8 +66,7 @@ class FTP_Test(unittest.TestCase):
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test Banner', 'max_attempts': 3, 'syst_type': 'Test Type'}
 
         cap = hive_ftp.ftp(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         bee_info = {
@@ -99,8 +97,7 @@ class FTP_Test(unittest.TestCase):
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test Banner', 'max_attempts': 3, 'syst_type': 'Test Type'}
 
         cap = hive_ftp.ftp(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         bee_info = {
@@ -136,8 +133,7 @@ class FTP_Test(unittest.TestCase):
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test Banner', 'max_attempts': 3, 'syst_type': 'Test Type'}
 
         cap = hive_ftp.ftp(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         bee_info = {
@@ -174,8 +170,7 @@ class FTP_Test(unittest.TestCase):
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test Banner', 'max_attempts': 3, 'syst_type': 'Test Type'}
 
         cap = hive_ftp.ftp(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         bee_info = {

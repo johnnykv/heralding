@@ -26,7 +26,6 @@ gevent.monkey.patch_all()
 
 from gevent.server import StreamServer
 from beeswarm.hive.hive import Hive
-from beeswarm.hive.helpers.common import create_socket
 from beeswarm.hive.capabilities import vnc
 from beeswarm.hive.models.user import HiveUser
 from beeswarm.shared.vnc_constants import *
@@ -48,8 +47,7 @@ class VNC_Test(unittest.TestCase):
         users = {'test': HiveUser('test', 'test')}
         options = {'enabled': 'True', 'port': 0}
         cap = vnc.vnc(sessions, options, users, self.work_dir)
-        s = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(s, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
         
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

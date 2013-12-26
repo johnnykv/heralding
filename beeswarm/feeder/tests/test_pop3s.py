@@ -23,7 +23,6 @@ import shutil
 
 from gevent.server import StreamServer
 from beeswarm.hive.hive import Hive
-from beeswarm.hive.helpers.common import create_socket
 from beeswarm.hive.models.user import HiveUser
 from beeswarm.hive.models.authenticator import Authenticator
 from beeswarm.hive.models.session import Session
@@ -52,8 +51,7 @@ class POP3S_Test(unittest.TestCase):
 
         options = {'enabled': 'True', 'port': 0, 'max_attempts': 3}
         cap = hive_pop3s.pop3s(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         bee_info = {

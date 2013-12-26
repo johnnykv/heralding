@@ -28,7 +28,6 @@ from beeswarm.hive.models.authenticator import Authenticator
 from beeswarm.hive.models.session import Session
 from beeswarm.hive.models.user import HiveUser
 from beeswarm.hive.capabilities import https as hive_https
-from beeswarm.hive.helpers.common import create_socket
 from beeswarm.feeder.bees import https as bee_https
 
 
@@ -50,8 +49,7 @@ class HTTPS_Test(unittest.TestCase):
         Session.authenticator = authenticator
         options = {'enabled': 'True', 'port': 0}
         cap = hive_https.https(sessions, options, users, self.work_dir)
-        socket = create_socket(('0.0.0.0', 0))
-        srv = StreamServer(socket, cap.handle_session)
+        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
         bee_info = {
