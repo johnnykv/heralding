@@ -17,7 +17,7 @@
 
 import logging
 import os
-from gevent.server import socket
+from gevent.socket import socket
 
 from beeswarm.hive.capabilities.handlerbase import HandlerBase
 from beeswarm.hive.helpers.common import send_whole_file, path_to_ls
