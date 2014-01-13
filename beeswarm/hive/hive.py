@@ -63,8 +63,6 @@ class Hive(object):
             Hive.prepare_environment(work_dir)
             with open('beeswarmcfg.json', 'r') as config_file:
                 config = json.load(config_file, object_hook=asciify)
-        else:
-            print config
 
         self.work_dir = work_dir
         self.config = config
@@ -215,7 +213,7 @@ class Hive(object):
         #this config file is for standalone operations, it will be overwritten during __init__
         #if a config url is specified.
         config_file = os.path.join(work_dir, 'beeswarmcfg.json.dist')
-        if not os.path.isfile(config_file):
+        if not os.path.isfile('beeswarmcfg.json'):
             logger.info('Copying configuration file to workdir.')
             shutil.copyfile(os.path.join(package_directory, 'hive/beeswarmcfg.json.dist'),
                             os.path.join(work_dir, 'beeswarmcfg.json'))
