@@ -259,8 +259,11 @@ def create_hive():
         db_session = database.get_session()
         hive_users = db_session.query(HiveUser).all()
         users_dict = {}
-        for u in hive_users:
-            users_dict[u.username] = u.password
+        # only add users if the honeypot is running in active mode
+        # TODO: actually create active mode...
+        if not form.general_standalone.data:
+            for u in hive_users:
+                users_dict[u.username] = u.password
 
         hive_config = {
             'general': {

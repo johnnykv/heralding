@@ -25,6 +25,8 @@ def validate_time_range(form, field):
 
 class NewHiveConfigForm(Form):
 
+    general_standalone = BooleanField(default=False, label='Standalone honeypot')
+
     http_enabled = BooleanField(default=False, label='Enabled')
     http_port = IntegerField(default=80, label='Port')
     http_banner = TextField(default='Microsoft-IIS/5.0', label='Server Banner')
