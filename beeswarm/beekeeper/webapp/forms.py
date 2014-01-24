@@ -56,7 +56,7 @@ class NewHiveConfigForm(Form):
 
     pop3s_enabled = BooleanField(default=False, label='Enabled')
     pop3s_port = IntegerField(default=995, label='Port')
-    pop3s_max_attempts = IntegerField(default=3, label='Port')
+    pop3s_max_attempts = IntegerField(default=3, label='Login Attempts')
 
     ssh_enabled = BooleanField(default=False, label='Enabled')
     ssh_port = IntegerField(default=22, label='Port')
