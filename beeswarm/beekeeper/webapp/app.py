@@ -558,9 +558,15 @@ def data_sessions_attacks(_type):
 
     rows = []
     for a in entries:
+        auth_attempts = []
+        for attempt in a.authentication:
+            auth_attempts.append(
+                {'username': attempt.username,
+                 'password': attempt.password,
+                 'successful': attempt.successful})
         classification = a.classification_id.replace('_', ' ').capitalize()
         row = {'time': a.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': a.protocol, 'ip_address': a.source_ip,
-               'classification': classification, 'id': a.id}
+               'classification': classification, 'id': a.id, 'auth_attempts': auth_attempts}
         rows.append(row)
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp
