@@ -22,11 +22,11 @@ import shutil
 import tempfile
 
 from gevent.server import StreamServer
-from beeswarm.hive.hive import Hive
-from beeswarm.hive.models.authenticator import Authenticator
-from beeswarm.hive.models.session import Session
-from beeswarm.hive.capabilities import ssh as hive_ssh
-from beeswarm.hive.models.user import HiveUser
+from beeswarm.honeypot.honeypot import Honeypot
+from beeswarm.honeypot.models.authenticator import Authenticator
+from beeswarm.honeypot.models.session import Session
+from beeswarm.honeypot.capabilities import ssh as hive_ssh
+from beeswarm.honeypot.models.user import BaitUser
 
 from beeswarm.feeder.bees import ssh as bee_ssh
 from beeswarm.feeder.models.session import BeeSession
@@ -35,7 +35,7 @@ from beeswarm.feeder.models.session import BeeSession
 class SSH_Test(unittest.TestCase):
     def setUp(self):
         self.work_dir = tempfile.mkdtemp()
-        Hive.prepare_environment(self.work_dir)
+        Honeypot.prepare_environment(self.work_dir)
         self.key = os.path.join(os.path.dirname( __file__), 'dummy_key.key')
         self.cert = os.path.join(os.path.dirname( __file__), 'dummy_cert.crt')
 
@@ -47,7 +47,7 @@ class SSH_Test(unittest.TestCase):
         """Tests if the SSH bee can Login to the SSH capability"""
 
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
@@ -74,7 +74,7 @@ class SSH_Test(unittest.TestCase):
         """Tests if the SSH bee can Logout from the SSH capability"""
 
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
@@ -100,7 +100,7 @@ class SSH_Test(unittest.TestCase):
 
     def test_validate_senses(self):
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
@@ -127,7 +127,7 @@ class SSH_Test(unittest.TestCase):
     def test_command_cd(self):
 
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
@@ -157,7 +157,7 @@ class SSH_Test(unittest.TestCase):
     def test_command_pwd(self):
 
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
@@ -186,7 +186,7 @@ class SSH_Test(unittest.TestCase):
     def test_command_uname(self):
 
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
@@ -214,7 +214,7 @@ class SSH_Test(unittest.TestCase):
     def test_command_cat(self):
 
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
@@ -242,7 +242,7 @@ class SSH_Test(unittest.TestCase):
     def test_command_uptime(self):
 
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
@@ -270,7 +270,7 @@ class SSH_Test(unittest.TestCase):
     def test_command_echo(self):
 
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
@@ -297,7 +297,7 @@ class SSH_Test(unittest.TestCase):
 
     def test_command_list(self):
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 

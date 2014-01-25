@@ -13,12 +13,12 @@
         {
             "type": "honeybee",
             "description_short": "Legit Honeytoken traffic",
-            "description_long": "A session where a Feeder instance successfully transmitted information to a Hive with no indication of malicious activity."
+            "description_long": "A session where a Feeder instance successfully transmitted information to a Honeypot with no indication of malicious activity."
         },
         {
-            "type": "hive_impersonation",
-            "description_short": "Attacker impersonating Hive instance.",
-            "description_long": "A feeder instance successfully communicated with an attacker impersonating a Hive instance."
+            "type": "honeypot_impersonation",
+            "description_short": "Attacker impersonating Honeypot instance.",
+            "description_long": "A feeder instance successfully communicated with an attacker impersonating a Honeypot instance."
         },
         {
             "type": "credentials_reuse",
@@ -28,10 +28,10 @@
         {
             "type": "bruteforce",
             "description_short": "Attacker brute-forcing",
-            "description_long": "An attacker connected to a Hive instance and tried to authenticate using credentials not transmitted in any recorded honeybee."
+            "description_long": "An attacker connected to a Honeypot instance and tried to authenticate using credentials not transmitted in any recorded honeybee."
         }
     ],
-    "hive_users": {
+    "bait_users": {
         "johnny": "password",
         "julia": "qweasd",
         "nagios": "nagios",

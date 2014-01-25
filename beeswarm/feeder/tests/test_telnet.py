@@ -23,11 +23,11 @@ import shutil
 import tempfile
 
 from gevent.server import StreamServer
-from beeswarm.hive.hive import Hive
-from beeswarm.hive.models.authenticator import Authenticator
-from beeswarm.hive.models.session import Session
-from beeswarm.hive.capabilities import telnet as hive_telnet
-from beeswarm.hive.models.user import HiveUser
+from beeswarm.honeypot.honeypot import Honeypot
+from beeswarm.honeypot.models.authenticator import Authenticator
+from beeswarm.honeypot.models.session import Session
+from beeswarm.honeypot.capabilities import telnet as hive_telnet
+from beeswarm.honeypot.models.user import BaitUser
 
 from beeswarm.feeder.bees import telnet as bee_telnet
 from beeswarm.feeder.models.session import BeeSession
@@ -36,7 +36,7 @@ from beeswarm.feeder.models.session import BeeSession
 class Telnet_Test(unittest.TestCase):
     def setUp(self):
         self.work_dir = tempfile.mkdtemp()
-        Hive.prepare_environment(self.work_dir)
+        Honeypot.prepare_environment(self.work_dir)
 
     def tearDown(self):
         if os.path.isdir(self.work_dir):
@@ -46,7 +46,7 @@ class Telnet_Test(unittest.TestCase):
         """Tests if the Telnet bee can Login to the Telnet capability"""
 
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
@@ -72,7 +72,7 @@ class Telnet_Test(unittest.TestCase):
 
     def test_validate_senses(self):
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
@@ -98,7 +98,7 @@ class Telnet_Test(unittest.TestCase):
 
     def test_command_cd(self):
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
@@ -129,7 +129,7 @@ class Telnet_Test(unittest.TestCase):
     def test_command_pwd(self):
 
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
@@ -159,7 +159,7 @@ class Telnet_Test(unittest.TestCase):
     def test_command_uname(self):
 
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
@@ -188,7 +188,7 @@ class Telnet_Test(unittest.TestCase):
     def test_command_cat(self):
 
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
@@ -217,7 +217,7 @@ class Telnet_Test(unittest.TestCase):
     def test_command_uptime(self):
 
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
@@ -246,7 +246,7 @@ class Telnet_Test(unittest.TestCase):
     def test_command_echo(self):
 
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
@@ -273,7 +273,7 @@ class Telnet_Test(unittest.TestCase):
 
     def test_command_list(self):
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 

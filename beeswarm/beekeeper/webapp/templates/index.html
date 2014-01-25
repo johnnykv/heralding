@@ -3,9 +3,9 @@
 <div class="row-fluid">
     <ul class="thumbnails">
         <li class="thumbnail span6 text-center">
-            <a class="btn-link" href="#hivemodal" data-toggle="modal">
-                <h1>{{ status.nhives }}
-                    <small>Hives</small>
+            <a class="btn-link" href="#honeypotmodal" data-toggle="modal">
+                <h1>{{ status.nhoneypots }}
+                    <small>Honeypots</small>
                 </h1>
             </a>
             <hr>
@@ -124,12 +124,12 @@
 </script>
 
 {#--- modals ---#}
-<div id="hivemodal" class="modal hide fade" tabindex="-1">
+<div id="honeypotmodal" class="modal hide fade" tabindex="-1">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal">x</button>
-        <h2>Hives</h2>
+        <h2>Honeypots</h2>
     </div>
-    <table id="hivesTable" class="table table-bordered datagrid">
+    <table id="honeypotsTable" class="table table-bordered datagrid">
         <thead/>
         <tfoot>
         <tr>
@@ -165,13 +165,13 @@
 
     <script type="text/javascript">
 
-        $('#hivemodal').on('shown', function () {
-            $('#hivesTable').datagrid({
+        $('#honeypotmodal').on('shown', function () {
+            $('#honeypotsTable').datagrid({
                 dataSource: new GenericDataSource({
                     columns: [
                         {
-                            property: 'hive_id',
-                            label: 'Hive ID',
+                            property: 'honeypot_id',
+                            label: 'Honeypot Id',
                             sortable: true
                         },
                         {
@@ -185,7 +185,7 @@
                             sortable: false
                         }
                     ],
-                    url: '/data/hives',
+                    url: '/data/honeypots',
                     formatter: function (items) {
                         $.each(items, function (index, item) {
                             item.actions = '<i class="fa fa-trash-o fa-fw"></i>';
@@ -196,12 +196,12 @@
                         var id = $(this).parent().parent().find("td").eq(0).html();
                         console.log(JSON.stringify([id]));
                         $.ajax({
-                            url: '/ws/hive/delete',
+                            url: '/ws/honeypot/delete',
                             type: 'POST',
                             contentType: 'application/json; charset=utf-8',
                             data: JSON.stringify([id, ])
                         });
-                        $('#hivesTable').datagrid('reload');
+                        $('#honeypotsTable').datagrid('reload');
                     });
         });
     </script>

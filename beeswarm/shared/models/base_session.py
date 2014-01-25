@@ -73,7 +73,7 @@ class BaseSession(object):
 
     def to_old_dict(self):
         return {
-            'hive_id': 111,
+            'honeypot_id': 111,
             'id': self.id,
             'timestamp': self.timestamp,
             'attacker_ip': self.attacker_ip,

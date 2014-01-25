@@ -20,7 +20,7 @@ import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from entities import Classification
-from entities import HiveUser
+from entities import BaitUser
 import entities
 
 DB_Session = None
@@ -53,12 +53,12 @@ def setup_db(connection_string):
         else:
             c.description_short = entry['description_short']
             c.description_long = entry['description_long']
-    for username in data['hive_users']:
-        u = session.query(HiveUser).filter(HiveUser.username == username).first()
+    for username in data['bait_users']:
+        u = session.query(BaitUser).filter(BaitUser.username == username).first()
         if not u:
-            logger.debug('Creating default HiveUser: {}'.format(username))
-            password = data['hive_users'][username]
-            huser = HiveUser(username=username, password=password)
+            logger.debug('Creating default BaitUser: {}'.format(username))
+            password = data['bait_users'][username]
+            huser = BaitUser(username=username, password=password)
             session.add(huser)
     session.commit()
 

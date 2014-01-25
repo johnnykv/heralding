@@ -23,11 +23,11 @@ import shutil
 import tempfile
 
 from gevent.server import StreamServer
-from beeswarm.hive.hive import Hive
-from beeswarm.hive.models.authenticator import Authenticator
-from beeswarm.hive.models.session import Session
-from beeswarm.hive.capabilities import smtp as hive_smtp
-from beeswarm.hive.models.user import HiveUser
+from beeswarm.honeypot.honeypot import Honeypot
+from beeswarm.honeypot.models.authenticator import Authenticator
+from beeswarm.honeypot.models.session import Session
+from beeswarm.honeypot.capabilities import smtp as hive_smtp
+from beeswarm.honeypot.models.user import BaitUser
 
 from beeswarm.feeder.bees import smtp as bee_smtp
 from beeswarm.feeder.models.session import BeeSession
@@ -36,7 +36,7 @@ from beeswarm.feeder.models.session import BeeSession
 class SMTP_Test(unittest.TestCase):
     def setUp(self):
         self.work_dir = tempfile.mkdtemp()
-        Hive.prepare_environment(self.work_dir)
+        Honeypot.prepare_environment(self.work_dir)
 
     def tearDown(self):
         if os.path.isdir(self.work_dir):
@@ -46,7 +46,7 @@ class SMTP_Test(unittest.TestCase):
         """Tests if the SMTP bee can login to the SMTP capability"""
 
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
@@ -74,7 +74,7 @@ class SMTP_Test(unittest.TestCase):
         """Tests if the SMTP bee can send emails to the SMTP capability"""
 
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
@@ -104,7 +104,7 @@ class SMTP_Test(unittest.TestCase):
         """ Tests if a mail can be properly retrieved from the mail corpus """
 
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 

@@ -56,7 +56,7 @@ class Feeder(object):
             self.config = json.load(config_file, object_hook=asciify)
 
         BeeSession.feeder_id = self.config['general']['feeder_id']
-        BeeSession.hive_id = self.config['general']['hive_id']
+        BeeSession.honeypot_id = self.config['general']['honeypot_id']
 
         if self.config['public_ip']['fetch_ip']:
             self.my_ip = urllib2.urlopen('http://api-sth01.exip.org/?call=ip').read()
@@ -86,7 +86,7 @@ class Feeder(object):
 
     def start(self):
         """
-            Starts sending client bees to the configured Hive.
+            Starts sending client bees to the configured Honeypot.
         """
         logger.info('Starting feeder.')
 

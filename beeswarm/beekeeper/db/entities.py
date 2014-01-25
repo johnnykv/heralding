@@ -12,10 +12,10 @@ class Feeder(Base):
     configuration = Column(String)
 
 
-class Hive(Base):
-    __tablename__ = 'hive'
+class Honeypot(Base):
+    __tablename__ = 'honeypot'
     id = Column(String, primary_key=True)
-    sessions = relationship("Session", cascade="all, delete-orphan", backref='hive')
+    sessions = relationship("Session", cascade="all, delete-orphan", backref='honeypot')
     configuration = Column(String)
 
 
@@ -41,7 +41,7 @@ class Session(Base):
     transcript = relationship('Transcript', cascade="all, delete-orphan", backref='Session')
     destination_ip = Column(String)
     destination_port = Column(Integer)
-    hive_id = Column(String, ForeignKey('hive.id'))
+    honeypot_id = Column(String, ForeignKey('honeypot.id'))
     classification_id = Column(String, ForeignKey('classification.type'), nullable=False, default='unclassified')
     classification = relationship('Classification')
 
@@ -93,7 +93,7 @@ class User(Base):
 
     # User type will be:
     # Admin  == 0
-    # Hive   == 1
+    # Honeypot   == 1
     # Feeder == 2
     utype = Column(Integer, default=0)
 
@@ -113,7 +113,7 @@ class User(Base):
         return '<User %r>' % self.nickname
 
 
-class HiveUser(Base):
-    __tablename__ = 'hiveuser'
+class BaitUser(Base):
+    __tablename__ = 'baituser'
     username = Column(String(32), primary_key=True)
     password = Column(String(32))

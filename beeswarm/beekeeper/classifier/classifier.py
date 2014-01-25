@@ -47,7 +47,7 @@ class Classifier(object):
         #get all sessions which matches basic properties.
         sessions = db_session.query(Session).options(joinedload(Session.authentication))\
                                             .filter(Session.protocol == honeybee.protocol) \
-                                            .filter(Session.hive == honeybee.hive) \
+                                            .filter(Session.honeypot == honeybee.honeypot) \
                                             .filter(Session.timestamp >= min_datetime) \
                                             .filter(Session.timestamp <= max_datetime) \
                                             .filter(Session.protocol == honeybee.protocol) \

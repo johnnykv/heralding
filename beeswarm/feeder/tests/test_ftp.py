@@ -22,11 +22,11 @@ import shutil
 import tempfile
 
 from gevent.server import StreamServer
-from beeswarm.hive.hive import Hive
-from beeswarm.hive.models.authenticator import Authenticator
-from beeswarm.hive.models.session import Session
-from beeswarm.hive.capabilities import ftp as hive_ftp
-from beeswarm.hive.models.user import HiveUser
+from beeswarm.honeypot.honeypot import Honeypot
+from beeswarm.honeypot.models.authenticator import Authenticator
+from beeswarm.honeypot.models.session import Session
+from beeswarm.honeypot.capabilities import ftp as hive_ftp
+from beeswarm.honeypot.models.user import BaitUser
 
 from beeswarm.feeder.bees import ftp as bee_ftp
 from beeswarm.feeder.models.session import BeeSession
@@ -35,7 +35,7 @@ from beeswarm.feeder.models.session import BeeSession
 class FTP_Test(unittest.TestCase):
     def setUp(self):
         self.work_dir = tempfile.mkdtemp()
-        Hive.prepare_environment(self.work_dir)
+        Honeypot.prepare_environment(self.work_dir)
         self.create_file_system()
 
     def tearDown(self):
@@ -59,7 +59,7 @@ class FTP_Test(unittest.TestCase):
         """FTP: Testing different login combinations"""
 
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
@@ -90,7 +90,7 @@ class FTP_Test(unittest.TestCase):
         """Tests the FTP LIST command"""
 
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
@@ -126,7 +126,7 @@ class FTP_Test(unittest.TestCase):
         """Tests the FTP CWD command"""
 
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
@@ -163,7 +163,7 @@ class FTP_Test(unittest.TestCase):
         """Tests the FTP RETR command"""
 
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 

@@ -16,7 +16,7 @@ Deployment overview
     beekeeper -> nsm [label="Alerts", style="dashed"]
     beekeeper -> beekeeper [label="Analysis of honeytokens"];
 
-    hive_a [label="Hive\n192.168.5.1"];
+    hive_a [label="Honeypot\n192.168.5.1"];
     beekeeper [label="Beekeeper\n192.168.2.2", fillcolor="palegreen", style="filled"];
     feeder_a [label="Feeder\n192.168.200.222"];
     feeder_b [label="Feeder\n192.168.200.250"];

@@ -31,10 +31,10 @@ from werkzeug.datastructures import MultiDict
 from beeswarm.beekeeper.webapp.auth import Authenticator
 from wtforms import HiddenField
 import beeswarm
-from forms import NewHiveConfigForm, NewFeederConfigForm, LoginForm, SettingsForm
+from forms import NewHoneypotConfigForm, NewFeederConfigForm, LoginForm, SettingsForm
 from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Hive, User, Authentication, Classification,\
-                                           HiveUser, Transcript
+from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Honeypot, User, Authentication, Classification,\
+                                           BaitUser, Transcript
 from beeswarm.shared.helpers import update_config_file, get_config_dict
 
 
@@ -80,7 +80,7 @@ def user_loader(userid):
 def home():
     db_session = database.get_session()
     status = {
-        'nhives': db_session.query(Hive).count(),
+        'nhoneypots': db_session.query(Honeypot).count(),
         'nfeeders': db_session.query(Feeder).count(),
         'nsessions': db_session.query(Session).count(),
         'nbees': db_session.query(Honeybee).count(),
@@ -122,9 +122,9 @@ def home():
         }
     }
     urls = {
-        'hivedata': '/data/hives',
+        'honeypotdata': '/data/honeypots',
         'feederdata': '/data/feeders',
-        'delhive': '/ws/hive/delete',
+        'delhoneypot': '/ws/honeypot/delete',
         'delfeeder': '/ws/feeder/delete'
     }
     return render_template('index.html', user=current_user, status=status, urls=urls)
@@ -159,10 +159,10 @@ def feeder_data():
 
     _feeder = session.query(Feeder).filter(Feeder.id == data['feeder_id']).one()
 
-    if data['hive_id'] is not None:
-        _hive = session.query(Hive).filter(Hive.id == data['hive_id']).one()
+    if data['honeypot_id'] is not None:
+        _honeypot = session.query(Honeypot).filter(Honeypot.id == data['honeypot_id']).one()
     else:
-        _hive = None
+        _honeypot = None
 
     h = Honeybee(
         id=data['id'],
@@ -178,7 +178,7 @@ def feeder_data():
         did_login=data['did_login'],
         did_complete=data['did_complete'],
         feeder=_feeder,
-        hive=_hive
+        honeypot=_honeypot
     )
 
     #ignore the entry if configured to do so.
@@ -194,16 +194,16 @@ def feeder_data():
     return ''
 
 
-@app.route('/ws/hive_data', methods=['POST'])
+@app.route('/ws/honeypot_data', methods=['POST'])
 @login_required
-def hive_data():
+def honeypot_data():
     #TODO: investigate why the flask provided request.json returns None.
     data = json.loads(request.data)
-    logger.debug('Received hive data from {0}: {1}'.format(flask.session['user_id'], data))
+    logger.debug('Received honeypot data from {0}: {1}'.format(flask.session['user_id'], data))
 
     db_session = database.get_session()
     classification = db_session.query(Classification).filter(Classification.type == 'unclassified').one()
-    _hive = db_session.query(Hive).filter(Hive.id == data['hive_id']).one()
+    _honeypot = db_session.query(Honeypot).filter(Honeypot.id == data['honeypot_id']).one()
 
     session = Session(
         id=data['id'],
@@ -215,7 +215,7 @@ def hive_data():
         destination_port=data['destination_port'],
         source_ip=data['source_ip'],
         source_port=data['source_port'],
-        hive=_hive)
+        honeypot=_honeypot)
 
     for entry in data['transcript']:
         transcript_timestamp = datetime.strptime(entry['timestamp'], '%Y-%m-%dT%H:%M:%S.%f')
@@ -232,11 +232,11 @@ def hive_data():
     return ''
 
 
-@app.route('/ws/hive/config/<hive_id>', methods=['GET'])
-def get_hive_config(hive_id):
+@app.route('/ws/honeypot/config/<honeypot_id>', methods=['GET'])
+def get_honeypot_config(honeypot_id):
     db_session = database.get_session()
-    current_hive = db_session.query(Hive).filter(Hive.id == hive_id).one()
-    return current_hive.configuration
+    current_honeypot = db_session.query(Honeypot).filter(Honeypot.id == honeypot_id).one()
+    return current_honeypot.configuration
 
 
 @app.route('/ws/feeder/config/<feeder_id>', methods=['GET'])
@@ -246,30 +246,30 @@ def get_feeder_config(feeder_id):
     return current_feeder.configuration
 
 
-@app.route('/ws/hive', methods=['GET', 'POST'])
+@app.route('/ws/honeypot', methods=['GET', 'POST'])
 @login_required
-def create_hive():
-    form = NewHiveConfigForm()
-    new_hive_id = str(uuid.uuid4())
+def create_honeypot():
+    form = NewHoneypotConfigForm()
+    new_honeypot_id = str(uuid.uuid4())
     if form.validate_on_submit():
         with open(app.config['CERT_PATH']) as cert:
             cert_str = cert.read()
         beekeeper_url = 'https://{0}:{1}/'.format(config['network']['host'], config['network']['port'])
-        hive_password = str(uuid.uuid4())
+        honeypot_password = str(uuid.uuid4())
         db_session = database.get_session()
-        hive_users = db_session.query(HiveUser).all()
+        honeypot_users = db_session.query(BaitUser).all()
         users_dict = {}
         # only add users if the honeypot is running in active mode
         # TODO: actually create active mode...
         if not form.general_standalone.data:
-            for u in hive_users:
+            for u in honeypot_users:
                 users_dict[u.username] = u.password
 
-        hive_config = {
+        honeypot_config = {
             'general': {
-                'mode': 'hive',
-                'hive_id': new_hive_id,
-                'hive_ip': '192.168.1.1',
+                'mode': 'honeypot',
+                'honeypot_id': new_honeypot_id,
+                'honeypot_ip': '192.168.1.1',
                 'fetch_ip': False
             },
             'log_hpfeedslogger': {
@@ -278,13 +278,13 @@ def create_hive():
                 'port': 20000,
                 'ident': '2wtadBoH',
                 'secret': 'mJPyhNhJmLYGbDCt',
-                'chan': 'beeswarm.hive',
+                'chan': 'beeswarm.honeypot',
                 'port_mapping': '{}'
             },
             'log_beekeeper': {
                 'enabled': True,
                 'beekeeper_url': beekeeper_url,
-                'beekeeper_pass': hive_password,
+                'beekeeper_pass': honeypot_password,
                 'cert': cert_str
             },
             'log_syslog': {
@@ -346,31 +346,31 @@ def create_hive():
                 'ntp_pool': 'pool.ntp.org'
             },
         }
-        config_json = json.dumps(hive_config, indent=4)
+        config_json = json.dumps(honeypot_config, indent=4)
 
-        h = Hive(id=new_hive_id, configuration=config_json)
+        h = Honeypot(id=new_honeypot_id, configuration=config_json)
         db_session.add(h)
         db_session.commit()
-        authenticator.add_user(new_hive_id, hive_password, 2)
-        config_link = '{0}ws/hive/config/{1}'.format(beekeeper_url, new_hive_id)
-        iso_link = '/iso/hive/{0}.iso'.format(new_hive_id)
-        return render_template('finish-config.html', mode_name='Hive', user=current_user,
+        authenticator.add_user(new_honeypot_id, honeypot_password, 2)
+        config_link = '{0}ws/honeypot/config/{1}'.format(beekeeper_url, new_honeypot_id)
+        iso_link = '/iso/honeypot/{0}.iso'.format(new_honeypot_id)
+        return render_template('finish-config.html', mode_name='Honeypot', user=current_user,
                                config_link=config_link, iso_link=iso_link)
 
-    return render_template('create-hive.html', form=form, mode_name='Hive', user=current_user)
+    return render_template('create-honeypot.html', form=form, mode_name='Honeypot', user=current_user)
 
 
-@app.route('/ws/hive/delete', methods=['POST'])
+@app.route('/ws/honeypot/delete', methods=['POST'])
 @login_required
-def delete_hives():
-    # list of hive id's'
-    hive_ids = json.loads(request.data)
+def delete_honeypots():
+    # list of honeypot id's'
+    honeypot_ids = json.loads(request.data)
     db_session = database.get_session()
-    for hive_id in hive_ids:
-        hive_to_delete = db_session.query(Hive).filter(Hive.id == hive_id).one()
-        db_session.delete(hive_to_delete)
+    for id in honeypot_ids:
+        honeypot_to_delete = db_session.query(Honeypot).filter(Honeypot.id == id).one()
+        db_session.delete(honeypot_to_delete)
         db_session.commit()
-        authenticator.remove_user(hive_id)
+        authenticator.remove_user(id)
     return ''
 
 
@@ -388,7 +388,7 @@ def create_feeder():
             'general': {
                 'mode': 'feeder',
                 'feeder_id': new_feeder_id,
-                'hive_id': None
+                'honeypot_id': None
             },
             'public_ip': {
                 'fetch_ip': True
@@ -584,14 +584,14 @@ def data_session_transcript(_id):
     rsp = Response(response=json.dumps(return_rows, indent=4), status=200, mimetype='application/json')
     return rsp
 
-@app.route('/data/hives', methods=['GET'])
+@app.route('/data/honeypots', methods=['GET'])
 @login_required
-def data_hives():
+def data_honeypots():
     db_session = database.get_session()
-    hives = db_session.query(Hive).all()
+    honeypots = db_session.query(Honeypot).all()
     rows = []
-    for h in hives:
-        row = {'hive_id': h.id, 'attacks': db_session.query(Session).filter(Session.hive_id == h.id).count(),
+    for h in honeypots:
+        row = {'honeypot_id': h.id, 'attacks': db_session.query(Session).filter(Session.honeypot_id == h.id).count(),
                'checked': False}
         rows.append(row)
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
@@ -636,12 +636,12 @@ def logout():
     return redirect('/login')
 
 
-@app.route('/iso/hive/<hive_id>.iso', methods=['GET'])
+@app.route('/iso/honeypot/<honeypot_id>.iso', methods=['GET'])
 @login_required
-def generate_hive_iso(hive_id):
-    logger.info('Generating new ISO for Hive ({})'.format(hive_id))
+def generate_honeypot_iso(honeypot_id):
+    logger.info('Generating new ISO for Honeypot ({})'.format(honeypot_id))
     db_session = database.get_session()
-    current_hive = db_session.query(Hive).filter(Hive.id == hive_id).one()
+    current_honeypot = db_session.query(Honeypot).filter(Honeypot.id == honeypot_id).one()
 
     tempdir = tempfile.mkdtemp()
     custom_config_dir = os.path.join(tempdir, 'custom_config')
@@ -649,16 +649,16 @@ def generate_hive_iso(hive_id):
 
     package_directory = os.path.dirname(os.path.abspath(beeswarm.__file__))
     logger.debug('Copying data files to temporary directory.')
-    shutil.copytree(os.path.join(package_directory, 'hive/data'), os.path.join(custom_config_dir, 'data/'))
+    shutil.copytree(os.path.join(package_directory, 'honeypot/data'), os.path.join(custom_config_dir, 'data/'))
 
     config_file_path = os.path.join(custom_config_dir, 'beeswarmcfg.json')
     with open(config_file_path, 'w') as config_file:
-        config_file.write(current_hive.configuration)
+        config_file.write(current_honeypot.configuration)
 
-    if not write_to_iso(tempdir, current_hive):
+    if not write_to_iso(tempdir, current_honeypot):
         return 'Not Found', 404
-    temp_iso_name = 'beeswarm-{}-{}.iso'.format(current_hive.__class__.__name__,
-                                                current_hive.id)
+    temp_iso_name = 'beeswarm-{}-{}.iso'.format(current_honeypot.__class__.__name__,
+                                                current_honeypot.id)
 
     return send_from_directory(tempdir, temp_iso_name, mimetype='application/iso-image')
 

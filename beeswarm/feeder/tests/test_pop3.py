@@ -22,11 +22,11 @@ import tempfile
 import shutil
 
 from gevent.server import StreamServer
-from beeswarm.hive.hive import Hive
-from beeswarm.hive.models.user import HiveUser
-from beeswarm.hive.models.authenticator import Authenticator
-from beeswarm.hive.models.session import Session
-from beeswarm.hive.capabilities import pop3 as hive_pop3
+from beeswarm.honeypot.honeypot import Honeypot
+from beeswarm.honeypot.models.user import BaitUser
+from beeswarm.honeypot.models.authenticator import Authenticator
+from beeswarm.honeypot.models.session import Session
+from beeswarm.honeypot.capabilities import pop3 as hive_pop3
 
 from beeswarm.feeder.models.session import BeeSession
 from beeswarm.feeder.bees import pop3 as bee_pop3
@@ -35,7 +35,7 @@ from beeswarm.feeder.bees import pop3 as bee_pop3
 class POP3_Test(unittest.TestCase):
     def setUp(self):
         self.work_dir = tempfile.mkdtemp()
-        Hive.prepare_environment(self.work_dir)
+        Honeypot.prepare_environment(self.work_dir)
 
     def tearDown(self):
         if os.path.isdir(self.work_dir):
@@ -45,7 +45,7 @@ class POP3_Test(unittest.TestCase):
         """Tests if the POP3 bee can login to the POP3 capability"""
 
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 

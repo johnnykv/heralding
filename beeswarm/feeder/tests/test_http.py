@@ -22,19 +22,19 @@ import os
 import shutil
 import tempfile
 
-from beeswarm.hive.hive import Hive
+from beeswarm.honeypot.honeypot import Honeypot
 from beeswarm.feeder.models.session import BeeSession
-from beeswarm.hive.models.authenticator import Authenticator
-from beeswarm.hive.models.session import Session
-from beeswarm.hive.models.user import HiveUser
-from beeswarm.hive.capabilities import http as hive_http
+from beeswarm.honeypot.models.authenticator import Authenticator
+from beeswarm.honeypot.models.session import Session
+from beeswarm.honeypot.models.user import BaitUser
+from beeswarm.honeypot.capabilities import http as hive_http
 from beeswarm.feeder.bees import http as bee_http
 
 
 class HTTP_Test(unittest.TestCase):
     def setUp(self):
         self.work_dir = tempfile.mkdtemp()
-        Hive.prepare_environment(self.work_dir)
+        Honeypot.prepare_environment(self.work_dir)
 
     def tearDown(self):
         if os.path.isdir(self.work_dir):
@@ -44,7 +44,7 @@ class HTTP_Test(unittest.TestCase):
         """ Tests if HTTP bee can login to the http capability.
         """
         sessions = {}
-        users = {'test': HiveUser('test', 'test')}
+        users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
         options = {'enabled': 'True', 'port': 0}

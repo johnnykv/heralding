@@ -18,7 +18,7 @@ import string
 import random
 import uuid
 
-from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Hive, Authentication, Classification, Session, Transcript
+from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Honeypot, Authentication, Classification, Session, Transcript
 
 from beeswarm.beekeeper.db import database
 
@@ -33,7 +33,7 @@ def fill_dummy_data():
     protocols = [('pop3', 110), ('ssh', 22), ('telnet', 23), ('ftp', 21), ('http', 80)]
     source_ips = ('192.168.1.2', '192.168.2.3', '192.168.3.4', '192.168.4.5')
 
-    hives = [Hive(id=str(uuid.uuid4()))]
+    honeypots = [Honeypot(id=str(uuid.uuid4()))]
     feeders = [Feeder(id=str(uuid.uuid4()))]
     sessions = []
     authentications = []
@@ -44,7 +44,7 @@ def fill_dummy_data():
                            destination_ip='4.3.2.1', destination_port='1111')
 
         session.protocol, session.destination_port = random.choice(protocols)
-        session.hive = random.choice(hives)
+        session.honeypot = random.choice(honeypots)
         session.feeder = random.choice(feeders)
         session.classification = db_session.query(Classification).filter(Classification.type == 'honeybee').one()
 
@@ -68,7 +68,7 @@ def fill_dummy_data():
                            destination_ip='4.3.2.1', destination_port='1111')
 
         session.protocol, session.destination_port = random.choice(protocols)
-        session.hive = random.choice(hives)
+        session.honeypot = random.choice(honeypots)
 
         session.classification = db_session.query(Classification).filter(Classification.type == 'credentials_reuse').one()
 
@@ -82,7 +82,7 @@ def fill_dummy_data():
 
     db_session.add_all(authentications)
     db_session.add_all(sessions)
-    db_session.add_all(hives)
+    db_session.add_all(honeypots)
     db_session.add_all(feeders)
     db_session.commit()
 

@@ -16,7 +16,7 @@ An IoC could be a certificate mismatch or the unexpected reuse of credentials (h
 Beeswarm consist of three parts:
 
 
-* Hive
+* Honeypot
 
   * Multiprotocol credentials catching honeypot, comes default with ssh, vnc, pop3, pop3s, ssh, smtp, ftp, http and telnet capability.
   * Extendable, both in terms of new protocols but can also be extended to provide shell-like features.
@@ -30,7 +30,7 @@ Beeswarm consist of three parts:
 * Beekeeper
 
   * Provides management interface.
-  * Processes data from Hive and Feeder.
+  * Processes data from Honeypot and Feeder.
   * Reports malicious activity.
   * Generates configuration and crypto keys for a full beeswarm setup.
 
@@ -51,7 +51,7 @@ Developers are encouraged to use the develop feature from distribute:
     $>python setup.py develop
 
 
-Hive
+Honeypot
 ====
 The following sections shows how hive can be used as a standalone credentials-catching honeypot.
 
@@ -143,7 +143,7 @@ The following deployment diagram shows the Beeswarm concept when fully operation
                                   |                                       |                |
                                   |                                       v                    |
                           +-------+------+     Reuse credentials    +------------+         |
-                          |  Evil dudes  |+------------------------>|    Hive    |+ - - - -+   |
+                          |  Evil dudes  |+------------------------>|    Honeypot    |+ - - - -+   |
                           +-------+------+                          +------------+
                                   |                                  (Static ip)               |
                                   |Operates exit node                     ^
@@ -162,7 +162,7 @@ The following deployment diagram shows the Beeswarm concept when fully operation
 Data access
 -----------
 
-The Hive part of the system is operational and are currently collecting data. Members of the `The Honeynet Project <http://www.honeynet.org/>`_ 
+The Honeypot part of the system is operational and are currently collecting data. Members of the `The Honeynet Project <http://www.honeynet.org/>`_
 can gain access to this data by subscribing to the *beeswarm.hive* hpfeeds channel, or preferably access the data through the `Mnemosyne <https://github.com/johnnykv/mnemosyne>`_ `REST api <http://johnnykv.github.com/mnemosyne/WebAPI.html#resources-as-of-version-1>`_.
 
 Lead developer

@@ -18,13 +18,7 @@ import logging
 import time
 
 
-HIVE_TITLE = """._...._._............
-| |..| (_)...........
-| |__| |___..._____..
-|  __  | \ \./ / _ \.
-| |..| | |\ V /  __/.
-|_|..|_|_|.\_/.\___|.
-"""
+HONEYPOT_TITLE = ""
 
 FEEDER_TITLE = """..______............_............
 .|  ____|..........| |...........
@@ -98,13 +92,13 @@ class _UIHandler(object):
             self.addstring_middle(line)
 
 
-class HiveUIHandler(_UIHandler):
+class HoneypotUIHandler(_UIHandler):
     def draw(self):
-        self.draw_title(HIVE_TITLE)
+        self.draw_title(HONEYPOT_TITLE)
         self.addstring_middle('Running: ' + ' '.join(self.status['enabled_capabilities']))
         self._draw_height += 1
         self.addstring_left('IP Address: {}'.format(self.status['ip_address']))
-        self.addstring_right('Hive ID: {}'.format(self.status['hive_id']))
+        self.addstring_right('Honeypot ID: {}'.format(self.status['honeypot_id']))
         self.addstring_left('Total Sessions: {}'.format(self.status['total_sessions']))
         self.addstring_right('Active Sessions: {}'.format(self.status['active_sessions']))
 

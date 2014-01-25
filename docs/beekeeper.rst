@@ -5,7 +5,7 @@ Beekeeper is a web-app built on the `Flask <http://flask.pocoo.org/>`_
 framework. It makes the creation and deployment of Hives and Feeders
 easy. It is the management interface for Beeswarm and, does the data
 processing too. It makes deployment easy by generating bootable ISO
-files for Hive/Feeder. In order for it to be able to do this, it uses
+files for Honeypot/Feeder. In order for it to be able to do this, it uses
 a base ISO file, which is modified as per the configuration.
 
 Generating a Base ISO file

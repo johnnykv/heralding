@@ -9,7 +9,7 @@ import gevent
 from beeswarm.beekeeper.webapp.auth import Authenticator
 
 from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Feeder, Hive, Session, Honeybee, User, Authentication, Transcript
+from beeswarm.beekeeper.db.entities import Feeder, Honeypot, Session, Honeybee, User, Authentication, Transcript
 from beeswarm.beekeeper.webapp import app
 
 
@@ -33,12 +33,12 @@ class WebappTests(unittest.TestCase):
         self.feeder_password = str(uuid.uuid4())
         self.authenticator.add_user(self.feeder_id, self.feeder_password, 2)
 
-        self.hive_id = str(uuid.uuid4())
-        self.hive_password = str(uuid.uuid4())
-        self.authenticator.add_user(self.hive_id, self.hive_password, 1)
+        self.honeypot_id = str(uuid.uuid4())
+        self.honeypot_password = str(uuid.uuid4())
+        self.authenticator.add_user(self.honeypot_id, self.honeypot_password, 1)
 
         session.add_all([ Feeder(id=self.feeder_id, configuration='test_feeder_config'),
-                          Hive(id=self.hive_id, configuration='test_hive_config')
+                          Honeypot(id=self.honeypot_id, configuration='test_honeypot_config')
                         ])
 
         session.commit()
@@ -56,7 +56,7 @@ class WebappTests(unittest.TestCase):
         data_dict = {
             'id': str(uuid.uuid4()),
             'feeder_id': self.feeder_id,
-            'hive_id': self.hive_id,
+            'honeypot_id': self.honeypot_id,
             'protocol': 'pop3',
             'destination_ip': '127.0.0.1',
             'destination_port': '110',
@@ -100,16 +100,16 @@ class WebappTests(unittest.TestCase):
         r = self.app.post('/ws/feeder_data', data=json.dumps(data_dict), content_type='application/json')
         self.assertEquals(r.status, '500 INTERNAL SERVER ERROR')
 
-    def test_basic_hive_post(self):
+    def test_basic_honeypot_post(self):
         """
         Tests if a session dict can be posted without exceptions.
         """
 
-        self.login(self.hive_id, self.hive_password)
+        self.login(self.honeypot_id, self.honeypot_password)
 
         data_dict = {
             'id': 'ba9fdb3d-0efb-4764-9a6b-d9b86eccda96',
-            'hive_id': self.hive_id,
+            'honeypot_id': self.honeypot_id,
             'destination_ip': '192.168.1.1',
             'destination_port': 8023,
             'protocol': 'telnet',
@@ -126,19 +126,19 @@ class WebappTests(unittest.TestCase):
                 {'timestamp': '2013-05-07T22:21:21.136800', 'direction': 'out', 'data': 'james_brown\r\n$:~'}]
         }
 
-        r = self.app.post('/ws/hive_data', data=json.dumps(data_dict), content_type='application/json')
+        r = self.app.post('/ws/honeypot_data', data=json.dumps(data_dict), content_type='application/json')
         self.assertEquals(r.status, '200 OK')
 
-    def test_basic_unsuccessful_hive_post(self):
+    def test_basic_unsuccessful_honeypot_post(self):
         """
         Tests if an error is returned when data is posted without ID values.
         """
 
-        self.login(self.hive_id, self.hive_password)
+        self.login(self.honeypot_id, self.honeypot_password)
 
         #missing id
         data_dict = {
-            'hive_id': self.hive_id,
+            'honeypot_id': self.honeypot_id,
             'destination_ip': '192.168.1.1',
             'destination_port': 8023,
             'protocol': 'telnet',
@@ -155,7 +155,7 @@ class WebappTests(unittest.TestCase):
                 {'timestamp': '2013-05-07T22:21:21.136800', 'direction': 'out', 'data': 'james_brown\r\n$:~'}
             ]
         }
-        r = self.app.post('/ws/hive_data', data=json.dumps(data_dict), content_type='application/json')
+        r = self.app.post('/ws/honeypot_data', data=json.dumps(data_dict), content_type='application/json')
         self.assertEquals(r.status, '500 INTERNAL SERVER ERROR')
 
     def test_new_feeder(self):
@@ -250,9 +250,9 @@ class WebappTests(unittest.TestCase):
         self.assertTrue(200, resp.status_code)
         self.logout()
 
-    def test_new_hive(self):
+    def test_new_honeypot(self):
         """
-        Tests whether new Hive configuration can be posted successfully.
+        Tests whether new Honeypot configuration can be posted successfully.
         """
         post_data = {
             'http_enabled': True,
@@ -292,15 +292,15 @@ class WebappTests(unittest.TestCase):
             'ssh_key': 'server.key'
         }
         self.login('test', 'test')
-        resp = self.app.post('/ws/hive', data=post_data)
+        resp = self.app.post('/ws/honeypot', data=post_data)
         self.assertTrue(200, resp.status_code)
         self.logout()
 
-    def test_new_hive_config(self):
-        """ Tests if a Hive config is being returned correctly """
+    def test_new_honeypot_config(self):
+        """ Tests if a Honeypot config is being returned correctly """
 
-        resp = self.app.get('/ws/hive/config/' + self.hive_id)
-        self.assertEquals(resp.data, 'test_hive_config')
+        resp = self.app.get('/ws/honeypot/config/' + self.honeypot_id)
+        self.assertEquals(resp.data, 'test_honeypot_config')
 
     def test_new_feeder_config(self):
         """ Tests if a Feeder config is being returned correctly """
@@ -338,12 +338,12 @@ class WebappTests(unittest.TestCase):
         self.assertEquals(len(table_data), 4)
         self.logout()
 
-    def test_data_hive(self):
-        """ Tests if Hive information is returned properly """
+    def test_data_honeypot(self):
+        """ Tests if Honeypot information is returned properly """
 
         self.login('test', 'test')
-        self.populate_hives()
-        resp = self.app.get('/data/hives')
+        self.populate_honeypots()
+        resp = self.app.get('/data/honeypots')
         table_data = json.loads(resp.data)
         self.assertEquals(len(table_data), 5)  # One is added in the setup method, and 4 in populate
 
@@ -401,16 +401,16 @@ class WebappTests(unittest.TestCase):
         self.login('test', 'test')
         self.logout()
 
-    def test_hive_delete(self):
-        """ Tests the '/ws/hive/delete' route."""
+    def test_honeypot_delete(self):
+        """ Tests the '/ws/honeypot/delete' route."""
 
         self.login('test', 'test')
-        self.populate_hives()
-        data = [ self.hives[0], self.hives[1]]
-        self.app.post('/ws/hive/delete', data=json.dumps(data))
+        self.populate_honeypots()
+        data = [ self.honeypots[0], self.honeypots[1]]
+        self.app.post('/ws/honeypot/delete', data=json.dumps(data))
         db_session = database.get_session()
-        nhives = db_session.query(Hive).count()
-        self.assertEquals(3, nhives)
+        honeypot_count = db_session.query(Honeypot).count()
+        self.assertEquals(3, honeypot_count)
 
     def test_feeder_delete(self):
         """ Tests the '/ws/feeder/delete' route."""
@@ -438,16 +438,16 @@ class WebappTests(unittest.TestCase):
             db_session.add(u)
         db_session.commit()
 
-    def populate_hives(self):
-        """ Populates the database with 4 Hives """
+    def populate_honeypots(self):
+        """ Populates the database with 4 honeypots """
 
         db_session = database.get_session()
-        self.hives = []
+        self.honeypots = []
         for i in xrange(4):  # We add 4 here, but one is added in the setup method
             curr_id = str(uuid.uuid4())
             curr_id = curr_id.encode('utf-8')
-            self.hives.append(curr_id)
-            h = Hive(id=curr_id)
+            self.honeypots.append(curr_id)
+            h = Honeypot(id=curr_id)
             u = User(id=curr_id, password=str(uuid.uuid4()), utype=1)
             db_session.add(h)
             db_session.add(u)

@@ -75,7 +75,7 @@ class Commands(object):
         files = []
         dirs = []
         if params:
-            # Our Hive capability only accepts "ls -l" or "ls" so params will always be "-l"
+            # Our Honeypot capability only accepts "ls -l" or "ls" so params will always be "-l"
             for line in resp[2:-1]:  # Discard the line with echoed command, total and prompt
                 # 8 Makes sure we have the right result even if filenames have spaces.
                 info = line.split(' ', 8)

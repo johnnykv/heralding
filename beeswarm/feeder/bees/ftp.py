@@ -179,7 +179,7 @@ class ftp(ClientBase):
 
     def connect(self):
         """
-            Connect to the remote FTP server (Hive).
+            Connect to the remote FTP server (Honeypot).
         """
         self.client.connect(self.options['server'], self.options['port'])
 

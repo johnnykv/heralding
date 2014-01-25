@@ -18,7 +18,7 @@ import uuid
 from datetime import datetime, timedelta
 
 from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Feeder, Hive
+from beeswarm.beekeeper.db.entities import Feeder, Honeypot
 from beeswarm.beekeeper.db.entities import Classification, Session, Honeybee, Authentication
 from beeswarm.beekeeper.classifier.classifier import Classifier
 
@@ -29,22 +29,22 @@ class ClassifierTests(unittest.TestCase):
         database.setup_db('sqlite://')
 
         self.feeder_id = str(uuid.uuid4())
-        self.hive_id = str(uuid.uuid4())
+        self.honeypot_id = str(uuid.uuid4())
         self.honeybee_id = str(uuid.uuid4())
         self.honeybee_datetime = datetime.utcnow()
 
         db_session = database.get_session()
         feeder = Feeder(id=self.feeder_id)
-        hive = Hive(id=self.hive_id)
+        honeypot = Honeypot(id=self.honeypot_id)
 
         honeybee = Honeybee(id=self.honeybee_id, source_ip='321', destination_ip='123',
                             received=datetime.utcnow(), timestamp=self.honeybee_datetime, protocol='pop3',
-                            source_port=1, destination_port=1, did_complete=True, feeder=feeder, hive=hive)
+                            source_port=1, destination_port=1, did_complete=True, feeder=feeder, honeypot=honeypot)
 
         authentication = Authentication(id=str(uuid.uuid4()), username='a', password='a',
                                         successful=True, timestamp=datetime.utcnow())
         honeybee.authentication.append(authentication)
-        db_session.add_all([feeder, hive, honeybee])
+        db_session.add_all([feeder, honeypot, honeybee])
         db_session.commit()
 
     def tearDown(self):
@@ -57,13 +57,13 @@ class ClassifierTests(unittest.TestCase):
 
         db_session = database.get_session()
         honeybee = db_session.query(Honeybee).filter(Honeybee.id == self.honeybee_id).one()
-        hive = db_session.query(Hive).filter(Hive.id == self.hive_id).one()
+        honeypot = db_session.query(Honeypot).filter(Honeypot.id == self.honeypot_id).one()
 
         #session2 is the matching session
         for id, offset in (('session1', -15), ('session2', 3), ('session3', 15)):
             s = Session(id=id, source_ip='321', destination_ip='123',
                         received=datetime.utcnow(), timestamp=honeybee.timestamp + timedelta(seconds=offset),
-                        protocol='pop3', source_port=1, destination_port=1, hive=hive)
+                        protocol='pop3', source_port=1, destination_port=1, honeypot=honeypot)
             a = Authentication(id=str(uuid.uuid4()), username='a', password='a', successful=True,
                                timestamp=datetime.utcnow())
             s.authentication.append(a)
@@ -77,19 +77,19 @@ class ClassifierTests(unittest.TestCase):
 
     def test_correlation_honeybee_session(self):
         """
-        Test if honeybee session is correctly identified as related to a specific hive session.
-        We expect the honeybee entity to be classified as a legit (successfully completed) 'honeybee' and that the hive
+        Test if honeybee session is correctly identified as related to a specific honeypot session.
+        We expect the honeybee entity to be classified as a legit (successfully completed) 'honeybee' and that the honeypot
         session is deleted.
         """
 
-        #setup the hive session we expect to match the honeybee
+        #setup the honeypot session we expect to match the honeybee
         db_session = database.get_session()
-        hive = db_session.query(Hive).filter(Hive.id == self.hive_id).one()
+        honeypot = db_session.query(Honeypot).filter(Honeypot.id == self.honeypot_id).one()
 
         s_id = str(uuid.uuid4())
         s = Session(id=s_id, source_ip='321', destination_ip='123',
                     received=datetime.now(), timestamp=self.honeybee_datetime - timedelta(seconds=2),
-                    protocol='pop3', source_port=1, destination_port=1, hive=hive)
+                    protocol='pop3', source_port=1, destination_port=1, honeypot=honeypot)
         a = Authentication(id=str(uuid.uuid4()), username='a', password='a', successful=True,
                            timestamp=datetime.utcnow())
         s.authentication.append(a)
@@ -105,7 +105,7 @@ class ClassifierTests(unittest.TestCase):
         #test that the honeybee got classified
         self.assertTrue(
             honeybee.classification == db_session.query(Classification).filter(Classification.type == 'honeybee').one())
-        #test that the hive session got deleted
+        #test that the honeypot session got deleted
         self.assertIsNone(session)
 
     def test_classify_sessions_bruteforce(self):
@@ -114,12 +114,12 @@ class ClassifierTests(unittest.TestCase):
         """
 
         db_session = database.get_session()
-        hive = db_session.query(Hive).filter(Hive.id == self.hive_id).one()
+        honeypot = db_session.query(Honeypot).filter(Honeypot.id == self.honeypot_id).one()
 
         for id, offset in (('session99', -30), ('session88', -10), ('session77', -2)):
             s = Session(id=id, source_ip='321', destination_ip='123',
                         received=datetime.utcnow(), timestamp=datetime.utcnow() + timedelta(seconds=offset),
-                        protocol='pop3', source_port=1, destination_port=1, hive=hive)
+                        protocol='pop3', source_port=1, destination_port=1, honeypot=honeypot)
             a = Authentication(id=str(uuid.uuid4()), username='he', password='haha')
             s.authentication.append(a)
             db_session.add(s)
@@ -138,11 +138,11 @@ class ClassifierTests(unittest.TestCase):
         """
 
         db_session = database.get_session()
-        hive = db_session.query(Hive).filter(Hive.id == self.hive_id).one()
+        honeypot = db_session.query(Honeypot).filter(Honeypot.id == self.honeypot_id).one()
 
         s = Session(id='session1010', source_ip='321', destination_ip='123',
                     received=datetime.utcnow(), timestamp=datetime.utcnow() + timedelta(seconds=-25),
-                    protocol='pop3', source_port=1, destination_port=1, hive=hive)
+                    protocol='pop3', source_port=1, destination_port=1, honeypot=honeypot)
         a = Authentication(id=str(uuid.uuid4()), username='a', password='a')
         s.authentication.append(a)
         db_session.add(s)

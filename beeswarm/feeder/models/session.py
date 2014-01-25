@@ -20,7 +20,7 @@ from beeswarm.shared.models.base_session import BaseSession
 class BeeSession(BaseSession):
 
     feeder_id = ''
-    hive_id = ''
+    honeypot_id = ''
 
     def __init__(self, protocol, destination_ip, destination_port, my_ip):
         super(BeeSession, self).__init__(protocol, source_ip=my_ip, destination_ip=destination_ip,
@@ -29,7 +29,7 @@ class BeeSession(BaseSession):
         assert BeeSession.feeder_id
 
         self.feeder_id = BeeSession.feeder_id
-        self.hive_id = BeeSession.hive_id
+        self.honeypot_id = BeeSession.honeypot_id
 
         self.did_connect = False
         self.did_login = False

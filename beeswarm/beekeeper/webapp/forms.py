@@ -23,7 +23,7 @@ def validate_time_range(form, field):
         raise ValidationError('Make sure the time is in correct format: "hh:mm - hh:mm"')
 
 
-class NewHiveConfigForm(Form):
+class NewHoneypotConfigForm(Form):
 
     general_standalone = BooleanField(default=False, label='Standalone honeypot')
 
