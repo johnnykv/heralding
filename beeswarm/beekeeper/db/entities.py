@@ -5,10 +5,10 @@ from sqlalchemy.orm import relationship
 Base = declarative_base()
 
 
-class Feeder(Base):
-    __tablename__ = 'feeder'
+class Client(Base):
+    __tablename__ = 'client'
     id = Column(String, primary_key=True)
-    honeybees = relationship("Honeybee", cascade="all, delete-orphan", backref='feeder')
+    honeybees = relationship("Honeybee", cascade="all, delete-orphan", backref='client')
     configuration = Column(String)
 
 
@@ -82,7 +82,7 @@ class Honeybee(Session):
     did_connect = Column(Boolean)
     did_login = Column(Boolean)
     did_complete = Column(Boolean)
-    feeder_id = Column(String, ForeignKey('feeder.id'))
+    client_id = Column(String, ForeignKey('client.id'))
 
 
 class User(Base):
@@ -94,7 +94,7 @@ class User(Base):
     # User type will be:
     # Admin  == 0
     # Honeypot   == 1
-    # Feeder == 2
+    # Client == 2
     utype = Column(Integer, default=0)
 
     def is_authenticated(self):

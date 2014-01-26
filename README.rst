@@ -23,14 +23,14 @@ Beeswarm consist of three parts:
   * Supports a variety of loggers (syslog, file logging, hpfeeds, etc).
   * Can be deployed independently or as part of the full beeswarm setup.
 
-* Feeder
+* Client
 
   * Simulates a realistic environment using honeybees.
 
 * Beekeeper
 
   * Provides management interface.
-  * Processes data from Honeypot and Feeder.
+  * Processes data from Honeypot and Client.
   * Reports malicious activity.
   * Generates configuration and crypto keys for a full beeswarm setup.
 
@@ -136,7 +136,7 @@ The following deployment diagram shows the Beeswarm concept when fully operation
                                                                                      +------------+
                |                        (honeybees)                                        ^   ^
           +----+------+                   Traffic                                              |
-          |   Feeder  |+--------------------------------------------------+                |
+          |   Client  |+--------------------------------------------------+                |
           +-----------+           ^                                       |                    |
           (Static IP)             |                                       |         L O G  |
                                   |Intercept creds.                       |         D A T A    |
@@ -151,7 +151,7 @@ The following deployment diagram shows the Beeswarm concept when fully operation
                                   |                                       |
                                   v                                       |                    |
           +-----------+    +-------------+                                |
-          |   Feeder  |+-->|TOR Exit Node|+-------------------------------+                    |
+          |   Client  |+-->|TOR Exit Node|+-------------------------------+                    |
           +-----+-----+    +-------------+               Traffic
                 |                                      (honeybees)                             |
 

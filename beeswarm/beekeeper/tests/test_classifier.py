@@ -18,7 +18,7 @@ import uuid
 from datetime import datetime, timedelta
 
 from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Feeder, Honeypot
+from beeswarm.beekeeper.db.entities import Client, Honeypot
 from beeswarm.beekeeper.db.entities import Classification, Session, Honeybee, Authentication
 from beeswarm.beekeeper.classifier.classifier import Classifier
 
@@ -28,23 +28,23 @@ class ClassifierTests(unittest.TestCase):
         #'sqlite://' gives a in-memory sqlite database
         database.setup_db('sqlite://')
 
-        self.feeder_id = str(uuid.uuid4())
+        self.client_id = str(uuid.uuid4())
         self.honeypot_id = str(uuid.uuid4())
         self.honeybee_id = str(uuid.uuid4())
         self.honeybee_datetime = datetime.utcnow()
 
         db_session = database.get_session()
-        feeder = Feeder(id=self.feeder_id)
+        client = Client(id=self.client_id)
         honeypot = Honeypot(id=self.honeypot_id)
 
         honeybee = Honeybee(id=self.honeybee_id, source_ip='321', destination_ip='123',
                             received=datetime.utcnow(), timestamp=self.honeybee_datetime, protocol='pop3',
-                            source_port=1, destination_port=1, did_complete=True, feeder=feeder, honeypot=honeypot)
+                            source_port=1, destination_port=1, did_complete=True, client=client, honeypot=honeypot)
 
         authentication = Authentication(id=str(uuid.uuid4()), username='a', password='a',
                                         successful=True, timestamp=datetime.utcnow())
         honeybee.authentication.append(authentication)
-        db_session.add_all([feeder, honeypot, honeybee])
+        db_session.add_all([client, honeypot, honeybee])
         db_session.commit()
 
     def tearDown(self):

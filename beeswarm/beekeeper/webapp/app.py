@@ -31,9 +31,9 @@ from werkzeug.datastructures import MultiDict
 from beeswarm.beekeeper.webapp.auth import Authenticator
 from wtforms import HiddenField
 import beeswarm
-from forms import NewHoneypotConfigForm, NewFeederConfigForm, LoginForm, SettingsForm
+from forms import NewHoneypotConfigForm, NewClientConfigForm, LoginForm, SettingsForm
 from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Session, Honeypot, User, Authentication, Classification,\
+from beeswarm.beekeeper.db.entities import Client, Honeybee, Session, Honeypot, User, Authentication, Classification,\
                                            BaitUser, Transcript
 from beeswarm.shared.helpers import update_config_file, get_config_dict
 
@@ -81,7 +81,7 @@ def home():
     db_session = database.get_session()
     status = {
         'nhoneypots': db_session.query(Honeypot).count(),
-        'nfeeders': db_session.query(Feeder).count(),
+        'nclients': db_session.query(Client).count(),
         'nsessions': db_session.query(Session).count(),
         'nbees': db_session.query(Honeybee).count(),
         'nattacks': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
@@ -123,9 +123,9 @@ def home():
     }
     urls = {
         'honeypotdata': '/data/honeypots',
-        'feederdata': '/data/feeders',
+        'clientdata': '/data/clients',
         'delhoneypot': '/ws/honeypot/delete',
-        'delfeeder': '/ws/feeder/delete'
+        'delclient': '/ws/client/delete'
     }
     return render_template('index.html', user=current_user, status=status, urls=urls)
 
@@ -148,16 +148,16 @@ def sessions_attacks():
     return render_template('logs.html', logtype='Attacks', user=current_user)
 
 
-@app.route('/ws/feeder_data', methods=['POST'])
+@app.route('/ws/client_data', methods=['POST'])
 @login_required
-def feeder_data():
+def client_data():
     #TODO: investigate why the flask provided request.json returns None
     data = json.loads(request.data)
-    logger.debug('Received feeder data from {0}: {1}'.format(flask.session['user_id'], data))
+    logger.debug('Received client data from {0}: {1}'.format(flask.session['user_id'], data))
     session = database.get_session()
     classification = session.query(Classification).filter(Classification.type == 'unclassified').one()
 
-    _feeder = session.query(Feeder).filter(Feeder.id == data['feeder_id']).one()
+    _client = session.query(Client).filter(Client.id == data['client_id']).one()
 
     if data['honeypot_id'] is not None:
         _honeypot = session.query(Honeypot).filter(Honeypot.id == data['honeypot_id']).one()
@@ -177,7 +177,7 @@ def feeder_data():
         did_connect=data['did_connect'],
         did_login=data['did_login'],
         did_complete=data['did_complete'],
-        feeder=_feeder,
+        client=_client,
         honeypot=_honeypot
     )
 
@@ -239,11 +239,11 @@ def get_honeypot_config(honeypot_id):
     return current_honeypot.configuration
 
 
-@app.route('/ws/feeder/config/<feeder_id>', methods=['GET'])
-def get_feeder_config(feeder_id):
+@app.route('/ws/client/config/<client_id>', methods=['GET'])
+def get_client_config(client_id):
     db_session = database.get_session()
-    current_feeder = db_session.query(Feeder).filter(Feeder.id == feeder_id).one()
-    return current_feeder.configuration
+    client = db_session.query(Client).filter(Client.id == client_id).one()
+    return client.configuration
 
 
 @app.route('/ws/honeypot', methods=['GET', 'POST'])
@@ -374,20 +374,20 @@ def delete_honeypots():
     return ''
 
 
-@app.route('/ws/feeder', methods=['GET', 'POST'])
+@app.route('/ws/client', methods=['GET', 'POST'])
 @login_required
-def create_feeder():
-    form = NewFeederConfigForm()
-    new_feeder_id = str(uuid.uuid4())
+def create_client():
+    form = NewClientConfigForm()
+    client_id = str(uuid.uuid4())
     if form.validate_on_submit():
         with open(app.config['CERT_PATH']) as cert:
             cert_str = cert.read()
         beekeeper_url = 'https://{0}:{1}/'.format(config['network']['host'], config['network']['port'])
-        feeder_password = str(uuid.uuid4())
-        feeder_config = {
+        client_password = str(uuid.uuid4())
+        client_config = {
             'general': {
-                'mode': 'feeder',
-                'feeder_id': new_feeder_id,
+                'mode': 'client',
+                'client_id': client_id,
                 'honeypot_id': None
             },
             'public_ip': {
@@ -507,35 +507,35 @@ def create_feeder():
             'log_beekeeper': {
                 'enabled': True,
                 'beekeeper_url': beekeeper_url,
-                'beekeeper_pass': feeder_password,
+                'beekeeper_pass': client_password,
                 'cert': cert_str
             },
         }
-        config_json = json.dumps(feeder_config, indent=4)
+        config_json = json.dumps(client_config, indent=4)
 
         db_session = database.get_session()
-        f = Feeder(id=new_feeder_id, configuration=config_json)
+        f = Client(id=client_id, configuration=config_json)
         db_session.add(f)
         db_session.commit()
-        authenticator.add_user(new_feeder_id, feeder_password, 2)
-        config_link = '{0}ws/feeder/config/{1}'.format(beekeeper_url, new_feeder_id)
-        iso_link = '/iso/feeder/{0}.iso'.format(new_feeder_id)
-        return render_template('finish-config.html', mode_name='Feeder', user=current_user,
+        authenticator.add_user(client_id, client_password, 2)
+        config_link = '{0}ws/client/config/{1}'.format(beekeeper_url, client_id)
+        iso_link = '/iso/client/{0}.iso'.format(client_id)
+        return render_template('finish-config.html', mode_name='Client', user=current_user,
                                config_link=config_link, iso_link=iso_link)
 
-    return render_template('create-feeder.html', form=form, mode_name='Feeder', user=current_user)
+    return render_template('create-client.html', form=form, mode_name='Client', user=current_user)
 
 
-@app.route('/ws/feeder/delete', methods=['POST'])
+@app.route('/ws/client/delete', methods=['POST'])
 @login_required
-def delete_feeders():
-    feeder_ids = json.loads(request.data)
+def delete_clients():
+    client_ids = json.loads(request.data)
     db_session = database.get_session()
-    for feeder_id in feeder_ids:
-        feeder_to_delete = db_session.query(Feeder).filter(Feeder.id == feeder_id).one()
-        db_session.delete(feeder_to_delete)
+    for client_id in client_ids:
+        client = db_session.query(Client).filter(Client.id == client_id).one()
+        db_session.delete(client)
         db_session.commit()
-        authenticator.remove_user(feeder_id)
+        authenticator.remove_user(client_id)
     return ''
 
 
@@ -597,14 +597,14 @@ def data_honeypots():
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp
 
-@app.route('/data/feeders', methods=['GET'])
+@app.route('/data/clients', methods=['GET'])
 @login_required
-def data_feeders():
+def data_clients():
     db_session = database.get_session()
-    feeders = db_session.query(Feeder).all()
+    clients = db_session.query(Client).all()
     rows = []
-    for f in feeders:
-        row = {'feeder_id': f.id, 'bees': db_session.query(Honeybee).filter(Honeybee.feeder_id == f.id).count(),
+    for client in clients:
+        row = {'client_id': client.id, 'bees': db_session.query(Honeybee).filter(Honeybee.client_id == client.id).count(),
                'checked': False}
         rows.append(row)
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
@@ -663,12 +663,12 @@ def generate_honeypot_iso(honeypot_id):
     return send_from_directory(tempdir, temp_iso_name, mimetype='application/iso-image')
 
 
-@app.route('/iso/feeder/<feeder_id>.iso', methods=['GET'])
+@app.route('/iso/client/<client_id>.iso', methods=['GET'])
 @login_required
-def generate_feeder_iso(feeder_id):
-    logger.info('Generating new ISO for Feeder ({})'.format(feeder_id))
+def generate_client_iso(client_id):
+    logger.info('Generating new ISO for Client ({})'.format(client_id))
     db_session = database.get_session()
-    current_feeder = db_session.query(Feeder).filter(Feeder.id == feeder_id).one()
+    client = db_session.query(Client).filter(Client.id == client_id).one()
 
     tempdir = tempfile.mkdtemp()
     custom_config_dir = os.path.join(tempdir, 'custom_config')
@@ -676,12 +676,12 @@ def generate_feeder_iso(feeder_id):
 
     config_file_path = os.path.join(custom_config_dir, 'beeswarmcfg.json')
     with open(config_file_path, 'w') as config_file:
-        config_file.write(current_feeder.configuration)
+        config_file.write(client.configuration)
 
-    if not write_to_iso(tempdir, current_feeder):
+    if not write_to_iso(tempdir, client):
         return 'Not Found', 404
-    temp_iso_name = 'beeswarm-{}-{}.iso'.format(current_feeder.__class__.__name__,
-                                                current_feeder.id)
+    temp_iso_name = 'beeswarm-{}-{}.iso'.format(client.__class__.__name__,
+                                                client.id)
     return send_from_directory(tempdir, temp_iso_name, mimetype='application/iso-image')
 
 

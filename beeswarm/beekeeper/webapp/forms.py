@@ -65,7 +65,7 @@ class NewHoneypotConfigForm(Form):
     ssh_key = FileField(default='server.key', label='Key File')
 
 
-class NewFeederConfigForm(Form):
+class NewClientConfigForm(Form):
 
     http_enabled = BooleanField(default=False, label='Enabled')
     http_server = TextField(default='127.0.0.1', label='Server IP')

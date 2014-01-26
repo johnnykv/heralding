@@ -9,7 +9,7 @@ import gevent
 from beeswarm.beekeeper.webapp.auth import Authenticator
 
 from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Feeder, Honeypot, Session, Honeybee, User, Authentication, Transcript
+from beeswarm.beekeeper.db.entities import Client, Honeypot, Session, Honeybee, User, Authentication, Transcript
 from beeswarm.beekeeper.webapp import app
 
 
@@ -29,33 +29,32 @@ class WebappTests(unittest.TestCase):
         #dummy entities
         self.authenticator.add_user('test', 'test', 0)
 
-        self.feeder_id = str(uuid.uuid4())
-        self.feeder_password = str(uuid.uuid4())
-        self.authenticator.add_user(self.feeder_id, self.feeder_password, 2)
+        self.client_id = str(uuid.uuid4())
+        self.client_password = str(uuid.uuid4())
+        self.authenticator.add_user(self.client_id, self.client_password, 2)
 
         self.honeypot_id = str(uuid.uuid4())
         self.honeypot_password = str(uuid.uuid4())
         self.authenticator.add_user(self.honeypot_id, self.honeypot_password, 1)
 
-        session.add_all([ Feeder(id=self.feeder_id, configuration='test_feeder_config'),
-                          Honeypot(id=self.honeypot_id, configuration='test_honeypot_config')
-                        ])
+        session.add_all([Client(id=self.client_id, configuration='test_client_config'),
+                         Honeypot(id=self.honeypot_id, configuration='test_honeypot_config') ])
 
         session.commit()
 
     def tearDown(self):
         database.clear_db()
 
-    def test_basic_feeder_post(self):
+    def test_basic_client_post(self):
         """
         Tests if a honeybee dict can be posted without exceptions.
         """
 
-        self.login(self.feeder_id, self.feeder_password)
+        self.login(self.client_id, self.client_password)
 
         data_dict = {
             'id': str(uuid.uuid4()),
-            'feeder_id': self.feeder_id,
+            'client_id': self.client_id,
             'honeypot_id': self.honeypot_id,
             'protocol': 'pop3',
             'destination_ip': '127.0.0.1',
@@ -71,15 +70,15 @@ class WebappTests(unittest.TestCase):
                                 'timestamp': datetime.utcnow().isoformat()}]
         }
 
-        r = self.app.post('/ws/feeder_data', data=json.dumps(data_dict), content_type='application/json')
+        r = self.app.post('/ws/client_data', data=json.dumps(data_dict), content_type='application/json')
         self.assertEquals(r.status, '200 OK')
 
-    def test_basic_unsuccessful_feeder_post(self):
+    def test_basic_unsuccessful_client_post(self):
         """
         Tests if an error is returned when data is posted without ID values.
         """
 
-        self.login(self.feeder_id, self.feeder_password)
+        self.login(self.client_id, self.client_password)
 
         #missing id's
         data_dict = {
@@ -97,7 +96,7 @@ class WebappTests(unittest.TestCase):
             'protocol_data': None
         }
 
-        r = self.app.post('/ws/feeder_data', data=json.dumps(data_dict), content_type='application/json')
+        r = self.app.post('/ws/client_data', data=json.dumps(data_dict), content_type='application/json')
         self.assertEquals(r.status, '500 INTERNAL SERVER ERROR')
 
     def test_basic_honeypot_post(self):
@@ -158,9 +157,9 @@ class WebappTests(unittest.TestCase):
         r = self.app.post('/ws/honeypot_data', data=json.dumps(data_dict), content_type='application/json')
         self.assertEquals(r.status, '500 INTERNAL SERVER ERROR')
 
-    def test_new_feeder(self):
+    def test_new_client(self):
         """
-        Tests if a new Feeder configuration can be posted successfully
+        Tests if a new Client configuration can be posted successfully
         """
 
         post_data = {
@@ -246,7 +245,7 @@ class WebappTests(unittest.TestCase):
             'telnet_password': 'test',
         }
         self.login('test', 'test')
-        resp = self.app.post('/ws/feeder', data=post_data)
+        resp = self.app.post('/ws/client', data=post_data)
         self.assertTrue(200, resp.status_code)
         self.logout()
 
@@ -302,11 +301,11 @@ class WebappTests(unittest.TestCase):
         resp = self.app.get('/ws/honeypot/config/' + self.honeypot_id)
         self.assertEquals(resp.data, 'test_honeypot_config')
 
-    def test_new_feeder_config(self):
-        """ Tests if a Feeder config is being returned correctly """
+    def test_new_client_config(self):
+        """ Tests if a Client config is being returned correctly """
 
-        resp = self.app.get('/ws/feeder/config/' + self.feeder_id)
-        self.assertEquals(resp.data, 'test_feeder_config')
+        resp = self.app.get('/ws/client/config/' + self.client_id)
+        self.assertEquals(resp.data, 'test_client_config')
 
     def test_data_sessions_all(self):
         """ Tests if all sessions are returned properly"""
@@ -347,12 +346,12 @@ class WebappTests(unittest.TestCase):
         table_data = json.loads(resp.data)
         self.assertEquals(len(table_data), 5)  # One is added in the setup method, and 4 in populate
 
-    def test_data_feeder(self):
-        """ Tests if Feeder information is returned properly """
+    def test_data_client(self):
+        """ Tests if Client information is returned properly """
 
         self.login('test', 'test')
-        self.populate_feeders()
-        resp = self.app.get('/data/feeders')
+        self.populate_clients()
+        resp = self.app.get('/data/clients')
         table_data = json.loads(resp.data)
         self.assertEquals(len(table_data), 5)  # One is added in the setup method, and 4 in populate
 
@@ -412,28 +411,28 @@ class WebappTests(unittest.TestCase):
         honeypot_count = db_session.query(Honeypot).count()
         self.assertEquals(3, honeypot_count)
 
-    def test_feeder_delete(self):
-        """ Tests the '/ws/feeder/delete' route."""
+    def test_client_delete(self):
+        """ Tests the '/ws/client/delete' route."""
 
         self.login('test', 'test')
-        self.populate_feeders()
-        data = [self.feeders[0], self.feeders[1]]
-        self.app.post('/ws/feeder/delete', data=json.dumps(data))
+        self.populate_clients()
+        data = [self.clients[0], self.clients[1]]
+        self.app.post('/ws/client/delete', data=json.dumps(data))
         db_session = database.get_session()
-        nfeeders = db_session.query(Feeder).count()
-        self.assertEquals(3, nfeeders)
+        nclients = db_session.query(Client).count()
+        self.assertEquals(3, nclients)
 
-    def populate_feeders(self):
-        """ Populates the database with 4 Feeders """
+    def populate_clients(self):
+        """ Populates the database with 4 clients """
 
         db_session = database.get_session()
-        self.feeders = []
+        self.clients = []
         for i in xrange(4):  # We add 4 here, but one is added in the setup method
             curr_id = str(uuid.uuid4())
             curr_id = curr_id.encode('utf-8')
-            self.feeders.append(curr_id)
+            self.clients.append(curr_id)
             u = User(id=curr_id, password=str(uuid.uuid4()), utype=2)
-            f = Feeder(id=curr_id)
+            f = Client(id=curr_id)
             db_session.add(f)
             db_session.add(u)
         db_session.commit()

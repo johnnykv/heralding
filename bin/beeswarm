@@ -30,7 +30,7 @@ import beeswarm
 
 from beeswarm.honeypot.honeypot import Honeypot
 from beeswarm.beekeeper.beekeeper import Beekeeper
-from beeswarm.feeder.feeder import Feeder
+from beeswarm.client.client import Client
 from beeswarm.errors import ConfigNotFound
 from beeswarm.shared.helpers import is_url
 from beeswarm.shared.models.ui_handler import CursesLogHandler
@@ -102,7 +102,7 @@ if __name__ == '__main__':
 
     group = parser.add_argument_group()
     group.add_argument('-ho', '--honeypot', action='store_true', help='Starts beeswarm in honeypot mode.')
-    group.add_argument('-fe', '--feeder', action='store_true', help='Starts beeswarm in feeder mode.')
+    group.add_argument('-fe', '--client', action='store_true', help='Starts beeswarm in client mode.')
     group.add_argument('-be', '--beekeeper', action='store_true', help='Starts beeswarm in beekeeper mode.')
 
     parser.add_argument('--config', dest='configurl', default='', help='Configuration URL to the beekeeper service.')
@@ -133,12 +133,12 @@ if __name__ == '__main__':
                     mode = Honeypot
                 elif _mode == 'beekeeper':
                     mode = Beekeeper
-                elif _mode == 'feeder':
-                    mode = Feeder
+                elif _mode == 'client':
+                    mode = Client
     elif args.honeypot:
         mode = Honeypot
-    elif args.feeder:
-        mode = Feeder
+    elif args.client:
+        mode = Client
     elif args.beekeeper:
         mode = Beekeeper
 

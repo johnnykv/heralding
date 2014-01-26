@@ -18,8 +18,8 @@ Deployment overview
 
     hive_a [label="Honeypot\n192.168.5.1"];
     beekeeper [label="Beekeeper\n192.168.2.2", fillcolor="palegreen", style="filled"];
-    feeder_a [label="Feeder\n192.168.200.222"];
-    feeder_b [label="Feeder\n192.168.200.250"];
+    feeder_a [label="Client\n192.168.200.222"];
+    feeder_b [label="Client\n192.168.200.250"];
     nsm [label="NSM", style="dashed"]
 
 Supported protocols

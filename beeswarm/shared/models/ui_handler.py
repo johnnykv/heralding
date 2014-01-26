@@ -20,7 +20,7 @@ import time
 
 HONEYPOT_TITLE = ""
 
-FEEDER_TITLE = """..______............_............
+CLIENT_TITLE = """..______............_............
 .|  ____|..........| |...........
 .| |__.___..___..__| |.___._.__..
 .|  __/ _ \/ _ \/ _` |/ _ \ '__|.
@@ -103,13 +103,13 @@ class HoneypotUIHandler(_UIHandler):
         self.addstring_right('Active Sessions: {}'.format(self.status['active_sessions']))
 
 
-class FeederUIHandler(_UIHandler):
+class ClientUIHandler(_UIHandler):
     def draw(self):
-        self.draw_title(FEEDER_TITLE)
+        self.draw_title(CLIENT_TITLE)
         self.addstring_middle('Running: ' + ' '.join(self.status['enabled_bees']))
         self._draw_height += 1
         self.addstring_left('IP Address: {}'.format(self.status['ip_address']))
-        self.addstring_right('Feeder ID: {}'.format(self.status['feeder_id']))
+        self.addstring_right('Client ID: {}'.format(self.status['client_id']))
         self.addstring_left('Total Bees Sent: {}'.format(self.status['total_bees']))
         self.addstring_right('Successful Bees: {}'.format(self.status['active_bees']))
 

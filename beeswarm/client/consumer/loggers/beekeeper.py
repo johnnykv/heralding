@@ -4,6 +4,12 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
+# Copyright (C) 2013 Johnny Vestergaard <jkv@unixcluster.dk>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -14,16 +20,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+import tempfile
 import urlparse
 import uuid
 import json
-import tempfile
 from datetime import datetime
+from lxml import html
 
 import requests
-from lxml import html
 from requests.exceptions import RequestException
-from beeswarm.honeypot.consumer.loggers.loggerbase import LoggerBase
+from beeswarm.client.consumer.loggers.loggerbase import LoggerBase
 
 logger = logging.getLogger(__name__)
 
@@ -31,8 +37,8 @@ logger = logging.getLogger(__name__)
 class Beekeeper(LoggerBase):
     def __init__(self, config):
         super(Beekeeper, self).__init__(config)
-        self.beekeeper_url = config['log_beekeeper']['beekeeper_url']
-        self.submit_url = urlparse.urljoin(self.beekeeper_url, 'ws/honeypot_data')
+        self.beekeeper_url = self.config['log_beekeeper']['beekeeper_url']
+        self.submit_url = urlparse.urljoin(self.beekeeper_url, 'ws/client_data')
         self.tempcert = tempfile.NamedTemporaryFile()
         self.tempcert.write(config['log_beekeeper']['cert'])
         self.tempcert.flush()
@@ -42,7 +48,7 @@ class Beekeeper(LoggerBase):
         csrf_doc = html.document_fromstring(csrf_response.text)
         csrf_token = csrf_doc.get_element_by_id('csrf_token').value
         login_data = {
-            'username': config['general']['honeypot_id'],
+            'username': config['general']['client_id'],
             'password': config['log_beekeeper']['beekeeper_pass'],
             'csrf_token': csrf_token,
             'submit': ''
@@ -55,7 +61,7 @@ class Beekeeper(LoggerBase):
     def log(self, session):
         try:
             data = json.dumps(session.to_dict(), default=json_default)
-            response = self.websession.post(self.submit_url, data=data, verify=self.tempcert.name)
+            response = self.websession.post(self.submit_url, data=data)
             #raise exception for everything other than response code 200
             response.raise_for_status()
         except RequestException as ex:

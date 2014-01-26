@@ -18,7 +18,7 @@ import string
 import random
 import uuid
 
-from beeswarm.beekeeper.db.entities import Feeder, Honeybee, Honeypot, Authentication, Classification, Session, Transcript
+from beeswarm.beekeeper.db.entities import Client, Honeybee, Honeypot, Authentication, Classification, Session, Transcript
 
 from beeswarm.beekeeper.db import database
 
@@ -34,7 +34,7 @@ def fill_dummy_data():
     source_ips = ('192.168.1.2', '192.168.2.3', '192.168.3.4', '192.168.4.5')
 
     honeypots = [Honeypot(id=str(uuid.uuid4()))]
-    feeders = [Feeder(id=str(uuid.uuid4()))]
+    client = [Client(id=str(uuid.uuid4()))]
     sessions = []
     authentications = []
 
@@ -45,7 +45,7 @@ def fill_dummy_data():
 
         session.protocol, session.destination_port = random.choice(protocols)
         session.honeypot = random.choice(honeypots)
-        session.feeder = random.choice(feeders)
+        session.client = random.choice(client)
         session.classification = db_session.query(Classification).filter(Classification.type == 'honeybee').one()
 
         username = ''.join(random.choice(string.lowercase) for x in range(8))
@@ -83,7 +83,7 @@ def fill_dummy_data():
     db_session.add_all(authentications)
     db_session.add_all(sessions)
     db_session.add_all(honeypots)
-    db_session.add_all(feeders)
+    db_session.add_all(client)
     db_session.commit()
 
 

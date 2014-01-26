@@ -13,12 +13,12 @@
         {
             "type": "honeybee",
             "description_short": "Legit Honeytoken traffic",
-            "description_long": "A session where a Feeder instance successfully transmitted information to a Honeypot with no indication of malicious activity."
+            "description_long": "A session where a Client instance successfully transmitted information to a Honeypot with no indication of malicious activity."
         },
         {
             "type": "honeypot_impersonation",
             "description_short": "Attacker impersonating Honeypot instance.",
-            "description_long": "A feeder instance successfully communicated with an attacker impersonating a Honeypot instance."
+            "description_long": "A client instance successfully communicated with an attacker impersonating a Honeypot instance."
         },
         {
             "type": "credentials_reuse",

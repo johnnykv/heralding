@@ -229,7 +229,7 @@ class Honeypot(object):
         return to_ignore
 
     def create_users(self):
-        """Creates the users for the Honeypot. A Feeder client or an attacker can log in
+        """Creates the users for the Honeypot. A Client client or an attacker can log in
         using the credentials supplied in the Honeypot Configuration. """
 
         users = {}
