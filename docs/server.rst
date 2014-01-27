@@ -1,7 +1,7 @@
-Beekeeper
-=========
+Beeswarm Server
+===============
 
-Beekeeper is a web-app built on the `Flask <http://flask.pocoo.org/>`_
+The central beeswarm server is a web-app built on the `Flask <http://flask.pocoo.org/>`_
 framework. It makes the creation and deployment of Hives and Feeders
 easy. It is the management interface for Beeswarm and, does the data
 processing too. It makes deployment easy by generating bootable ISO

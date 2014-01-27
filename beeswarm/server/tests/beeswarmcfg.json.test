@@ -1,10 +1,10 @@
 {
     "sql": {
-        "connection_string": "sqlite:///beekeeper_sqlite.db"
+        "connection_string": "sqlite:///server_sqlite.db"
     },
     "ssl": {
-        "certpath": "beekeeper.crt",
-        "keypath": "beekeeper.key"
+        "certpath": "server.crt",
+        "keypath": "server.key"
     },
     "honeybee_session_retain": 2,
     "malicious_session_retain": 100,

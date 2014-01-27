@@ -21,30 +21,30 @@ import shutil
 import gevent
 from gevent.pywsgi import WSGIServer
 import beeswarm
-from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.webapp import app
-from beeswarm.beekeeper.webapp.auth import Authenticator
+from beeswarm.server.db import database
+from beeswarm.server.webapp import app
+from beeswarm.server.webapp.auth import Authenticator
 from beeswarm.shared.helpers import drop_privileges
-from beeswarm.beekeeper.misc.scheduler import Scheduler
+from beeswarm.server.misc.scheduler import Scheduler
 from beeswarm.shared.helpers import find_offset, create_self_signed_cert, update_config_file
 from beeswarm.shared.asciify import asciify
 
 logger = logging.getLogger(__name__)
 
 
-class Beekeeper(object):
+class Server(object):
     def __init__(self, work_dir, config, curses_screen=None):
         """
-            Main class for the Beekeeper Web-Interface. It takes care of setting up
+            Main class for the Web-Interface. It takes care of setting up
             the database, managing the users, etc.
 
         :param work_dir: The working directory (usually the current working directory).
         :param config_arg: Beeswarm configuration dictionary, None if not configuration was supplied.
         :param curses_screen: This parameter is to maintain a similar interface for
-                               all the modes. It is ignored for the Beekeeper.
+                               all the modes. It is ignored for the Server.
         """
         if config is None:
-            Beekeeper.prepare_environment(work_dir)
+            Server.prepare_environment(work_dir)
             with open(os.path.join(work_dir, 'beeswarmcfg.json'), 'r') as config_file:
                 config = json.load(config_file, object_hook=asciify)
 
@@ -52,35 +52,34 @@ class Beekeeper(object):
         self.config = config
         self.config_file = 'beeswarmcfg.json'
 
-        self.servers = {}
+        self.workers = {}
         self.greenlets = []
         self.started = False
 
         database.setup_db(os.path.join(self.config['sql']['connection_string']))
         self.app = app.app
         self.app.config['CERT_PATH'] = self.config['ssl']['certpath']
-        self.app.config['BEEKEEPER_CONFIG'] = 'beeswarmcfg.json'
+        self.app.config['SERVER_CONFIG'] = 'beeswarmcfg.json'
         self.authenticator = Authenticator()
         self.authenticator.ensure_default_user()
 
     def start(self, port=5000, maintenance=True):
         """
-            Starts the Beekeeper web-app on the specified port.
-            Beekeeper is the maintenance interface.
+            Starts the BeeSwarm web-app on the specified port.
 
         :param port: The port on which the web-app is to run.
         """
         self.started = True
-        logger.info('Starting Beekeeper listening on port {0}'.format(port))
+        logger.info('Starting server listening on port {0}'.format(port))
 
-        http_server = WSGIServer(('', 5000), self.app, keyfile='beekeeper.key', certfile='beekeeper.crt')
+        http_server = WSGIServer(('', 5000), self.app, keyfile='server.key', certfile='server.crt')
         http_server_greenlet = gevent.spawn(http_server.serve_forever)
-        self.servers['http'] = http_server
+        self.workers['http'] = http_server
         self.greenlets.append(http_server_greenlet)
 
         if maintenance:
             maintenance_greenlet = gevent.spawn(self.start_maintenance_tasks)
-            self.servers['maintenance'] = maintenance_greenlet
+            self.workers['maintenance'] = maintenance_greenlet
             self.greenlets.append(maintenance_greenlet)
 
         drop_privileges()
@@ -91,8 +90,8 @@ class Beekeeper(object):
             Stops the web-app.
         """
         self.started = False
-        logging.info('Stopping beekeeper.')
-        self.servers['http'].stop(5)
+        logging.info('Stopping server.')
+        self.workers['http'].stop(5)
 
     def get_config(self, configfile):
         """
@@ -111,7 +110,7 @@ class Beekeeper(object):
             config_tar_offset = find_offset(self.config['iso']['path'], '\x07' * 30)
 
             if not config_tar_offset:
-                logger.warning('Beekeeper client ISO was found but is invalid. Bootable clients can not be generated.')
+                logger.warning('Beeswarm client ISO was found but is invalid. Bootable clients can not be generated.')
                 raise Exception('Expected binary pattern not found in ISO file.')
             else:
                 logger.debug('Binary pattern found in ISO at: {0}'.format(config_tar_offset))
@@ -123,7 +122,7 @@ class Beekeeper(object):
                     # and  write again
                     config_file.write(json.dumps(self.config, indent=4))
         else:
-            logger.warning('Beekeeper client ISO was NOT found. Bootable clients can not be generated.')
+            logger.warning('Beeswarm client ISO was NOT found. Bootable clients can not be generated.')
 
         maintenance_worker = Scheduler(self.config)
         maintenance_greenlet = gevent.spawn(maintenance_worker.start)
@@ -157,7 +156,7 @@ class Beekeeper(object):
             print ''
             print '* Certificate Information *'
             print 'IMPORTANT: Please make sure that "Common Name" is the IP address or fully qualified host name ' \
-                  ' that you want to use for the beekeeper API.'
+                  ' that you want to use for the server API.'
             cert_cn = raw_input('Common Name: ')
             cert_country = raw_input('Country: ')
             cert_state = raw_input('State: ')
@@ -174,10 +173,10 @@ class Beekeeper(object):
             # to keep things simple we just use the CN for host for now.
             tcp_host = cert_cn
 
-            create_self_signed_cert(work_dir, 'beekeeper.crt', 'beekeeper.key', cert_country, cert_state, cert_org,
+            create_self_signed_cert(work_dir, 'server.crt', 'server.key', cert_country, cert_state, cert_org,
                                     cert_locality, cert_org_unit, cert_cn)
 
-            shutil.copyfile(os.path.join(package_directory, 'beekeeper/beeswarmcfg.json.dist'),
+            shutil.copyfile(os.path.join(package_directory, 'server/beeswarmcfg.json.dist'),
                             config_file)
 
             # update the config file

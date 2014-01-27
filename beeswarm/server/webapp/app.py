@@ -28,12 +28,12 @@ from flask.ext.login import LoginManager, login_user, current_user, login_requir
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.security import check_password_hash
 from werkzeug.datastructures import MultiDict
-from beeswarm.beekeeper.webapp.auth import Authenticator
+from beeswarm.server.webapp.auth import Authenticator
 from wtforms import HiddenField
 import beeswarm
 from forms import NewHoneypotConfigForm, NewClientConfigForm, LoginForm, SettingsForm
-from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Client, Honeybee, Session, Honeypot, User, Authentication, Classification,\
+from beeswarm.server.db import database
+from beeswarm.server.db.entities import Client, Honeybee, Session, Honeypot, User, Authentication, Classification,\
                                            BaitUser, Transcript
 from beeswarm.shared.helpers import update_config_file, get_config_dict
 
@@ -61,7 +61,7 @@ authenticator = Authenticator()
 @app.before_first_request
 def initialize():
     global config
-    config = get_config_dict(app.config['BEEKEEPER_CONFIG'])
+    config = get_config_dict(app.config['SERVER_CONFIG'])
 
 @login_manager.user_loader
 def user_loader(userid):
@@ -254,7 +254,7 @@ def create_honeypot():
     if form.validate_on_submit():
         with open(app.config['CERT_PATH']) as cert:
             cert_str = cert.read()
-        beekeeper_url = 'https://{0}:{1}/'.format(config['network']['host'], config['network']['port'])
+        server_url = 'https://{0}:{1}/'.format(config['network']['host'], config['network']['port'])
         honeypot_password = str(uuid.uuid4())
         db_session = database.get_session()
         honeypot_users = db_session.query(BaitUser).all()
@@ -281,10 +281,10 @@ def create_honeypot():
                 'chan': 'beeswarm.honeypot',
                 'port_mapping': '{}'
             },
-            'log_beekeeper': {
+            'log_server': {
                 'enabled': True,
-                'beekeeper_url': beekeeper_url,
-                'beekeeper_pass': honeypot_password,
+                'server_url': server_url,
+                'server_pass': honeypot_password,
                 'cert': cert_str
             },
             'log_syslog': {
@@ -352,7 +352,7 @@ def create_honeypot():
         db_session.add(h)
         db_session.commit()
         authenticator.add_user(new_honeypot_id, honeypot_password, 2)
-        config_link = '{0}ws/honeypot/config/{1}'.format(beekeeper_url, new_honeypot_id)
+        config_link = '{0}ws/honeypot/config/{1}'.format(server_url, new_honeypot_id)
         iso_link = '/iso/honeypot/{0}.iso'.format(new_honeypot_id)
         return render_template('finish-config.html', mode_name='Honeypot', user=current_user,
                                config_link=config_link, iso_link=iso_link)
@@ -382,7 +382,7 @@ def create_client():
     if form.validate_on_submit():
         with open(app.config['CERT_PATH']) as cert:
             cert_str = cert.read()
-        beekeeper_url = 'https://{0}:{1}/'.format(config['network']['host'], config['network']['port'])
+        server_url = 'https://{0}:{1}/'.format(config['network']['host'], config['network']['port'])
         client_password = str(uuid.uuid4())
         client_config = {
             'general': {
@@ -504,10 +504,10 @@ def create_client():
                     'password': form.telnet_password.data
                 }
             },
-            'log_beekeeper': {
+            'log_server': {
                 'enabled': True,
-                'beekeeper_url': beekeeper_url,
-                'beekeeper_pass': client_password,
+                'server_url': server_url,
+                'server_pass': client_password,
                 'cert': cert_str
             },
         }
@@ -518,7 +518,7 @@ def create_client():
         db_session.add(f)
         db_session.commit()
         authenticator.add_user(client_id, client_password, 2)
-        config_link = '{0}ws/client/config/{1}'.format(beekeeper_url, client_id)
+        config_link = '{0}ws/client/config/{1}'.format(server_url, client_id)
         iso_link = '/iso/client/{0}.iso'.format(client_id)
         return render_template('finish-config.html', mode_name='Client', user=current_user,
                                config_link=config_link, iso_link=iso_link)
@@ -696,9 +696,9 @@ def settings():
         options = {'honeybee_session_retain': form.honeybee_session_retain.data,
                    'malicious_session_retain': form.malicious_session_retain.data,
                    'ignore_failed_honeybees': form.ignore_failed_honeybees.data}
-        update_config_file(app.config['BEEKEEPER_CONFIG'], options)
+        update_config_file(app.config['SERVER_CONFIG'], options)
         # update the global config dict.
-        config = get_config_dict(app.config['BEEKEEPER_CONFIG'])
+        config = get_config_dict(app.config['SERVER_CONFIG'])
 
     return render_template('settings.html', form=form, user=current_user)
 

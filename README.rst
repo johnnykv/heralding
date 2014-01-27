@@ -1,5 +1,5 @@
 Beeswarm |Build Status| |coverage|
-=======================
+==================================
 
 .. |Build Status| image:: https://travis-ci.org/honeynet/beeswarm.png?branch=master
                        :target: https://travis-ci.org/honeynet/beeswarm
@@ -27,10 +27,10 @@ Beeswarm consist of three parts:
 
   * Simulates a realistic environment using honeybees.
 
-* Beekeeper
+* Server
 
   * Provides management interface.
-  * Processes data from Honeypot and Client.
+  * Processes data from Honeypots and Clients.
   * Reports malicious activity.
   * Generates configuration and crypto keys for a full beeswarm setup.
 
@@ -52,8 +52,8 @@ Developers are encouraged to use the develop feature from distribute:
 
 
 Honeypot
-====
-The following sections shows how hive can be used as a standalone credentials-catching honeypot.
+========
+The following sections shows how the beeswarm Honeypot can be used as a standalone credentials-catching honeypot.
 
 Preparation
 -----------
@@ -85,28 +85,17 @@ Sample usage
     2013-02-21 10:37:49,787 (hive.models.session) ssh authentication attempt from 192.168.1.123. [root/toor] (6cda8971-aefd-41a6-9a96-caf4c7407028)
     2013-02-21 10:37:50,113 (hive.models.session) ssh authentication attempt from 192.168.1.123. [root/qwerty] (6cda8971-aefd-41a6-9a96-caf4c7407028)
 
-BeeKeeper
-=========
-Beekeeper is the Web UI which can help manage the Hives/Feeders.
-
-Preparation
------------
-It is important to make sure that the Common Name specified in the following steps matches that of the
-Beekeeper server.
-
-.. code-block::
-
-    $>openssl genrsa -des3 -out beekeeper.key 2048
-    $>openssl req -new -key beekeeper.key -out beekeeper.csr
-    $>openssl x509 -req -days 3650 -in beekeeper.csr -signkey beekeeper.key -out beekeeper.crt
-    $>openssl rsa -in beekeeper.key -out beekeeper.key
+Beeswarm Server
+===============
+Beeswarm Server is the central server component which is responsible for deployment of honeypots
+and clients and correlation of data between these.
 
 Sample Usage
 ------------
 
 .. code-block::
 
-    $> beeswarm -be
+    $> beeswarm -se
     2013-07-14 21:12:13,571 (root) Copying configuration file to workdir.
     2013-07-14 21:12:14,917 (root) Created default admin account for the BeeKeeper.
     Default password for the admin account is: gonz

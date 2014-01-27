@@ -14,9 +14,9 @@
         "chan": "beeswarm.honeypot",
         "port_mapping": "{}"
     },
-    "log_beekeeper": {
+    "log_server": {
         "enabled": false,
-        "beekeeper_url": "http://127.0.0.1:5000/ws/honeypot_data"
+        "server_url": "http://127.0.0.1:5000/ws/honeypot_data"
     },
     "log_syslog": {
         "enabled": false,

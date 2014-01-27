@@ -43,10 +43,7 @@ beeswarm.cfg
 # exceptions for vfs files
 !honeypot/data/vfs/*
 
-beekeeper/beekeeper.sqlite
-
 *.gz
 
-beekeeper.cfg
 docs/_build
 .noseids

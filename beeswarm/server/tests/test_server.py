@@ -18,14 +18,14 @@ import gevent.monkey
 import tempfile
 import os
 import shutil
-from beeswarm.beekeeper.beekeeper import Beekeeper
+from beeswarm.server.server import Server
 
 gevent.monkey.patch_all()
 
 import unittest
 
 
-class Beekeeper_Tests(unittest.TestCase):
+class Server_Tests(unittest.TestCase):
 
     def setUp(self):
         self.work_dir = tempfile.mkdtemp()
@@ -35,10 +35,10 @@ class Beekeeper_Tests(unittest.TestCase):
         self.cert = os.path.join(os.path.dirname(__file__), 'dummy_cert.crt')
 
     def test_init(self):
-        bk = Beekeeper(self.work_dir, None)
+        server = Server(self.work_dir, None)
 
     def test_start(self):
-        bk = Beekeeper(self.work_dir, None)
-        gevent.spawn(bk.start, maintenance=False)
+        server = Server(self.work_dir, None)
+        gevent.spawn(server.start, maintenance=False)
         gevent.sleep(1)
-        self.assertNotEquals(bk.servers, {})
+        self.assertNotEquals(server.workers, {})

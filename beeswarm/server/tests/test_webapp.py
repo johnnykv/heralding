@@ -6,11 +6,11 @@ from datetime import datetime
 import shutil
 import gevent
 
-from beeswarm.beekeeper.webapp.auth import Authenticator
+from beeswarm.server.webapp.auth import Authenticator
 
-from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Client, Honeypot, Session, Honeybee, User, Authentication, Transcript
-from beeswarm.beekeeper.webapp import app
+from beeswarm.server.db import database
+from beeswarm.server.db.entities import Client, Honeypot, Session, Honeybee, User, Authentication, Transcript
+from beeswarm.server.webapp import app
 
 
 
@@ -18,7 +18,7 @@ class WebappTests(unittest.TestCase):
     def setUp(self):
         app.app.config['WTF_CSRF_ENABLED'] = False
         app.app.config['CERT_PATH'] = os.path.join(os.path.dirname(__file__), 'beeswarmcfg.json.test')
-        app.app.config['BEEKEEPER_CONFIG'] = os.path.join(os.path.dirname(__file__), 'beeswarmcfg.json.test')
+        app.app.config['SERVER_CONFIG'] = os.path.join(os.path.dirname(__file__), 'beeswarmcfg.json.test')
 
         self.app = app.app.test_client()
         self.authenticator = Authenticator()
@@ -378,20 +378,20 @@ class WebappTests(unittest.TestCase):
         """ Tests if new settings are successfully written to the config file """
 
         self.login('test', 'test')
-        with open(app.app.config['BEEKEEPER_CONFIG'], 'r') as conf:
+        with open(app.app.config['SERVER_CONFIG'], 'r') as conf:
             original_config = conf.read()
-        config_modified = os.stat(app.app.config['BEEKEEPER_CONFIG']).st_mtime
+        config_modified = os.stat(app.app.config['SERVER_CONFIG']).st_mtime
         data = {
             'honeybee_session_retain': 3,
             'malicious_session_retain': 50,
             'ignore_failed_honeybees': False
         }
         self.app.post('/settings', data=data, follow_redirects=True)
-        config_next_modified = os.stat(app.app.config['BEEKEEPER_CONFIG']).st_mtime
+        config_next_modified = os.stat(app.app.config['SERVER_CONFIG']).st_mtime
         self.assertTrue(config_next_modified > config_modified)
 
         # Restore original configuration
-        with open(app.app.config['BEEKEEPER_CONFIG'], 'w') as conf:
+        with open(app.app.config['SERVER_CONFIG'], 'w') as conf:
             conf.write(original_config)
 
     def test_login_logout(self):

@@ -66,7 +66,7 @@ def create_self_signed_cert(directory, cname, kname, cert_country='US', cert_sta
     cert = crypto.X509()
     sub = cert.get_subject()
 
-    # Later, we'll get these fields from the BeeKeeper
+    # Later, we'll get these fields from the server
     # country
     sub.C = cert_country
     # state or province name

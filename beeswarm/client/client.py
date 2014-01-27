@@ -70,7 +70,7 @@ class Client(object):
             'active_bees': 0,
             'enabled_bees': [],
             'client_id': self.config['general']['client_id'],
-            'beekeeper_url': self.config['log_beekeeper']['beekeeper_url'],
+            'server_url': self.config['log_server']['server_url'],
             'ip_address': self.my_ip
         }
 

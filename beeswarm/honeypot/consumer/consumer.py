@@ -18,7 +18,7 @@ import logging
 import gevent
 from beeswarm.honeypot.consumer.loggers import loggerbase
 from beeswarm.honeypot.consumer.loggers.hpfeedslogger import HPFeedsLogger
-from beeswarm.honeypot.consumer.loggers.beekeeper import Beekeeper
+from beeswarm.honeypot.consumer.loggers.server import Server
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ class Consumer:
         self.enabled = True
 
         active_loggers = self.start_loggers(self.get_enabled_loggers())
-        
+        print active_loggers
         while self.enabled:
             self.status['active_sessions'] = len(self.sessions)
 

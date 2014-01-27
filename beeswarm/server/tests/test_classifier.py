@@ -17,10 +17,10 @@ import unittest
 import uuid
 from datetime import datetime, timedelta
 
-from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Client, Honeypot
-from beeswarm.beekeeper.db.entities import Classification, Session, Honeybee, Authentication
-from beeswarm.beekeeper.classifier.classifier import Classifier
+from beeswarm.server.db import database
+from beeswarm.server.db.entities import Client, Honeypot
+from beeswarm.server.db.entities import Classification, Session, Honeybee, Authentication
+from beeswarm.server.classifier.classifier import Classifier
 
 
 class ClassifierTests(unittest.TestCase):

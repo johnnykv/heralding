@@ -55,5 +55,5 @@ class honeypot_tests(unittest.TestCase):
         sut = Honeypot(self.work_dir, self.config_dict, key=self.key, cert=self.cert)
         gevent.spawn(sut.start)
         gevent.sleep(1)
-        #number of capabilities (servers). This value must be updated when adding new capabilities
+        #number of capabilities (workers). This value must be updated when adding new capabilities
         self.assertEquals(9, len(sut.servers))

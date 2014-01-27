@@ -18,14 +18,14 @@ import string
 import random
 import uuid
 
-from beeswarm.beekeeper.db.entities import Client, Honeybee, Honeypot, Authentication, Classification, Session, Transcript
+from beeswarm.server.db.entities import Client, Honeybee, Honeypot, Authentication, Classification, Session, Transcript
 
-from beeswarm.beekeeper.db import database
+from beeswarm.server.db import database
 
 
 def fill_dummy_data():
     """
-    Populates the beekeeper data with dummy data to ease development.
+    Populates the server data with dummy data to ease development.
     """
 
     db_session = database.get_session()
@@ -88,5 +88,5 @@ def fill_dummy_data():
 
 
 if __name__ == '__main__':
-    database.setup_db('sqlite:///beekeeper_sqlite.db')
+    database.setup_db('sqlite:///server_sqlite.db')
     fill_dummy_data()

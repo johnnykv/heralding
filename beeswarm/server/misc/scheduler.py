@@ -19,9 +19,9 @@ import logging
 import gevent
 from gevent import Greenlet
 
-from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Session
-from beeswarm.beekeeper.classifier.classifier import Classifier
+from beeswarm.server.db import database
+from beeswarm.server.db.entities import Session
+from beeswarm.server.classifier.classifier import Classifier
 
 logger = logging.getLogger(__name__)
 

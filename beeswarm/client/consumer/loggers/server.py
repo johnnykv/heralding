@@ -34,22 +34,22 @@ from beeswarm.client.consumer.loggers.loggerbase import LoggerBase
 logger = logging.getLogger(__name__)
 
 
-class Beekeeper(LoggerBase):
+class Server(LoggerBase):
     def __init__(self, config):
-        super(Beekeeper, self).__init__(config)
-        self.beekeeper_url = self.config['log_beekeeper']['beekeeper_url']
-        self.submit_url = urlparse.urljoin(self.beekeeper_url, 'ws/client_data')
+        super(Server, self).__init__(config)
+        self.server_url = self.config['log_server']['server_url']
+        self.submit_url = urlparse.urljoin(self.server_url, 'ws/client_data')
         self.tempcert = tempfile.NamedTemporaryFile()
-        self.tempcert.write(config['log_beekeeper']['cert'])
+        self.tempcert.write(config['log_server']['cert'])
         self.tempcert.flush()
         self.websession = requests.session()
-        login_url = urlparse.urljoin(self.beekeeper_url, 'login')
+        login_url = urlparse.urljoin(self.server_url, 'login')
         csrf_response = self.websession.get(login_url, verify=self.tempcert.name)
         csrf_doc = html.document_fromstring(csrf_response.text)
         csrf_token = csrf_doc.get_element_by_id('csrf_token').value
         login_data = {
             'username': config['general']['client_id'],
-            'password': config['log_beekeeper']['beekeeper_pass'],
+            'password': config['log_server']['server_pass'],
             'csrf_token': csrf_token,
             'submit': ''
         }
@@ -65,7 +65,7 @@ class Beekeeper(LoggerBase):
             #raise exception for everything other than response code 200
             response.raise_for_status()
         except RequestException as ex:
-            logger.error('Error sending data to beekeeper: {0}'.format(ex))
+            logger.error('Error sending data to server: {0}'.format(ex))
 
 
 def json_default(obj):

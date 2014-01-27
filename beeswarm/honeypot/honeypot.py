@@ -90,7 +90,7 @@ class Honeypot(object):
             'total_sessions': 0,
             'active_sessions': 0,
             'enabled_capabilities': [],
-            'beekeeper_url': ''
+            'server_url': ''
         }
 
         #will contain BaitUser objects
@@ -193,7 +193,7 @@ class Honeypot(object):
         if self.curses_screen is not None:
             self.uihandler.stop()
         self.session_consumer.stop()
-        logger.info('All servers stopped.')
+        logger.info('All workers stopped.')
 
     @staticmethod
     def prepare_environment(work_dir):

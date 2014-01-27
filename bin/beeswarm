@@ -29,7 +29,7 @@ from requests.exceptions import Timeout, ConnectionError
 import beeswarm
 
 from beeswarm.honeypot.honeypot import Honeypot
-from beeswarm.beekeeper.beekeeper import Beekeeper
+from beeswarm.server.server import Server
 from beeswarm.client.client import Client
 from beeswarm.errors import ConfigNotFound
 from beeswarm.shared.helpers import is_url
@@ -103,9 +103,9 @@ if __name__ == '__main__':
     group = parser.add_argument_group()
     group.add_argument('-ho', '--honeypot', action='store_true', help='Starts beeswarm in honeypot mode.')
     group.add_argument('-fe', '--client', action='store_true', help='Starts beeswarm in client mode.')
-    group.add_argument('-be', '--beekeeper', action='store_true', help='Starts beeswarm in beekeeper mode.')
+    group.add_argument('-se', '--server', action='store_true', help='Starts beeswarm in server mode.')
 
-    parser.add_argument('--config', dest='configurl', default='', help='Configuration URL to the beekeeper service.')
+    parser.add_argument('--config', dest='configurl', default='', help='Configuration URL to the server service.')
     parser.add_argument('--workdir', dest='workdir', default=os.getcwd())
     parser.add_argument('--logfile', dest='logfile', default='beeswarm.log')
     parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Logs debug messages.')
@@ -131,16 +131,16 @@ if __name__ == '__main__':
                 _mode = config['general']['mode']
                 if _mode == 'honeypot':
                     mode = Honeypot
-                elif _mode == 'beekeeper':
-                    mode = Beekeeper
+                elif _mode == 'server':
+                    mode = Server
                 elif _mode == 'client':
                     mode = Client
     elif args.honeypot:
         mode = Honeypot
     elif args.client:
         mode = Client
-    elif args.beekeeper:
-        mode = Beekeeper
+    elif args.server:
+        mode = Server
 
     assert mode is not None
 

@@ -17,8 +17,8 @@ import logging
 import datetime
 
 from sqlalchemy.orm import joinedload
-from beeswarm.beekeeper.db import database
-from beeswarm.beekeeper.db.entities import Classification, Honeybee, Session, Authentication
+from beeswarm.server.db import database
+from beeswarm.server.db.entities import Classification, Honeybee, Session, Authentication
 
 
 logger = logging.getLogger(__name__)
