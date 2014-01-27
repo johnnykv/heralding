@@ -28,9 +28,9 @@ import requests
 from requests.exceptions import Timeout, ConnectionError
 import beeswarm
 
-from beeswarm.hive.hive import Hive
-from beeswarm.beekeeper.beekeeper import Beekeeper
-from beeswarm.feeder.feeder import Feeder
+from beeswarm.honeypot.honeypot import Honeypot
+from beeswarm.server.server import Server
+from beeswarm.client.client import Client
 from beeswarm.errors import ConfigNotFound
 from beeswarm.shared.helpers import is_url
 from beeswarm.shared.models.ui_handler import CursesLogHandler
@@ -101,11 +101,11 @@ if __name__ == '__main__':
     parser = ArgumentParser(description='Beeswarm')
 
     group = parser.add_argument_group()
-    group.add_argument('-hi', '--hive', action='store_true', help='Starts beeswarm in hive mode.')
-    group.add_argument('-fe', '--feeder', action='store_true', help='Starts beeswarm in feeder mode.')
-    group.add_argument('-be', '--beekeeper', action='store_true', help='Starts beeswarm in beekeeper mode.')
+    group.add_argument('-ho', '--honeypot', action='store_true', help='Starts beeswarm in honeypot mode.')
+    group.add_argument('-fe', '--client', action='store_true', help='Starts beeswarm in client mode.')
+    group.add_argument('-se', '--server', action='store_true', help='Starts beeswarm in server mode.')
 
-    parser.add_argument('--config', dest='configurl', default='', help='Configuration URL to the beekeeper service.')
+    parser.add_argument('--config', dest='configurl', default='', help='Configuration URL to the server service.')
     parser.add_argument('--workdir', dest='workdir', default=os.getcwd())
     parser.add_argument('--logfile', dest='logfile', default='beeswarm.log')
     parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Logs debug messages.')
@@ -129,18 +129,18 @@ if __name__ == '__main__':
             config = json.load(config_file, object_hook=asciify)
             if 'general' in config:
                 _mode = config['general']['mode']
-                if _mode == 'hive':
-                    mode = Hive
-                elif _mode == 'beekeeper':
-                    mode = Beekeeper
-                elif _mode == 'feeder':
-                    mode = Feeder
-    elif args.hive:
-        mode = Hive
-    elif args.feeder:
-        mode = Feeder
-    elif args.beekeeper:
-        mode = Beekeeper
+                if _mode == 'honeypot':
+                    mode = Honeypot
+                elif _mode == 'server':
+                    mode = Server
+                elif _mode == 'client':
+                    mode = Client
+    elif args.honeypot:
+        mode = Honeypot
+    elif args.client:
+        mode = Client
+    elif args.server:
+        mode = Server
 
     assert mode is not None
 

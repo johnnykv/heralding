@@ -28,14 +28,11 @@ pip-log.txt
 .mr.developer.cfg
 
 .DS_store
-hive_sqlite.db
-feeder_sqlite.db
-beekeeper_sqlite.db
+*.db
 server.crt
 server.key
 
-hive.cfg
-feeder.cfg
+beeswarm.cfg
 
 *.log
 
@@ -44,12 +41,9 @@ feeder.cfg
 .pydevproject
 
 # exceptions for vfs files
-!hive/data/vfs/*
-
-beekeeper/beekeeper.sqlite
+!honeypot/data/vfs/*
 
 *.gz
 
-beekeeper.cfg
 docs/_build
 .noseids

@@ -1,5 +1,5 @@
 Beeswarm |Build Status| |coverage|
-=======================
+==================================
 
 .. |Build Status| image:: https://travis-ci.org/honeynet/beeswarm.png?branch=master
                        :target: https://travis-ci.org/honeynet/beeswarm
@@ -16,21 +16,21 @@ An IoC could be a certificate mismatch or the unexpected reuse of credentials (h
 Beeswarm consist of three parts:
 
 
-* Hive
+* Honeypot
 
   * Multiprotocol credentials catching honeypot, comes default with ssh, vnc, pop3, pop3s, ssh, smtp, ftp, http and telnet capability.
   * Extendable, both in terms of new protocols but can also be extended to provide shell-like features.
   * Supports a variety of loggers (syslog, file logging, hpfeeds, etc).
   * Can be deployed independently or as part of the full beeswarm setup.
 
-* Feeder
+* Client
 
   * Simulates a realistic environment using honeybees.
 
-* Beekeeper
+* Server
 
   * Provides management interface.
-  * Processes data from Hive and Feeder.
+  * Processes data from Honeypots and Clients.
   * Reports malicious activity.
   * Generates configuration and crypto keys for a full beeswarm setup.
 
@@ -51,9 +51,9 @@ Developers are encouraged to use the develop feature from distribute:
     $>python setup.py develop
 
 
-Hive
-====
-The following sections shows how hive can be used as a standalone credentials-catching honeypot.
+Honeypot
+========
+The following sections shows how the beeswarm Honeypot can be used as a standalone credentials-catching honeypot.
 
 Preparation
 -----------
@@ -85,28 +85,17 @@ Sample usage
     2013-02-21 10:37:49,787 (hive.models.session) ssh authentication attempt from 192.168.1.123. [root/toor] (6cda8971-aefd-41a6-9a96-caf4c7407028)
     2013-02-21 10:37:50,113 (hive.models.session) ssh authentication attempt from 192.168.1.123. [root/qwerty] (6cda8971-aefd-41a6-9a96-caf4c7407028)
 
-BeeKeeper
-=========
-Beekeeper is the Web UI which can help manage the Hives/Feeders.
-
-Preparation
------------
-It is important to make sure that the Common Name specified in the following steps matches that of the
-Beekeeper server.
-
-.. code-block::
-
-    $>openssl genrsa -des3 -out beekeeper.key 2048
-    $>openssl req -new -key beekeeper.key -out beekeeper.csr
-    $>openssl x509 -req -days 3650 -in beekeeper.csr -signkey beekeeper.key -out beekeeper.crt
-    $>openssl rsa -in beekeeper.key -out beekeeper.key
+Beeswarm Server
+===============
+Beeswarm Server is the central server component which is responsible for deployment of honeypots
+and clients and correlation of data between these.
 
 Sample Usage
 ------------
 
 .. code-block::
 
-    $> beeswarm -be
+    $> beeswarm -se
     2013-07-14 21:12:13,571 (root) Copying configuration file to workdir.
     2013-07-14 21:12:14,917 (root) Created default admin account for the BeeKeeper.
     Default password for the admin account is: gonz
@@ -136,14 +125,14 @@ The following deployment diagram shows the Beeswarm concept when fully operation
                                                                                      +------------+
                |                        (honeybees)                                        ^   ^
           +----+------+                   Traffic                                              |
-          |   Feeder  |+--------------------------------------------------+                |
+          |   Client  |+--------------------------------------------------+                |
           +-----------+           ^                                       |                    |
           (Static IP)             |                                       |         L O G  |
                                   |Intercept creds.                       |         D A T A    |
                                   |                                       |                |
                                   |                                       v                    |
                           +-------+------+     Reuse credentials    +------------+         |
-                          |  Evil dudes  |+------------------------>|    Hive    |+ - - - -+   |
+                          |  Evil dudes  |+------------------------>|    Honeypot    |+ - - - -+   |
                           +-------+------+                          +------------+
                                   |                                  (Static ip)               |
                                   |Operates exit node                     ^
@@ -151,7 +140,7 @@ The following deployment diagram shows the Beeswarm concept when fully operation
                                   |                                       |
                                   v                                       |                    |
           +-----------+    +-------------+                                |
-          |   Feeder  |+-->|TOR Exit Node|+-------------------------------+                    |
+          |   Client  |+-->|TOR Exit Node|+-------------------------------+                    |
           +-----+-----+    +-------------+               Traffic
                 |                                      (honeybees)                             |
 
@@ -162,7 +151,7 @@ The following deployment diagram shows the Beeswarm concept when fully operation
 Data access
 -----------
 
-The Hive part of the system is operational and are currently collecting data. Members of the `The Honeynet Project <http://www.honeynet.org/>`_ 
+The Honeypot part of the system is operational and are currently collecting data. Members of the `The Honeynet Project <http://www.honeynet.org/>`_
 can gain access to this data by subscribing to the *beeswarm.hive* hpfeeds channel, or preferably access the data through the `Mnemosyne <https://github.com/johnnykv/mnemosyne>`_ `REST api <http://johnnykv.github.com/mnemosyne/WebAPI.html#resources-as-of-version-1>`_.
 
 Lead developer
