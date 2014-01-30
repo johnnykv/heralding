@@ -8,8 +8,8 @@ Beeswarm |Build Status| |coverage|
 
 Note: This project is not ready for production deployments!
 
-A honeypot project which provides easy configuration, deployment and managment of honeypots.
-Beeswarm operates by deploying fake end-user systems and services. Beeswarm uses these systems to provides 
+Beeswarm is a honeypot project which provides easy configuration, deployment and managment of honeypots.
+Beeswarm operates by deploying fake end-user systems (clients) and services (honeypots). Beeswarm uses these systems to provides 
 IoC (Indication of Compromise) by observing the difference between expected and actual traffic. 
 An IoC could be a certificate mismatch or the unexpected reuse of credentials (honeytokens).
 
@@ -18,6 +18,7 @@ Beeswarm consist of three parts:
 
 * Honeypot
 
+  * Generic low interaction honeypot
   * Multiprotocol credentials catching honeypot, comes default with ssh, vnc, pop3, pop3s, ssh, smtp, ftp, http and telnet capability.
   * Extendable, both in terms of new protocols but can also be extended to provide shell-like features.
   * Supports a variety of loggers (syslog, file logging, hpfeeds, etc).
@@ -25,7 +26,7 @@ Beeswarm consist of three parts:
 
 * Client
 
-  * Simulates a realistic environment using honeybees.
+  * Simulates a realistic environment using bait sessions.
 
 * Server
 
@@ -120,29 +121,29 @@ The following deployment diagram shows the Beeswarm concept when fully operation
 
 .. code-block::
 
-               +- - - - - - - - - - - - - L O G  D A T A- - - - - - - - - - - - - >>>+------------+
-               |                                                                     | Beekeeper |
-                                                                                     +------------+
-               |                        (honeybees)                                        ^   ^
-          +----+------+                   Traffic                                              |
-          |   Client  |+--------------------------------------------------+                |
-          +-----------+           ^                                       |                    |
-          (Static IP)             |                                       |         L O G  |
-                                  |Intercept creds.                       |         D A T A    |
+               +- - - - - - - - - - - - - L O G  D A T A- - - - - - - - - - - - - >>>+-----------------+
+               |                                                                     | Beeswarm server |
+                                                                                     +-----------------+
+               |                      (bait sessions)                                      ^   ^
+        +------+--------+                   Traffic                                        |   |
+        |Beeswarm Client|+------------------------------------------------+                |   |
+        +---------------+         ^                                       |                |   |
+          (Static IP)             |                                       |       L O G    |   |
+                                  |Intercept creds.                       |       D A T A      |
                                   |                                       |                |
-                                  |                                       v                    |
-                          +-------+------+     Reuse credentials    +------------+         |
-                          |  Evil dudes  |+------------------------>|    Honeypot    |+ - - - -+   |
-                          +-------+------+                          +------------+
+                                  |                                       v                |   |
+                          +-------+------+     Reuse credentials    +-----------------+    |   |
+                          |  Evil dudes  |+------------------------>|Beeswarm Honeypot|+-+ |   |
+                          +-------+------+                          +-----------------+
                                   |                                  (Static ip)               |
                                   |Operates exit node                     ^
                                   |(and intercepting creds)               |                    |
                                   |                                       |
                                   v                                       |                    |
-          +-----------+    +-------------+                                |
-          |   Client  |+-->|TOR Exit Node|+-------------------------------+                    |
-          +-----+-----+    +-------------+               Traffic
-                |                                      (honeybees)                             |
+        +---------------+    +-------------+                              |
+        |Beeswarm client|+-->|TOR Exit Node|+-----------------------------+                    |
+        +-----+---------+    +-------------+               Traffic
+                |                                    (bait sessions)                           |
 
                 |                                                                              |
                 +- - - - - - - - - - - - - L O G  D A T A- - - - - - - - - - - - - - - - - - - -
