@@ -141,8 +141,9 @@ if __name__ == '__main__':
         mode = Client
     elif args.server:
         mode = Server
-
-    assert mode is not None
+    else:
+        parser.print_help()
+        sys.exit(1)
 
     try:
         m = mode(args.workdir, config, curses_screen=curses_screen)
