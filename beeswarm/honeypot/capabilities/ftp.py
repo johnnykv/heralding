@@ -212,6 +212,7 @@ class BeeFTPHandler(object):
 
     def stop(self):
         self.conn.close()
+        self.session.connected = False
 
 
 class ftp(HandlerBase):
