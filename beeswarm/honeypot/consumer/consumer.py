@@ -44,7 +44,6 @@ class Consumer:
         self.enabled = True
 
         active_loggers = self.start_loggers(self.get_enabled_loggers())
-        print active_loggers
         while self.enabled:
             self.status['active_sessions'] = len(self.sessions)
 

@@ -42,6 +42,7 @@ class telnet_wrapper(Commands):
     """
     Wraps the telnetsrv module to fit the Honeypot architecture.
     """
+    PROMPT = '$ '
 
     def __init__(self, client_address, server, socket, session, vfs):
         self.session = session

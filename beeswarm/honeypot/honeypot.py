@@ -35,7 +35,6 @@ from beeswarm.honeypot.models.session import Session
 from beeswarm.honeypot.models.authenticator import Authenticator
 from beeswarm.shared.helpers import drop_privileges, create_self_signed_cert
 from beeswarm.honeypot.models.user import BaitUser
-from beeswarm.errors import ConfigNotFound
 import requests
 from requests.exceptions import Timeout, ConnectionError
 from beeswarm.shared.asciify import asciify
@@ -54,7 +53,7 @@ class Honeypot(object):
             Main class which runs Beeswarm in Honeypot mode.
 
         :param work_dir: Working directory (usually the current working directory)
-        :param config_arg: Beeswarm configuration dictionary, None if no configuration was supplied.
+        :param config: Beeswarm configuration dictionary, None if no configuration was supplied.
         :param key: Key file used for SSL enabled capabilities
         :param cert: Cert file used for SSL enabled capabilities
         :param curses_screen: Contains a curses screen object, if UI is enabled. Default is None.
