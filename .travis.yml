@@ -10,9 +10,7 @@ install:
   - pip install -e git+https://github.com/rep/hpfeeds.git#egg=hpfeeds
   - pip install -r requirements.txt
   - pip install flake8
-# static code analysis
-before_script:
- - flake8 beeswarm
+
 # command to run tests
 script:
  - nosetests
@@ -22,3 +20,5 @@ after_success:
  - pip install --upgrade coveralls coverage sh
  - coverage run --source=beeswarm setup.py -q nosetests
  - coveralls
+ # static code analysis
+ - flake8 beeswarm
