@@ -9,8 +9,11 @@ requests
 telnetsrv
 paramiko
 ntplib
-fs
+--allow-unverified pysendfile
+--allow-external pysendfile
 pysendfile
+--allow-unverified pydes 
+--allow-external pydes 
 pyDes
 flask>=0.10.0
 flask-login
