@@ -1,3 +1,6 @@
+--allow-unverified fs
+--allow-external fs
+fs
 Crypto
 cssselect
 nose
