@@ -223,7 +223,10 @@ def honeypot_data():
         session.transcript.append(transcript)
 
     for auth in data['login_attempts']:
-        a = Authentication(id=auth['id'], username=auth['username'], password=auth['password'],
+        # TODO: Model this better in db model, not all capabilities authenticate with both username/password
+        username = auth.get('username', '')
+        password = auth.get('password', '')
+        a = Authentication(id=auth['id'], username=username, password=password,
                            successful=auth['successful'],
                            timestamp=datetime.strptime(auth['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'))
         session.authentication.append(a)
