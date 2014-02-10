@@ -1,11 +1,14 @@
-Beeswarm |Build Status| |coverage|
-==================================
+Beeswarm |Build Status| |coverage| |landscape| 
+==============================================
 
 .. |Build Status| image:: https://travis-ci.org/honeynet/beeswarm.png?branch=master
                        :target: https://travis-ci.org/honeynet/beeswarm
 .. |coverage| image:: https://coveralls.io/repos/honeynet/beeswarm/badge.png?brance=master
                        :target: https://coveralls.io/r/honeynet/beeswarm
-
+.. |landscape| image:: https://landscape.io/github/honeynet/beeswarm/master/landscape.png
+   :target: https://landscape.io/github/honeynet/beeswarm/master
+   :alt: Code Health
+   
 Note: This project is not ready for production deployments!
 
 Beeswarm is a honeypot project which provides easy configuration, deployment and managment of honeypots.
