@@ -15,7 +15,7 @@ install:
 script:
  - nosetests
 # static code analysis
- - flake8 beeswarm
+ - flake8 --exit-zero beeswarm
  
 after_success:
  - pip install --upgrade distribute
