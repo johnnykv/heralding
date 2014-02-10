@@ -93,12 +93,16 @@ class smtp(ClientBase):
 
         :return: Tuple containing From Address, To Address and the mail body.
         """
-        mail_key = random.choice(self.mailbox.keys())
-        mail = self.mailbox[mail_key]
-        from_addr = mail.get_from()
-        to_addr = mail['To']
-        mail_body = mail.get_payload()
-        return from_addr, to_addr, mail_body
+
+        while True:
+            mail_key = random.choice(self.mailbox.keys())
+            mail = self.mailbox[mail_key]
+            from_addr = mail.get_from()
+            to_addr = mail['To']
+            mail_body = mail.get_payload()
+            if not from_addr or not to_addr:
+                continue
+            return from_addr, to_addr, mail_body
 
     def connect(self):
         """

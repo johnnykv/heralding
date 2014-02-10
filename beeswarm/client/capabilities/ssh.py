@@ -18,7 +18,7 @@ import time
 
 from beeswarm.client.capabilities.clientbase import ClientBase
 from beeswarm.client.capabilities.shared.shell import Commands
-from beeswarm.honeypot.capabilities.telnet import AuthenticationFailed
+from beeswarm.errors import AuthenticationFailed
 
 logger = logging.getLogger(__name__)
 
