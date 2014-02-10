@@ -14,9 +14,7 @@ install:
 # command to run tests
 script:
  - nosetests
-# static code analysis
- - flake8 --exit-zero beeswarm
- 
+
 after_success:
  - pip install --upgrade distribute
  - pip install --upgrade coveralls coverage sh
