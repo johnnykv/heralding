@@ -36,14 +36,32 @@ class Server(LoggerBase):
         self.tempcert = tempfile.NamedTemporaryFile()
         self.tempcert.write(config['log_server']['cert'])
         self.tempcert.flush()
+        self.backqueue = []
+        self._login()
+
+    def log(self, session):
+        try:
+            data = json.dumps(session.to_dict(), default=json_default)
+            response = self.websession.post(self.submit_url, data=data, verify=self.tempcert.name, allow_redirects=False)
+            #raise exception for everything other than response code 200
+            response.raise_for_status()
+            # also raise for 302
+            if response.status_code == 302:
+                raise RequestException()
+        except RequestException as ex:
+            self._login()
+
+    def _login(self):
+        logger.warn('Connecting to Beeswarm server.')
         self.websession = requests.session()
         login_url = urlparse.urljoin(self.server_url, 'login')
         csrf_response = self.websession.get(login_url, verify=self.tempcert.name)
         csrf_doc = html.document_fromstring(csrf_response.text)
         csrf_token = csrf_doc.get_element_by_id('csrf_token').value
+        print csrf_token
         login_data = {
-            'username': config['general']['honeypot_id'],
-            'password': config['log_server']['server_pass'],
+            'username': self.config['general']['honeypot_id'],
+            'password': self.config['log_server']['server_pass'],
             'csrf_token': csrf_token,
             'submit': ''
         }
@@ -52,14 +70,6 @@ class Server(LoggerBase):
         }
         self.websession.post(login_url, data=login_data, headers=headers, verify=self.tempcert.name)
 
-    def log(self, session):
-        try:
-            data = json.dumps(session.to_dict(), default=json_default)
-            response = self.websession.post(self.submit_url, data=data, verify=self.tempcert.name)
-            #raise exception for everything other than response code 200
-            response.raise_for_status()
-        except RequestException as ex:
-            logger.error('Error sending data to server: {0}'.format(ex))
 
 
 def json_default(obj):
