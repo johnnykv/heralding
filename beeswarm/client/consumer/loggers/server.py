@@ -37,19 +37,36 @@ logger = logging.getLogger(__name__)
 class Server(LoggerBase):
     def __init__(self, config):
         super(Server, self).__init__(config)
+        self.config = config
         self.server_url = self.config['log_server']['server_url']
         self.submit_url = urlparse.urljoin(self.server_url, 'ws/client_data')
         self.tempcert = tempfile.NamedTemporaryFile()
         self.tempcert.write(config['log_server']['cert'])
         self.tempcert.flush()
+        self._login()
+
+    def log(self, session):
+        try:
+            data = json.dumps(session.to_dict(), default=json_default)
+            response = self.websession.post(self.submit_url, data=data, verify=self.tempcert.name, allow_redirects=False)
+            #raise exception for everything other than response code 200
+            response.raise_for_status()
+            # also raise for 302
+            if response.status_code == 302:
+                raise RequestException()
+        except RequestException as ex:
+            logger.error('Error sending data to server: {0}'.format(ex))
+
+    def _login(self):
+        logger.info('Connecting to Beeswarm server.')
         self.websession = requests.session()
         login_url = urlparse.urljoin(self.server_url, 'login')
         csrf_response = self.websession.get(login_url, verify=self.tempcert.name)
         csrf_doc = html.document_fromstring(csrf_response.text)
         csrf_token = csrf_doc.get_element_by_id('csrf_token').value
         login_data = {
-            'username': config['general']['client_id'],
-            'password': config['log_server']['server_pass'],
+            'username': self.config['general']['client_id'],
+            'password': self.config['log_server']['server_pass'],
             'csrf_token': csrf_token,
             'submit': ''
         }
@@ -57,16 +74,6 @@ class Server(LoggerBase):
             'Referer': login_url
         }
         self.websession.post(login_url, data=login_data, headers=headers, verify=self.tempcert.name)
-
-    def log(self, session):
-        try:
-            data = json.dumps(session.to_dict(), default=json_default)
-            response = self.websession.post(self.submit_url, data=data)
-            #raise exception for everything other than response code 200
-            response.raise_for_status()
-        except RequestException as ex:
-            logger.error('Error sending data to server: {0}'.format(ex))
-
 
 def json_default(obj):
     if isinstance(obj, datetime):
