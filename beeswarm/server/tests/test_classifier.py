@@ -132,6 +132,7 @@ class ClassifierTests(unittest.TestCase):
         #we expect the resultset to contain session1 and session2
         self.assertEquals(len(result), 2)
 
+
     def test_classify_sessions_reuse_credentails(self):
         """
         Test if attack which uses previously transmitted credentials is tagged correctly
@@ -154,3 +155,25 @@ class ClassifierTests(unittest.TestCase):
         result = db_session.query(Session).filter(Session.classification_id == 'credentials_reuse').one()
         #we expect the resultset to contain session1010
         self.assertEquals(result.id, 'session1010')
+
+    def test_classify_sessions_probe(self):
+        """
+        Test if session without authentication attempts is tagged as probes.
+        """
+
+        db_session = database.get_session()
+        honeypot = db_session.query(Honeypot).filter(Honeypot.id == self.honeypot_id).one()
+
+        session_id = str(uuid.uuid4())
+        s = Session(id=session_id, source_ip='111', destination_ip='222',
+                    received=datetime.utcnow(), timestamp=datetime.utcnow(),
+                    protocol='telnet', source_port=1, destination_port=1, honeypot=honeypot)
+        db_session.add(s)
+        db_session.commit()
+
+        c = Classifier()
+        c.classify_sessions(0, db_session)
+
+        result = db_session.query(Session).filter(Session.classification_id == 'probe').one()
+        #we expect the resultset to contain session1010
+        self.assertEquals(result.id, session_id)

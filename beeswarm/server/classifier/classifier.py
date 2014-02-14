@@ -44,7 +44,7 @@ class Classifier(object):
         #default return value
         match = None
 
-        #get all sessions which matches basic properties.
+        #get all sessions that matches basic properties.
         sessions = db_session.query(Session).options(joinedload(Session.authentication))\
                                             .filter(Session.protocol == honeybee.protocol) \
                                             .filter(Session.honeypot == honeybee.honeypot) \
@@ -111,10 +111,10 @@ class Classifier(object):
 
         sessions = db_session.query(Session).filter(Session.discriminator == None) \
                                             .filter(Session.timestamp <= min_datetime) \
+                                            .filter(Session.classification_id == 'unclassified') \
                                             .all()
 
         for session in sessions:
-
             #TODO: This would be more pretty if done with pure orm
             honey_matches = []
             for a in session.authentication:
@@ -127,6 +127,9 @@ class Classifier(object):
                 logger.debug('Classifying session with id {0} as attack which involved the reused '
                              'of previously transmitted credentials.'.format(session.id))
                 session.classification = db_session.query(Classification).filter(Classification.type == 'credentials_reuse').one()
+            elif len(session.authentication) == 0:
+                logger.debug('Classifying session with id {0} as probe.'.format(session.id))
+                session.classification = db_session.query(Classification).filter(Classification.type == 'probe').one()
             else:
                 #we have never transmitted this username/password combo
                 logger.debug('Classifying session with id {0} as bruteforce attempt.'.format(session.id))
