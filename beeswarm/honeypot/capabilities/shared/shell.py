@@ -217,9 +217,9 @@ class Commands(TelnetHandler):
             self.writeline(self.WELCOME)
         self.session_start()
         while self.RUNSHELL:
-            raw_input = self.readline(prompt=self.PROMPT).strip()
-            self.session.transcript_incoming(raw_input + '\n')
-            self.input = self.input_reader(self, raw_input)
+            read_line = self.readline(prompt=self.PROMPT).strip()
+            self.session.transcript_incoming(read_line + '\n')
+            self.input = self.input_reader(self, read_line)
             self.raw_input = self.input.raw
             if self.input.cmd:
                 cmd = self.input.cmd.upper()

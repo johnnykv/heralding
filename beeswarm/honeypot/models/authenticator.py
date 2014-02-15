@@ -22,13 +22,13 @@ class Authenticator(object):
         #key: username, value: BaitUser object
         self.users = users
 
-    def try_auth(self, type, **kwargs):
-        if type == 'plaintext':
+    def try_auth(self, _type, **kwargs):
+        if _type == 'plaintext':
             if kwargs.get('username') in self.users:
                 if self.users[kwargs.get('username')].password == kwargs.get('password'):
                     return True
 
-        elif type == 'cram_md5':
+        elif _type == 'cram_md5':
             def encode_cram_md5(challenge, user, password):
                 response = user + ' ' + hmac.HMAC(password, challenge).hexdigest()
                 return response

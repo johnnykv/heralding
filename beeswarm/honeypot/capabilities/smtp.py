@@ -30,7 +30,7 @@ from beeswarm.honeypot.capabilities.handlerbase import HandlerBase
 
 class SMTPChannel(smtpd.SMTPChannel):
     def __init__(self, smtp_server, newsocket, fromaddr,
-                 map=None, session=None, opts=None):
+                 smtp_map=None, session=None, opts=None):
         self.options = opts
         # A sad hack because SMTPChannel doesn't
         # allow custom banners, and sends it's own through its
@@ -56,7 +56,7 @@ class SMTPChannel(smtpd.SMTPChannel):
         self.options = opts
 
         smtpd.SMTPChannel.__init__(self, smtp_server, newsocket, fromaddr)
-        asynchat.async_chat.__init__(self, newsocket, map=map)
+        asynchat.async_chat.__init__(self, newsocket, map=smtp_map)
 
         # Now we set the initflag, so that push() will work again.
         # And we push.
@@ -292,7 +292,7 @@ class smtp(HandlerBase):
         local_map = {}
         server = DummySMTPServer(self.vfsystem.opendir('/var/mail'))
         SMTPChannel(server, gsocket, address, session=session_,
-                    map=local_map, opts=self._options)
+                    smtp_map=local_map, opts=self._options)
         try:
             asyncore.loop(map=local_map)
         except Exception:

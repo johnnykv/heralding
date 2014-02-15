@@ -95,9 +95,9 @@ class Consumer:
         enabled_loggers = []
         for k, v in self.config.items():
             if '_' in k:
-                type, name = k.split('_')
+                config_type, name = k.split('_')
                 #only interested in logging configurations
-                if type == 'log' and v['enabled']:
+                if config_type == 'log' and v['enabled']:
                     enabled_loggers.append(name)
         return enabled_loggers
 

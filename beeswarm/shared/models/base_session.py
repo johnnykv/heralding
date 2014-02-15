@@ -35,7 +35,7 @@ class BaseSession(object):
         self.login_attempts = []
         self.transcript = []
 
-    def add_auth_attempt(self, type, successful, **kwargs):
+    def add_auth_attempt(self, auth_type, successful, **kwargs):
         """
         :param username:
         :param password:
@@ -45,7 +45,7 @@ class BaseSession(object):
         """
 
         entry = {'timestamp': datetime.utcnow(),
-                 'type': type,
+                 'auth': auth_type,
                  'id': uuid.uuid4(),
                  'successful': successful}
 

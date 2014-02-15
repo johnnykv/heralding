@@ -41,14 +41,14 @@ class Session(BaseSession):
         self.vdata = {}
         self.socket = socket
 
-    def try_auth(self, type, **kwargs):
+    def try_auth(self, _type, **kwargs):
 
-        if Session.authenticator.try_auth(type, **kwargs):
+        if Session.authenticator.try_auth(_type, **kwargs):
             self.authenticated = True
-            self.add_auth_attempt(type, True, **kwargs)
+            self.add_auth_attempt(_type, True, **kwargs)
             return True
         else:
-            self.add_auth_attempt(type, False, **kwargs)
+            self.add_auth_attempt(_type, False, **kwargs)
             return False
 
     def activity(self):

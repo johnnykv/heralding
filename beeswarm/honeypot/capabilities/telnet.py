@@ -54,7 +54,7 @@ class telnet_wrapper(Commands):
         Commands.__init__(self, request, client_address, server, vfs, self.session)
 
     def authenticate_user(self, username, password):
-        if self.session.try_auth(type='plaintext', username=username, password=password):
+        if self.session.try_auth(_type='plaintext', username=username, password=password):
             self.working_dir = '/'
             self.username = username
             self.PROMPT = '[{0}@{1} {2}]$ '.format(self.username, self.HOSTNAME, self.working_dir)

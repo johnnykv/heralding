@@ -369,11 +369,11 @@ def delete_honeypots():
     # list of honeypot id's'
     honeypot_ids = json.loads(request.data)
     db_session = database.get_session()
-    for id in honeypot_ids:
-        honeypot_to_delete = db_session.query(Honeypot).filter(Honeypot.id == id).one()
+    for honeypot_id in honeypot_ids:
+        honeypot_to_delete = db_session.query(Honeypot).filter(Honeypot.id == honeypot_id).one()
         db_session.delete(honeypot_to_delete)
         db_session.commit()
-        authenticator.remove_user(id)
+        authenticator.remove_user(honeypot_id)
     return ''
 
 
