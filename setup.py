@@ -19,5 +19,5 @@ setup(
     dependency_links = [
     'git+https://github.com/rep/hpfeeds.git#egg=hpfeeds-1.0.0',
     ],
-    install_requires=open('requirements.txt').read().splitlines(),
+    install_requires=open('requirements_legacy.txt').read().splitlines(),
 )

@@ -19,7 +19,8 @@ flask>=0.10.0
 flask-login
 sqlalchemy>=0.8.1
 pyOpenSSL
-hpfeeds
+--allow-external hpfeeds
+git+https://github.com/rep/hpfeeds.git#egg=hpfeeds-1.0.0
 lxml
 flask-wtf>=0.9.0
 mock
