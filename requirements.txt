@@ -1,5 +1,3 @@
---allow-unverified fs
---allow-external fs
 fs
 Crypto
 cssselect
@@ -9,18 +7,13 @@ requests
 telnetsrv
 paramiko
 ntplib
---allow-unverified pysendfile
---allow-external pysendfile
 pysendfile
---allow-unverified pydes 
---allow-external pydes 
 pyDes
 flask>=0.10.0
 flask-login
 sqlalchemy>=0.8.1
 pyOpenSSL
---allow-external hpfeeds
-git+https://github.com/rep/hpfeeds.git#egg=hpfeeds-1.0.0
+hpfeeds
 lxml
 flask-wtf>=0.9.0
 mock
