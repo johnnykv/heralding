@@ -5,15 +5,10 @@ python:
 before_install:
  - sudo apt-get update
  - sudo apt-get install python-dev libevent-dev
-# command to install dependencies
-install:
-  - pip install -e git+https://github.com/rep/hpfeeds.git#egg=hpfeeds
-  - pip install -r requirements.txt
-  - pip install flake8
 
 # command to run tests
 script:
- - nosetests
+ - python setup.py test
 
 after_success:
  - pip install --upgrade distribute
