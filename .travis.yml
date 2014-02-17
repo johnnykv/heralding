@@ -4,6 +4,7 @@ python:
 install:
   - pip install -e .
   - pip install coveralls
+  - pip install --upgrade setuptools
 script:
   - coverage run --source=faker setup.py test
 after_success:
