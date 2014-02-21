@@ -4,6 +4,7 @@ python:
 install:
   - pip install --upgrade setuptools
   - pip install coveralls
+  - pip install cython
 script:
   - python setup.py test
 after_success:
