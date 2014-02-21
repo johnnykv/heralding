@@ -18,6 +18,8 @@ setup(
     test_suite='nose.collector',
     dependency_links=[
         'git+https://github.com/rep/hpfeeds.git#egg=hpfeeds-1.0.0',
+         # temporary until 14.1.0 is released
+        'git+https://github.com/zeromq/pyzmq#egg=pyzmq-14.0.2',
     ],
     install_requires=open('requirements.txt').read().splitlines(),
 )
