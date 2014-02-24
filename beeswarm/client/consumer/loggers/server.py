@@ -38,10 +38,10 @@ class Server(LoggerBase):
     def __init__(self, config):
         super(Server, self).__init__(config)
         self.config = config
-        self.server_url = self.config['log_server']['server_url']
+        self.server_url = self.config['beeswarm_server']['managment_url']
         self.submit_url = urlparse.urljoin(self.server_url, 'ws/client_data')
         self.tempcert = tempfile.NamedTemporaryFile()
-        self.tempcert.write(config['log_server']['cert'])
+        self.tempcert.write(config['beeswarm_server']['https_cert'])
         self.tempcert.flush()
         self._login()
 
@@ -66,7 +66,7 @@ class Server(LoggerBase):
         csrf_token = csrf_doc.get_element_by_id('csrf_token').value
         login_data = {
             'username': self.config['general']['client_id'],
-            'password': self.config['log_server']['server_pass'],
+            'password': self.config['beeswarm_server']['server_pass'],
             'csrf_token': csrf_token,
             'submit': ''
         }

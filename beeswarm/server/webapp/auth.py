@@ -15,7 +15,7 @@
 import logging
 import random
 import string
-from beeswarm.server.db import database
+from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import User
 from werkzeug.security import generate_password_hash
 
@@ -25,7 +25,7 @@ class Authenticator(object):
     """ Handles server authentications """
 
     def ensure_default_user(self):
-        session = database.get_session()
+        session = database_setup.get_session()
         userid = 'admin'
         count = session.query(User).filter(User.id == userid).count()
         if not count:
@@ -40,7 +40,7 @@ class Authenticator(object):
             print '****************************************************************************'
 
     def add_user(self, username, password, user_type, nickname=''):
-        session = database.get_session()
+        session = database_setup.get_session()
         userid = username
         pw_hash = generate_password_hash(password)
         u = User(id=userid, nickname=nickname, password=pw_hash, utype=user_type)
@@ -48,7 +48,7 @@ class Authenticator(object):
         session.commit()
 
     def remove_user(self, userid):
-        session = database.get_session()
+        session = database_setup.get_session()
         to_delete = session.query(User).filter(User.id == userid).one()
         session.delete(to_delete)
         session.commit()

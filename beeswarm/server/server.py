@@ -12,22 +12,29 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import json
 
 import logging
 import os
 import shutil
+import tempfile
 
 import gevent
 from gevent.pywsgi import WSGIServer
+import zmq.green as zmq
+import zmq.auth
+
+
 import beeswarm
-from beeswarm.server.db import database
+from beeswarm.server.db import database_setup
 from beeswarm.server.webapp import app
 from beeswarm.server.webapp.auth import Authenticator
 from beeswarm.shared.helpers import drop_privileges
 from beeswarm.server.misc.scheduler import Scheduler
 from beeswarm.shared.helpers import find_offset, create_self_signed_cert, update_config_file
 from beeswarm.shared.asciify import asciify
+from beeswarm.server.db.persistanceworker import PersistanceWorker
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +54,6 @@ class Server(object):
             Server.prepare_environment(work_dir)
             with open(os.path.join(work_dir, 'beeswarmcfg.json'), 'r') as config_file:
                 config = json.load(config_file, object_hook=asciify)
-
         self.work_dir = work_dir
         self.config = config
         self.config_file = 'beeswarmcfg.json'
@@ -56,12 +62,57 @@ class Server(object):
         self.greenlets = []
         self.started = False
 
-        database.setup_db(os.path.join(self.config['sql']['connection_string']))
+        database_setup.setup_db(os.path.join(self.config['sql']['connection_string']))
         self.app = app.app
         self.app.config['CERT_PATH'] = self.config['ssl']['certpath']
         self.app.config['SERVER_CONFIG'] = 'beeswarmcfg.json'
         self.authenticator = Authenticator()
         self.authenticator.ensure_default_user()
+        gevent.spawn(self.message_proxy, work_dir)
+        persistanceWorker = PersistanceWorker()
+        gevent.spawn(persistanceWorker.start)
+        gevent.sleep()
+
+    # distributes messages between external and internal receivers and senders
+    def message_proxy(self, work_dir):
+        ctx = zmq.Context()
+
+        public_keys_dir = os.path.join(work_dir, 'certificates', 'public_keys')
+        secret_keys_dir = os.path.join(work_dir, 'certificates', 'private_keys')
+
+        # start and configure auth worker
+        auth = zmq.auth.IOLoopAuthenticator(ctx)
+        auth.start()
+        auth.allow('127.0.0.1')
+        auth.configure_curve(domain='*', location=public_keys_dir)
+
+        #start and configure our external socket for receiving data from honeypots/clients
+        server_secret_file = os.path.join(secret_keys_dir, 'beeswarm_server.pri')
+        server_public, server_secret = zmq.auth.load_certificate(server_secret_file)
+        sock = ctx.socket(zmq.PULL)
+        sock.curve_secretkey = server_secret
+        sock.curve_publickey = server_public
+        sock.curve_server = True
+        sock.bind("tcp://*:5558")
+
+        #use to publishe session data to internal listeners
+        sessionPublisher = ctx.socket(zmq.PUB)
+        sessionPublisher.bind('ipc://sessionPublisher')
+
+        poller = zmq.Poller()
+        poller.register(sock, zmq.POLLIN)
+        while True:
+            # .recv() gives no context switch - why not? using poller with timeout instead
+            socks = dict(poller.poll(1))
+            gevent.sleep()
+            # we got data on socket
+            if sock in socks and socks[sock] == zmq.POLLIN:
+                topic, data = sock.recv().split(' ', 1)
+                logger.debug("Received {0} data.".format(topic))
+                if topic == 'session_honeypot' or topic == 'session_client':
+                    sessionPublisher.send('{0} {1}'.format(topic, data))
+                else:
+                    logger.warn('Message with unknown topic received: {0}'.format(topic))
 
     def start(self, port=5000, maintenance=True):
         """
@@ -69,6 +120,7 @@ class Server(object):
 
         :param port: The port on which the web-app is to run.
         """
+        print 'START'
         self.started = True
         logger.info('Starting server listening on port {0}'.format(port))
 
@@ -165,7 +217,7 @@ class Server(object):
             cert_org_unit = raw_input('Organizational unit: ')
             print ''
             print '* Network *'
-            tcp_port = raw_input('Port for UI/API (default: 5000): ')
+            tcp_port = raw_input('Port for UI (default: 5000): ')
             if tcp_port:
                 tcp_port = int(tcp_port)
             else:
@@ -179,7 +231,33 @@ class Server(object):
             shutil.copyfile(os.path.join(package_directory, 'server/beeswarmcfg.json.dist'),
                             config_file)
 
+            generate_zmq_keys(work_dir, 'beeswarm_server')
+
             # update the config file
             update_config_file(config_file, {'network': {'port': tcp_port, 'host': tcp_host}})
 
+
+def generate_zmq_keys(cert_dir, key_name):
+    cert_path = os.path.join(cert_dir, 'certificates')
+    shutil.rmtree(cert_path, ignore_errors=True)
+    public_keys = os.path.join(cert_path, 'public_keys')
+    private_keys = os.path.join(cert_path, 'private_keys')
+    for _path in [cert_path, public_keys, private_keys]:
+        os.mkdir(_path)
+    tmp_key_dir = tempfile.mkdtemp()
+    # server key
+    public_key, private_key = zmq.auth.create_certificates(tmp_key_dir, key_name)
+    # move public keys to appropriate directory
+    for key_file in os.listdir(tmp_key_dir):
+        if key_file.endswith(".key"):
+            print key_file
+            shutil.move(os.path.join(tmp_key_dir, key_file),
+                        os.path.join(public_keys, '{0}.pub'.format(key_name)))
+
+    # move secret keys to appropriate directory
+    for key_file in os.listdir(tmp_key_dir):
+        if key_file.endswith(".key_secret"):
+            shutil.move(os.path.join(tmp_key_dir, key_file),
+                        os.path.join(private_keys, '{0}.pri'.format(key_name)))
+    shutil.rmtree(tmp_key_dir)
 

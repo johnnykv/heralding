@@ -62,7 +62,7 @@ class Honeypot(object):
             Honeypot.prepare_environment(work_dir)
             with open('beeswarmcfg.json', 'r') as config_file:
                 config = json.load(config_file, object_hook=asciify)
-
+        extract_keys(workdir, config)
         self.work_dir = work_dir
         self.config = config
         self.key = key
@@ -89,7 +89,7 @@ class Honeypot(object):
             'total_sessions': 0,
             'active_sessions': 0,
             'enabled_capabilities': [],
-            'server_url': ''
+            'managment_url': ''
         }
 
         #will contain BaitUser objects
@@ -217,8 +217,6 @@ class Honeypot(object):
             shutil.copyfile(os.path.join(package_directory, 'honeypot/beeswarmcfg.json.dist'),
                             os.path.join(work_dir, 'beeswarmcfg.json'))
 
-        create_self_signed_cert(work_dir, 'server.crt', 'server.key')
-
     @staticmethod
     def _ignore_copy_files(path, content):
         to_ignore = []
@@ -237,3 +235,21 @@ class Honeypot(object):
             huser = BaitUser(username, password)
             users[username] = huser
         return users
+
+def extract_keys(work_dir, config):
+    #dump keys used for communication securly with beeswarm server
+    # safe to rm since we have everything we need in the config
+    cert_path = os.path.join(work_dir, 'certificates')
+    shutil.rmtree(cert_path)
+
+    public_keys = os.path.join(work_dir, 'public_keys')
+    private_keys = os.path.join(work_dir, 'private_keys')
+    for _path in [cert_path, public_keys, private_keys]:
+        os.mkdir(_path)
+
+    with open(os.path.join(public_keys, 'server.key')) as key_file:
+        key_file.write((config['beeswarm_server']['server.pub']))
+    with open(os.path.join(public_keys, 'client.key')) as key_file:
+        key_file.write((config['beeswarm_server']['client.pub']))
+    with open(os.path.join(private_keys, 'client.key')) as key_file:
+        key_file.write((config['beeswarm_server']['client.pri']))

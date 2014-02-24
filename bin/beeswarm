@@ -13,6 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import curses
 
 import logging
@@ -23,6 +24,8 @@ import os
 
 import gevent
 import gevent.monkey
+
+gevent.monkey.patch_all()
 from gevent import Greenlet
 import requests
 from requests.exceptions import Timeout, ConnectionError
@@ -37,7 +40,7 @@ from beeswarm.shared.models.ui_handler import CursesLogHandler
 from beeswarm.shared.asciify import asciify
 from beeswarm.shared.helpers import is_url
 
-gevent.monkey.patch_all()
+
 
 logger = logging.getLogger()
 
@@ -152,6 +155,7 @@ if __name__ == '__main__':
         sys.exit(ex)
 
     mode_greenlet = Greenlet.spawn(m.start)
+    gevent.sleep()
 
     try:
         gevent.joinall([mode_greenlet])

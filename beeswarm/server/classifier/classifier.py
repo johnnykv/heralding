@@ -17,7 +17,7 @@ import logging
 import datetime
 
 from sqlalchemy.orm import joinedload
-from beeswarm.server.db import database
+from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Classification, Honeybee, Session, Authentication
 
 
@@ -39,7 +39,7 @@ class Classifier(object):
         max_datetime = honeybee.timestamp + datetime.timedelta(seconds=timediff)
 
         if not db_session:
-            db_session = database.get_session()
+            db_session = database_setup.get_session()
 
         #default return value
         match = None
@@ -76,7 +76,7 @@ class Classifier(object):
         min_datetime = datetime.datetime.utcnow() - datetime.timedelta(seconds=delay_seconds)
 
         if not db_session:
-            db_session = database.get_session()
+            db_session = database_setup.get_session()
 
         honeybees = db_session.query(Honeybee).options(joinedload(Honeybee.authentication))\
                                               .filter(Honeybee.classification_id == 'unclassified') \
@@ -107,7 +107,7 @@ class Classifier(object):
         min_datetime = datetime.datetime.utcnow() - datetime.timedelta(seconds=delay_seconds)
 
         if not db_session:
-            db_session = database.get_session()
+            db_session = database_setup.get_session()
 
         sessions = db_session.query(Session).filter(Session.discriminator == None) \
                                             .filter(Session.timestamp <= min_datetime) \

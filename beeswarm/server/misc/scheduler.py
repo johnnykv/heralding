@@ -19,7 +19,7 @@ import logging
 import gevent
 from gevent import Greenlet
 
-from beeswarm.server.db import database
+from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Session
 from beeswarm.server.classifier.classifier import Classifier
 
@@ -57,7 +57,7 @@ class Scheduler(object):
         honeybee_retain = datetime.utcnow() - timedelta(days=self.config['honeybee_session_retain'])
         malicious_retain = datetime.utcnow() - timedelta(days=self.config['malicious_session_retain'])
 
-        db_session = database.get_session()
+        db_session = database_setup.get_session()
 
         malicious_deleted_count = db_session.query(Session).filter(Session.classification_id != 'honeybee') \
                                                            .filter(Session.timestamp < malicious_retain).delete()
@@ -70,7 +70,7 @@ class Scheduler(object):
                      .format(honeybees_deleted_count, malicious_deleted_count))
 
     def do_classification(self):
-        db_session = database.get_session()
+        db_session = database_setup.get_session()
         classifier = Classifier()
         classifier.classify_honeybees(db_session=db_session)
         classifier.classify_sessions(db_session=db_session)

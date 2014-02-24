@@ -32,7 +32,7 @@ from beeswarm.server.webapp.auth import Authenticator
 from wtforms import HiddenField
 import beeswarm
 from forms import NewHoneypotConfigForm, NewClientConfigForm, LoginForm, SettingsForm
-from beeswarm.server.db import database
+from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, Honeybee, Session, Honeypot, User, Authentication, Classification,\
                                            BaitUser, Transcript
 from beeswarm.shared.helpers import update_config_file, get_config_dict
@@ -66,7 +66,7 @@ def initialize():
 @login_manager.user_loader
 def user_loader(userid):
     userid = userid.encode('utf-8')
-    db_session = database.get_session()
+    db_session = database_setup.get_session()
     user = None
     try:
         user = db_session.query(User).filter(User.id == userid).one()
@@ -78,7 +78,7 @@ def user_loader(userid):
 @app.route('/')
 @login_required
 def home():
-    db_session = database.get_session()
+    db_session = database_setup.get_session()
     status = {
         'nhoneypots': db_session.query(Honeypot).count(),
         'nclients': db_session.query(Client).count(),
@@ -147,104 +147,16 @@ def sessions_honeybees():
 def sessions_attacks():
     return render_template('logs.html', logtype='Attacks', user=current_user)
 
-
-@app.route('/ws/client_data', methods=['POST'])
-@login_required
-def client_data():
-    #TODO: investigate why the flask provided request.json returns None
-    data = json.loads(request.data)
-    logger.debug('Received client data from {0}: {1}'.format(flask.session['user_id'], data))
-    session = database.get_session()
-    classification = session.query(Classification).filter(Classification.type == 'unclassified').one()
-
-    _client = session.query(Client).filter(Client.id == data['client_id']).one()
-
-    if data['honeypot_id'] is not None:
-        _honeypot = session.query(Honeypot).filter(Honeypot.id == data['honeypot_id']).one()
-    else:
-        _honeypot = None
-
-    h = Honeybee(
-        id=data['id'],
-        classification=classification,
-        timestamp=datetime.strptime(data['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
-        received=datetime.utcnow(),
-        protocol=data['protocol'],
-        destination_ip=data['destination_ip'],
-        destination_port=data['destination_port'],
-        source_ip=data['source_ip'],
-        source_port=data['source_port'],
-        did_connect=data['did_connect'],
-        did_login=data['did_login'],
-        did_complete=data['did_complete'],
-        client=_client,
-        honeypot=_honeypot
-    )
-
-    #ignore the entry if configured to do so.
-    if not h.did_complete and not config['ignore_failed_honeybees']:
-        for auth in data['authentication']:
-            a = Authentication(id=auth['id'], username=auth['username'], password=auth['password'],
-                               successful=auth['successful'],
-                               timestamp=datetime.strptime(auth['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'))
-            h.authentication.append(a)
-
-        session.add(h)
-        session.commit()
-    return ''
-
-
-@app.route('/ws/honeypot_data', methods=['POST'])
-@login_required
-def honeypot_data():
-    #TODO: investigate why the flask provided request.json returns None.
-    data = json.loads(request.data)
-    logger.debug('Received honeypot data from {0}: {1}'.format(flask.session['user_id'], data))
-
-    db_session = database.get_session()
-    classification = db_session.query(Classification).filter(Classification.type == 'unclassified').one()
-    _honeypot = db_session.query(Honeypot).filter(Honeypot.id == data['honeypot_id']).one()
-
-    session = Session(
-        id=data['id'],
-        classification=classification,
-        timestamp=datetime.strptime(data['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'),
-        received=datetime.utcnow(),
-        protocol=data['protocol'],
-        destination_ip=data['destination_ip'],
-        destination_port=data['destination_port'],
-        source_ip=data['source_ip'],
-        source_port=data['source_port'],
-        honeypot=_honeypot)
-
-    for entry in data['transcript']:
-        transcript_timestamp = datetime.strptime(entry['timestamp'], '%Y-%m-%dT%H:%M:%S.%f')
-        transcript = Transcript(timestamp=transcript_timestamp, direction=entry['direction'], data=entry['data'])
-        session.transcript.append(transcript)
-
-    for auth in data['login_attempts']:
-        # TODO: Model this better in db model, not all capabilities authenticate with both username/password
-        username = auth.get('username', '')
-        password = auth.get('password', '')
-        a = Authentication(id=auth['id'], username=username, password=password,
-                           successful=auth['successful'],
-                           timestamp=datetime.strptime(auth['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'))
-        session.authentication.append(a)
-    db_session.add(session)
-    db_session.commit()
-    return ''
-
-
 @app.route('/ws/honeypot/config/<honeypot_id>', methods=['GET'])
 def get_honeypot_config(honeypot_id):
-    db_session = database.get_session()
+    db_session = database_setup.get_session()
     current_honeypot = db_session.query(Honeypot).filter(Honeypot.id == honeypot_id).one()
     return current_honeypot.configuration
 
 
 @app.route('/ws/client/config/<client_id>', methods=['GET'])
 def get_client_config(client_id):
-    db_session = database.get_session()
+    db_session = database_setup.get_session()
     client = db_session.query(Client).filter(Client.id == client_id).one()
     return client.configuration
 
@@ -258,8 +170,8 @@ def create_honeypot():
         with open(app.config['CERT_PATH']) as cert:
             cert_str = cert.read()
         server_url = 'https://{0}:{1}/'.format(config['network']['host'], config['network']['port'])
-        honeypot_password = str(uuid.uuid4())
-        db_session = database.get_session()
+        zmq_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
+        db_session = database_setup.get_session()
         honeypot_users = db_session.query(BaitUser).all()
         users_dict = {}
         # only add users if the honeypot is running in active mode
@@ -284,11 +196,14 @@ def create_honeypot():
                 'chan': 'beeswarm.honeypot',
                 'port_mapping': '{}'
             },
-            'log_server': {
+            'beeswarm_server': {
                 'enabled': True,
-                'server_url': server_url,
-                'server_pass': honeypot_password,
-                'cert': cert_str
+                'managment_url': server_url,
+                'zme_url' : zmq_url,
+                'server.pub': server_pub_key,
+                'client.pub': client_pub_key,
+                'client.pri': client_priv_key,
+                'https_cert': cert_str
             },
             'log_syslog': {
                 'enabled': False,
@@ -368,7 +283,7 @@ def create_honeypot():
 def delete_honeypots():
     # list of honeypot id's'
     honeypot_ids = json.loads(request.data)
-    db_session = database.get_session()
+    db_session = database_setup.get_session()
     for honeypot_id in honeypot_ids:
         honeypot_to_delete = db_session.query(Honeypot).filter(Honeypot.id == honeypot_id).one()
         db_session.delete(honeypot_to_delete)
@@ -507,16 +422,16 @@ def create_client():
                     'password': form.telnet_password.data
                 }
             },
-            'log_server': {
+            'beeswarm_server': {
                 'enabled': True,
-                'server_url': server_url,
+                'managment_url': server_url,
                 'server_pass': client_password,
-                'cert': cert_str
+                'https_cert': cert_str
             },
         }
         config_json = json.dumps(client_config, indent=4)
 
-        db_session = database.get_session()
+        db_session = database_setup.get_session()
         f = Client(id=client_id, configuration=config_json)
         db_session.add(f)
         db_session.commit()
@@ -533,7 +448,7 @@ def create_client():
 @login_required
 def delete_clients():
     client_ids = json.loads(request.data)
-    db_session = database.get_session()
+    db_session = database_setup.get_session()
     for client_id in client_ids:
         client = db_session.query(Client).filter(Client.id == client_id).one()
         db_session.delete(client)
@@ -545,8 +460,8 @@ def delete_clients():
 @app.route('/data/sessions/<_type>', methods=['GET'])
 @login_required
 def data_sessions_attacks(_type):
-    db_session = database.get_session()
-    #the database will not get hit until we start iterating the query object
+    db_session = database_setup.get_session()
+    #the database_setup will not get hit until we start iterating the query object
     query_iterators = {
         'all': db_session.query(Session),
         'honeybees': db_session.query(Honeybee),
@@ -577,7 +492,7 @@ def data_sessions_attacks(_type):
 @app.route('/data/session/<_id>/transcript')
 @login_required
 def data_session_transcript(_id):
-    db_session = database.get_session()
+    db_session = database_setup.get_session()
 
     transcripts = db_session.query(Transcript).filter(Transcript.session_id == _id)
     return_rows = []
@@ -590,7 +505,7 @@ def data_session_transcript(_id):
 @app.route('/data/honeypots', methods=['GET'])
 @login_required
 def data_honeypots():
-    db_session = database.get_session()
+    db_session = database_setup.get_session()
     honeypots = db_session.query(Honeypot).all()
     rows = []
     for h in honeypots:
@@ -603,7 +518,7 @@ def data_honeypots():
 @app.route('/data/clients', methods=['GET'])
 @login_required
 def data_clients():
-    db_session = database.get_session()
+    db_session = database_setup.get_session()
     clients = db_session.query(Client).all()
     rows = []
     for client in clients:
@@ -618,7 +533,7 @@ def data_clients():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        db_session = database.get_session()
+        db_session = database_setup.get_session()
         user = None
         try:
             user = db_session.query(User).filter(User.id == form.username.data).one()
@@ -643,7 +558,7 @@ def logout():
 @login_required
 def generate_honeypot_iso(honeypot_id):
     logger.info('Generating new ISO for Honeypot ({})'.format(honeypot_id))
-    db_session = database.get_session()
+    db_session = database_setup.get_session()
     current_honeypot = db_session.query(Honeypot).filter(Honeypot.id == honeypot_id).one()
 
     tempdir = tempfile.mkdtemp()
@@ -670,7 +585,7 @@ def generate_honeypot_iso(honeypot_id):
 @login_required
 def generate_client_iso(client_id):
     logger.info('Generating new ISO for Client ({})'.format(client_id))
-    db_session = database.get_session()
+    db_session = database_setup.get_session()
     client = db_session.query(Client).filter(Client.id == client_id).one()
 
     tempdir = tempfile.mkdtemp()
