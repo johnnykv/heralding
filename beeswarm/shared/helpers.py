@@ -22,7 +22,6 @@ import grp
 import platform
 import logging
 import socket
-import _socket
 import json
 import fcntl
 

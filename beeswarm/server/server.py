@@ -241,25 +241,15 @@ class Server(object):
 
 def generate_zmq_keys(cert_dir, key_name):
     cert_path = os.path.join(cert_dir, 'certificates')
-    shutil.rmtree(cert_path, ignore_errors=True)
     public_keys = os.path.join(cert_path, 'public_keys')
     private_keys = os.path.join(cert_path, 'private_keys')
     for _path in [cert_path, public_keys, private_keys]:
         os.mkdir(_path)
     tmp_key_dir = tempfile.mkdtemp()
-    # server key
-    public_key, private_key = zmq.auth.create_certificates(tmp_key_dir, key_name)
-    # move public keys to appropriate directory
-    for key_file in os.listdir(tmp_key_dir):
-        if key_file.endswith(".key"):
-            print key_file
-            shutil.move(os.path.join(tmp_key_dir, key_file),
-                        os.path.join(public_keys, '{0}.pub'.format(key_name)))
 
-    # move secret keys to appropriate directory
-    for key_file in os.listdir(tmp_key_dir):
-        if key_file.endswith(".key_secret"):
-            shutil.move(os.path.join(tmp_key_dir, key_file),
-                        os.path.join(private_keys, '{0}.pri'.format(key_name)))
-    shutil.rmtree(tmp_key_dir)
-
+    try:
+        public_key, private_key = create_certificates(tmp_key_dir, key_name)
+        shutil.move(public_key, os.path.join(public_keys, '{0}.pub'.format(key_name)))
+        shutil.move(private_key, os.path.join(private_keys, '{0}.pri'.format(key_name)))
+    finally:
+        shutil.rmtree(tmp_key_dir)
