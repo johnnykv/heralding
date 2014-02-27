@@ -40,6 +40,7 @@ class PersistanceWorker(object):
             logger.debug('Received message from publisher')
             self.persist_session(session_json, topic)
 
+
     def persist_session(self, session_json, session_type):
         data = json.loads(session_json)
         db_session = database_setup.get_session()
@@ -77,7 +78,8 @@ class PersistanceWorker(object):
             session.did_complete = data['did_complete']
             session.client = client
         else:
-            raise Exception('lala')
+            logger.warn('Unknown message type: {0}'.format(session_type))
+            return
 
         session.id = data['id']
         session.classification = classification

@@ -22,6 +22,11 @@ import shutil
 import string
 import tempfile
 import uuid
+from collections import namedtuple
+
+import gevent
+import zmq.green as zmq
+
 from flask import Flask, render_template, request, redirect, flash, Response, send_from_directory
 import flask
 from flask.ext.login import LoginManager, login_user, current_user, login_required, logout_user
@@ -56,12 +61,31 @@ config = {}
 logger = logging.getLogger(__name__)
 
 authenticator = Authenticator()
-
+first_cfg_received = gevent.event.Event()
 
 @app.before_first_request
 def initialize():
+    gevent.spawn(config_subscriber)
+    # wait until we have received the first config publish
+    first_cfg_received.wait()
+
+
+def config_subscriber():
     global config
-    config = get_config_dict(app.config['SERVER_CONFIG'])
+    ctx = zmq.Context()
+    subscriber_socket = ctx.socket(zmq.SUB)
+    subscriber_socket.connect('ipc://configPublisher')
+    subscriber_socket.setsockopt(zmq.SUBSCRIBE, 'full')
+    while True:
+        poller = zmq.Poller()
+        poller.register(subscriber_socket, zmq.POLLIN)
+        while True:
+            socks = dict(poller.poll())
+            if subscriber_socket in socks and socks[subscriber_socket] == zmq.POLLIN:
+                topic, msg = subscriber_socket.recv().split(' ', 1)
+                config = json.loads(msg)
+                first_cfg_received.set()
+                logger.debug('Config received')
 
 @login_manager.user_loader
 def user_loader(userid):
@@ -607,18 +631,28 @@ def generate_client_iso(client_id):
 @login_required
 def settings():
     global config
-    form = SettingsForm(obj=MultiDict(config))
+    # we need getattr for WTF
+    formdata = namedtuple('Struct', config.keys())(*config.values())
+    form = SettingsForm(obj=formdata, honeybee_session_retain=config['honeybee_session_retain'])
 
     if form.validate_on_submit():
         # the potential updates that we want to save to config file.
         options = {'honeybee_session_retain': form.honeybee_session_retain.data,
                    'malicious_session_retain': form.malicious_session_retain.data,
                    'ignore_failed_honeybees': form.ignore_failed_honeybees.data}
-        update_config_file(app.config['SERVER_CONFIG'], options)
-        # update the global config dict.
-        config = get_config_dict(app.config['SERVER_CONFIG'])
-
+        update_config(options)
     return render_template('settings.html', form=form, user=current_user)
+
+
+def update_config(options):
+    context = zmq.Context()
+    socket = context.socket(zmq.REQ)
+    socket.connect('ipc://configSetter')
+    socket.send(json.dumps(options))
+    reply = socket.recv()
+    if reply != 'ok':
+        logger.warning('Error while requesting config change to actor.')
+    socket.close()
 
 
 def write_to_iso(temporary_dir, mode):
