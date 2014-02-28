@@ -15,17 +15,22 @@
 
 import json
 import logging
+import os
+import tempfile
+import shutil
 
 import gevent.event
 import zmq.green as zmq
+from zmq.auth.certs import create_certificates, load_certificate
 
 logger = logging.getLogger(__name__)
 
 
 class ConfigActor(object):
-    def __init__(self, config_file):
+    def __init__(self, config_file, work_dir):
         self.config_file = config_file
         self.config = json.load(open(self.config_file, 'r'))
+        self.work_dir = work_dir
 
         context = zmq.Context()
         self.config_publisher = context.socket(zmq.XPUB)
@@ -74,3 +79,24 @@ class ConfigActor(object):
     def _save_config_file(self):
         with open(self.config_file, 'r+') as config_file:
             config_file.write(json.dumps(self.config, indent=4))
+
+    def generate_zmq_keys(self, key_name):
+        cert_path = os.path.join(self.work_dir, 'certificates')
+        public_keys = os.path.join(cert_path, 'public_keys')
+        private_keys = os.path.join(cert_path, 'private_keys')
+        for _path in [cert_path, public_keys, private_keys]:
+            os.mkdir(_path)
+        tmp_key_dir = tempfile.mkdtemp()
+
+        try:
+            public_key, private_key = create_certificates(tmp_key_dir, key_name)
+            # the final location for keys
+            public_key_final = os.path.join(public_keys, '{0}.pub'.format(key_name))
+            private_key_final = os.path.join(private_keys, '{0}.pri'.format(key_name))
+            shutil.move(public_key, public_key_final)
+            shutil.move(private_key,private_key_final)
+        finally:
+            shutil.rmtree(tmp_key_dir)
+
+        # return copy of keys
+        return open(private_key_final, "r").readlines(), open(public_key_final, "r").readlines()

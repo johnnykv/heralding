@@ -40,7 +40,7 @@ from forms import NewHoneypotConfigForm, NewClientConfigForm, LoginForm, Setting
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, Honeybee, Session, Honeypot, User, Authentication, Classification,\
                                            BaitUser, Transcript
-from beeswarm.shared.helpers import update_config_file, get_config_dict
+from beeswarm.server.server import generate_zmq_keys
 
 
 def is_hidden_field_filter(field):
@@ -189,12 +189,13 @@ def get_client_config(client_id):
 @login_required
 def create_honeypot():
     form = NewHoneypotConfigForm()
-    new_honeypot_id = str(uuid.uuid4())
+    honeypot_id = str(uuid.uuid4())
     if form.validate_on_submit():
         with open(app.config['CERT_PATH']) as cert:
             cert_str = cert.read()
-        server_url = 'https://{0}:{1}/'.format(config['network']['host'], config['network']['port'])
-        zmq_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
+        server_https = 'https://{0}:{1}/'.format(config['network']['host'], config['network']['port'])
+        server_zmq = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
+        zmq_private, zmq_public = generate_zmq_keys(honeypot_id)
         db_session = database_setup.get_session()
         honeypot_users = db_session.query(BaitUser).all()
         users_dict = {}
@@ -207,7 +208,7 @@ def create_honeypot():
         honeypot_config = {
             'general': {
                 'mode': 'honeypot',
-                'honeypot_id': new_honeypot_id,
+                'honeypot_id': honeypot_id,
                 'honeypot_ip': '192.168.1.1',
                 'fetch_ip': False
             },
@@ -222,12 +223,12 @@ def create_honeypot():
             },
             'beeswarm_server': {
                 'enabled': True,
-                'managment_url': server_url,
-                'zme_url' : zmq_url,
-                'server.pub': server_pub_key,
-                'client.pub': client_pub_key,
-                'client.pri': client_priv_key,
-                'https_cert': cert_str
+                'managment_url': server_https,
+                'zmq_url' : server_zmq,
+                'zmq_server_public': server_pub_key,
+                'zmq_own_public': zmq_public,
+                'zmq_own_private': zmq_private,
+                'https_cert': server_https
             },
             'log_syslog': {
                 'enabled': False,
@@ -290,12 +291,11 @@ def create_honeypot():
         }
         config_json = json.dumps(honeypot_config, indent=4)
 
-        h = Honeypot(id=new_honeypot_id, configuration=config_json)
+        h = Honeypot(id=honeypot_id, configuration=config_json)
         db_session.add(h)
         db_session.commit()
-        authenticator.add_user(new_honeypot_id, honeypot_password, 2)
-        config_link = '{0}ws/honeypot/config/{1}'.format(server_url, new_honeypot_id)
-        iso_link = '/iso/honeypot/{0}.iso'.format(new_honeypot_id)
+        config_link = '{0}ws/honeypot/config/{1}'.format(server_https, honeypot_id)
+        iso_link = '/iso/honeypot/{0}.iso'.format(honeypot_id)
         return render_template('finish-config.html', mode_name='Honeypot', user=current_user,
                                config_link=config_link, iso_link=iso_link)
 

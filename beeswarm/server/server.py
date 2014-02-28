@@ -18,14 +18,11 @@ import json
 import logging
 import os
 import shutil
-import tempfile
 
 import gevent
 from gevent.pywsgi import WSGIServer
 import zmq.green as zmq
 from zmq.auth.ioloop import IOLoopAuthenticator
-from zmq.auth.certs import create_certificates, load_certificate
-
 
 import beeswarm
 from beeswarm.server.db import database_setup
@@ -61,7 +58,7 @@ class Server(object):
         self.config_file = 'beeswarmcfg.json'
 
         self.actors = []
-        self.actors.append(ConfigActor('beeswarmcfg.json'))
+        self.actors.append(ConfigActor('beeswarmcfg.json', work_dir))
         self.workers = {}
         self.greenlets = []
         self.started = False
@@ -239,17 +236,3 @@ class Server(object):
             update_config_file(config_file, {'network': {'port': tcp_port, 'host': tcp_host}})
 
 
-def generate_zmq_keys(cert_dir, key_name):
-    cert_path = os.path.join(cert_dir, 'certificates')
-    public_keys = os.path.join(cert_path, 'public_keys')
-    private_keys = os.path.join(cert_path, 'private_keys')
-    for _path in [cert_path, public_keys, private_keys]:
-        os.mkdir(_path)
-    tmp_key_dir = tempfile.mkdtemp()
-
-    try:
-        public_key, private_key = create_certificates(tmp_key_dir, key_name)
-        shutil.move(public_key, os.path.join(public_keys, '{0}.pub'.format(key_name)))
-        shutil.move(private_key, os.path.join(private_keys, '{0}.pri'.format(key_name)))
-    finally:
-        shutil.rmtree(tmp_key_dir)
