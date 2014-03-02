@@ -22,6 +22,7 @@ import shutil
 import gevent.event
 import zmq.green as zmq
 from zmq.auth.certs import create_certificates, load_certificate
+import beeswarm
 
 logger = logging.getLogger(__name__)
 
@@ -34,23 +35,29 @@ class ConfigActor(object):
 
         context = zmq.Context()
         self.config_publisher = context.socket(zmq.XPUB)
-        self.config_setter = context.socket(zmq.REP)
+        self.config_commands = context.socket(zmq.REP)
+        self.enabled = True
         gevent.spawn(self._start)
+
+    def close(self):
+        self.config_publisher.close()
+        self.config_commands.close()
+        self.enabled = False
 
     def _start(self):
         # start accepting incomming messages
-        self.config_setter.bind('ipc://configSetter')
+        self.config_commands.bind('ipc://configCommands')
         self.config_publisher.bind('ipc://configPublisher')
         # initial publish of config
         self._publish_config()
 
         poller = zmq.Poller()
-        poller.register(self.config_setter, zmq.POLLIN)
+        poller.register(self.config_commands, zmq.POLLIN)
         poller.register(self.config_publisher, zmq.POLLIN)
-        while True:
-            socks = dict(poller.poll())
-            if self.config_setter in socks and socks[self.config_setter] == zmq.POLLIN:
-                self._handle_setters()
+        while self.enabled:
+            socks = dict(poller.poll(500))
+            if self.config_commands in socks and socks[self.config_commands] == zmq.POLLIN:
+                self._handle_commands()
             if self.config_publisher in socks and socks[self.config_publisher] == zmq.POLLIN:
                 self._handle_subscriptions()
 
@@ -61,17 +68,36 @@ class ConfigActor(object):
             logger.debug('SUBSCRIBE')
             self._publish_config()
 
-    def _handle_setters(self):
-        raw_msg = self.config_setter.recv()
-        new_config = json.loads(raw_msg)
+    def _handle_commands(self):
+        msg = self.config_commands.recv()
+
+        if ' ' in msg:
+            cmd, data = msg.split(' ', 1)
+        else:
+            cmd = msg
+
+        if cmd == 'set':
+            self._handle_command_set(data)
+        elif cmd == 'genkeys':
+            self._handle_command_genkeys(data)
+        else:
+            self.config_commands.send(beeswarm.FAIL)
+
+    def _handle_command_set(self, data):
+        new_config = json.loads(data)
         # all keys must in the original dict
         if all(key in self.config for key in new_config):
-            self.config_setter.send('ok')
+            self.config_commands.send(beeswarm.OK)
             self.config.update(new_config)
             self._save_config_file()
             self._publish_config()
         else:
-            self.config_setter.send('fail')
+            self.config_commands.send(beeswarm.FAIL)
+
+    def _handle_command_genkeys(self, name):
+        private_key, publickey = self._generate_zmq_keys(name)
+        self.config_commands.send_json({'public_key': publickey,
+                                        'private_key': private_key})
 
     def _publish_config(self):
         self.config_publisher.send('{0} {1}'.format('full', json.dumps(self.config)))
@@ -80,7 +106,7 @@ class ConfigActor(object):
         with open(self.config_file, 'r+') as config_file:
             config_file.write(json.dumps(self.config, indent=4))
 
-    def generate_zmq_keys(self, key_name):
+    def _generate_zmq_keys(self, key_name):
         cert_path = os.path.join(self.work_dir, 'certificates')
         public_keys = os.path.join(cert_path, 'public_keys')
         private_keys = os.path.join(cert_path, 'private_keys')

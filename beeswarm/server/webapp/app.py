@@ -40,7 +40,6 @@ from forms import NewHoneypotConfigForm, NewClientConfigForm, LoginForm, Setting
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, Honeybee, Session, Honeypot, User, Authentication, Classification,\
                                            BaitUser, Transcript
-from beeswarm.server.server import generate_zmq_keys
 
 
 def is_hidden_field_filter(field):
@@ -647,10 +646,10 @@ def settings():
 def update_config(options):
     context = zmq.Context()
     socket = context.socket(zmq.REQ)
-    socket.connect('ipc://configSetter')
+    socket.connect('ipc://configCommands')
     socket.send(json.dumps(options))
     reply = socket.recv()
-    if reply != 'ok':
+    if reply != beeswarm.OK:
         logger.warning('Error while requesting config change to actor.')
     socket.close()
 

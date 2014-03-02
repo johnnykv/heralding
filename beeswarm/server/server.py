@@ -23,6 +23,7 @@ import gevent
 from gevent.pywsgi import WSGIServer
 import zmq.green as zmq
 from zmq.auth.ioloop import IOLoopAuthenticator
+from zmq.auth.certs import load_certificate
 
 import beeswarm
 from beeswarm.server.db import database_setup
@@ -62,8 +63,6 @@ class Server(object):
         self.workers = {}
         self.greenlets = []
         self.started = False
-
-
 
         database_setup.setup_db(os.path.join(self.config['sql']['connection_string']))
         self.app = app.app
@@ -229,10 +228,14 @@ class Server(object):
 
             shutil.copyfile(os.path.join(package_directory, 'server/beeswarmcfg.json.dist'),
                             config_file)
+            #tmp actor while initializing
+            configActor = ConfigActor('beeswarmcfg.json', work_dir)
 
-            generate_zmq_keys(work_dir, 'beeswarm_server')
-
-            # update the config file
-            update_config_file(config_file, {'network': {'port': tcp_port, 'host': tcp_host}})
-
-
+            context = zmq.Context()
+            socket = context.socket(zmq.REQ)
+            socket.connect('ipc://configCommands')
+            socket.send('genkeys beeswarm_server')
+            msg = socket.recv()
+            socket.send('set {0}'.format(json.dumps({'network': {'port': tcp_port, 'host': tcp_host}})))
+            socket.recv()
+            configActor.close()
