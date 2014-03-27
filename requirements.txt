@@ -1,4 +1,4 @@
-pyzmq>=14.0.1
+pyzmq>=14.1.1
 fs
 Crypto
 cssselect
