@@ -60,6 +60,7 @@ class Server(object):
 
         self.actors = []
         config_actor = ConfigActor('beeswarmcfg.json', work_dir)
+        config_actor.start()
         self.actors.append(config_actor)
         self.workers = {}
         self.greenlets = []
@@ -241,6 +242,7 @@ class Server(object):
 
             #tmp actor while initializing
             configActor = ConfigActor('beeswarmcfg.json', work_dir)
+            configActor.start()
 
             context = zmq.Context()
             socket = context.socket(zmq.REQ)

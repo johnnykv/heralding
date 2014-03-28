@@ -19,7 +19,7 @@ import os
 import tempfile
 import shutil
 
-import gevent.event
+from gevent import Greenlet
 import zmq.green as zmq
 from zmq.auth.certs import create_certificates, load_certificate
 import beeswarm
@@ -27,8 +27,9 @@ import beeswarm
 logger = logging.getLogger(__name__)
 
 
-class ConfigActor(object):
+class ConfigActor(Greenlet):
     def __init__(self, config_file, work_dir):
+        Greenlet.__init__(self)
         self.config_file = config_file
         self.config = json.load(open(self.config_file, 'r'))
         self.work_dir = work_dir
@@ -37,14 +38,13 @@ class ConfigActor(object):
         self.config_publisher = context.socket(zmq.XPUB)
         self.config_commands = context.socket(zmq.REP)
         self.enabled = True
-        gevent.spawn(self._start)
 
     def close(self):
         self.config_publisher.close()
         self.config_commands.close()
         self.enabled = False
 
-    def _start(self):
+    def _run(self):
         # start accepting incomming messages
         self.config_commands.bind('ipc://configCommands')
         self.config_publisher.bind('ipc://configPublisher')
