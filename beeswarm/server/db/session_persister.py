@@ -38,14 +38,14 @@ class PersistanceWorker(object):
         while True:
             topic, session_json = self.subscriber_socket.recv().split(' ', 1)
             logger.debug('Received message from publisher')
+            print topic
+            print session_json
             self.persist_session(session_json, topic)
-
 
     def persist_session(self, session_json, session_type):
         data = json.loads(session_json)
         db_session = database_setup.get_session()
         classification = db_session.query(Classification).filter(Classification.type == 'unclassified').one()
-
         if data['honeypot_id'] is not None:
             _honeypot = db_session.query(Honeypot).filter(Honeypot.id == data['honeypot_id']).one()
         else:

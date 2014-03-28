@@ -31,7 +31,7 @@ from beeswarm.server.webapp import app
 from beeswarm.server.webapp.auth import Authenticator
 from beeswarm.shared.helpers import drop_privileges
 from beeswarm.server.misc.scheduler import Scheduler
-from beeswarm.shared.helpers import find_offset, create_self_signed_cert, update_config_file
+from beeswarm.shared.helpers import find_offset, create_self_signed_cert, update_config_file, send_command
 from beeswarm.shared.asciify import asciify
 from beeswarm.server.db.session_persister import PersistanceWorker
 from beeswarm.shared.workers.config_actor import ConfigActor
@@ -59,7 +59,8 @@ class Server(object):
         self.config_file = 'beeswarmcfg.json'
 
         self.actors = []
-        self.actors.append(ConfigActor('beeswarmcfg.json', work_dir))
+        config_actor = ConfigActor('beeswarmcfg.json', work_dir)
+        self.actors.append(config_actor)
         self.workers = {}
         self.greenlets = []
         self.started = False
@@ -95,7 +96,7 @@ class Server(object):
         sock.curve_secretkey = server_secret
         sock.curve_publickey = server_public
         sock.curve_server = True
-        sock.bind("tcp://*:5558")
+        sock.bind('tcp://*:{0}'.format(self.config['network']['zmq_port']))
 
         #use to publishe session data to internal listeners
         sessionPublisher = ctx.socket(zmq.PUB)
@@ -228,14 +229,33 @@ class Server(object):
 
             shutil.copyfile(os.path.join(package_directory, 'server/beeswarmcfg.json.dist'),
                             config_file)
+
+            print ''
+            print '* Communication between honeypots and server *'
+            zmq_host = raw_input('IP or hostname of server: ')
+            zmq_port = raw_input('TCP port (default: 5712) : ')
+            if zmq_port:
+                zmq_port = int(zmq_port)
+            else:
+                zmq_port = 5712
+
             #tmp actor while initializing
             configActor = ConfigActor('beeswarmcfg.json', work_dir)
 
             context = zmq.Context()
             socket = context.socket(zmq.REQ)
             socket.connect('ipc://configCommands')
-            socket.send('genkeys beeswarm_server')
-            msg = socket.recv()
-            socket.send('set {0}'.format(json.dumps({'network': {'port': tcp_port, 'host': tcp_host}})))
+            socket.send('gen_zmq_keys beeswarm_server')
+            result = socket.recv()
+            if result.split(' ', 1)[0] == beeswarm.OK:
+                result = json.loads(result.split(' ',1)[1])
+                zmq_public, zmq_private = (result['public_key'], result['private_key'])
+            else:
+                assert(False)
+
+
+            socket.send('set {0}'.format(json.dumps({'network': {'zmq_server_public_key': zmq_public,
+                                                                 'port': tcp_port, 'host': tcp_host,
+                                                                 'zmq_port': zmq_port, 'zmq_host': zmq_host}})))
             socket.recv()
             configActor.close()

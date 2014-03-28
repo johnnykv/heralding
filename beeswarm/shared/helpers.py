@@ -24,6 +24,9 @@ import logging
 import socket
 import json
 import fcntl
+import zmq.green as zmq
+
+import beeswarm
 
 logger = logging.getLogger(__name__)
 
@@ -169,3 +172,19 @@ def update_config_file(configfile, options):
 def get_config_dict(configfile):
     config = json.load(open(configfile, 'r'))
     return config
+
+
+# for occasional req/resp
+def send_command(actor_url, request):
+    context = zmq.Context()
+    socket = context.socket(zmq.REQ)
+    socket.connect(actor_url)
+    socket.send(request)
+    result = socket.recv()
+    if result.split(' ', 1)[0] != beeswarm.OK:
+        logger.warning('Error while requesting config change to actor.')
+        socket.close()
+        assert(False)
+    else:
+        socket.close()
+        return json.loads(result.split(' ', 1)[1])

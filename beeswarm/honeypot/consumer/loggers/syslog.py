@@ -21,7 +21,7 @@ from beeswarm.honeypot.consumer.loggers.loggerbase import LoggerBase
 
 
 class Syslog(LoggerBase):
-    def __init__(self, config):
+    def __init__(self, config, work_dir):
         self.options = {
             'enabled': config['log_syslog']['enabled'],
             'socket': config['log_syslog']['socket'],

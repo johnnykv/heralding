@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class Consumer:
-    def __init__(self, sessions,  honeypot_ip, config, status):
+    def __init__(self, sessions,  honeypot_ip, config, status, work_dir):
         """
             Processes completed/disconnected sessions from the sessions dict.
 
@@ -39,11 +39,12 @@ class Consumer:
         self.honeypot_ip = honeypot_ip
         self.status = status
         self.sessions = sessions
+        self.work_dir = work_dir
 
     def start(self):
         self.enabled = True
-
         active_loggers = self.start_loggers(self.get_enabled_loggers())
+        print active_loggers
         while self.enabled:
             self.status['active_sessions'] = len(self.sessions)
 
@@ -93,12 +94,16 @@ class Consumer:
         #parser = ConfigParser()
         #parser.read(self.config)
         enabled_loggers = []
+        # find generic loggers
         for k, v in self.config.items():
             if '_' in k:
                 config_type, name = k.split('_')
                 #only interested in logging configurations
                 if config_type == 'log' and v['enabled']:
                     enabled_loggers.append(name)
+        #check if beeswarm server is enabled
+        if self.config['beeswarm_server']:
+            enabled_loggers.append('server')
         return enabled_loggers
 
     def start_loggers(self, enabled_logger_classes):
@@ -112,7 +117,7 @@ class Consumer:
         for l in loggerbase.LoggerBase.__subclasses__():
             logger_name = l.__name__.lower()
             if logger_name in enabled_logger_classes:
-                honeypot_logger = l(self.config)
+                honeypot_logger = l(self.config, self.work_dir)
                 logger.debug('{0} logger initialized.'.format(logger_name.title()))
                 loggers.append(honeypot_logger)
         return loggers

@@ -62,7 +62,7 @@ class Honeypot(object):
             Honeypot.prepare_environment(work_dir)
             with open('beeswarmcfg.json', 'r') as config_file:
                 config = json.load(config_file, object_hook=asciify)
-        extract_keys(workdir, config)
+        extract_keys(work_dir, config)
         self.work_dir = work_dir
         self.config = config
         self.key = key
@@ -128,14 +128,13 @@ class Honeypot(object):
 
     def start(self):
         """ Starts services. """
-
         self.servers = []
         self.server_greenlets = []
         #will contain Session objects
         self.sessions = {}
 
         #greenlet to consume the provided sessions
-        self.session_consumer = consumer.Consumer(self.sessions, self.honeypot_ip, self.config, self.status)
+        self.session_consumer = consumer.Consumer(self.sessions, self.honeypot_ip, self.config, self.status, self.work_dir)
         Greenlet.spawn(self.session_consumer.start)
 
         #protocol handlers
@@ -237,19 +236,20 @@ class Honeypot(object):
         return users
 
 def extract_keys(work_dir, config):
-    #dump keys used for communication securly with beeswarm server
+    #dump keys used for secure communication with beeswarm server
     # safe to rm since we have everything we need in the config
     cert_path = os.path.join(work_dir, 'certificates')
-    shutil.rmtree(cert_path)
+    shutil.rmtree(cert_path, True)
 
-    public_keys = os.path.join(work_dir, 'public_keys')
-    private_keys = os.path.join(work_dir, 'private_keys')
+    public_keys = os.path.join(cert_path, 'public_keys')
+    private_keys = os.path.join(cert_path, 'private_keys')
     for _path in [cert_path, public_keys, private_keys]:
-        os.mkdir(_path)
+        if not os.path.isdir(_path):
+            os.mkdir(_path)
 
-    with open(os.path.join(public_keys, 'server.key')) as key_file:
-        key_file.write((config['beeswarm_server']['server.pub']))
-    with open(os.path.join(public_keys, 'client.key')) as key_file:
-        key_file.write((config['beeswarm_server']['client.pub']))
-    with open(os.path.join(private_keys, 'client.key')) as key_file:
-        key_file.write((config['beeswarm_server']['client.pri']))
+    with open(os.path.join(public_keys, 'server.key'), 'w') as key_file:
+        key_file.writelines(config['beeswarm_server']['zmq_server_public'])
+    with open(os.path.join(public_keys, 'client.key'), 'w') as key_file:
+        key_file.writelines(config['beeswarm_server']['zmq_own_public'])
+    with open(os.path.join(private_keys, 'client.key'), 'w') as key_file:
+        key_file.writelines(config['beeswarm_server']['zmq_own_private'])

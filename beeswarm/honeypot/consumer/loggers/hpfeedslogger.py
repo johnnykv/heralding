@@ -25,8 +25,8 @@ logger = logging.getLogger(__name__)
 
 
 class HPFeedsLogger(LoggerBase):
-    def __init__(self, config):
-        super(HPFeedsLogger, self).__init__(config)
+    def __init__(self, config, work_dir):
+        super(HPFeedsLogger, self).__init__(config, work_dir)
         #hpfeeds lib has problems with unicodestring - hence we encode as latin1
         host = config['log_hpfeedslogger']['host'].encode('latin1')
         port = config['log_hpfeedslogger']['port']

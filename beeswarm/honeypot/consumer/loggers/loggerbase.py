@@ -15,8 +15,9 @@
 
 
 class LoggerBase(object):
-    def __init__(self, config):
+    def __init__(self, config, work_dir):
         self.config = config
+        self.work_dir = work_dir
 
     def log(self, session):
         raise Exception('Do no call base class!')

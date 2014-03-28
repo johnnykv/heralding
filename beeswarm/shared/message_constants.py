@@ -1,2 +1,3 @@
 OK = 'ok'
 FAIL = 'fail'
+

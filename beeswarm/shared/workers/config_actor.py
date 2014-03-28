@@ -78,9 +78,10 @@ class ConfigActor(object):
 
         if cmd == 'set':
             self._handle_command_set(data)
-        elif cmd == 'genkeys':
+        elif cmd == 'gen_zmq_keys':
             self._handle_command_genkeys(data)
         else:
+            print data
             self.config_commands.send(beeswarm.FAIL)
 
     def _handle_command_set(self, data):
@@ -96,8 +97,8 @@ class ConfigActor(object):
 
     def _handle_command_genkeys(self, name):
         private_key, publickey = self._generate_zmq_keys(name)
-        self.config_commands.send_json({'public_key': publickey,
-                                        'private_key': private_key})
+        self.config_commands.send(beeswarm.OK + ' ' + json.dumps({'public_key': publickey,
+                                                                  'private_key': private_key}))
 
     def _publish_config(self):
         self.config_publisher.send('{0} {1}'.format('full', json.dumps(self.config)))
@@ -111,9 +112,10 @@ class ConfigActor(object):
         public_keys = os.path.join(cert_path, 'public_keys')
         private_keys = os.path.join(cert_path, 'private_keys')
         for _path in [cert_path, public_keys, private_keys]:
-            os.mkdir(_path)
-        tmp_key_dir = tempfile.mkdtemp()
+            if not os.path.isdir(_path):
+                os.mkdir(_path)
 
+        tmp_key_dir = tempfile.mkdtemp()
         try:
             public_key, private_key = create_certificates(tmp_key_dir, key_name)
             # the final location for keys

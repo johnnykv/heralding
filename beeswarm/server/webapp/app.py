@@ -40,6 +40,7 @@ from forms import NewHoneypotConfigForm, NewClientConfigForm, LoginForm, Setting
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, Honeybee, Session, Honeypot, User, Authentication, Classification,\
                                            BaitUser, Transcript
+from beeswarm.shared.helpers import send_command
 
 
 def is_hidden_field_filter(field):
@@ -190,11 +191,12 @@ def create_honeypot():
     form = NewHoneypotConfigForm()
     honeypot_id = str(uuid.uuid4())
     if form.validate_on_submit():
-        with open(app.config['CERT_PATH']) as cert:
-            cert_str = cert.read()
+        server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
+        result = send_command('ipc://configCommands', 'gen_zmq_keys ' + honeypot_id)
+        zmq_public = result['public_key']
+        zmq_private = result['private_key']
+        # # TODO: initial config should also be pulled with ZMQ from server...
         server_https = 'https://{0}:{1}/'.format(config['network']['host'], config['network']['port'])
-        server_zmq = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
-        zmq_private, zmq_public = generate_zmq_keys(honeypot_id)
         db_session = database_setup.get_session()
         honeypot_users = db_session.query(BaitUser).all()
         users_dict = {}
@@ -222,12 +224,10 @@ def create_honeypot():
             },
             'beeswarm_server': {
                 'enabled': True,
-                'managment_url': server_https,
-                'zmq_url' : server_zmq,
-                'zmq_server_public': server_pub_key,
+                'zmq_url' : server_zmq_url,
+                'zmq_server_public': config['network']['zmq_server_public_key'],
                 'zmq_own_public': zmq_public,
                 'zmq_own_private': zmq_private,
-                'https_cert': server_https
             },
             'log_syslog': {
                 'enabled': False,
@@ -293,6 +293,7 @@ def create_honeypot():
         h = Honeypot(id=honeypot_id, configuration=config_json)
         db_session.add(h)
         db_session.commit()
+        # TODO: initial config should also be pulled with ZMQ from server...
         config_link = '{0}ws/honeypot/config/{1}'.format(server_https, honeypot_id)
         iso_link = '/iso/honeypot/{0}.iso'.format(honeypot_id)
         return render_template('finish-config.html', mode_name='Honeypot', user=current_user,
@@ -647,7 +648,7 @@ def update_config(options):
     context = zmq.Context()
     socket = context.socket(zmq.REQ)
     socket.connect('ipc://configCommands')
-    socket.send(json.dumps(options))
+    socket.send('set ' + json.dumps(options))
     reply = socket.recv()
     if reply != beeswarm.OK:
         logger.warning('Error while requesting config change to actor.')
