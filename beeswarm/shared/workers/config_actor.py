@@ -23,6 +23,7 @@ from gevent import Greenlet
 import zmq.green as zmq
 from zmq.auth.certs import create_certificates, load_certificate
 import beeswarm
+from beeswarm.shared.message_constants import *
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ class ConfigActor(Greenlet):
         self.work_dir = work_dir
 
         context = zmq.Context()
-        self.config_publisher = context.socket(zmq.XPUB)
+        self.config_publisher = context.socket(zmq.PUB)
         self.config_commands = context.socket(zmq.REP)
         self.enabled = True
 
@@ -58,16 +59,6 @@ class ConfigActor(Greenlet):
             socks = dict(poller.poll(500))
             if self.config_commands in socks and socks[self.config_commands] == zmq.POLLIN:
                 self._handle_commands()
-            if self.config_publisher in socks and socks[self.config_publisher] == zmq.POLLIN:
-                self._handle_subscriptions()
-
-    def _handle_subscriptions(self):
-        raw_msg = self.config_publisher.recv(zmq.NOBLOCK)
-        # publish config if we have a new subscriber
-        if raw_msg[0] == '\x01':
-            print raw_msg[1:]
-            logger.debug('Received subscribe command')
-            self._publish_config()
 
     def _handle_commands(self):
         msg = self.config_commands.recv()
@@ -81,6 +72,9 @@ class ConfigActor(Greenlet):
             self._handle_command_set(data)
         elif cmd == 'gen_zmq_keys':
             self._handle_command_genkeys(data)
+        elif cmd == PUBLISH_CONFIG:
+            self._publish_config()
+            self.config_commands.send(beeswarm.OK + ' {}')
         else:
             self.config_commands.send(beeswarm.FAIL)
 
@@ -88,7 +82,7 @@ class ConfigActor(Greenlet):
         new_config = json.loads(data)
         # all keys must in the original dict
         if all(key in self.config for key in new_config):
-            self.config_commands.send(beeswarm.OK)
+            self.config_commands.send(beeswarm.OK + ' {}')
             self.config.update(new_config)
             self._save_config_file()
             self._publish_config()

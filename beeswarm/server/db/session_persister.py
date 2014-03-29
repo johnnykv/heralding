@@ -23,6 +23,8 @@ import gevent
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, Honeybee, Session, Honeypot, Authentication, Classification, \
     Transcript
+from beeswarm.shared.helpers import send_command
+from beeswarm.shared.message_constants import *
 
 
 logger = logging.getLogger(__name__)
@@ -41,7 +43,9 @@ class PersistanceWorker(object):
         ctx = zmq.Context()
         subscriber_socket = ctx.socket(zmq.SUB)
         subscriber_socket.connect('ipc://configPublisher')
-        subscriber_socket.setsockopt(zmq.SUBSCRIBE, 'full')
+        subscriber_socket.setsockopt(zmq.SUBSCRIBE, '')
+        send_command('ipc://configCommands', PUBLISH_CONFIG)
+
         while True:
             poller = zmq.Poller()
             poller.register(subscriber_socket, zmq.POLLIN)
