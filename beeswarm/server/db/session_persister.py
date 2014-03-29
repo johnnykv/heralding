@@ -18,6 +18,7 @@ import logging
 from datetime import datetime
 
 import zmq.green as zmq
+import gevent
 
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, Honeybee, Session, Honeypot, Authentication, Classification, \
@@ -33,13 +34,33 @@ class PersistanceWorker(object):
         self.subscriber_socket = ctx.socket(zmq.SUB)
         self.subscriber_socket.connect('ipc://sessionPublisher')
         self.subscriber_socket.setsockopt(zmq.SUBSCRIBE, 'session')
+        self.first_cfg_received = gevent.event.Event()
+        self.config = None
+
+    def config_subscriber(self):
+        global config
+        ctx = zmq.Context()
+        subscriber_socket = ctx.socket(zmq.SUB)
+        subscriber_socket.connect('ipc://configPublisher')
+        subscriber_socket.setsockopt(zmq.SUBSCRIBE, 'full')
+        while True:
+            poller = zmq.Poller()
+            poller.register(subscriber_socket, zmq.POLLIN)
+            while True:
+                socks = dict(poller.poll())
+                if subscriber_socket in socks and socks[subscriber_socket] == zmq.POLLIN:
+                    topic, msg = subscriber_socket.recv().split(' ', 1)
+                    self.config = json.loads(msg)
+                    self.first_cfg_received.set()
+                    logger.debug('Config received')
 
     def start(self):
+        gevent.spawn(self.config_subscriber)
+        # we cannot proceede before we have received a initial configuration message
+        self.first_cfg_received.wait()
         while True:
             topic, session_json = self.subscriber_socket.recv().split(' ', 1)
             logger.debug('Received message from publisher')
-            print topic
-            print session_json
             self.persist_session(session_json, topic)
 
     def persist_session(self, session_json, session_type):
@@ -68,9 +89,8 @@ class PersistanceWorker(object):
                                    timestamp=datetime.strptime(auth['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'))
                 session.authentication.append(a)
         elif session_type == 'session_client':
-            # TODO: support his
-            # if not data['did_complete'] and config['ignore_failed_honeybees']:
-            #    return
+            if not data['did_complete'] and self.config['ignore_failed_honeybees']:
+                return
             session = Honeybee()
             client = db_session.query(Client).filter(Client.id == data['client_id']).one()
             session.did_connect = data['did_connect']
