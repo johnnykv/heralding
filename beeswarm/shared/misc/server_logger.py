@@ -31,9 +31,10 @@ from beeswarm.honeypot.consumer.loggers.loggerbase import LoggerBase
 logger = logging.getLogger(__name__)
 
 
-class Server(LoggerBase):
+class ServerLogger(LoggerBase):
     def __init__(self, config, work_dir):
-        super(Server, self).__init__(config, work_dir)
+        self.config = config
+        self.work_dir = work_dir
         context = zmq.Context()
         self.push_socket = context.socket(zmq.PUSH)
 

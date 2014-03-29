@@ -17,6 +17,7 @@ import logging
 
 import gevent
 from beeswarm.client.consumer.loggers import loggerbase
+from beeswarm.shared.misc.server_logger import ServerLogger
 
 logger = logging.getLogger(__name__)
 
@@ -64,4 +65,8 @@ class Consumer:
             if self.config['log_' + l.__name__.lower()]['enabled']:
                 logger = l(self.config)
                 loggers.append(logger)
+
+        # check if beeswarm server is enabled
+        if self.config['beeswarm_server']:
+            loggers.append(ServerLogger(self.config, self.work_dir))
         return loggers

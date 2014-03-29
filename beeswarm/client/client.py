@@ -32,6 +32,7 @@ from beeswarm.client.models.dispatcher import BeeDispatcher
 from beeswarm.shared.asciify import asciify
 from beeswarm.shared.helpers import drop_privileges
 from beeswarm.client.consumer import consumer
+from beeswarm.shared.helpers import extract_keys
 
 # Do not remove this import, it is used to autodetect the capabilities.
 import beeswarm.client.capabilities
@@ -54,6 +55,9 @@ class Client(object):
 
         with open('beeswarmcfg.json', 'r') as config_file:
             self.config = json.load(config_file, object_hook=asciify)
+
+        # write ZMQ keys to files - as expected by pyzmq
+        extract_keys(work_dir, config)
 
         BeeSession.client_id = self.config['general']['client_id']
         BeeSession.honeypot_id = self.config['general']['honeypot_id']

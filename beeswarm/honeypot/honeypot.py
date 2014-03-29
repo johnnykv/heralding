@@ -39,6 +39,7 @@ import requests
 from requests.exceptions import Timeout, ConnectionError
 from beeswarm.shared.asciify import asciify
 from beeswarm.shared.models.ui_handler import HoneypotUIHandler
+from beeswarm.shared.helpers import extract_keys
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +63,7 @@ class Honeypot(object):
             Honeypot.prepare_environment(work_dir)
             with open('beeswarmcfg.json', 'r') as config_file:
                 config = json.load(config_file, object_hook=asciify)
+        # write ZMQ keys to files - as expected by pyzmq
         extract_keys(work_dir, config)
         self.work_dir = work_dir
         self.config = config
@@ -234,22 +236,3 @@ class Honeypot(object):
             huser = BaitUser(username, password)
             users[username] = huser
         return users
-
-def extract_keys(work_dir, config):
-    #dump keys used for secure communication with beeswarm server
-    # safe to rm since we have everything we need in the config
-    cert_path = os.path.join(work_dir, 'certificates')
-    shutil.rmtree(cert_path, True)
-
-    public_keys = os.path.join(cert_path, 'public_keys')
-    private_keys = os.path.join(cert_path, 'private_keys')
-    for _path in [cert_path, public_keys, private_keys]:
-        if not os.path.isdir(_path):
-            os.mkdir(_path)
-
-    with open(os.path.join(public_keys, 'server.key'), 'w') as key_file:
-        key_file.writelines(config['beeswarm_server']['zmq_server_public'])
-    with open(os.path.join(public_keys, 'client.key'), 'w') as key_file:
-        key_file.writelines(config['beeswarm_server']['zmq_own_public'])
-    with open(os.path.join(private_keys, 'client.key'), 'w') as key_file:
-        key_file.writelines(config['beeswarm_server']['zmq_own_private'])

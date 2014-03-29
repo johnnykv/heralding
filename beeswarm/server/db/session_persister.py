@@ -38,7 +38,6 @@ class PersistanceWorker(object):
         self.config = None
 
     def config_subscriber(self):
-        global config
         ctx = zmq.Context()
         subscriber_socket = ctx.socket(zmq.SUB)
         subscriber_socket.connect('ipc://configPublisher')

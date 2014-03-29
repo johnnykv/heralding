@@ -64,8 +64,9 @@ class ConfigActor(Greenlet):
     def _handle_subscriptions(self):
         raw_msg = self.config_publisher.recv(zmq.NOBLOCK)
         # publish config if we have a new subscriber
-        if raw_msg[0] == "\x01":
-            logger.debug('SUBSCRIBE')
+        if raw_msg[0] == '\x01':
+            print raw_msg[1:]
+            logger.debug('Received subscribe command')
             self._publish_config()
 
     def _handle_commands(self):
@@ -81,7 +82,6 @@ class ConfigActor(Greenlet):
         elif cmd == 'gen_zmq_keys':
             self._handle_command_genkeys(data)
         else:
-            print data
             self.config_commands.send(beeswarm.FAIL)
 
     def _handle_command_set(self, data):
@@ -101,6 +101,7 @@ class ConfigActor(Greenlet):
                                                                   'private_key': private_key}))
 
     def _publish_config(self):
+        logger.debug('Sending config to subscribers.')
         self.config_publisher.send('{0} {1}'.format('full', json.dumps(self.config)))
 
     def _save_config_file(self):

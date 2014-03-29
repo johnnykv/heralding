@@ -195,8 +195,6 @@ def create_honeypot():
         result = send_command('ipc://configCommands', 'gen_zmq_keys ' + honeypot_id)
         zmq_public = result['public_key']
         zmq_private = result['private_key']
-        # # TODO: initial config should also be pulled with ZMQ from server...
-        server_https = 'https://{0}:{1}/'.format(config['network']['host'], config['network']['port'])
         db_session = database_setup.get_session()
         honeypot_users = db_session.query(BaitUser).all()
         users_dict = {}
@@ -324,7 +322,11 @@ def create_client():
     if form.validate_on_submit():
         with open(app.config['CERT_PATH']) as cert:
             cert_str = cert.read()
-        server_url = 'https://{0}:{1}/'.format(config['network']['host'], config['network']['port'])
+        print config
+        server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
+        result = send_command('ipc://configCommands', 'gen_zmq_keys ' + client_id)
+        zmq_public = result['public_key']
+        zmq_private = result['private_key']
         client_password = str(uuid.uuid4())
         client_config = {
             'general': {
@@ -448,9 +450,10 @@ def create_client():
             },
             'beeswarm_server': {
                 'enabled': True,
-                'managment_url': server_url,
-                'server_pass': client_password,
-                'https_cert': cert_str
+                'zmq_url' : server_zmq_url,
+                'zmq_server_public': config['network']['zmq_server_public_key'],
+                'zmq_own_public': zmq_public,
+                'zmq_own_private': zmq_private,
             },
         }
         config_json = json.dumps(client_config, indent=4)

@@ -18,7 +18,7 @@ import logging
 import gevent
 from beeswarm.honeypot.consumer.loggers import loggerbase
 from beeswarm.honeypot.consumer.loggers.hpfeedslogger import HPFeedsLogger
-from beeswarm.honeypot.consumer.loggers.server import Server
+from beeswarm.shared.misc.server_logger import ServerLogger
 
 logger = logging.getLogger(__name__)
 
@@ -43,8 +43,7 @@ class Consumer:
 
     def start(self):
         self.enabled = True
-        active_loggers = self.start_loggers(self.get_enabled_loggers())
-        print active_loggers
+        active_loggers = self.start_loggers(self.get_generic_loggers())
         while self.enabled:
             self.status['active_sessions'] = len(self.sessions)
 
@@ -85,25 +84,21 @@ class Consumer:
             if callable(stop_method):
                 stop_method()
 
-    def get_enabled_loggers(self):
+    def get_generic_loggers(self):
         """
-        Extracts names of enabled loggers from configuration file.
+        Extracts names of enabled generic loggers from configuration file.
+        (this does not apply to the native beeswarm server loggeR)
 
         :return: a list of enabled loggers (strings)
         """
-        #parser = ConfigParser()
-        #parser.read(self.config)
+
         enabled_loggers = []
-        # find generic loggers
         for k, v in self.config.items():
             if '_' in k:
                 config_type, name = k.split('_')
                 #only interested in logging configurations
                 if config_type == 'log' and v['enabled']:
                     enabled_loggers.append(name)
-        #check if beeswarm server is enabled
-        if self.config['beeswarm_server']:
-            enabled_loggers.append('server')
         return enabled_loggers
 
     def start_loggers(self, enabled_logger_classes):
@@ -114,6 +109,11 @@ class Consumer:
         :return: a list of instantiated loggers
         """
         loggers = []
+        # check if beeswarm server is enabled
+        if self.config['beeswarm_server']:
+            loggers.append(ServerLogger(self.config, self.work_dir))
+
+        # enable generic loggers
         for l in loggerbase.LoggerBase.__subclasses__():
             logger_name = l.__name__.lower()
             if logger_name in enabled_logger_classes:

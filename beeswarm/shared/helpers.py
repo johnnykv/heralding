@@ -24,6 +24,7 @@ import logging
 import socket
 import json
 import fcntl
+import shutil
 import zmq.green as zmq
 
 import beeswarm
@@ -188,3 +189,22 @@ def send_command(actor_url, request):
     else:
         socket.close()
         return json.loads(result.split(' ', 1)[1])
+
+def extract_keys(work_dir, config):
+    #dump keys used for secure communication with beeswarm server
+    # safe to rm since we have everything we need in the config
+    cert_path = os.path.join(work_dir, 'certificates')
+    shutil.rmtree(cert_path, True)
+
+    public_keys = os.path.join(cert_path, 'public_keys')
+    private_keys = os.path.join(cert_path, 'private_keys')
+    for _path in [cert_path, public_keys, private_keys]:
+        if not os.path.isdir(_path):
+            os.mkdir(_path)
+
+    with open(os.path.join(public_keys, 'server.key'), 'w') as key_file:
+        key_file.writelines(config['beeswarm_server']['zmq_server_public'])
+    with open(os.path.join(public_keys, 'client.key'), 'w') as key_file:
+        key_file.writelines(config['beeswarm_server']['zmq_own_public'])
+    with open(os.path.join(private_keys, 'client.key'), 'w') as key_file:
+        key_file.writelines(config['beeswarm_server']['zmq_own_private'])
