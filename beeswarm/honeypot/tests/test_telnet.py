@@ -57,7 +57,7 @@ class Telnet_Tests(unittest.TestCase):
         Session.authenticator = authenticator
 
         options = {'enabled': 'True', 'port': 2503, 'max_attempts': 3}
-        cap = telnet.telnet(sessions, options, users, self.work_dir)
+        cap = telnet.Telnet(sessions, options, users, self.work_dir)
         server = StreamServer(('0.0.0.0', 2503), cap.handle_session)
         server.start()
 
@@ -97,7 +97,7 @@ class Telnet_Tests(unittest.TestCase):
         Session.authenticator = authenticator
 
         options = {'enabled': 'True', 'port': 0, 'max_attempts': 3}
-        cap = telnet.telnet(sessions, options, users, self.work_dir)
+        cap = telnet.Telnet(sessions, options, users, self.work_dir)
         server = StreamServer(('0.0.0.0', 0), cap.handle_session)
         server.start()
 
@@ -137,7 +137,7 @@ class Telnet_Tests(unittest.TestCase):
         Session.authenticator = authenticator
 
         options = {'enabled': 'True', 'port': 0, 'max_attempts': 3}
-        cap = telnet.telnet(sessions, options, users, self.work_dir)
+        cap = telnet.Telnet(sessions, options, users, self.work_dir)
         server = StreamServer(('0.0.0.0', 0), cap.handle_session)
         server.start()
 

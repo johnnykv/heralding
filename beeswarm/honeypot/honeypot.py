@@ -142,7 +142,7 @@ class Honeypot(object):
         #protocol handlers
         for c in handlerbase.HandlerBase.__subclasses__():
 
-            cap_name = c.__name__
+            cap_name = c.__name__.lower()
 
             if cap_name not in self.config['capabilities']:
                 logger.warning(
