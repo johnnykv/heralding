@@ -322,7 +322,6 @@ def create_client():
     if form.validate_on_submit():
         with open(app.config['CERT_PATH']) as cert:
             cert_str = cert.read()
-        print config
         server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
         result = send_command('ipc://configCommands', 'gen_zmq_keys ' + client_id)
         zmq_public = result['public_key']

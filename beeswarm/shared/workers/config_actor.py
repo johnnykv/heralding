@@ -65,7 +65,6 @@ class ConfigActor(Greenlet):
         raw_msg = self.config_publisher.recv(zmq.NOBLOCK)
         # publish config if we have a new subscriber
         if raw_msg[0] == '\x01':
-            print raw_msg[1:]
             logger.debug('Received subscribe command')
             self._publish_config()
 

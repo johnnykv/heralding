@@ -61,8 +61,7 @@ class ServerLogger(LoggerBase):
 
     def log(self, session):
         data = json.dumps(session.to_dict(), default=json_default)
-        er = self.push_socket.send('{0} {1}'.format('session_honeypot', data))
-        print 'ERROR: {0}'.format(er)
+        self.push_socket.send('{0} {1}'.format('session_honeypot', data))
 
     def monitor_worker(self):
         poller = zmq.Poller()
