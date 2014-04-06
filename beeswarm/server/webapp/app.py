@@ -41,6 +41,7 @@ from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, Honeybee, Session, Honeypot, User, Authentication, Classification,\
                                            BaitUser, Transcript
 from beeswarm.shared.helpers import send_command
+from beeswarm.shared.message_constants import *
 
 
 def is_hidden_field_filter(field):
@@ -76,6 +77,7 @@ def config_subscriber():
     subscriber_socket = ctx.socket(zmq.SUB)
     subscriber_socket.connect('ipc://configPublisher')
     subscriber_socket.setsockopt(zmq.SUBSCRIBE, 'full')
+    send_command('ipc://configCommands', PUBLISH_CONFIG)
     while True:
         poller = zmq.Poller()
         poller.register(subscriber_socket, zmq.POLLIN)
@@ -292,6 +294,7 @@ def create_honeypot():
         db_session.add(h)
         db_session.commit()
         # TODO: initial config should also be pulled with ZMQ from server...
+        server_https = 'https://{0}:{1}/'.format(config['network']['host'], config['network']['port'])
         config_link = '{0}ws/honeypot/config/{1}'.format(server_https, honeypot_id)
         iso_link = '/iso/honeypot/{0}.iso'.format(honeypot_id)
         return render_template('finish-config.html', mode_name='Honeypot', user=current_user,
@@ -462,7 +465,8 @@ def create_client():
         db_session.add(f)
         db_session.commit()
         authenticator.add_user(client_id, client_password, 2)
-        config_link = '{0}ws/client/config/{1}'.format(server_url, client_id)
+        server_https = 'https://{0}:{1}/'.format(config['network']['host'], config['network']['port'])
+        config_link = '{0}ws/client/config/{1}'.format(server_https, client_id)
         iso_link = '/iso/client/{0}.iso'.format(client_id)
         return render_template('finish-config.html', mode_name='Client', user=current_user,
                                config_link=config_link, iso_link=iso_link)

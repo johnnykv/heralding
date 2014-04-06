@@ -23,22 +23,22 @@ from beeswarm.honeypot.capabilities.shared.shell import Commands
 logger = logging.getLogger(__name__)
 
 
-class telnet(HandlerBase):
+class Telnet(HandlerBase):
     def __init__(self, sessions, options, users, work_dir):
-        super(telnet, self).__init__(sessions, options, users, work_dir)
+        super(Telnet, self).__init__(sessions, options, users, work_dir)
 
     def handle_session(self, gsocket, address):
-        telnet_wrapper.max_tries = int(self.options['max_attempts'])
+        TelnetWrapper.max_tries = int(self.options['max_attempts'])
         session = self.create_session(address, gsocket)
         try:
-            telnet_wrapper(address, None, gsocket, session, self.vfsystem)
+            TelnetWrapper(address, None, gsocket, session, self.vfsystem)
         except socket.error as err:
             logger.debug('Unexpected end of telnet session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
 
         session.connected = False
 
 
-class telnet_wrapper(Commands):
+class TelnetWrapper(Commands):
     """
     Wraps the telnetsrv module to fit the Honeypot architecture.
     """
@@ -48,7 +48,7 @@ class telnet_wrapper(Commands):
         self.session = session
         self.auth_count = 0
         self.username = None
-        request = telnet_wrapper.false_request()
+        request = TelnetWrapper.false_request()
         request._sock = socket
         self.vfs = vfs
         Commands.__init__(self, request, client_address, server, vfs, self.session)
@@ -66,7 +66,7 @@ class telnet_wrapper(Commands):
     def authentication_ok(self):
         username = None
         password = None
-        while self.auth_count < telnet_wrapper.max_tries:
+        while self.auth_count < TelnetWrapper.max_tries:
             if self.authNeedUser:
                 username = self.readline(prompt="Username: ", use_history=False)
             if self.authNeedPass:

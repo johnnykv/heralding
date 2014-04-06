@@ -26,16 +26,16 @@ from beeswarm.honeypot.capabilities.shared.shell import Commands
 logger = logging.getLogger(__name__)
 
 
-class ssh(HandlerBase):
+class SSH(HandlerBase):
     def __init__(self, sessions, options, users, work_dir):
         logging.getLogger("telnetsrv.paramiko_ssh ").setLevel(logging.WARNING)
         logging.getLogger("paramiko").setLevel(logging.WARNING)
-        super(ssh, self).__init__(sessions, options, users, work_dir)
+        super(SSH, self).__init__(sessions, options, users, work_dir)
 
     def handle_session(self, gsocket, address):
         session = self.create_session(address, gsocket)
         try:
-            ssh_wrapper(address, None, gsocket, session, self.options, self.vfsystem)
+            SshWrapper(address, None, gsocket, session, self.options, self.vfsystem)
         except (SSHException, EOFError) as ex:
             logger.debug('Unexpected end of ssh session: {0}. ({1})'.format(ex, session.id))
 
@@ -48,7 +48,7 @@ class BeeTelnetHandler(Commands):
         Commands.__init__(self, request, client_address, server, vfs, session)
 
 
-class ssh_wrapper(SSHHandler):
+class SshWrapper(SSHHandler):
     """
     Wraps the telnetsrv paramiko module to fit the Honeypot architecture.
     """
@@ -66,8 +66,8 @@ class ssh_wrapper(SSHHandler):
         self.username = None
 
         server_key = options['key']
-        ssh_wrapper.host_key = RSAKey(filename=server_key)
-        request = ssh_wrapper.dummy_request()
+        SshWrapper.host_key = RSAKey(filename=server_key)
+        request = SshWrapper.dummy_request()
         request._sock = socket
 
         SSHHandler.__init__(self, request, client_address, server)

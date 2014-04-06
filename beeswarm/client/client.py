@@ -102,7 +102,7 @@ class Client(object):
 
         honeybees = []
         for b in clientbase.ClientBase.__subclasses__():
-            bee_name = b.__name__
+            bee_name = b.__name__.lower()
 
             if bee_name not in self.config['honeybees']:
                 logger.warning(

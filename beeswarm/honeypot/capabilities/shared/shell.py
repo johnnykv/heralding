@@ -27,6 +27,7 @@ from datetime import timedelta
 
 logger = logging.getLogger(__name__)
 
+
 class Commands(TelnetHandler):
     """This class implements the shell functionality for the telnet and SSH capabilities"""
 
@@ -117,7 +118,6 @@ class Commands(TelnetHandler):
             # Attacker tried to leave the Virtual File system. We wont let him.
             self.working_dir = '/'
             self.PROMPT = '[{0}@{1} {2}]$ '.format(self.username, self.HOSTNAME, self.working_dir)
-            pass
         self.update_total_file_size(self.working_dir)
 
     @command('pwd')
@@ -177,9 +177,9 @@ class Commands(TelnetHandler):
         for filename in params:
             filepath = os.path.join(self.working_dir, filename)
             try:
-                with self.vfs.open(filepath) as f:
+                with self.vfs.open(filepath) as _file:
                     while True:
-                        chunk = f.read(65536)
+                        chunk = _file.read(65536)
                         if not chunk:
                             break
                         self.write(chunk)
@@ -205,7 +205,7 @@ class Commands(TelnetHandler):
 
     def update_total_file_size(self, path):
         size = 0
-        for dirname, info in self.vfs.ilistdirinfo(path):
+        for _, info in self.vfs.ilistdirinfo(path):
             size += info['st_blocks']
         self.total_file_size = size
 
