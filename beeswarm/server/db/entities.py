@@ -1,14 +1,21 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Table
 from sqlalchemy.orm import relationship
 
 Base = declarative_base()
+
+# table for honeypot <-> client many to many relationship
+honeypot_client_mtm = Table('association', Base.metadata,
+                            Column('client', String, ForeignKey('client.id')),
+                            Column('honeypot', String, ForeignKey('honeypot.id')))
 
 
 class Client(Base):
     __tablename__ = 'client'
     id = Column(String, primary_key=True)
     honeybees = relationship("Honeybee", cascade="all, delete-orphan", backref='client')
+    # honeypots that this client will connect to.
+    honeypots = relationship("Honeypot", secondary=honeypot_client_mtm)
     configuration = Column(String)
 
 
@@ -17,6 +24,7 @@ class Honeypot(Base):
     id = Column(String, primary_key=True)
     sessions = relationship("Session", cascade="all, delete-orphan", backref='honeypot')
     configuration = Column(String)
+    clients = relationship("Client", secondary=honeypot_client_mtm)
 
 
 class Classification(Base):
