@@ -39,7 +39,7 @@ import beeswarm
 from forms import NewHoneypotConfigForm, NewClientConfigForm, LoginForm, SettingsForm
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, Honeybee, Session, Honeypot, User, Authentication, Classification,\
-                                           BaitUser, Transcript
+                                           BaitUser, Transcript, Drone
 from beeswarm.shared.helpers import send_command
 from beeswarm.shared.message_constants import *
 
@@ -557,6 +557,27 @@ def data_clients():
         rows.append(row)
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp
+
+@app.route('/data/drones', methods=['GET'])
+@login_required
+def data_drones():
+    db_session = database_setup.get_session()
+    drones = db_session.query(Drone).all()
+    rows = []
+    for d in drones:
+        if d.last_activity == datetime.min:
+            timestamp = 'Never'
+        else:
+            timestamp = d.last_activity.strftime('%Y-%m-%d %H:%M:%S')
+        row = {'id': d.id, 'name': d.name, 'type': d.discriminator.capitalize(), 'last_activity': timestamp}
+        rows.append(row)
+    rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
+    return rsp
+
+@app.route('/ws/drones')
+@login_required
+def drones():
+    return render_template('drones.html', user=current_user)
 
 
 @app.route('/login', methods=['GET', 'POST'])
