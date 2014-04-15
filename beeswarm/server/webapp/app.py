@@ -558,11 +558,16 @@ def data_clients():
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp
 
-@app.route('/data/drones', methods=['GET'])
+@app.route('/data/drones', defaults={'dronetype': None}, methods=['GET'])
+@app.route('/data/drones/<dronetype>', methods=['GET'])
 @login_required
-def data_drones():
+def data_drones(dronetype):
     db_session = database_setup.get_session()
-    drones = db_session.query(Drone).all()
+    if dronetype is None:
+        drones = db_session.query(Drone).all()
+    else:
+        drones = db_session.query(Drone).filter(Drone.discriminator == dronetype)
+
     rows = []
     for d in drones:
         if d.last_activity == datetime.min:
@@ -574,10 +579,11 @@ def data_drones():
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp
 
-@app.route('/ws/drones')
+@app.route('/ws/drones', defaults={'dronetype': None})
+@app.route('/ws/drones/<dronetype>')
 @login_required
-def drones():
-    return render_template('drones.html', user=current_user)
+def drones(dronetype):
+    return render_template('drones.html', user=current_user, dronetype=dronetype)
 
 
 @app.route('/login', methods=['GET', 'POST'])

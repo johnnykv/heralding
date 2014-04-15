@@ -1,10 +1,8 @@
 {% extends "base.html" %}
-{% if logtype == 'All' %}
-{% set dataurl = '/data/sessions/all' %}
-{% elif logtype == 'HoneyBees' %}
-{% set dataurl = '/data/sessions/honeybees' %}
-{% elif logtype == 'Attacks' %}
-{% set dataurl = '/data/sessions/attacks' %}
+{% if dronetype == None %}
+{% set dataurl = '/data/drones' %}
+{% else %}
+{% set dataurl = '/data/drones/' + dronetype %}
 {% endif %}
 
 {% block content %}
@@ -70,7 +68,7 @@
                     sortable: true
                 },
             ],
-            url: '/data/drones',
+            url: '{{ dataurl }}',
             formatter: function (items) {
                 $.each(items, function (index, item) {
                     item.time = item.time + '<span style="visibility: hidden;" data-id="' + item.id + '"/>';
