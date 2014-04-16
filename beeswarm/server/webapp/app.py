@@ -337,7 +337,54 @@ def drone_key(key):
     else:
         # TODO: *  Add drone to db with no specialization
         #       *  Send config including ZeroMQ keys to the drone
-        return ''
+        drone_id = str(uuid.uuid4())
+        server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
+        result = send_command('ipc://configCommands', 'gen_zmq_keys ' + drone_id)
+        zmq_public = result['public_key']
+        zmq_private = result['private_key']
+        db_session = database_setup.get_session()
+        # this could be done even simpler by only using the http api to provide the ZMQ keys
+        # everything else could be done using zmq
+        drone_config = {
+            'general': {
+                'mode': '',
+                'id': drone_id,
+                'fetch_ip': False
+            },
+            'log_hpfeedslogger': {
+                'enabled': False,
+                'host': 'hpfriends.honeycloud.net',
+                'port': 20000,
+                'ident': '2wtadBoH',
+                'secret': 'mJPyhNhJmLYGbDCt',
+                'chan': 'beeswarm.honeypot',
+                'port_mapping': '{}'
+            },
+            'beeswarm_server': {
+                'enabled': True,
+                'zmq_url' : server_zmq_url,
+                'zmq_server_public': config['network']['zmq_server_public_key'],
+                'zmq_own_public': zmq_public,
+                'zmq_own_private': zmq_private,
+            },
+            'log_syslog': {
+                'enabled': False,
+                'socket': '/dev/log'
+            },
+            'timecheck': {
+                'enabled': True,
+                'poll': 5,
+                'ntp_pool': 'pool.ntp.org'
+            },
+        }
+
+        config_json = json.dumps(drone_config, indent=4)
+        drone = Drone(id=drone_id, configuration=config_json)
+        db_session.add(drone)
+        db_session.commit()
+        logger.debug('Generated drone config for {0} on request from {1}'.format(drone_id, request.remote_addr))
+        return config_json
+
 
 @app.route('/ws/honeypot/delete', methods=['POST'])
 @login_required
