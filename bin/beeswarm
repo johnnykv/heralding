@@ -122,6 +122,8 @@ if __name__ == '__main__':
     config_file = None
 
     if is_url(args.configurl):
+        # meh, MiTM problem here... Acceptable? Workaround?
+        # maybe print fingerprint on the web ui and let user verify manually?
         conf = requests.get(args.configurl, verify=False)
         config = json.loads(conf.text, object_hook=asciify)
         with open('beeswarmcfg.json', 'w') as local_config:

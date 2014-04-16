@@ -335,8 +335,6 @@ def drone_key(key):
         logger.warn('Attempt to add new drone, but using wrong key from: {0}'.format(request.remote_addr))
         abort(401)
     else:
-        # TODO: *  Add drone to db with no specialization
-        #       *  Send config including ZeroMQ keys to the drone
         drone_id = str(uuid.uuid4())
         server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
         result = send_command('ipc://configCommands', 'gen_zmq_keys ' + drone_id)
@@ -351,31 +349,13 @@ def drone_key(key):
                 'id': drone_id,
                 'fetch_ip': False
             },
-            'log_hpfeedslogger': {
-                'enabled': False,
-                'host': 'hpfriends.honeycloud.net',
-                'port': 20000,
-                'ident': '2wtadBoH',
-                'secret': 'mJPyhNhJmLYGbDCt',
-                'chan': 'beeswarm.honeypot',
-                'port_mapping': '{}'
-            },
             'beeswarm_server': {
                 'enabled': True,
                 'zmq_url' : server_zmq_url,
                 'zmq_server_public': config['network']['zmq_server_public_key'],
                 'zmq_own_public': zmq_public,
                 'zmq_own_private': zmq_private,
-            },
-            'log_syslog': {
-                'enabled': False,
-                'socket': '/dev/log'
-            },
-            'timecheck': {
-                'enabled': True,
-                'poll': 5,
-                'ntp_pool': 'pool.ntp.org'
-            },
+            }
         }
 
         config_json = json.dumps(drone_config, indent=4)
@@ -657,7 +637,11 @@ def data_drones(dronetype):
             timestamp = 'Never'
         else:
             timestamp = d.last_activity.strftime('%Y-%m-%d %H:%M:%S')
-        row = {'id': d.id, 'name': d.name, 'type': d.discriminator.capitalize(), 'last_activity': timestamp}
+        if d.discriminator is None:
+            _type = ''
+        else:
+            _type = d.discriminator.capitalize()
+        row = {'id': d.id, 'name': d.name, 'type': _type, 'last_activity': timestamp}
         rows.append(row)
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp
