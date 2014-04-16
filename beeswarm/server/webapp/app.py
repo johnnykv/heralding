@@ -39,7 +39,7 @@ import beeswarm
 from forms import NewHoneypotConfigForm, NewClientConfigForm, LoginForm, SettingsForm
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, Honeybee, Session, Honeypot, User, Authentication, Classification,\
-                                           BaitUser, Transcript, Drone
+                                           BaitUser, Transcript
 from beeswarm.shared.helpers import send_command
 from beeswarm.shared.message_constants import *
 
@@ -557,33 +557,6 @@ def data_clients():
         rows.append(row)
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp
-
-@app.route('/data/drones', defaults={'dronetype': None}, methods=['GET'])
-@app.route('/data/drones/<dronetype>', methods=['GET'])
-@login_required
-def data_drones(dronetype):
-    db_session = database_setup.get_session()
-    if dronetype is None:
-        drones = db_session.query(Drone).all()
-    else:
-        drones = db_session.query(Drone).filter(Drone.discriminator == dronetype)
-
-    rows = []
-    for d in drones:
-        if d.last_activity == datetime.min:
-            timestamp = 'Never'
-        else:
-            timestamp = d.last_activity.strftime('%Y-%m-%d %H:%M:%S')
-        row = {'id': d.id, 'name': d.name, 'type': d.discriminator.capitalize(), 'last_activity': timestamp}
-        rows.append(row)
-    rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
-    return rsp
-
-@app.route('/ws/drones', defaults={'dronetype': None})
-@app.route('/ws/drones/<dronetype>')
-@login_required
-def drones(dronetype):
-    return render_template('drones.html', user=current_user, dronetype=dronetype)
 
 
 @app.route('/login', methods=['GET', 'POST'])

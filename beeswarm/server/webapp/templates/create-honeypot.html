@@ -2,181 +2,156 @@
 {% import "macros.html" as macros %}
 
 {% block javascript %}
-{{ super() }}
-<script type="text/javascript">
-    $(function () {
-        $('#formtabs a:first').tab('show');
-    });
-
-    $(document).on('click', '#btnWizardPrev', function () {
-        $('#HoneypotWizard').wizard('previous');
-    });
-
-    $(document).on('click', '#btnWizardNext', function () {
-        console.log('cry baby');
-        $('#HoneypotWizard').wizard('next', 'foo');
-    });
-</script>
-
-
+    {{ super() }}
+    <script type="text/javascript">
+        $(function () {
+            $('#formtabs a:first').tab('show');
+        });
+    </script>
 {% endblock %}
 
 {% block content %}
+    <div>
+        <h3>New Honeypot Config</h3>
+        <p>
+            You can use the tabs below to customize your new honeypot configuration. When you're done,
+            click on the generate button.
+        </p>
+    </div>
 
-<div>
-    <div id="HoneypotWizard" class="wizard">
-        <ul class="steps">
-            <li data-target="#step1" class="active"><span class="badge badge-info">1</span>Protocols<span
-                    class="chevron"></span></li>
-            <li data-target="#step2"><span class="badge">2</span>Clients<span class="chevron"></span></li>
-            <li data-target="#step3"><span class="badge">3</span>Generate<span class="chevron"></span></li>
-        </ul>
-        <div class="actions">
-            <button class="btn btn-mini btn-prev"><i class="icon-arrow-left"></i>Prev</button>
-            <button class="btn btn-mini btn-next" data-last="Finish">Next<i class="icon-arrow-right"></i></button>
+    <form action="" method="post" class="form form-horizontal">
+        {{ form.hidden_tag() }}
+        {{ macros.form_errors(form, 'only') }}
+        <div class="tabbable tabs-left">
+            <ul class="nav nav-tabs" id="formtabs">
+                <li><a href="#general" data-toggle="tab">General</a></li>
+                <li><a href="#http" data-toggle="tab">HTTP</a></li>
+                <li><a href="#https" data-toggle="tab">HTTPs</a></li>
+                <li><a href="#ftp" data-toggle="tab">FTP</a></li>
+                <li><a href="#smtp" data-toggle="tab">SMTP</a></li>
+                <li><a href="#vnc" data-toggle="tab">VNC</a></li>
+                <li><a href="#telnet" data-toggle="tab">Telnet</a></li>
+                <li><a href="#pop3" data-toggle="tab">POP3</a></li>
+                <li><a href="#pop3s" data-toggle="tab">POP3s</a></li>
+                <li><a href="#ssh" data-toggle="tab">SSH</a></li>
+            </ul>
+
+            <div class="tab-content">
+
+                <div id="general" class="tab-pane">
+                    <fieldset>
+                        <legend>General Options</legend>
+                        {% for field in [form.general_standalone] %}
+                            {% if not field|bootstrap_is_hidden_field %}
+                                {{ macros.horizontal_field(field) }}
+                            {%- endif %}
+                        {% endfor %}
+                    </fieldset>
+                </div>
+
+                <div id="http" class="tab-pane">
+                    <fieldset>
+                        <legend>HTTP Options</legend>
+                        {% for field in [form.http_enabled, form.http_port, form.http_banner] %}
+                            {% if not field|bootstrap_is_hidden_field %}
+                                {{ macros.horizontal_field(field) }}
+                            {%- endif %}
+                        {% endfor %}
+                    </fieldset>
+                </div>
+
+                <div id="https" class="tab-pane">
+                    <fieldset>
+                        <legend>HTTPs Options</legend>
+                        {% for field in [form.https_enabled, form.https_port, form.https_banner] %}
+                            {% if not field|bootstrap_is_hidden_field %}
+                                {{ macros.horizontal_field(field) }}
+                            {%- endif %}
+                        {% endfor %}
+                    </fieldset>
+                </div>
+
+                <div id="ftp" class="tab-pane">
+                    <fieldset>
+                        <legend>FTP Options</legend>
+                        {% for field in [form.ftp_enabled, form.ftp_banner, form.ftp_port, form.ftp_max_attempts, form.ftp_syst_type] %}
+                            {% if not field|bootstrap_is_hidden_field %}
+                                {{ macros.horizontal_field(field) }}
+                            {%- endif %}
+                        {% endfor %}
+                    </fieldset>
+                </div>
+
+                <div id="smtp" class="tab-pane">
+                    <fieldset>
+                        <legend>SMTP Options</legend>
+                        {% for field in [form.smtp_enabled, form.smtp_banner, form.smtp_port] %}
+                            {% if not field|bootstrap_is_hidden_field %}
+                                {{ macros.horizontal_field(field) }}
+                            {%- endif %}
+                        {% endfor %}
+                    </fieldset>
+                </div>
+
+                <div id="vnc" class="tab-pane">
+                    <fieldset>
+                        <legend>VNC Options</legend>
+                        {% for field in [form.vnc_enabled, form.vnc_port] %}
+                            {% if not field|bootstrap_is_hidden_field %}
+                                {{ macros.horizontal_field(field) }}
+                            {%- endif %}
+                        {% endfor %}
+                    </fieldset>
+                </div>
+
+                <div id="telnet" class="tab-pane">
+                    <fieldset>
+                        <legend>Telnet Options</legend>
+                        {% for field in [form.telnet_enabled, form.telnet_max_attempts, form.telnet_port] %}
+                            {% if not field|bootstrap_is_hidden_field %}
+                                {{ macros.horizontal_field(field) }}
+                            {%- endif %}
+                        {% endfor %}
+                    </fieldset>
+                </div>
+
+                <div id="pop3" class="tab-pane">
+                    <fieldset>
+                        <legend>POP3 Options</legend>
+                        {% for field in [form.pop3_enabled, form.pop3_max_attempts, form.pop3_port] %}
+                            {% if not field|bootstrap_is_hidden_field %}
+                                {{ macros.horizontal_field(field) }}
+                            {%- endif %}
+                        {% endfor %}
+                    </fieldset>
+                </div>
+
+                <div id="pop3s" class="tab-pane">
+                    <fieldset>
+                        <legend>POP3s Options</legend>
+                        {% for field in [form.pop3s_enabled, form.pop3s_max_attempts, form.pop3s_port] %}
+                            {% if not field|bootstrap_is_hidden_field %}
+                                {{ macros.horizontal_field(field) }}
+                            {%- endif %}
+                        {% endfor %}
+                    </fieldset>
+                </div>
+
+                <div id="ssh" class="tab-pane">
+                    <fieldset>
+                        <legend>SSH Options</legend>
+                        {% for field in [form.ssh_enabled, form.ssh_port, form.ssh_key] %}
+                            {% if not field|bootstrap_is_hidden_field %}
+                                {{ macros.horizontal_field(field) }}
+                            {%- endif %}
+                        {% endfor %}
+                    </fieldset>
+                </div>
+            </div>
         </div>
-    </div>
-    <div class="step-content">
-        <form action="" method="post" class="form form-horizontal">
-            <div class="step-pane active" id="step1">
-
-                {{ form.hidden_tag() }}
-                {{ macros.form_errors(form, 'only') }}
-                <div class="tabbable tabs-left">
-                    <ul class="nav nav-tabs" id="formtabs">
-                        <li><a href="#http" data-toggle="tab">HTTP</a></li>
-                        <li><a href="#https" data-toggle="tab">HTTPs</a></li>
-                        <li><a href="#ftp" data-toggle="tab">FTP</a></li>
-                        <li><a href="#smtp" data-toggle="tab">SMTP</a></li>
-                        <li><a href="#vnc" data-toggle="tab">VNC</a></li>
-                        <li><a href="#telnet" data-toggle="tab">Telnet</a></li>
-                        <li><a href="#pop3" data-toggle="tab">POP3</a></li>
-                        <li><a href="#pop3s" data-toggle="tab">POP3s</a></li>
-                        <li><a href="#ssh" data-toggle="tab">SSH</a></li>
-                    </ul>
-
-                    <div class="tab-content">
-
-                        <div id="http" class="tab-pane">
-                            <fieldset>
-                                <legend>HTTP Options</legend>
-                                {% for field in [form.http_enabled, form.http_port, form.http_banner] %}
-                                {% if not field|bootstrap_is_hidden_field %}
-                                {{ macros.horizontal_field(field) }}
-                                {%- endif %}
-                                {% endfor %}
-                            </fieldset>
-                        </div>
-
-                        <div id="https" class="tab-pane">
-                            <fieldset>
-                                <legend>HTTPs Options</legend>
-                                {% for field in [form.https_enabled, form.https_port, form.https_banner] %}
-                                {% if not field|bootstrap_is_hidden_field %}
-                                {{ macros.horizontal_field(field) }}
-                                {%- endif %}
-                                {% endfor %}
-                            </fieldset>
-                        </div>
-
-                        <div id="ftp" class="tab-pane">
-                            <fieldset>
-                                <legend>FTP Options</legend>
-                                {% for field in [form.ftp_enabled, form.ftp_banner, form.ftp_port,
-                                form.ftp_max_attempts, form.ftp_syst_type] %}
-                                {% if not field|bootstrap_is_hidden_field %}
-                                {{ macros.horizontal_field(field) }}
-                                {%- endif %}
-                                {% endfor %}
-                            </fieldset>
-                        </div>
-
-                        <div id="smtp" class="tab-pane">
-                            <fieldset>
-                                <legend>SMTP Options</legend>
-                                {% for field in [form.smtp_enabled, form.smtp_banner, form.smtp_port] %}
-                                {% if not field|bootstrap_is_hidden_field %}
-                                {{ macros.horizontal_field(field) }}
-                                {%- endif %}
-                                {% endfor %}
-                            </fieldset>
-                        </div>
-
-                        <div id="vnc" class="tab-pane">
-                            <fieldset>
-                                <legend>VNC Options</legend>
-                                {% for field in [form.vnc_enabled, form.vnc_port] %}
-                                {% if not field|bootstrap_is_hidden_field %}
-                                {{ macros.horizontal_field(field) }}
-                                {%- endif %}
-                                {% endfor %}
-                            </fieldset>
-                        </div>
-
-                        <div id="telnet" class="tab-pane">
-                            <fieldset>
-                                <legend>Telnet Options</legend>
-                                {% for field in [form.telnet_enabled, form.telnet_max_attempts, form.telnet_port] %}
-                                {% if not field|bootstrap_is_hidden_field %}
-                                {{ macros.horizontal_field(field) }}
-                                {%- endif %}
-                                {% endfor %}
-                            </fieldset>
-                        </div>
-
-                        <div id="pop3" class="tab-pane">
-                            <fieldset>
-                                <legend>POP3 Options</legend>
-                                {% for field in [form.pop3_enabled, form.pop3_max_attempts, form.pop3_port] %}
-                                {% if not field|bootstrap_is_hidden_field %}
-                                {{ macros.horizontal_field(field) }}
-                                {%- endif %}
-                                {% endfor %}
-                            </fieldset>
-                        </div>
-
-                        <div id="pop3s" class="tab-pane">
-                            <fieldset>
-                                <legend>POP3s Options</legend>
-                                {% for field in [form.pop3s_enabled, form.pop3s_max_attempts, form.pop3s_port] %}
-                                {% if not field|bootstrap_is_hidden_field %}
-                                {{ macros.horizontal_field(field) }}
-                                {%- endif %}
-                                {% endfor %}
-                            </fieldset>
-                        </div>
-
-                        <div id="ssh" class="tab-pane">
-                            <fieldset>
-                                <legend>SSH Options</legend>
-                                {% for field in [form.ssh_enabled, form.ssh_port, form.ssh_key] %}
-                                {% if not field|bootstrap_is_hidden_field %}
-                                {{ macros.horizontal_field(field) }}
-                                {%- endif %}
-                                {% endfor %}
-                            </fieldset>
-                        </div>
-                    </div>
-                </div>
-                <hr>
-
-            </div>
-            <div class="step-pane" id="step2">
-            TODO: Assign clients here.
-            </div>
-            <div class="step-pane" id="step3">
-                <div class="controls">
-                    TODO: Configuration overview here.
-                    <button name="submit" type="submit" class="btn btn-primary">Generate</button>
-                </div>
-            </div>
-        </form>
-    </div>
-    <br>
-    <input type="button" class="btn" id="btnWizardPrev" value="Back">
-    <input type="button" class="btn btn-primary" id="btnWizardNext" value="Next">
-
- </div>
-
-
+        <hr>
+        <div class="controls">
+            <button name="submit" type="submit" class="btn btn-primary">Generate</button>
+        </div>
+    </form>
 {% endblock content %}
