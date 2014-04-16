@@ -15,7 +15,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import curses
-
 import logging
 import json
 from argparse import ArgumentParser
@@ -25,17 +24,15 @@ import os
 import gevent
 import gevent.monkey
 
+
 gevent.monkey.patch_all()
 from gevent import Greenlet
 import requests
-from requests.exceptions import Timeout, ConnectionError
-import beeswarm
 
-from beeswarm.honeypot.honeypot import Honeypot
+from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.server.server import Server
-from beeswarm.client.client import Client
+from beeswarm.drones.client.client import Client
 from beeswarm.errors import ConfigNotFound
-from beeswarm.shared.helpers import is_url
 from beeswarm.shared.models.ui_handler import CursesLogHandler
 from beeswarm.shared.asciify import asciify
 from beeswarm.shared.helpers import is_url

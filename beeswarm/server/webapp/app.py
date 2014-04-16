@@ -222,7 +222,7 @@ def create_honeypot():
                 'port': 20000,
                 'ident': '2wtadBoH',
                 'secret': 'mJPyhNhJmLYGbDCt',
-                'chan': 'beeswarm.honeypot',
+                'chan': 'beeswarm.drones.honeypot',
                 'port_mapping': '{}'
             },
             'beeswarm_server': {
