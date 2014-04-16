@@ -27,7 +27,7 @@ from collections import namedtuple
 import gevent
 import zmq.green as zmq
 
-from flask import Flask, render_template, request, redirect, flash, Response, send_from_directory
+from flask import Flask, render_template, request, redirect, flash, Response, send_from_directory, abort
 import flask
 from flask.ext.login import LoginManager, login_user, current_user, login_required, logout_user
 from sqlalchemy.orm.exc import NoResultFound
@@ -63,6 +63,9 @@ logger = logging.getLogger(__name__)
 
 authenticator = Authenticator()
 first_cfg_received = gevent.event.Event()
+
+# keys used for adding new drones to the system
+drone_keys = []
 
 @app.before_first_request
 def initialize():
@@ -302,6 +305,39 @@ def create_honeypot():
 
     return render_template('create-honeypot.html', form=form, mode_name='Honeypot', user=current_user)
 
+
+def reset_drone_key(key):
+    global drone_keys
+    if key in drone_keys:
+        drone_keys.remove(key)
+        logger.debug('Removed drone add key.')
+    else:
+        logger.debug('Tried to remove drone key, but the key was not found.')
+
+@app.route('/ws/drone/add', methods=['GET'])
+@login_required
+def add_drone():
+    global drone_keys
+    drone_key = ''.join(random.SystemRandom().choice('0123456789abcdef') for i in range(6))
+    drone_keys.append(drone_key)
+    gevent.spawn_later(120, reset_drone_key, drone_key)
+
+    drone_link = '/ws/drone/add/{0}'.format(drone_key)
+    iso_link = '/NotWorkingYet'
+    return render_template('add_drone.html', user=current_user, drone_link=drone_link,
+                           iso_link=iso_link)
+
+# TODO: throttle this
+@app.route('/ws/drone/add/<key>', methods=['GET'])
+def drone_key(key):
+    global drone_keys
+    if key not in drone_keys:
+        logger.warn('Attempt to add new drone, but using wrong key from: {0}'.format(request.remote_addr))
+        abort(401)
+    else:
+        # TODO: *  Add drone to db with no specialization
+        #       *  Send config including ZeroMQ keys to the drone
+        return ''
 
 @app.route('/ws/honeypot/delete', methods=['POST'])
 @login_required
