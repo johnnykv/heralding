@@ -90,7 +90,7 @@ class Server(object):
         auth.allow('127.0.0.1')
         auth.configure_curve(domain='*', location=public_keys_dir)
 
-        #start and configure our external socket for receiving data from honeypots/clients
+        # start and configure our external socket for receiving data from honeypots/clients
         server_secret_file = os.path.join(secret_keys_dir, 'beeswarm_server.pri')
         server_public, server_secret = load_certificate(server_secret_file)
         sock = ctx.socket(zmq.PULL)
@@ -99,18 +99,35 @@ class Server(object):
         sock.curve_server = True
         sock.bind('tcp://*:{0}'.format(self.config['network']['zmq_port']))
 
-        #use to publishe session data to internal listeners
+        # use to publish session data to internal listeners
         sessionPublisher = ctx.socket(zmq.PUB)
         sessionPublisher.bind('ipc://sessionPublisher')
 
+        # for sending data to drones
+        pub_sock = ctx.socket(zmq.PUB)
+        pub_sock.curve_secretkey = server_secret
+        pub_sock.curve_publickey = server_public
+        pub_sock.curve_server = True
+        sock.bind('tcp://*:{0}'.format(self.config['network']['zmq_command_port']))
+
+        # use to publish session data to internal listeners
+        # topic for all send's on this socket must be the id of the drone
+        droneCommandreceiver = ctx.socket(zmq.PULL)
+        droneCommandreceiver.bind('ipc://droneCommandReceiver')
+
         poller = zmq.Poller()
         poller.register(sock, zmq.POLLIN)
+        poller.register(droneCommandreceiver, zmq.POLLIN)
         while True:
             # .recv() gives no context switch - why not? using poller with timeout instead
             socks = dict(poller.poll(1))
             gevent.sleep()
             # we got data on socket
-            if sock in socks and socks[sock] == zmq.POLLIN:
+            if droneCommandreceiver in socks and socks[droneCommandreceiver] == zmq.POLLIN:
+                topic, data = sock.recv().split(' ', 1)
+                logger.debug("Received drone command to:".format(topic))
+                pub_sock.send(topic, data)
+            elif sock in socks and socks[sock] == zmq.POLLIN:
                 topic, data = sock.recv().split(' ', 1)
                 logger.debug("Received {0} data.".format(topic))
                 if topic == 'session_honeypot' or topic == 'session_client':
@@ -234,11 +251,17 @@ class Server(object):
             print ''
             print '* Communication between honeypots and server *'
             zmq_host = raw_input('IP or hostname of server: ')
-            zmq_port = raw_input('TCP port (default: 5712) : ')
+            zmq_port = raw_input('TCP port for session data (default: 5712) : ')
             if zmq_port:
                 zmq_port = int(zmq_port)
             else:
                 zmq_port = 5712
+
+            zmq_command_port = raw_input('TCP port for drone commands(default: 5713) : ')
+            if zmq_command_port:
+                zmq_command_port = int(zmq_port)
+            else:
+                zmq_command_port = 5713
 
             #tmp actor while initializing
             configActor = ConfigActor('beeswarmcfg.json', work_dir)
@@ -250,14 +273,15 @@ class Server(object):
             socket.send('gen_zmq_keys beeswarm_server')
             result = socket.recv()
             if result.split(' ', 1)[0] == beeswarm.OK:
-                result = json.loads(result.split(' ',1)[1])
+                result = json.loads(result.split(' ', 1)[1])
                 zmq_public, zmq_private = (result['public_key'], result['private_key'])
             else:
                 assert(False)
 
-
             socket.send('set {0}'.format(json.dumps({'network': {'zmq_server_public_key': zmq_public,
                                                                  'port': tcp_port, 'host': tcp_host,
-                                                                 'zmq_port': zmq_port, 'zmq_host': zmq_host}})))
+                                                                 'zmq_port': zmq_port,
+                                                                 'zmq_command_port': zmq_command_port,
+                                                                 'zmq_host': zmq_host}})))
             socket.recv()
             configActor.close()

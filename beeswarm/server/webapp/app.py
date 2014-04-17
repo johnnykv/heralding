@@ -337,6 +337,7 @@ def drone_key(key):
     else:
         drone_id = str(uuid.uuid4())
         server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
+        server_zmq_command_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_command_port'])
         result = send_command('ipc://configCommands', 'gen_zmq_keys ' + drone_id)
         zmq_public = result['public_key']
         zmq_private = result['private_key']
@@ -351,7 +352,8 @@ def drone_key(key):
             },
             'beeswarm_server': {
                 'enabled': True,
-                'zmq_url' : server_zmq_url,
+                'zmq_url': server_zmq_url,
+                'zmq_command_url' : server_zmq_command_url,
                 'zmq_server_public': config['network']['zmq_server_public_key'],
                 'zmq_own_public': zmq_public,
                 'zmq_own_private': zmq_private,
