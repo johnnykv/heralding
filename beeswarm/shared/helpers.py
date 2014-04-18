@@ -28,6 +28,7 @@ import shutil
 import zmq.green as zmq
 
 import beeswarm
+from beeswarm.shared.message_enum import Messages
 
 logger = logging.getLogger(__name__)
 
@@ -182,7 +183,7 @@ def send_zmq_request(actor_url, request):
     socket.connect(actor_url)
     socket.send(request)
     result = socket.recv()
-    if result.split(' ', 1)[0] != beeswarm.OK:
+    if result.split(' ', 1)[0] != Messages.OK:
         logger.warning('Error while requesting config change to actor.')
         socket.close()
         assert(False)

@@ -35,6 +35,7 @@ from beeswarm.shared.helpers import find_offset, create_self_signed_cert, update
 from beeswarm.shared.asciify import asciify
 from beeswarm.server.db.session_persister import PersistanceWorker
 from beeswarm.shared.workers.config_actor import ConfigActor
+from beeswarm.shared.message_enum import Messages
 
 logger = logging.getLogger(__name__)
 
@@ -279,7 +280,7 @@ class Server(object):
             socket.connect('ipc://configCommands')
             socket.send('gen_zmq_keys beeswarm_server')
             result = socket.recv()
-            if result.split(' ', 1)[0] == beeswarm.OK:
+            if result.split(' ', 1)[0] == Messages.OK:
                 result = json.loads(result.split(' ', 1)[1])
                 zmq_public, zmq_private = (result['public_key'], result['private_key'])
             else:

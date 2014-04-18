@@ -41,7 +41,6 @@ from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, Honeybee, Session, Honeypot, User, Authentication, Classification,\
                                            BaitUser, Transcript, Drone
 from beeswarm.shared.helpers import send_zmq_request, send_zmq_push
-from beeswarm.shared.message_constants import *
 from beeswarm.shared.message_enum import Messages
 
 
@@ -81,7 +80,7 @@ def config_subscriber():
     subscriber_socket = ctx.socket(zmq.SUB)
     subscriber_socket.connect('ipc://configPublisher')
     subscriber_socket.setsockopt(zmq.SUBSCRIBE, 'full')
-    send_zmq_request('ipc://configCommands', PUBLISH_CONFIG)
+    send_zmq_request('ipc://configCommands', Messages.PUBLISH_CONFIG)
     while True:
         poller = zmq.Poller()
         poller.register(subscriber_socket, zmq.POLLIN)
@@ -764,7 +763,7 @@ def update_config(options):
     socket.connect('ipc://configCommands')
     socket.send('set ' + json.dumps(options))
     reply = socket.recv()
-    if reply != beeswarm.OK:
+    if reply != Messages.OK:
         logger.warning('Error while requesting config change to actor.')
     socket.close()
 

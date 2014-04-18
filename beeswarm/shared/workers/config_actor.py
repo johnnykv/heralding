@@ -23,7 +23,7 @@ from gevent import Greenlet
 import zmq.green as zmq
 from zmq.auth.certs import create_certificates, load_certificate
 import beeswarm
-from beeswarm.shared.message_constants import *
+from beeswarm.shared.message_enum import Messages
 
 logger = logging.getLogger(__name__)
 
@@ -72,26 +72,26 @@ class ConfigActor(Greenlet):
             self._handle_command_set(data)
         elif cmd == 'gen_zmq_keys':
             self._handle_command_genkeys(data)
-        elif cmd == PUBLISH_CONFIG:
+        elif cmd == Messages.PUBLISH_CONFIG:
             self._publish_config()
-            self.config_commands.send(beeswarm.OK + ' {}')
+            self.config_commands.send(Messages.OK + ' {}')
         else:
-            self.config_commands.send(beeswarm.FAIL)
+            self.config_commands.send(Messages.FAIL)
 
     def _handle_command_set(self, data):
         new_config = json.loads(data)
         # all keys must in the original dict
         if all(key in self.config for key in new_config):
-            self.config_commands.send(beeswarm.OK + ' {}')
+            self.config_commands.send(Messages.OK + ' {}')
             self.config.update(new_config)
             self._save_config_file()
             self._publish_config()
         else:
-            self.config_commands.send(beeswarm.FAIL)
+            self.config_commands.send(Messages.FAIL)
 
     def _handle_command_genkeys(self, name):
         private_key, publickey = self._generate_zmq_keys(name)
-        self.config_commands.send(beeswarm.OK + ' ' + json.dumps({'public_key': publickey,
+        self.config_commands.send(Messages.OK + ' ' + json.dumps({'public_key': publickey,
                                                                   'private_key': private_key}))
 
     def _publish_config(self):

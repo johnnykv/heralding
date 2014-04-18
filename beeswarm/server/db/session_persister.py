@@ -24,7 +24,7 @@ from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, Honeybee, Session, Honeypot, Authentication, Classification, \
     Transcript
 from beeswarm.shared.helpers import send_zmq_request
-from beeswarm.shared.message_constants import *
+from beeswarm.shared.message_enum import Messages
 
 
 logger = logging.getLogger(__name__)
@@ -44,7 +44,7 @@ class PersistanceWorker(object):
         subscriber_socket = ctx.socket(zmq.SUB)
         subscriber_socket.connect('ipc://configPublisher')
         subscriber_socket.setsockopt(zmq.SUBSCRIBE, '')
-        send_zmq_request('ipc://configCommands', PUBLISH_CONFIG)
+        send_zmq_request('ipc://configCommands', Messages.PUBLISH_CONFIG)
 
         while True:
             poller = zmq.Poller()
