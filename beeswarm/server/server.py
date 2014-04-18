@@ -31,7 +31,7 @@ from beeswarm.server.webapp import app
 from beeswarm.server.webapp.auth import Authenticator
 from beeswarm.shared.helpers import drop_privileges
 from beeswarm.server.misc.scheduler import Scheduler
-from beeswarm.shared.helpers import find_offset, create_self_signed_cert, update_config_file, send_command
+from beeswarm.shared.helpers import find_offset, create_self_signed_cert, update_config_file, send_zmq_request
 from beeswarm.shared.asciify import asciify
 from beeswarm.server.db.session_persister import PersistanceWorker
 from beeswarm.shared.workers.config_actor import ConfigActor
@@ -118,7 +118,7 @@ class Server(object):
 
         # all commands received on this will be published on the external interface
         drone_command_receiver = ctx.socket(zmq.PULL)
-        drone_command_receiver.connect('ipc://droneCommandReceiver')
+        drone_command_receiver.bind('ipc://droneCommandReceiver')
 
         poller = zmq.Poller()
         poller.register(drone_data_inbound, zmq.POLLIN)

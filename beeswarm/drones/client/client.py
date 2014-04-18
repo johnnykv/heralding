@@ -59,8 +59,9 @@ class Client(object):
         # write ZMQ keys to files - as expected by pyzmq
         extract_keys(work_dir, config)
 
-        BeeSession.client_id = self.config['general']['client_id']
-        BeeSession.honeypot_id = self.config['general']['honeypot_id']
+        BeeSession.client_id = self.config['general']['id']
+        # TODO: Handle peering in other place
+        BeeSession.honeypot_id = self.config['general']['id']
 
         if self.config['public_ip']['fetch_ip']:
             self.my_ip = urllib2.urlopen('http://api-sth01.exip.org/?call=ip').read()

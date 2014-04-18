@@ -16,9 +16,11 @@
 import os
 import logging
 import requests
+import json
 from requests.exceptions import Timeout, ConnectionError
 import gevent
 from beeswarm.shared.asciify import asciify
+from beeswarm.shared.message_enum import Messages
 from beeswarm.shared.helpers import extract_keys
 from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.drones.client.client import Client
@@ -26,6 +28,7 @@ import zmq.green as zmq
 import zmq.auth
 
 logger = logging.getLogger(__name__)
+
 
 class Drone(object):
 
@@ -59,7 +62,7 @@ class Drone(object):
                 url = 'http://api.externalip.net/ip'
                 req = requests.get(url)
                 self.ip = req.text
-                logger.info('Fetched {0} as external ip for Honeypot.'.format(self.honeypot_ip))
+                logger.info('Fetched {0} as external ip for Honeypot.'.format(self.ip))
             except (Timeout, ConnectionError) as e:
                 logger.warning('Could not fetch public ip: {0}'.format(e))
         else:
@@ -68,6 +71,17 @@ class Drone(object):
     def start(self):
         """ Starts services. """
         self.command_listener_greenlet = gevent.spawn(self.command_listener)
+
+        self._start_drone()
+
+        #drop_privileges()
+        logger.info('Drone running using id: {0}'.format(self.id))
+        gevent.joinall([self.command_listener_greenlet])
+
+    def _start_drone(self):
+        """
+        Tears down the drone if and restarts it.
+        """
 
         mode = None
         if self.config['general']['mode'] == '':
@@ -79,15 +93,17 @@ class Drone(object):
 
         if mode:
             self.drone = mode(self.work_dir, self.config)
-            self.drone_greenlet = gevent.spawn(self.drone)
+            self.drone_greenlet = gevent.spawn(self.drone.start)
 
-        #drop_privileges()
-        logger.info("Drone running.")
-        gevent.joinall([self.command_listener_greenlet])
-
-    def stop(self):
+    def _stop_drone(self):
         """Stops services"""
-        assert(False)
+        logging.debug('Stopping drone, hang on.')
+        if self.drone is not None:
+            self.drone.stop()
+        # just some time for the drone to powerdown to be nice.
+        gevent.sleep(2)
+        if self.drone_greenlet is not None:
+            self.drone_greenlet.kill(timeout=5)
 
     # command from server
     def command_listener(self):
@@ -112,12 +128,38 @@ class Drone(object):
         # messages to this specific drone
         socket.setsockopt(zmq.SUBSCRIBE, self.id)
         # broadcasts to all drones
-        socket.setsockopt(zmq.SUBSCRIBE, 'all')
+        socket.setsockopt(zmq.SUBSCRIBE, Messages.BROADCAST)
 
         socket.connect(self.config['beeswarm_server']['zmq_command_url'])
         logger.debug('Connected to server on {0}'.format(self.config['beeswarm_server']['zmq_command_url']))
+
+        poller = zmq.Poller()
+        poller.register(socket, zmq.POLLIN)
         while True:
-            message = socket.recv()
-            topic, messagedata = message.split(' ', 1)
-            logger.debug('Received {0} message.'.format(topic))
-            # TODO: dispatch message internally
+            # .recv() gives no context switch - why not? using poller with timeout instead
+            socks = dict(poller.poll(1))
+            gevent.sleep()
+
+            if socket in socks and socks[socket] == zmq.POLLIN:
+                message = socket.recv()
+                # expected format for drone commands are:
+                # DRONE_ID COMMAND OPTIONAL_DATA
+                # DRONE_ID and COMMAND must not contain spaces
+                drone_id, command, data = message.split(' ', 2)
+                logger.debug('Received {0} command.'.format(command))
+                assert(drone_id == self.id)
+                #if we receive a configuration we restart the drone
+                if command == Messages.CONFIG:
+                    self.config = json.loads(data)
+                    with open('beeswarmcfg.json', 'w') as local_config:
+                        local_config.write(json.dumps(self.config, indent=4))
+                    self._stop_drone()
+                    self._start_drone()
+                else:
+                    # TODO: Dispatch the message using internal zmq
+                    logger.warning('Unknown command received.')
+                    pass
+        logger.warn('Command listener exiting.')
+
+
+

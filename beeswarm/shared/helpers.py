@@ -176,7 +176,7 @@ def get_config_dict(configfile):
 
 
 # for occasional req/resp
-def send_command(actor_url, request):
+def send_zmq_request(actor_url, request):
     context = zmq.Context()
     socket = context.socket(zmq.REQ)
     socket.connect(actor_url)
@@ -189,6 +189,16 @@ def send_command(actor_url, request):
     else:
         socket.close()
         return json.loads(result.split(' ', 1)[1])
+
+
+# for occasional zmq pushes
+def send_zmq_push(actor_url, data):
+    context = zmq.Context()
+    socket = context.socket(zmq.PUSH)
+    socket.connect(actor_url)
+    socket.send(data)
+    socket.close()
+
 
 def extract_keys(work_dir, config):
     #dump keys used for secure communication with beeswarm server

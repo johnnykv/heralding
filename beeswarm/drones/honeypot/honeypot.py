@@ -72,7 +72,7 @@ class Honeypot(object):
         self.cert = cert
         self.curses_screen = curses_screen
 
-        Session.honeypot_id = self.config['general']['honeypot_id']
+        Session.honeypot_id = self.config['general']['id']
 
         if self.config['general']['fetch_ip']:
             try:
@@ -83,12 +83,12 @@ class Honeypot(object):
             except (Timeout, ConnectionError) as e:
                 logger.warning('Could not fetch public ip: {0}'.format(e))
         else:
-            self.honeypot_ip = self.config['general']['honeypot_ip']
+            self.honeypot_ip = ''
 
         self.status = {
             'mode': 'Honeypot',
             'ip_address': self.honeypot_ip,
-            'honeypot_id': self.config['general']['honeypot_id'],
+            'honeypot_id': self.config['general']['id'],
             'total_sessions': 0,
             'active_sessions': 0,
             'enabled_capabilities': [],
@@ -178,7 +178,6 @@ class Honeypot(object):
                 logger.info('Started {0} capability listening on port {1}'.format(c.__name__, port))
 
         drop_privileges()
-        gevent.spawn(self.command_listener())
         logger.info("Honeypot running - see log file (honeypot.log) for attack events.")
 
         gevent.joinall(self.server_greenlets)

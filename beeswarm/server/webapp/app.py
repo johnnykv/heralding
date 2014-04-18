@@ -40,8 +40,9 @@ from forms import NewHoneypotConfigForm, NewClientConfigForm, LoginForm, Setting
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, Honeybee, Session, Honeypot, User, Authentication, Classification,\
                                            BaitUser, Transcript, Drone
-from beeswarm.shared.helpers import send_command
+from beeswarm.shared.helpers import send_zmq_request, send_zmq_push
 from beeswarm.shared.message_constants import *
+from beeswarm.shared.message_enum import Messages
 
 
 def is_hidden_field_filter(field):
@@ -80,7 +81,7 @@ def config_subscriber():
     subscriber_socket = ctx.socket(zmq.SUB)
     subscriber_socket.connect('ipc://configPublisher')
     subscriber_socket.setsockopt(zmq.SUBSCRIBE, 'full')
-    send_command('ipc://configCommands', PUBLISH_CONFIG)
+    send_zmq_request('ipc://configCommands', PUBLISH_CONFIG)
     while True:
         poller = zmq.Poller()
         poller.register(subscriber_socket, zmq.POLLIN)
@@ -190,19 +191,23 @@ def get_client_config(client_id):
     return client.configuration
 
 
-@app.route('/ws/honeypot', methods=['GET', 'POST'])
+@app.route('/ws/honeypot/<id>', methods=['GET', 'POST'])
 @login_required
-def create_honeypot():
+def create_honeypot(id):
     form = NewHoneypotConfigForm()
-    honeypot_id = str(uuid.uuid4())
+    honeypot_id = id
     if form.validate_on_submit():
+        server_zmq_command_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_command_port'])
+        result = send_zmq_request('ipc://configCommands', 'gen_zmq_keys ' + str(honeypot_id))
+
         server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
-        result = send_command('ipc://configCommands', 'gen_zmq_keys ' + honeypot_id)
+        result = send_zmq_request('ipc://configCommands', 'gen_zmq_keys ' + str(honeypot_id))
         zmq_public = result['public_key']
         zmq_private = result['private_key']
         db_session = database_setup.get_session()
         honeypot_users = db_session.query(BaitUser).all()
         users_dict = {}
+
         # only add users if the honeypot is running in active mode
         # TODO: actually create active mode...
         if not form.general_standalone.data:
@@ -212,8 +217,8 @@ def create_honeypot():
         honeypot_config = {
             'general': {
                 'mode': 'honeypot',
-                'honeypot_id': honeypot_id,
-                'honeypot_ip': '192.168.1.1',
+                'id': honeypot_id,
+                'ip': '192.168.1.1',
                 'fetch_ip': False
             },
             'log_hpfeedslogger': {
@@ -231,6 +236,7 @@ def create_honeypot():
                 'zmq_server_public': config['network']['zmq_server_public_key'],
                 'zmq_own_public': zmq_public,
                 'zmq_own_private': zmq_private,
+                'zmq_command_url': server_zmq_command_url,
             },
             'log_syslog': {
                 'enabled': False,
@@ -293,15 +299,20 @@ def create_honeypot():
         }
         config_json = json.dumps(honeypot_config, indent=4)
 
+        # TODO: Fix this, currently we loose all config when reconfiguring
+        #       How to do this with the ORM without deleting the drone first?
+        #       Same problem if someone tries to reconfigure an client to honeypot
+        drone = db_session.query(Drone).filter(Drone.id == honeypot_id).one()
+        db_session.delete(drone)
+        db_session.commit()
         h = Honeypot(id=honeypot_id, configuration=config_json)
         db_session.add(h)
         db_session.commit()
-        # TODO: initial config should also be pulled with ZMQ from server...
-        server_https = 'https://{0}:{1}/'.format(config['network']['host'], config['network']['port'])
-        config_link = '{0}ws/honeypot/config/{1}'.format(server_https, honeypot_id)
-        iso_link = '/iso/honeypot/{0}.iso'.format(honeypot_id)
-        return render_template('finish-config.html', mode_name='Honeypot', user=current_user,
-                               config_link=config_link, iso_link=iso_link)
+
+        # everything good, push config to drone if it is listening
+        send_zmq_push('ipc://droneCommandReceiver', '{0} {1} {2}'.format(honeypot_id, Messages.CONFIG, config_json))
+
+        return render_template('finish-config.html', mode_name='Honeypot', user=current_user)
 
     return render_template('create-honeypot.html', form=form, mode_name='Honeypot', user=current_user)
 
@@ -339,7 +350,7 @@ def drone_key(key):
         drone_id = str(uuid.uuid4())
         server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
         server_zmq_command_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_command_port'])
-        result = send_command('ipc://configCommands', 'gen_zmq_keys ' + drone_id)
+        result = send_zmq_request('ipc://configCommands', 'gen_zmq_keys ' + drone_id)
         zmq_public = result['public_key']
         zmq_private = result['private_key']
         db_session = database_setup.get_session()
@@ -392,7 +403,7 @@ def create_client():
         with open(app.config['CERT_PATH']) as cert:
             cert_str = cert.read()
         server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
-        result = send_command('ipc://configCommands', 'gen_zmq_keys ' + client_id)
+        result = send_zmq_request('ipc://configCommands', 'gen_zmq_keys ' + client_id)
         zmq_public = result['public_key']
         zmq_private = result['private_key']
         client_password = str(uuid.uuid4())

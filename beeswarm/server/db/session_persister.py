@@ -23,7 +23,7 @@ import gevent
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, Honeybee, Session, Honeypot, Authentication, Classification, \
     Transcript
-from beeswarm.shared.helpers import send_command
+from beeswarm.shared.helpers import send_zmq_request
 from beeswarm.shared.message_constants import *
 
 
@@ -44,7 +44,7 @@ class PersistanceWorker(object):
         subscriber_socket = ctx.socket(zmq.SUB)
         subscriber_socket.connect('ipc://configPublisher')
         subscriber_socket.setsockopt(zmq.SUBSCRIBE, '')
-        send_command('ipc://configCommands', PUBLISH_CONFIG)
+        send_zmq_request('ipc://configCommands', PUBLISH_CONFIG)
 
         while True:
             poller = zmq.Poller()
@@ -71,6 +71,7 @@ class PersistanceWorker(object):
         db_session = database_setup.get_session()
         classification = db_session.query(Classification).filter(Classification.type == 'unclassified').one()
         if data['honeypot_id'] is not None:
+            print data['honeypot_id']
             _honeypot = db_session.query(Honeypot).filter(Honeypot.id == data['honeypot_id']).one()
         else:
             _honeypot = None
