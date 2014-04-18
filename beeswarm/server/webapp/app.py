@@ -322,7 +322,8 @@ def add_drone():
     drone_keys.append(drone_key)
     gevent.spawn_later(120, reset_drone_key, drone_key)
 
-    drone_link = '/ws/drone/add/{0}'.format(drone_key)
+    server_https = 'https://{0}:{1}/'.format(config['network']['host'], config['network']['port'])
+    drone_link = '{0}ws/drone/add/{1}'.format(server_https, drone_key)
     iso_link = '/NotWorkingYet'
     return render_template('add_drone.html', user=current_user, drone_link=drone_link,
                            iso_link=iso_link)

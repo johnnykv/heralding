@@ -1,8 +1,8 @@
 {
     "general": {
         "mode": "honeypot",
-        "honeypot_id": "standalone",
-        "honeypot_ip": "",
+        "id": "standalone",
+        "ip": "",
         "fetch_ip": true
     },
     "log_hpfeedslogger": {

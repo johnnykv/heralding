@@ -79,6 +79,11 @@ class Server(object):
 
     # distributes messages between external and internal receivers and senders
     def message_proxy(self, work_dir):
+        """
+        drone_data_inboud   is for data comming from drones
+        drone_data_outbound is for commands to the drone, topic must either be a drone ID or all for sending
+                            a broadcast message to all drones
+        """
         ctx = zmq.Context()
 
         public_keys_dir = os.path.join(work_dir, 'certificates', 'public_keys')
@@ -90,45 +95,47 @@ class Server(object):
         auth.allow('127.0.0.1')
         auth.configure_curve(domain='*', location=public_keys_dir)
 
-        # start and configure our external socket for receiving data from honeypots/clients
+
+        # external interfaces for communicating with drones
         server_secret_file = os.path.join(secret_keys_dir, 'beeswarm_server.pri')
         server_public, server_secret = load_certificate(server_secret_file)
-        sock = ctx.socket(zmq.PULL)
-        sock.curve_secretkey = server_secret
-        sock.curve_publickey = server_public
-        sock.curve_server = True
-        sock.bind('tcp://*:{0}'.format(self.config['network']['zmq_port']))
+        drone_data_inbound = ctx.socket(zmq.PULL)
+        drone_data_inbound.curve_secretkey = server_secret
+        drone_data_inbound.curve_publickey = server_public
+        drone_data_inbound.curve_server = True
+        drone_data_inbound.bind('tcp://*:{0}'.format(self.config['network']['zmq_port']))
 
-        # use to publish session data to internal listeners
+        drone_data_outbound = ctx.socket(zmq.PUB)
+        drone_data_outbound.curve_secretkey = server_secret
+        drone_data_outbound.curve_publickey = server_public
+        drone_data_outbound.curve_server = True
+        drone_data_outbound.bind('tcp://*:{0}'.format(self.config['network']['zmq_command_port']))
+
+        # internal interfaces
+        # all inbound session data from drones will be replayed in this socket
         sessionPublisher = ctx.socket(zmq.PUB)
         sessionPublisher.bind('ipc://sessionPublisher')
 
-        # for sending data to drones
-        pub_sock = ctx.socket(zmq.PUB)
-        pub_sock.curve_secretkey = server_secret
-        pub_sock.curve_publickey = server_public
-        pub_sock.curve_server = True
-        sock.bind('tcp://*:{0}'.format(self.config['network']['zmq_command_port']))
-
-        # use to publish session data to internal listeners
-        # topic for all send's on this socket must be the id of the drone
-        droneCommandreceiver = ctx.socket(zmq.PULL)
-        droneCommandreceiver.bind('ipc://droneCommandReceiver')
+        # all commands received on this will be published on the external interface
+        drone_command_receiver = ctx.socket(zmq.PULL)
+        drone_command_receiver.connect('ipc://droneCommandReceiver')
 
         poller = zmq.Poller()
-        poller.register(sock, zmq.POLLIN)
-        poller.register(droneCommandreceiver, zmq.POLLIN)
+        poller.register(drone_data_inbound, zmq.POLLIN)
+        poller.register(drone_command_receiver, zmq.POLLIN)
         while True:
             # .recv() gives no context switch - why not? using poller with timeout instead
-            socks = dict(poller.poll(1))
+            socks = dict(poller.poll(5))
             gevent.sleep()
-            # we got data on socket
-            if droneCommandreceiver in socks and socks[droneCommandreceiver] == zmq.POLLIN:
-                topic, data = sock.recv().split(' ', 1)
-                logger.debug("Received drone command to:".format(topic))
-                pub_sock.send(topic, data)
-            elif sock in socks and socks[sock] == zmq.POLLIN:
-                topic, data = sock.recv().split(' ', 1)
+
+            if drone_command_receiver in socks and socks[drone_command_receiver] == zmq.POLLIN:
+                data = drone_command_receiver.recv()
+                topic, message = data.split(' ', 1)
+                logger.debug("Sending drone command to: {0}".format(topic))
+                # pub socket takes care of filtering
+                drone_data_outbound.send(data)
+            elif drone_data_inbound in socks and socks[drone_data_inbound] == zmq.POLLIN:
+                topic, data = drone_data_inbound.recv().split(' ', 1)
                 logger.debug("Received {0} data.".format(topic))
                 if topic == 'session_honeypot' or topic == 'session_client':
                     sessionPublisher.send('{0} {1}'.format(topic, data))

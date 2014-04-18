@@ -33,7 +33,7 @@ from beeswarm.drones.honeypot.capabilities import handlerbase
 
 from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.models.authenticator import Authenticator
-from beeswarm.drones.honeypot import consumer
+from beeswarm.drones.honeypot.consumer.consumer import Consumer
 from beeswarm.shared.helpers import drop_privileges
 from beeswarm.drones.honeypot.models.user import BaitUser
 import requests
@@ -137,7 +137,7 @@ class Honeypot(object):
         self.sessions = {}
 
         #greenlet to consume the provided sessions
-        self.session_consumer = consumer.Consumer(self.sessions, self.honeypot_ip, self.config, self.status, self.work_dir)
+        self.session_consumer = Consumer(self.sessions, self.honeypot_ip, self.config, self.status, self.work_dir)
         Greenlet.spawn(self.session_consumer.start)
 
         #protocol handlers
@@ -178,7 +178,7 @@ class Honeypot(object):
                 logger.info('Started {0} capability listening on port {1}'.format(c.__name__, port))
 
         drop_privileges()
-
+        gevent.spawn(self.command_listener())
         logger.info("Honeypot running - see log file (honeypot.log) for attack events.")
 
         gevent.joinall(self.server_greenlets)
@@ -208,7 +208,7 @@ class Honeypot(object):
         package_directory = os.path.dirname(os.path.abspath(beeswarm.__file__))
 
         logger.info('Copying data files to workdir.')
-        shutil.copytree(os.path.join(package_directory, 'honeypot/data'), os.path.join(work_dir, 'data/'),
+        shutil.copytree(os.path.join(package_directory, 'drones/honeypot/data'), os.path.join(work_dir, 'data/'),
                         ignore=Honeypot._ignore_copy_files)
 
         #this config file is for standalone operations, it will be overwritten during __init__
