@@ -641,6 +641,8 @@ def data_drones(dronetype):
     db_session = database_setup.get_session()
     if dronetype is None:
         drones = db_session.query(Drone).all()
+    elif dronetype == 'unassigned':
+        drones = db_session.query(Drone).filter(Drone.discriminator == None)
     else:
         drones = db_session.query(Drone).filter(Drone.discriminator == dronetype)
 

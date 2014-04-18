@@ -71,8 +71,8 @@ class PersistanceWorker(object):
         db_session = database_setup.get_session()
         classification = db_session.query(Classification).filter(Classification.type == 'unclassified').one()
         if data['honeypot_id'] is not None:
-            print data['honeypot_id']
             _honeypot = db_session.query(Honeypot).filter(Honeypot.id == data['honeypot_id']).one()
+            _honeypot.last_activity = datetime.now()
         else:
             _honeypot = None
 
@@ -97,6 +97,7 @@ class PersistanceWorker(object):
                 return
             session = Honeybee()
             client = db_session.query(Client).filter(Client.id == data['client_id']).one()
+            client.last_activity = datetime.now()
             session.did_connect = data['did_connect']
             session.did_login = data['did_login']
             session.did_complete = data['did_complete']
