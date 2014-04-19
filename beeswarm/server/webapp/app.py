@@ -176,47 +176,65 @@ def sessions_honeybees():
 def sessions_attacks():
     return render_template('logs.html', logtype='Attacks', user=current_user)
 
-@app.route('/ws/honeypot/config/<honeypot_id>', methods=['GET'])
-def get_honeypot_config(honeypot_id):
-    db_session = database_setup.get_session()
-    current_honeypot = db_session.query(Honeypot).filter(Honeypot.id == honeypot_id).one()
-    return current_honeypot.configuration
-
-
-@app.route('/ws/client/config/<client_id>', methods=['GET'])
-def get_client_config(client_id):
-    db_session = database_setup.get_session()
-    client = db_session.query(Client).filter(Client.id == client_id).one()
-    return client.configuration
-
-
-@app.route('/ws/honeypot/<id>', methods=['GET', 'POST'])
+@app.route('/ws/drone/honeypot/<drone_id>')
 @login_required
-def create_honeypot(id):
-    form = NewHoneypotConfigForm()
-    honeypot_id = id
-    if form.validate_on_submit():
-        server_zmq_command_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_command_port'])
-        result = send_zmq_request('ipc://configCommands', 'gen_zmq_keys ' + str(honeypot_id))
+def set_honeypot_mode(drone_id):
+    db_session = database_setup.get_session()
+    drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
+    if drone.discriminator == None:
+        # meh, better way do do this?
+        db_session.delete(drone)
+        db_session.commit()
+        honeypot = Honeypot(id=drone_id)
+        db_session.add(honeypot)
+        db_session.commit()
+    else:
+        abort(500, 'Drone has already been assigned.')
 
-        server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
-        result = send_zmq_request('ipc://configCommands', 'gen_zmq_keys ' + str(honeypot_id))
-        zmq_public = result['public_key']
-        zmq_private = result['private_key']
-        db_session = database_setup.get_session()
-        honeypot_users = db_session.query(BaitUser).all()
-        users_dict = {}
+@app.route('/ws/drone/client/<drone_id>')
+@login_required
+def set_client_mode(drone_id):
+    db_session = database_setup.get_session()
+    drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
+    if drone.discriminator == None:
+        # meh, better way do do this?
+        db_session.delete(drone)
+        db_session.commit()
+        client = Client(id=drone_id)
+        db_session.add(client)
+        db_session.commit()
+    else:
+        abort(500, 'Drone has already been assigned.')
 
-        # only add users if the honeypot is running in active mode
-        # TODO: actually create active mode...
-        if not form.general_standalone.data:
-            for u in honeypot_users:
-                users_dict[u.username] = u.password
+@app.route('/ws/drone/configure/<id>', methods=['GET', 'POST'])
+@login_required
+def configure_drone(id):
+    # if drone is unspecified:
+    #   modal to pick client/honeypot
+    # else if drone is honeypot:
+    #   honeypot configure form
+    # else if drone is client:
+    #   client configure form
+    # else:
+    #   error, no drone by that id
+    db_session = database_setup.get_session()
+    drone = db_session.query(Drone).filter(Drone.id == id).one()
+    if drone.discriminator == 'honeypot':
+        form = NewHoneypotConfigForm()
+        if not form.validate_on_submit():
+            return render_template('create-honeypot.html', form=form, mode_name='Honeypot', user=current_user)
+        else:
+            server_zmq_command_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_command_port'])
+            server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
+            # TODO: Check if key pair exists
+            result = send_zmq_request('ipc://configCommands', 'gen_zmq_keys ' + str(drone.id))
+            zmq_public = result['public_key']
+            zmq_private = result['private_key']
 
-        honeypot_config = {
+            drone_config = {
             'general': {
                 'mode': 'honeypot',
-                'id': honeypot_id,
+                'id': drone.id,
                 'ip': '192.168.1.1',
                 'fetch_ip': False
             },
@@ -289,31 +307,31 @@ def create_honeypot(id):
                     'port': form.vnc_port.data
                 }
             },
-            'users': users_dict,
+            'users': {},
             'timecheck': {
                 'enabled': True,
                 'poll': 5,
                 'ntp_pool': 'pool.ntp.org'
             },
         }
-        config_json = json.dumps(honeypot_config, indent=4)
+            config_json = json.dumps(drone_config, indent=4)
 
-        # TODO: Fix this, currently we loose all config when reconfiguring
-        #       How to do this with the ORM without deleting the drone first?
-        #       Same problem if someone tries to reconfigure an client to honeypot
-        drone = db_session.query(Drone).filter(Drone.id == honeypot_id).one()
-        db_session.delete(drone)
-        db_session.commit()
-        h = Honeypot(id=honeypot_id, configuration=config_json)
-        db_session.add(h)
-        db_session.commit()
+            drone.configuration = config_json
+            logging.debug(drone.id)
+            logging.debug(drone)
+            db_session.add(drone)
+            db_session.commit()
 
-        # everything good, push config to drone if it is listening
-        send_zmq_push('ipc://droneCommandReceiver', '{0} {1} {2}'.format(honeypot_id, Messages.CONFIG, config_json))
-
-        return render_template('finish-config.html', mode_name='Honeypot', user=current_user)
-
-    return render_template('create-honeypot.html', form=form, mode_name='Honeypot', user=current_user)
+            # everything good, push config to drone if it is listening
+            send_zmq_push('ipc://droneCommandReceiver', '{0} {1} {2}'.format(drone.id, Messages.CONFIG, config_json))
+            return render_template('finish-config.html', drone_id=drone.id, user=current_user)
+    elif drone.discriminator == 'client':
+        assert(False, 'Not implemented yet.')
+    elif drone.discriminator is None:
+        return render_template('drone_mode.html', drone_id=drone.id, user=current_user)
+    else:
+        assert(drone is None)
+        abort(404, 'Drone with that id could not be found.')
 
 
 def reset_drone_key(key):
@@ -786,7 +804,6 @@ def write_to_iso(temporary_dir, mode):
         with open(config_archive, 'rb') as tarfile:
             isofile.write(tarfile.read())
     return True
-
 
 if __name__ == '__main__':
     app.run()
