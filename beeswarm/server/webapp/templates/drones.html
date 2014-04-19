@@ -67,14 +67,30 @@
                     label: 'Last activity',
                     sortable: true
                 },
+                {
+                    property: 'actions',
+                    label: 'Actions',
+                    sortable: false
+                }
             ],
             url: '{{ dataurl }}',
             formatter: function (items) {
                 $.each(items, function (index, item) {
                     item.time = item.time + '<span style="visibility: hidden;" data-id="' + item.id + '"/>';
+                    item.actions = '<i class="fa fa-trash-o fa-fw"></i>';
                 });
             }
         })
+    }).on('click', 'i.fa', function () {
+        var id = $(this).parent().parent().find("td").eq(0).html();
+        console.log(JSON.stringify([id]));
+        $.ajax({
+            url: '/ws/drone/delete',
+            type: 'POST',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify([id, ])
+        });
+        $('#dronestable').datagrid('reload');
     });
 
 </script>

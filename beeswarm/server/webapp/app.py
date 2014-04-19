@@ -379,17 +379,17 @@ def drone_key(key):
         return config_json
 
 
-@app.route('/ws/honeypot/delete', methods=['POST'])
+@app.route('/ws/drone/delete', methods=['POST'])
 @login_required
-def delete_honeypots():
-    # list of honeypot id's'
-    honeypot_ids = json.loads(request.data)
+def delete_drones():
+    # list of drone id's'
+    drone_ids = json.loads(request.data)
     db_session = database_setup.get_session()
-    for honeypot_id in honeypot_ids:
-        honeypot_to_delete = db_session.query(Honeypot).filter(Honeypot.id == honeypot_id).one()
-        db_session.delete(honeypot_to_delete)
+    for drone_id in drone_ids:
+        logger.debug('Deleting drone: {0}'.format(drone_id))
+        drone_to_delete= db_session.query(Drone).filter(Drone.id == drone_id).one()
+        db_session.delete(drone_to_delete)
         db_session.commit()
-        authenticator.remove_user(honeypot_id)
     return ''
 
 
@@ -405,7 +405,7 @@ def create_client():
         result = send_zmq_request('ipc://configCommands', 'gen_zmq_keys ' + client_id)
         zmq_public = result['public_key']
         zmq_private = result['private_key']
-        client_password = str(uuid.uuid4())
+
         client_config = {
             'general': {
                 'mode': 'client',
@@ -540,7 +540,6 @@ def create_client():
         f = Client(id=client_id, configuration=config_json)
         db_session.add(f)
         db_session.commit()
-        authenticator.add_user(client_id, client_password, 2)
         server_https = 'https://{0}:{1}/'.format(config['network']['host'], config['network']['port'])
         config_link = '{0}ws/client/config/{1}'.format(server_https, client_id)
         iso_link = '/iso/client/{0}.iso'.format(client_id)
@@ -548,19 +547,6 @@ def create_client():
                                config_link=config_link, iso_link=iso_link)
 
     return render_template('create-client.html', form=form, mode_name='Client', user=current_user)
-
-
-@app.route('/ws/client/delete', methods=['POST'])
-@login_required
-def delete_clients():
-    client_ids = json.loads(request.data)
-    db_session = database_setup.get_session()
-    for client_id in client_ids:
-        client = db_session.query(Client).filter(Client.id == client_id).one()
-        db_session.delete(client)
-        db_session.commit()
-        authenticator.remove_user(client_id)
-    return ''
 
 
 @app.route('/data/sessions/<_type>', methods=['GET'])
