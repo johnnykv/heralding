@@ -188,6 +188,7 @@ def set_honeypot_mode(drone_id):
         honeypot = Honeypot(id=drone_id)
         db_session.add(honeypot)
         db_session.commit()
+        return ''
     else:
         abort(500, 'Drone has already been assigned.')
 
@@ -203,6 +204,7 @@ def set_client_mode(drone_id):
         client = Client(id=drone_id)
         db_session.add(client)
         db_session.commit()
+        return ''
     else:
         abort(500, 'Drone has already been assigned.')
 

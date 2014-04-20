@@ -12,14 +12,18 @@
                 $.ajax({
                     url: '/ws/drone/honeypot/' + '{{ drone_id }}',
                     type: 'GET',
-                    contentType: 'application/json; charset=utf-8'
+                    contentType: 'application/json; charset=utf-8',
+                    async: false,
+                    success: function(msg) { window.location.href = '/ws/drone/configure/' + '{{ drone_id }}'; }
                 });
             }
             else if ($('#clientCheck').prop('checked') == true) {
                 $.ajax({
                     url: '/ws/drone/client/' + '{{ drone_id }}',
                     type: 'GET',
-                    contentType: 'application/json; charset=utf-8'
+                    contentType: 'application/json; charset=utf-8',
+                    async: false,
+                    success: function(msg) { window.location.href = '/ws/drone/configure/' + '{{ drone_id }}'; }
                 });
             }
             window.location.href = '/ws/drone/configure/' + '{{ drone_id }}';
