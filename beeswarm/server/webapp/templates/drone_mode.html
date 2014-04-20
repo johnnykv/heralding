@@ -5,8 +5,6 @@
 <script type="text/javascript">
 
     $(document).ready(function () {
-        $('#honeypotCheck').radio();
-        $('#clientCheck').radio();
         $('#ContinueButton').on('click', (function () {
             if ($('#honeypotCheck').prop('checked') == true) {
                 $.ajax({

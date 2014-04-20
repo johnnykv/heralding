@@ -211,14 +211,6 @@ def set_client_mode(drone_id):
 @app.route('/ws/drone/configure/<id>', methods=['GET', 'POST'])
 @login_required
 def configure_drone(id):
-    # if drone is unspecified:
-    #   modal to pick client/honeypot
-    # else if drone is honeypot:
-    #   honeypot configure form
-    # else if drone is client:
-    #   client configure form
-    # else:
-    #   error, no drone by that id
     db_session = database_setup.get_session()
     drone = db_session.query(Drone).filter(Drone.id == id).one()
     if drone.discriminator == 'honeypot':
@@ -328,7 +320,158 @@ def configure_drone(id):
             send_zmq_push('ipc://droneCommandReceiver', '{0} {1} {2}'.format(drone.id, Messages.CONFIG, config_json))
             return render_template('finish-config.html', drone_id=drone.id, user=current_user)
     elif drone.discriminator == 'client':
-        assert(False, 'Not implemented yet.')
+        form = NewClientConfigForm()
+        if not form.validate_on_submit():
+            return render_template('create-client.html', form=form, mode_name='Honeypot', user=current_user)
+        else:
+            server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
+            server_zmq_command_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_command_port'])
+            # TODO: Check if key pair exists
+            result = send_zmq_request('ipc://configCommands', 'gen_zmq_keys ' + str(drone.id))
+            zmq_public = result['public_key']
+            zmq_private = result['private_key']
+
+            drone_config = {
+                'general': {
+                    'mode': 'client',
+                    'id': drone.id,
+                    'honeypot_id': None
+                },
+                'public_ip': {
+                    'fetch_ip': True
+                },
+                'honeybees': {
+                    'http': {
+                        'enabled': form.http_enabled.data,
+                        'server': form.http_server.data,
+                        'port': form.http_port.data,
+                        'timing': {
+                            'active_range': form.http_active_range.data,
+                            'sleep_interval': form.http_sleep_interval.data,
+                            'activation_probability': form.http_activation_probability.data
+                        },
+                        'username': form.http_login.data,
+                        'password': form.http_password.data
+                    },
+                    'ftp': {
+                        'enabled': form.ftp_enabled.data,
+                        'server': form.ftp_server.data,
+                        'port': form.ftp_port.data,
+                        'timing': {
+                            'active_range': form.ftp_active_range.data,
+                            'sleep_interval': form.ftp_sleep_interval.data,
+                            'activation_probability': form.ftp_activation_probability.data
+                        },
+                        'username': form.ftp_login.data,
+                        'password': form.ftp_password.data
+                    },
+                    'https': {
+                        'enabled': form.https_enabled.data,
+                        'server': form.https_server.data,
+                        'port': form.https_port.data,
+                        'timing': {
+                            'active_range': form.https_active_range.data,
+                            'sleep_interval': form.https_sleep_interval.data,
+                            'activation_probability': form.https_activation_probability.data
+                        },
+                        'username': form.https_login.data,
+                        'password': form.https_password.data
+                    },
+                    'pop3': {
+                        'enabled': form.pop3_enabled.data,
+                        'server': form.pop3_server.data,
+                        'port': form.pop3_port.data,
+                        'timing': {
+                            'active_range': form.pop3_active_range.data,
+                            'sleep_interval': form.pop3_sleep_interval.data,
+                            'activation_probability': form.pop3_activation_probability.data
+                        },
+                        'username': form.pop3_login.data,
+                        'password': form.pop3_password.data
+                    },
+                    'ssh': {
+                        'enabled': form.ssh_enabled.data,
+                        'server': form.ssh_server.data,
+                        'port': form.ssh_port.data,
+                        'timing': {
+                            'active_range': form.ssh_active_range.data,
+                            'sleep_interval': form.ssh_sleep_interval.data,
+                            'activation_probability': form.ssh_activation_probability.data
+                        },
+                        'username': form.ssh_login.data,
+                        'password': form.ssh_password.data
+                    },
+                    'pop3s': {
+                        'enabled': form.pop3s_enabled.data,
+                        'server': form.pop3s_server.data,
+                        'port': form.pop3s_port.data,
+                        'timing': {
+                            'active_range': form.pop3s_active_range.data,
+                            'sleep_interval': form.pop3s_sleep_interval.data,
+                            'activation_probability': form.pop3s_activation_probability.data
+                        },
+                        'username': form.pop3s_login.data,
+                        'password': form.pop3s_password.data
+                    },
+                    'smtp': {
+                        'enabled': form.smtp_enabled.data,
+                        'server': form.smtp_server.data,
+                        'port': form.smtp_port.data,
+                        'timing': {
+                            'active_range': form.smtp_active_range.data,
+                            'sleep_interval': form.smtp_sleep_interval.data,
+                            'activation_probability': form.smtp_activation_probability.data
+                        },
+                        'username': form.smtp_login.data,
+                        'local_hostname': form.smtp_local_hostname.data,
+                        'password': form.smtp_password.data
+                    },
+                    'vnc': {
+                        'enabled': form.vnc_enabled.data,
+                        'server': form.vnc_server.data,
+                        'port': form.vnc_port.data,
+                        'timing': {
+                            'active_range': form.vnc_active_range.data,
+                            'sleep_interval': form.vnc_sleep_interval.data,
+                            'activation_probability': form.vnc_activation_probability.data
+                        },
+                        'username': form.vnc_login.data,
+                        'password': form.vnc_password.data
+                    },
+                    'telnet': {
+                        'enabled': form.telnet_enabled.data,
+                        'server': form.telnet_server.data,
+                        'port': form.telnet_port.data,
+                        'timing': {
+                            'active_range': form.telnet_active_range.data,
+                            'sleep_interval': form.telnet_sleep_interval.data,
+                            'activation_probability': form.telnet_activation_probability.data
+                        },
+                        'username': form.telnet_login.data,
+                        'password': form.telnet_password.data
+                    }
+                },
+                'beeswarm_server': {
+                    'enabled': True,
+                    'zmq_url' : server_zmq_url,
+                    'zmq_server_public': config['network']['zmq_server_public_key'],
+                    'zmq_own_public': zmq_public,
+                    'zmq_own_private': zmq_private,
+                    'zmq_command_url': server_zmq_command_url,
+                },
+            }
+
+            config_json = json.dumps(drone_config, indent=4)
+
+            drone.configuration = config_json
+            logging.debug(drone.id)
+            logging.debug(drone)
+            db_session.add(drone)
+            db_session.commit()
+
+            # everything good, push config to drone if it is listening
+            send_zmq_push('ipc://droneCommandReceiver', '{0} {1} {2}'.format(drone.id, Messages.CONFIG, config_json))
+            return render_template('finish-config.html', drone_id=drone.id, user=current_user)
     elif drone.discriminator is None:
         return render_template('drone_mode.html', drone_id=drone.id, user=current_user)
     else:
