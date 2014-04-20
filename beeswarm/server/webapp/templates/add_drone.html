@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% import "macros.html" as macros %}
+{% block content %}
+    <div class="row-fluid">
+        <h3>Adding new drone.</h3>
+
+        <p>The following configuration link will be active for the next 2 minutes. The link needs to be passed
+            as the '--config' parameter to Beeswarm on the machine that you want to act as client. The link can be used
+            to add several drones to the system.</p>
+        <pre><code>{{ drone_link }}</code></pre>
+        <p>
+            Alternatively, you can download a pre-configured bootable ISO.
+        </p>
+    </div>
+    <div class="controls-row">
+        <a class="btn btn-primary" href="{{ iso_link }}"><i class="icon-download-alt"></i> Download drone ISO</a>
+    </div>
+    <hr>
+{% endblock content %}

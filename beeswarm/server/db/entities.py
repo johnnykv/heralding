@@ -1,6 +1,7 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Table
 from sqlalchemy.orm import relationship
+import datetime
 
 Base = declarative_base()
 
@@ -10,22 +11,34 @@ honeypot_client_mtm = Table('association', Base.metadata,
                             Column('honeypot', String, ForeignKey('honeypot.id')))
 
 
-class Client(Base):
-    __tablename__ = 'client'
+class Drone(Base):
+    __tablename__ = 'drone'
+    discriminator = Column('type', String(50))
+    __mapper_args__ = {'polymorphic_on': discriminator}
+
     id = Column(String, primary_key=True)
+    name = Column(String, default='')
+    configuration = Column(String)
+    last_activity = Column(DateTime, default=datetime.datetime.min)
+
+
+class Client(Drone):
+    __tablename__ = 'client'
+    __mapper_args__ = {'polymorphic_identity': 'client'}
+
+    id = Column(String, ForeignKey('drone.id'), primary_key=True)
     honeybees = relationship("Honeybee", cascade="all, delete-orphan", backref='client')
     # honeypots that this client will connect to.
     honeypots = relationship("Honeypot", secondary=honeypot_client_mtm)
-    configuration = Column(String)
 
 
-class Honeypot(Base):
+class Honeypot(Drone):
     __tablename__ = 'honeypot'
-    id = Column(String, primary_key=True)
-    sessions = relationship("Session", cascade="all, delete-orphan", backref='honeypot')
-    configuration = Column(String)
-    clients = relationship("Client", secondary=honeypot_client_mtm)
+    id = Column(String, ForeignKey('drone.id'), primary_key=True)
+    __mapper_args__ = {'polymorphic_identity': 'honeypot'}
 
+    sessions = relationship("Session", cascade="all, delete-orphan", backref='honeypot')
+    clients = relationship("Client", secondary=honeypot_client_mtm)
 
 class Classification(Base):
     __tablename__ = 'classification'
@@ -36,9 +49,10 @@ class Classification(Base):
 
 class Session(Base):
     __tablename__ = 'session'
-    id = Column(String, primary_key=True)
     discriminator = Column('type', String(50))
     __mapper_args__ = {'polymorphic_on': discriminator}
+
+    id = Column(String, primary_key=True)
     received = Column(DateTime)
     timestamp = Column(DateTime)
     protocol = Column(String)
@@ -56,6 +70,7 @@ class Session(Base):
 
 class Authentication(Base):
     __tablename__ = 'authentication'
+
     id = Column(String, primary_key=True)
     timestamp = Column(DateTime)
     username = Column(String)
@@ -67,6 +82,7 @@ class Authentication(Base):
 
 class SessionData(Base):
     __tablename__ = 'sessiondata'
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     type = Column(String)
     data = Column(String)
@@ -76,6 +92,7 @@ class SessionData(Base):
 
 class Transcript(Base):
     __tablename__ = 'transcript'
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     data = Column(String)
     direction = Column(String)
@@ -86,6 +103,7 @@ class Transcript(Base):
 class Honeybee(Session):
     __tablename__ = 'honeybee'
     __mapper_args__ = {'polymorphic_identity': 'honeybee'}
+
     id = Column(String, ForeignKey('session.id'), primary_key=True)
     did_connect = Column(Boolean)
     did_login = Column(Boolean)
@@ -95,14 +113,14 @@ class Honeybee(Session):
 
 class User(Base):
     __tablename__ = 'user'
+
     id = Column(String(32), primary_key=True)
     nickname = Column(String(64))
     password = Column(String(256))
 
     # User type will be:
     # Admin  == 0
-    # Honeypot   == 1
-    # Client == 2
+
     utype = Column(Integer, default=0)
 
     def is_authenticated(self):
@@ -123,5 +141,6 @@ class User(Base):
 
 class BaitUser(Base):
     __tablename__ = 'baituser'
+
     username = Column(String(32), primary_key=True)
     password = Column(String(32))

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block javascript %}
+{{ super() }}
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        $('#ContinueButton').on('click', (function () {
+            if ($('#honeypotCheck').prop('checked') == true) {
+                $.ajax({
+                    url: '/ws/drone/honeypot/' + '{{ drone_id }}',
+                    type: 'GET',
+                    contentType: 'application/json; charset=utf-8',
+                    async: false,
+                    success: function(msg) { window.location.href = '/ws/drone/configure/' + '{{ drone_id }}'; }
+                });
+            }
+            else if ($('#clientCheck').prop('checked') == true) {
+                $.ajax({
+                    url: '/ws/drone/client/' + '{{ drone_id }}',
+                    type: 'GET',
+                    contentType: 'application/json; charset=utf-8',
+                    async: false,
+                    success: function(msg) { window.location.href = '/ws/drone/configure/' + '{{ drone_id }}'; }
+                });
+            }
+            window.location.href = '/ws/drone/configure/' + '{{ drone_id }}';
+        }));
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row-fluid">
+    <h3>Select mode for drone.</h3>
+
+    <p>This drone has never been configured before, please select if this drone should be configured as a honeypot
+        or a client.</p>
+    <label class="radio radio-custom">
+        <input id="honeypotCheck" type="radio" name="radioA" checked="checked">
+        <i class="radio"></i>Honeypot
+    </label>
+    <label class="radio radio-custom">
+        <input id="clientCheck" type="radio" name="radioA">
+        <i class="radio"></i>Client
+    </label>
+</div>
+<div class="controls-row">
+    <a id="ContinueButton" class="btn btn-primary">Continue</a>
+</div>
+<hr>
+{% endblock content %}

@@ -12,9 +12,10 @@ pysendfile
 pyDes
 flask>=0.10.0
 flask-login
-sqlalchemy>=0.8.1
+sqlalchemy>=0.9.1
 pyOpenSSL
 hpfeeds
 lxml
 flask-wtf>=0.9.0
 mock
+enum

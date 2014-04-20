@@ -15,7 +15,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import curses
-
 import logging
 import json
 from argparse import ArgumentParser
@@ -25,17 +24,16 @@ import os
 import gevent
 import gevent.monkey
 
+
 gevent.monkey.patch_all()
 from gevent import Greenlet
 import requests
-from requests.exceptions import Timeout, ConnectionError
-import beeswarm
 
-from beeswarm.honeypot.honeypot import Honeypot
+from beeswarm.drones.drone import Drone
+from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.server.server import Server
-from beeswarm.client.client import Client
+from beeswarm.drones.client.client import Client
 from beeswarm.errors import ConfigNotFound
-from beeswarm.shared.helpers import is_url
 from beeswarm.shared.models.ui_handler import CursesLogHandler
 from beeswarm.shared.asciify import asciify
 from beeswarm.shared.helpers import is_url
@@ -122,6 +120,8 @@ if __name__ == '__main__':
     config_file = None
 
     if is_url(args.configurl):
+        # meh, MiTM problem here... Acceptable? Workaround?
+        # maybe print fingerprint on the web ui and let user verify manually?
         conf = requests.get(args.configurl, verify=False)
         config = json.loads(conf.text, object_hook=asciify)
         with open('beeswarmcfg.json', 'w') as local_config:
@@ -132,12 +132,10 @@ if __name__ == '__main__':
             config = json.load(config_file, object_hook=asciify)
             if 'general' in config:
                 _mode = config['general']['mode']
-                if _mode == 'honeypot':
-                    mode = Honeypot
-                elif _mode == 'server':
+                if _mode == 'server':
                     mode = Server
-                elif _mode == 'client':
-                    mode = Client
+                else:
+                    mode = Drone
     elif args.honeypot:
         mode = Honeypot
     elif args.client:

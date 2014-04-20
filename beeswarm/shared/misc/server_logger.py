@@ -14,19 +14,18 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import urlparse
 import uuid
 import json
-import tempfile
 import os
 from datetime import datetime
-
 
 import gevent
 import zmq.green as zmq
 import zmq.auth
 from zmq.utils.monitor import recv_monitor_message
-from beeswarm.honeypot.consumer.loggers.loggerbase import LoggerBase
+
+from beeswarm.drones.honeypot.consumer.loggers.loggerbase import LoggerBase
+
 
 logger = logging.getLogger(__name__)
 

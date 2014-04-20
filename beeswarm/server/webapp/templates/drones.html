@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% if dronetype == None %}
+{% set dataurl = '/data/drones' %}
+{% else %}
+{% set dataurl = '/data/drones/' + dronetype %}
+{% endif %}
+
+{% block content %}
+<h3>Drones</h3>
+<table id="dronestable" class="table table-bordered datagrid">
+    <thead/>
+
+    <tfoot>
+    <tr>
+        <th>
+            <div class="datagrid-footer-left" style="display:none;">
+                <div class="grid-controls">
+                    <span><span class="grid-start"></span> - <span class="grid-end"></span> of <span
+                            class="grid-count"></span></span>
+                    <select class="grid-pagesize">
+                        <option>5</option>
+                        <option>20</option>
+                        <option>50</option>
+                    </select>
+                    <span>Per Page</span>
+                </div>
+            </div>
+            <div class="datagrid-footer-right" style="display:none;">
+                <div class="grid-pager">
+                    <button class="btn grid-prevpage"><i class="icon-chevron-left"></i></button>
+                    <span>Page</span>
+
+                    <div class="input-append dropdown combobox">
+                        <input class="span1" type="text">
+                    </div>
+                    <span>of <span class="grid-pages"></span></span>
+                    <button class="btn grid-nextpage"><i class="icon-chevron-right"></i></button>
+                </div>
+            </div>
+        </th>
+    </tr>
+    </tfoot>
+</table>
+
+<script type="text/javascript">
+
+    $('#dronestable').datagrid({
+        dataSource: new GenericDataSource({
+            columns: [
+                {
+                    property: 'id',
+                    label: 'Id',
+                    sortable: true
+                },
+                {
+                    property: 'name',
+                    label: 'Name',
+                    sortable: true
+                },
+                {
+                    property: 'type',
+                    label: 'Type',
+                    sortable: true
+                },
+                {
+                    property: 'last_activity',
+                    label: 'Last activity',
+                    sortable: true
+                },
+                {
+                    property: 'actions',
+                    label: 'Actions',
+                    sortable: false
+                }
+            ],
+            url: '{{ dataurl }}',
+            formatter: function (items) {
+                $.each(items, function (index, item) {
+                    item.time = item.time + '<span style="visibility: hidden;" data-id="' + item.id + '"/>';
+                    item.actions = '';
+                    item.actions += '<i id="delete" class="fa fa-trash-o fa-fw"></i>';
+                    item.actions += '<i id="settings" class="fa fa-wrench fa-fw"></i>';
+                });
+            }
+        })
+    }).on('click', 'i.fa', function () {
+        var drone_id = $(this).parent().parent().find("td").eq(0).html();
+        var icon_id = $(this).attr("id");
+        if (icon_id == 'delete')
+        {
+          $.ajax({
+                url: '/ws/drone/delete',
+                type: 'POST',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify([drone_id, ])
+            });
+            $('#dronestable').datagrid('reload');
+        }
+        else if (icon_id == 'settings')
+        {
+            window.location.href='/ws/drone/configure/' + drone_id;
+        }
+    });
+
+</script>
+{% endblock content %}

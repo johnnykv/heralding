@@ -2,17 +2,7 @@
 {% import "macros.html" as macros %}
 {% block content %}
     <div class="row-fluid">
-        <h3>New {{ mode_name }} configuration created.</h3>
-
-        <p>You can use the new configuration by passing the following link
-            as the '--config' parameter to Beeswarm.</p>
-        <pre><code>{{ config_link }}</code></pre>
-        <p>
-            Alternatively, you can download a pre-configured bootable ISO.
-        </p>
-    </div>
-    <div class="controls-row">
-        <a class="btn btn-primary" href="{{ iso_link }}"><i class="icon-download-alt"></i> Download ISO</a>
+        <h3>The drone has been configured.</h3>
     </div>
     <hr>
 {% endblock content %}

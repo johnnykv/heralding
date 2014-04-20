@@ -27,7 +27,7 @@ from collections import namedtuple
 import gevent
 import zmq.green as zmq
 
-from flask import Flask, render_template, request, redirect, flash, Response, send_from_directory
+from flask import Flask, render_template, request, redirect, flash, Response, send_from_directory, abort
 import flask
 from flask.ext.login import LoginManager, login_user, current_user, login_required, logout_user
 from sqlalchemy.orm.exc import NoResultFound
@@ -39,9 +39,9 @@ import beeswarm
 from forms import NewHoneypotConfigForm, NewClientConfigForm, LoginForm, SettingsForm
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, Honeybee, Session, Honeypot, User, Authentication, Classification,\
-                                           BaitUser, Transcript
-from beeswarm.shared.helpers import send_command
-from beeswarm.shared.message_constants import *
+                                           BaitUser, Transcript, Drone
+from beeswarm.shared.helpers import send_zmq_request, send_zmq_push
+from beeswarm.shared.message_enum import Messages
 
 
 def is_hidden_field_filter(field):
@@ -64,6 +64,9 @@ logger = logging.getLogger(__name__)
 authenticator = Authenticator()
 first_cfg_received = gevent.event.Event()
 
+# keys used for adding new drones to the system
+drone_keys = []
+
 @app.before_first_request
 def initialize():
     gevent.spawn(config_subscriber)
@@ -77,7 +80,7 @@ def config_subscriber():
     subscriber_socket = ctx.socket(zmq.SUB)
     subscriber_socket.connect('ipc://configPublisher')
     subscriber_socket.setsockopt(zmq.SUBSCRIBE, 'full')
-    send_command('ipc://configCommands', PUBLISH_CONFIG)
+    send_zmq_request('ipc://configCommands', Messages.PUBLISH_CONFIG)
     while True:
         poller = zmq.Poller()
         poller.register(subscriber_socket, zmq.POLLIN)
@@ -173,44 +176,60 @@ def sessions_honeybees():
 def sessions_attacks():
     return render_template('logs.html', logtype='Attacks', user=current_user)
 
-@app.route('/ws/honeypot/config/<honeypot_id>', methods=['GET'])
-def get_honeypot_config(honeypot_id):
-    db_session = database_setup.get_session()
-    current_honeypot = db_session.query(Honeypot).filter(Honeypot.id == honeypot_id).one()
-    return current_honeypot.configuration
-
-
-@app.route('/ws/client/config/<client_id>', methods=['GET'])
-def get_client_config(client_id):
-    db_session = database_setup.get_session()
-    client = db_session.query(Client).filter(Client.id == client_id).one()
-    return client.configuration
-
-
-@app.route('/ws/honeypot', methods=['GET', 'POST'])
+@app.route('/ws/drone/honeypot/<drone_id>')
 @login_required
-def create_honeypot():
-    form = NewHoneypotConfigForm()
-    honeypot_id = str(uuid.uuid4())
-    if form.validate_on_submit():
-        server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
-        result = send_command('ipc://configCommands', 'gen_zmq_keys ' + honeypot_id)
-        zmq_public = result['public_key']
-        zmq_private = result['private_key']
-        db_session = database_setup.get_session()
-        honeypot_users = db_session.query(BaitUser).all()
-        users_dict = {}
-        # only add users if the honeypot is running in active mode
-        # TODO: actually create active mode...
-        if not form.general_standalone.data:
-            for u in honeypot_users:
-                users_dict[u.username] = u.password
+def set_honeypot_mode(drone_id):
+    db_session = database_setup.get_session()
+    drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
+    if drone.discriminator == None:
+        # meh, better way do do this?
+        db_session.delete(drone)
+        db_session.commit()
+        honeypot = Honeypot(id=drone_id)
+        db_session.add(honeypot)
+        db_session.commit()
+        return ''
+    else:
+        abort(500, 'Drone has already been assigned.')
 
-        honeypot_config = {
+@app.route('/ws/drone/client/<drone_id>')
+@login_required
+def set_client_mode(drone_id):
+    db_session = database_setup.get_session()
+    drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
+    if drone.discriminator == None:
+        # meh, better way do do this?
+        db_session.delete(drone)
+        db_session.commit()
+        client = Client(id=drone_id)
+        db_session.add(client)
+        db_session.commit()
+        return ''
+    else:
+        abort(500, 'Drone has already been assigned.')
+
+@app.route('/ws/drone/configure/<id>', methods=['GET', 'POST'])
+@login_required
+def configure_drone(id):
+    db_session = database_setup.get_session()
+    drone = db_session.query(Drone).filter(Drone.id == id).one()
+    if drone.discriminator == 'honeypot':
+        form = NewHoneypotConfigForm()
+        if not form.validate_on_submit():
+            return render_template('create-honeypot.html', form=form, mode_name='Honeypot', user=current_user)
+        else:
+            server_zmq_command_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_command_port'])
+            server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
+            # TODO: Check if key pair exists
+            result = send_zmq_request('ipc://configCommands', 'gen_zmq_keys ' + str(drone.id))
+            zmq_public = result['public_key']
+            zmq_private = result['private_key']
+
+            drone_config = {
             'general': {
                 'mode': 'honeypot',
-                'honeypot_id': honeypot_id,
-                'honeypot_ip': '192.168.1.1',
+                'id': drone.id,
+                'ip': '192.168.1.1',
                 'fetch_ip': False
             },
             'log_hpfeedslogger': {
@@ -219,7 +238,7 @@ def create_honeypot():
                 'port': 20000,
                 'ident': '2wtadBoH',
                 'secret': 'mJPyhNhJmLYGbDCt',
-                'chan': 'beeswarm.honeypot',
+                'chan': 'beeswarm.drones.honeypot',
                 'port_mapping': '{}'
             },
             'beeswarm_server': {
@@ -228,6 +247,7 @@ def create_honeypot():
                 'zmq_server_public': config['network']['zmq_server_public_key'],
                 'zmq_own_public': zmq_public,
                 'zmq_own_private': zmq_private,
+                'zmq_command_url': server_zmq_command_url,
             },
             'log_syslog': {
                 'enabled': False,
@@ -281,39 +301,258 @@ def create_honeypot():
                     'port': form.vnc_port.data
                 }
             },
-            'users': users_dict,
+            'users': {},
             'timecheck': {
                 'enabled': True,
                 'poll': 5,
                 'ntp_pool': 'pool.ntp.org'
             },
         }
-        config_json = json.dumps(honeypot_config, indent=4)
+            config_json = json.dumps(drone_config, indent=4)
 
-        h = Honeypot(id=honeypot_id, configuration=config_json)
-        db_session.add(h)
-        db_session.commit()
-        # TODO: initial config should also be pulled with ZMQ from server...
-        server_https = 'https://{0}:{1}/'.format(config['network']['host'], config['network']['port'])
-        config_link = '{0}ws/honeypot/config/{1}'.format(server_https, honeypot_id)
-        iso_link = '/iso/honeypot/{0}.iso'.format(honeypot_id)
-        return render_template('finish-config.html', mode_name='Honeypot', user=current_user,
-                               config_link=config_link, iso_link=iso_link)
+            drone.configuration = config_json
+            logging.debug(drone.id)
+            logging.debug(drone)
+            db_session.add(drone)
+            db_session.commit()
 
-    return render_template('create-honeypot.html', form=form, mode_name='Honeypot', user=current_user)
+            # everything good, push config to drone if it is listening
+            send_zmq_push('ipc://droneCommandReceiver', '{0} {1} {2}'.format(drone.id, Messages.CONFIG, config_json))
+            return render_template('finish-config.html', drone_id=drone.id, user=current_user)
+    elif drone.discriminator == 'client':
+        form = NewClientConfigForm()
+        if not form.validate_on_submit():
+            return render_template('create-client.html', form=form, mode_name='Honeypot', user=current_user)
+        else:
+            server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
+            server_zmq_command_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_command_port'])
+            # TODO: Check if key pair exists
+            result = send_zmq_request('ipc://configCommands', 'gen_zmq_keys ' + str(drone.id))
+            zmq_public = result['public_key']
+            zmq_private = result['private_key']
+
+            drone_config = {
+                'general': {
+                    'mode': 'client',
+                    'id': drone.id,
+                    'honeypot_id': None
+                },
+                'public_ip': {
+                    'fetch_ip': True
+                },
+                'honeybees': {
+                    'http': {
+                        'enabled': form.http_enabled.data,
+                        'server': form.http_server.data,
+                        'port': form.http_port.data,
+                        'timing': {
+                            'active_range': form.http_active_range.data,
+                            'sleep_interval': form.http_sleep_interval.data,
+                            'activation_probability': form.http_activation_probability.data
+                        },
+                        'username': form.http_login.data,
+                        'password': form.http_password.data
+                    },
+                    'ftp': {
+                        'enabled': form.ftp_enabled.data,
+                        'server': form.ftp_server.data,
+                        'port': form.ftp_port.data,
+                        'timing': {
+                            'active_range': form.ftp_active_range.data,
+                            'sleep_interval': form.ftp_sleep_interval.data,
+                            'activation_probability': form.ftp_activation_probability.data
+                        },
+                        'username': form.ftp_login.data,
+                        'password': form.ftp_password.data
+                    },
+                    'https': {
+                        'enabled': form.https_enabled.data,
+                        'server': form.https_server.data,
+                        'port': form.https_port.data,
+                        'timing': {
+                            'active_range': form.https_active_range.data,
+                            'sleep_interval': form.https_sleep_interval.data,
+                            'activation_probability': form.https_activation_probability.data
+                        },
+                        'username': form.https_login.data,
+                        'password': form.https_password.data
+                    },
+                    'pop3': {
+                        'enabled': form.pop3_enabled.data,
+                        'server': form.pop3_server.data,
+                        'port': form.pop3_port.data,
+                        'timing': {
+                            'active_range': form.pop3_active_range.data,
+                            'sleep_interval': form.pop3_sleep_interval.data,
+                            'activation_probability': form.pop3_activation_probability.data
+                        },
+                        'username': form.pop3_login.data,
+                        'password': form.pop3_password.data
+                    },
+                    'ssh': {
+                        'enabled': form.ssh_enabled.data,
+                        'server': form.ssh_server.data,
+                        'port': form.ssh_port.data,
+                        'timing': {
+                            'active_range': form.ssh_active_range.data,
+                            'sleep_interval': form.ssh_sleep_interval.data,
+                            'activation_probability': form.ssh_activation_probability.data
+                        },
+                        'username': form.ssh_login.data,
+                        'password': form.ssh_password.data
+                    },
+                    'pop3s': {
+                        'enabled': form.pop3s_enabled.data,
+                        'server': form.pop3s_server.data,
+                        'port': form.pop3s_port.data,
+                        'timing': {
+                            'active_range': form.pop3s_active_range.data,
+                            'sleep_interval': form.pop3s_sleep_interval.data,
+                            'activation_probability': form.pop3s_activation_probability.data
+                        },
+                        'username': form.pop3s_login.data,
+                        'password': form.pop3s_password.data
+                    },
+                    'smtp': {
+                        'enabled': form.smtp_enabled.data,
+                        'server': form.smtp_server.data,
+                        'port': form.smtp_port.data,
+                        'timing': {
+                            'active_range': form.smtp_active_range.data,
+                            'sleep_interval': form.smtp_sleep_interval.data,
+                            'activation_probability': form.smtp_activation_probability.data
+                        },
+                        'username': form.smtp_login.data,
+                        'local_hostname': form.smtp_local_hostname.data,
+                        'password': form.smtp_password.data
+                    },
+                    'vnc': {
+                        'enabled': form.vnc_enabled.data,
+                        'server': form.vnc_server.data,
+                        'port': form.vnc_port.data,
+                        'timing': {
+                            'active_range': form.vnc_active_range.data,
+                            'sleep_interval': form.vnc_sleep_interval.data,
+                            'activation_probability': form.vnc_activation_probability.data
+                        },
+                        'username': form.vnc_login.data,
+                        'password': form.vnc_password.data
+                    },
+                    'telnet': {
+                        'enabled': form.telnet_enabled.data,
+                        'server': form.telnet_server.data,
+                        'port': form.telnet_port.data,
+                        'timing': {
+                            'active_range': form.telnet_active_range.data,
+                            'sleep_interval': form.telnet_sleep_interval.data,
+                            'activation_probability': form.telnet_activation_probability.data
+                        },
+                        'username': form.telnet_login.data,
+                        'password': form.telnet_password.data
+                    }
+                },
+                'beeswarm_server': {
+                    'enabled': True,
+                    'zmq_url' : server_zmq_url,
+                    'zmq_server_public': config['network']['zmq_server_public_key'],
+                    'zmq_own_public': zmq_public,
+                    'zmq_own_private': zmq_private,
+                    'zmq_command_url': server_zmq_command_url,
+                },
+            }
+
+            config_json = json.dumps(drone_config, indent=4)
+
+            drone.configuration = config_json
+            logging.debug(drone.id)
+            logging.debug(drone)
+            db_session.add(drone)
+            db_session.commit()
+
+            # everything good, push config to drone if it is listening
+            send_zmq_push('ipc://droneCommandReceiver', '{0} {1} {2}'.format(drone.id, Messages.CONFIG, config_json))
+            return render_template('finish-config.html', drone_id=drone.id, user=current_user)
+    elif drone.discriminator is None:
+        return render_template('drone_mode.html', drone_id=drone.id, user=current_user)
+    else:
+        assert(drone is None)
+        abort(404, 'Drone with that id could not be found.')
 
 
-@app.route('/ws/honeypot/delete', methods=['POST'])
+def reset_drone_key(key):
+    global drone_keys
+    if key in drone_keys:
+        drone_keys.remove(key)
+        logger.debug('Removed drone add key.')
+    else:
+        logger.debug('Tried to remove drone key, but the key was not found.')
+
+@app.route('/ws/drone/add', methods=['GET'])
 @login_required
-def delete_honeypots():
-    # list of honeypot id's'
-    honeypot_ids = json.loads(request.data)
-    db_session = database_setup.get_session()
-    for honeypot_id in honeypot_ids:
-        honeypot_to_delete = db_session.query(Honeypot).filter(Honeypot.id == honeypot_id).one()
-        db_session.delete(honeypot_to_delete)
+def add_drone():
+    global drone_keys
+    drone_key = ''.join(random.SystemRandom().choice('0123456789abcdef') for i in range(6))
+    drone_keys.append(drone_key)
+    gevent.spawn_later(120, reset_drone_key, drone_key)
+
+    server_https = 'https://{0}:{1}/'.format(config['network']['host'], config['network']['port'])
+    drone_link = '{0}ws/drone/add/{1}'.format(server_https, drone_key)
+    iso_link = '/NotWorkingYet'
+    return render_template('add_drone.html', user=current_user, drone_link=drone_link,
+                           iso_link=iso_link)
+
+# TODO: throttle this
+@app.route('/ws/drone/add/<key>', methods=['GET'])
+def drone_key(key):
+    global drone_keys
+    if key not in drone_keys:
+        logger.warn('Attempt to add new drone, but using wrong key from: {0}'.format(request.remote_addr))
+        abort(401)
+    else:
+        drone_id = str(uuid.uuid4())
+        server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
+        server_zmq_command_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_command_port'])
+        result = send_zmq_request('ipc://configCommands', 'gen_zmq_keys ' + drone_id)
+        zmq_public = result['public_key']
+        zmq_private = result['private_key']
+        db_session = database_setup.get_session()
+        # this could be done even simpler by only using the http api to provide the ZMQ keys
+        # everything else could be done using zmq
+        drone_config = {
+            'general': {
+                'mode': '',
+                'id': drone_id,
+                'fetch_ip': False
+            },
+            'beeswarm_server': {
+                'enabled': True,
+                'zmq_url': server_zmq_url,
+                'zmq_command_url' : server_zmq_command_url,
+                'zmq_server_public': config['network']['zmq_server_public_key'],
+                'zmq_own_public': zmq_public,
+                'zmq_own_private': zmq_private,
+            }
+        }
+
+        config_json = json.dumps(drone_config, indent=4)
+        drone = Drone(id=drone_id, configuration=config_json)
+        db_session.add(drone)
         db_session.commit()
-        authenticator.remove_user(honeypot_id)
+        logger.debug('Generated drone config for {0} on request from {1}'.format(drone_id, request.remote_addr))
+        return config_json
+
+
+@app.route('/ws/drone/delete', methods=['POST'])
+@login_required
+def delete_drones():
+    # list of drone id's'
+    drone_ids = json.loads(request.data)
+    db_session = database_setup.get_session()
+    for drone_id in drone_ids:
+        logger.debug('Deleting drone: {0}'.format(drone_id))
+        drone_to_delete= db_session.query(Drone).filter(Drone.id == drone_id).one()
+        db_session.delete(drone_to_delete)
+        db_session.commit()
     return ''
 
 
@@ -326,10 +565,10 @@ def create_client():
         with open(app.config['CERT_PATH']) as cert:
             cert_str = cert.read()
         server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
-        result = send_command('ipc://configCommands', 'gen_zmq_keys ' + client_id)
+        result = send_zmq_request('ipc://configCommands', 'gen_zmq_keys ' + client_id)
         zmq_public = result['public_key']
         zmq_private = result['private_key']
-        client_password = str(uuid.uuid4())
+
         client_config = {
             'general': {
                 'mode': 'client',
@@ -464,7 +703,6 @@ def create_client():
         f = Client(id=client_id, configuration=config_json)
         db_session.add(f)
         db_session.commit()
-        authenticator.add_user(client_id, client_password, 2)
         server_https = 'https://{0}:{1}/'.format(config['network']['host'], config['network']['port'])
         config_link = '{0}ws/client/config/{1}'.format(server_https, client_id)
         iso_link = '/iso/client/{0}.iso'.format(client_id)
@@ -472,19 +710,6 @@ def create_client():
                                config_link=config_link, iso_link=iso_link)
 
     return render_template('create-client.html', form=form, mode_name='Client', user=current_user)
-
-
-@app.route('/ws/client/delete', methods=['POST'])
-@login_required
-def delete_clients():
-    client_ids = json.loads(request.data)
-    db_session = database_setup.get_session()
-    for client_id in client_ids:
-        client = db_session.query(Client).filter(Client.id == client_id).one()
-        db_session.delete(client)
-        db_session.commit()
-        authenticator.remove_user(client_id)
-    return ''
 
 
 @app.route('/data/sessions/<_type>', methods=['GET'])
@@ -557,6 +782,39 @@ def data_clients():
         rows.append(row)
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp
+
+@app.route('/data/drones', defaults={'dronetype': None}, methods=['GET'])
+@app.route('/data/drones/<dronetype>', methods=['GET'])
+@login_required
+def data_drones(dronetype):
+    db_session = database_setup.get_session()
+    if dronetype is None:
+        drones = db_session.query(Drone).all()
+    elif dronetype == 'unassigned':
+        drones = db_session.query(Drone).filter(Drone.discriminator == None)
+    else:
+        drones = db_session.query(Drone).filter(Drone.discriminator == dronetype)
+
+    rows = []
+    for d in drones:
+        if d.last_activity == datetime.min:
+            timestamp = 'Never'
+        else:
+            timestamp = d.last_activity.strftime('%Y-%m-%d %H:%M:%S')
+        if d.discriminator is None:
+            _type = ''
+        else:
+            _type = d.discriminator.capitalize()
+        row = {'id': d.id, 'name': d.name, 'type': _type, 'last_activity': timestamp}
+        rows.append(row)
+    rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
+    return rsp
+
+@app.route('/ws/drones', defaults={'dronetype': None})
+@app.route('/ws/drones/<dronetype>')
+@login_required
+def drones(dronetype):
+    return render_template('drones.html', user=current_user, dronetype=dronetype)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -656,7 +914,7 @@ def update_config(options):
     socket.connect('ipc://configCommands')
     socket.send('set ' + json.dumps(options))
     reply = socket.recv()
-    if reply != beeswarm.OK:
+    if reply != Messages.OK:
         logger.warning('Error while requesting config change to actor.')
     socket.close()
 
@@ -691,7 +949,6 @@ def write_to_iso(temporary_dir, mode):
         with open(config_archive, 'rb') as tarfile:
             isofile.write(tarfile.read())
     return True
-
 
 if __name__ == '__main__':
     app.run()

@@ -2,12 +2,20 @@
 {% import "macros.html" as macros %}
 
 {% block javascript %}
-    {{ super() }}
-    <script type="text/javascript">
-        $(function () {
-            $('#formtabs a:first').tab('show');
-        });
-    </script>
+{{ super() }}
+<script type="text/javascript">
+    $(function () {
+        $('#formtabs a:first').tab('show');
+    });
+
+    $(document).on('click', '#btnWizardPrev', function () {
+        $('#HoneypotWizard').wizard('previous');
+    });
+
+    $(document).on('click', '#btnWizardNext', function () {
+        $('#HoneypotWizard').wizard('next', 'foo');
+    });
+</script>
 {% endblock %}
 
 {% block content %}

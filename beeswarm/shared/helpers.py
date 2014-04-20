@@ -28,6 +28,7 @@ import shutil
 import zmq.green as zmq
 
 import beeswarm
+from beeswarm.shared.message_enum import Messages
 
 logger = logging.getLogger(__name__)
 
@@ -176,19 +177,29 @@ def get_config_dict(configfile):
 
 
 # for occasional req/resp
-def send_command(actor_url, request):
+def send_zmq_request(actor_url, request):
     context = zmq.Context()
     socket = context.socket(zmq.REQ)
     socket.connect(actor_url)
     socket.send(request)
     result = socket.recv()
-    if result.split(' ', 1)[0] != beeswarm.OK:
+    if result.split(' ', 1)[0] != Messages.OK:
         logger.warning('Error while requesting config change to actor.')
         socket.close()
         assert(False)
     else:
         socket.close()
         return json.loads(result.split(' ', 1)[1])
+
+
+# for occasional zmq pushes
+def send_zmq_push(actor_url, data):
+    context = zmq.Context()
+    socket = context.socket(zmq.PUSH)
+    socket.connect(actor_url)
+    socket.send(data)
+    socket.close()
+
 
 def extract_keys(work_dir, config):
     #dump keys used for secure communication with beeswarm server

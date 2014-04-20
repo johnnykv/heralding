@@ -3,7 +3,7 @@
 <div class="row-fluid">
     <ul class="thumbnails">
         <li class="thumbnail span6 text-center">
-            <a class="btn-link" href="#honeypotmodal" data-toggle="modal">
+            <a class="btn-link" href="/ws/drones/honeypot">
                 <h1>{{ status.nhoneypots }}
                     <small>Honeypots</small>
                 </h1>
@@ -99,7 +99,7 @@
             </table>
         </li>
         <li class="thumbnail span6 text-center pull-right">
-            <a class="btn-link" href="#clientmodal" data-toggle="modal">
+            <a class="btn-link" href="/ws/drones/client">
                 <h1>{{ status.nclients }}
                     <small>Clients</small>
                 </h1>
@@ -122,176 +122,5 @@
         'height': thumbs.height()
     });
 </script>
-
-{#--- modals ---#}
-<div id="honeypotmodal" class="modal hide fade" tabindex="-1">
-    <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal">x</button>
-        <h2>Honeypots</h2>
-    </div>
-    <table id="honeypotsTable" class="table table-bordered datagrid">
-        <thead/>
-        <tfoot>
-        <tr>
-            <th>
-                <div class="datagrid-footer-left" style="display:none;">
-                    <div class="grid-controls">
-                        <span><span class="grid-start"></span> - <span class="grid-end"></span> of <span
-                                class="grid-count"></span></span>
-                        <select class="grid-pagesize">
-                            <option>5</option>
-                            <option>20</option>
-                            <option>50</option>
-                        </select>
-                        <span>Per Page</span>
-                    </div>
-                </div>
-                <div class="datagrid-footer-right" style="display:none;">
-                    <div class="grid-pager">
-                        <button class="btn grid-prevpage"><i class="icon-chevron-left"></i></button>
-                        <span>Page</span>
-
-                        <div class="input-append dropdown combobox">
-                            <input class="span1" type="text">
-                        </div>
-                        <span>of <span class="grid-pages"></span></span>
-                        <button class="btn grid-nextpage"><i class="icon-chevron-right"></i></button>
-                    </div>
-                </div>
-            </th>
-        </tr>
-        </tfoot>
-    </table>
-
-    <script type="text/javascript">
-
-        $('#honeypotmodal').on('shown', function () {
-            $('#honeypotsTable').datagrid({
-                dataSource: new GenericDataSource({
-                    columns: [
-                        {
-                            property: 'honeypot_id',
-                            label: 'Honeypot Id',
-                            sortable: true
-                        },
-                        {
-                            property: 'attacks',
-                            label: 'Attacks',
-                            sortable: true
-                        },
-                        {
-                            property: 'actions',
-                            label: 'Actions',
-                            sortable: false
-                        }
-                    ],
-                    url: '/data/honeypots',
-                    formatter: function (items) {
-                        $.each(items, function (index, item) {
-                            item.actions = '<i class="fa fa-trash-o fa-fw"></i>';
-                        })
-                    }
-                })
-            }).on('click', 'i.fa', function () {
-                        var id = $(this).parent().parent().find("td").eq(0).html();
-                        console.log(JSON.stringify([id]));
-                        $.ajax({
-                            url: '/ws/honeypot/delete',
-                            type: 'POST',
-                            contentType: 'application/json; charset=utf-8',
-                            data: JSON.stringify([id, ])
-                        });
-                        $('#honeypotsTable').datagrid('reload');
-                    });
-        });
-    </script>
-    <div class="modal-footer">
-        <button class="btn" data-dismiss="modal">Close</button>
-    </div>
-</div>
-
-<div id="clientmodal" class="modal hide fade" tabindex="-1">
-    <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal">x</button>
-        <h2>Client</h2>
-    </div>
-    <table id="clientsTable" class="table table-bordered datagrid">
-        <thead/>
-        <tfoot>
-        <tr>
-            <th>
-                <div class="datagrid-footer-left" style="display:none;">
-                    <div class="grid-controls">
-                        <span><span class="grid-start"></span> - <span class="grid-end"></span> of <span
-                                class="grid-count"></span></span>
-                        <select class="grid-pagesize">
-                            <option>5</option>
-                            <option>20</option>
-                            <option>50</option>
-                        </select>
-                        <span>Per Page</span>
-                    </div>
-                </div>
-                <div class="datagrid-footer-right" style="display:none;">
-                    <div class="grid-pager">
-                        <button class="btn grid-prevpage"><i class="icon-chevron-left"></i></button>
-                        <span>Page</span>
-
-                        <div class="input-append dropdown combobox">
-                            <input class="span1" type="text">
-                        </div>
-                        <span>of <span class="grid-pages"></span></span>
-                        <button class="btn grid-nextpage"><i class="icon-chevron-right"></i></button>
-                    </div>
-                </div>
-            </th>
-        </tr>
-        </tfoot>
-    </table>
-
-    <script type="text/javascript">
-        $('#clientmodal').on('shown', function () {
-            $('#clientsTable').datagrid({
-                dataSource: new GenericDataSource({
-                    columns: [
-                        {
-                            property: 'client_id',
-                            label: 'Client Id',
-                            sortable: true
-                        },
-                        {
-                            property: 'bees',
-                            label: 'Honeybees',
-                            sortable: true
-                        },
-                        {
-                            property: 'actions',
-                            label: 'Actions',
-                            sortable: false
-                        }
-                    ],
-                    url: '/data/clients',
-                    formatter: function (items) {
-                        $.each(items, function (index, item) {
-                            item.actions = '<i class="fa fa-trash-o fa-fw"></i>';
-                        })
-                    }
-                })
-            }).on('click', 'i.fa', function () {
-                        var id = $(this).parent().parent().find("td").eq(0).html();
-                        $.ajax({
-                            url: '/ws/client/delete',
-                            type: 'POST',
-                            contentType: 'application/json; charset=utf-8',
-                            data: JSON.stringify([id, ])
-                        });
-                        $('#clientsTable').datagrid('reload');
-                    });
-        });
-    </script>
-    <div class="modal-footer">
-        <button class="btn" data-dismiss="modal">Close</button>
-    </div>
-</div>
 
 {% endblock %}
