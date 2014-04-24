@@ -49,7 +49,7 @@
                 <div id="general" class="tab-pane">
                     <fieldset>
                         <legend>General Options</legend>
-                        {% for field in [form.general_standalone] %}
+                        {% for field in [form.general_name] %}
                             {% if not field|bootstrap_is_hidden_field %}
                                 {{ macros.horizontal_field(field) }}
                             {%- endif %}

@@ -226,6 +226,7 @@ def configure_drone(id):
 
             drone_config = {
             'general': {
+                'name': form.general_name.data,
                 'mode': 'honeypot',
                 'id': drone.id,
                 'ip': '192.168.1.1',
@@ -308,7 +309,7 @@ def configure_drone(id):
             },
         }
             config_json = json.dumps(drone_config, indent=4)
-
+            drone.name = form.general_name.data
             drone.configuration = config_json
             logging.debug(drone.id)
             logging.debug(drone)
@@ -764,7 +765,7 @@ def data_honeypots():
     rows = []
     for h in honeypots:
         row = {'honeypot_id': h.id, 'attacks': db_session.query(Session).filter(Session.honeypot_id == h.id).count(),
-               'checked': False}
+               'checked': False, 'name': h.name}
         rows.append(row)
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp
@@ -777,7 +778,7 @@ def data_clients():
     rows = []
     for client in clients:
         row = {'client_id': client.id, 'bees': db_session.query(BaitSession).filter(BaitSession.client_id == client.id).count(),
-               'checked': False}
+               'checked': False, 'name': client.name}
         rows.append(row)
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp

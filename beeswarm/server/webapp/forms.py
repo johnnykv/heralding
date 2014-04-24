@@ -25,7 +25,7 @@ def validate_time_range(form, field):
 
 class NewHoneypotConfigForm(Form):
 
-    general_standalone = BooleanField(default=False, label='Standalone honeypot')
+    general_name = TextField(default='', label='Name')
 
     http_enabled = BooleanField(default=False, label='Enabled')
     http_port = IntegerField(default=80, label='Port')
