@@ -38,7 +38,7 @@ from wtforms import HiddenField
 import beeswarm
 from forms import NewHoneypotConfigForm, NewClientConfigForm, LoginForm, SettingsForm
 from beeswarm.server.db import database_setup
-from beeswarm.server.db.entities import Client, Honeybee, Session, Honeypot, User, Authentication, Classification,\
+from beeswarm.server.db.entities import Client, BaitSession, Session, Honeypot, User, Authentication, Classification,\
                                            BaitUser, Transcript, Drone
 from beeswarm.shared.helpers import send_zmq_request, send_zmq_push
 from beeswarm.shared.message_enum import Messages
@@ -72,7 +72,6 @@ def initialize():
     gevent.spawn(config_subscriber)
     # wait until we have received the first config publish
     first_cfg_received.wait()
-
 
 def config_subscriber():
     global config
@@ -112,41 +111,41 @@ def home():
         'nhoneypots': db_session.query(Honeypot).count(),
         'nclients': db_session.query(Client).count(),
         'nsessions': db_session.query(Session).count(),
-        'nbees': db_session.query(Honeybee).count(),
-        'nattacks': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+        'nbees': db_session.query(BaitSession).count(),
+        'nattacks': db_session.query(Session).filter(Session.classification_id != 'bait_session' and
                                                      Session.classification_id is not None).count(),
         'attacks': {
-            'http': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+            'http': db_session.query(Session).filter(Session.classification_id != 'bait_session' and
                                                      Session.classification_id is not None and
                                                      Session.protocol == 'http').count(),
-            'vnc': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+            'vnc': db_session.query(Session).filter(Session.classification_id != 'bait_session' and
                                                     Session.classification_id is not None and
                                                     Session.protocol == 'vnc').count(),
-            'ssh': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+            'ssh': db_session.query(Session).filter(Session.classification_id != 'bait_session' and
                                                     Session.classification_id is not None and
                                                     Session.protocol == 'ssh').count(),
-            'ftp': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+            'ftp': db_session.query(Session).filter(Session.classification_id != 'bait_session' and
                                                     Session.classification_id is not None and
                                                     Session.protocol == 'ftp').count(),
-            'https': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+            'https': db_session.query(Session).filter(Session.classification_id != 'bait_session' and
                                                       Session.classification_id is not None and
                                                       Session.protocol == 'https').count(),
-            'pop3': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+            'pop3': db_session.query(Session).filter(Session.classification_id != 'bait_session' and
                                                      Session.classification_id is not None and
                                                      Session.protocol == 'pop3').count(),
-            'pop3s': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+            'pop3s': db_session.query(Session).filter(Session.classification_id != 'bait_session' and
                                                       Session.classification_id is not None and
                                                       Session.protocol == 'pop3s').count(),
-            'smtp': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+            'smtp': db_session.query(Session).filter(Session.classification_id != 'bait_session' and
                                                      Session.classification_id is not None and
                                                      Session.protocol == 'smtp').count(),
-            'telnet': db_session.query(Session).filter(Session.classification_id != 'honeybee' and
+            'telnet': db_session.query(Session).filter(Session.classification_id != 'bait_session' and
                                                        Session.classification_id is not None and
                                                        Session.protocol == 'telnet').count(),
         },
         'bees': {
-            'successful': db_session.query(Honeybee).filter(Honeybee.did_login).count(),
-            'failed': db_session.query(Honeybee).filter(not Honeybee.did_login).count(),
+            'successful': db_session.query(BaitSession).filter(BaitSession.did_login).count(),
+            'failed': db_session.query(BaitSession).filter(not BaitSession.did_login).count(),
 
         }
     }
@@ -165,10 +164,10 @@ def sessions_all():
     return render_template('logs.html', logtype='All', user=current_user)
 
 
-@app.route('/sessions/honeybees')
+@app.route('/sessions/bait_sessions')
 @login_required
-def sessions_honeybees():
-    return render_template('logs.html', logtype='HoneyBees', user=current_user)
+def sessions_bait():
+    return render_template('logs.html', logtype='BaitSessions', user=current_user)
 
 
 @app.route('/sessions/attacks')
@@ -340,7 +339,7 @@ def configure_drone(id):
                 'public_ip': {
                     'fetch_ip': True
                 },
-                'honeybees': {
+                'bait_sessions': {
                     'http': {
                         'enabled': form.http_enabled.data,
                         'server': form.http_server.data,
@@ -578,7 +577,7 @@ def create_client():
             'public_ip': {
                 'fetch_ip': True
             },
-            'honeybees': {
+            'bait_sessions': {
                 'http': {
                     'enabled': form.http_enabled.data,
                     'server': form.http_server.data,
@@ -719,8 +718,8 @@ def data_sessions_attacks(_type):
     #the database_setup will not get hit until we start iterating the query object
     query_iterators = {
         'all': db_session.query(Session),
-        'honeybees': db_session.query(Honeybee),
-        'attacks': db_session.query(Session).filter(Session.classification_id != 'honeybee')
+        'bait_sessions': db_session.query(BaitSession),
+        'attacks': db_session.query(Session).filter(Session.classification_id != 'bait_session')
     }
 
     if _type not in query_iterators:
@@ -777,7 +776,7 @@ def data_clients():
     clients = db_session.query(Client).all()
     rows = []
     for client in clients:
-        row = {'client_id': client.id, 'bees': db_session.query(Honeybee).filter(Honeybee.client_id == client.id).count(),
+        row = {'client_id': client.id, 'bees': db_session.query(BaitSession).filter(BaitSession.client_id == client.id).count(),
                'checked': False}
         rows.append(row)
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
@@ -897,13 +896,13 @@ def settings():
     global config
     # we need getattr for WTF
     formdata = namedtuple('Struct', config.keys())(*config.values())
-    form = SettingsForm(obj=formdata, honeybee_session_retain=config['honeybee_session_retain'])
+    form = SettingsForm(obj=formdata, bait_session_retain=config['bait_session_retain'])
 
     if form.validate_on_submit():
         # the potential updates that we want to save to config file.
-        options = {'honeybee_session_retain': form.honeybee_session_retain.data,
+        options = {'bait_session_retain': form.bait_session_retain.data,
                    'malicious_session_retain': form.malicious_session_retain.data,
-                   'ignore_failed_honeybees': form.ignore_failed_honeybees.data}
+                   'ignore_failed_bait_session': form.ignore_failed_bait_session.data}
         update_config(options)
     return render_template('settings.html', form=form, user=current_user)
 

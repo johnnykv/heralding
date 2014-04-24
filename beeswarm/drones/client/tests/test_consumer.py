@@ -67,7 +67,7 @@ class Consumer_test(unittest.TestCase):
 
     def test_logging_not_done_bee(self):
         """
-        Tests that the consumer does not process honeybees that are not marked as done.
+        Tests that the consumer does not process bait sessions that are not marked as done.
         """
         sessions = {}
         BeeSession.client_id = 'dummy_client_id'

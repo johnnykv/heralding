@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 
 from beeswarm.server.db import database
 from beeswarm.server.db.entities import Client, Honeypot
-from beeswarm.server.db.entities import Classification, Session, Honeybee, Authentication
+from beeswarm.server.db.entities import Classification, Session, BaitSession, Authentication
 from beeswarm.server.classifier.classifier import Classifier
 
 
@@ -30,21 +30,21 @@ class ClassifierTests(unittest.TestCase):
 
         self.client_id = str(uuid.uuid4())
         self.honeypot_id = str(uuid.uuid4())
-        self.honeybee_id = str(uuid.uuid4())
-        self.honeybee_datetime = datetime.utcnow()
+        self.bait_session_id = str(uuid.uuid4())
+        self.bait_session_datetime = datetime.utcnow()
 
         db_session = database.get_session()
         client = Client(id=self.client_id)
         honeypot = Honeypot(id=self.honeypot_id)
 
-        honeybee = Honeybee(id=self.honeybee_id, source_ip='321', destination_ip='123',
-                            received=datetime.utcnow(), timestamp=self.honeybee_datetime, protocol='pop3',
+        bait_session = BaitSession(id=self.bait_session_id, source_ip='321', destination_ip='123',
+                            received=datetime.utcnow(), timestamp=self.bait_session_datetime, protocol='pop3',
                             source_port=1, destination_port=1, did_complete=True, client=client, honeypot=honeypot)
 
         authentication = Authentication(id=str(uuid.uuid4()), username='a', password='a',
                                         successful=True, timestamp=datetime.utcnow())
-        honeybee.authentication.append(authentication)
-        db_session.add_all([client, honeypot, honeybee])
+        bait_session.authentication.append(authentication)
+        db_session.add_all([client, honeypot, bait_session])
         db_session.commit()
 
     def tearDown(self):
@@ -52,17 +52,17 @@ class ClassifierTests(unittest.TestCase):
 
     def test_matching_session(self):
         """
-        Test if the get_matching_session method returns the session that matches the given honeybee.
+        Test if the get_matching_session method returns the session that matches the given bait session.
         """
 
         db_session = database.get_session()
-        honeybee = db_session.query(Honeybee).filter(Honeybee.id == self.honeybee_id).one()
+        bait_session = db_session.query(BaitSession).filter(BaitSession.id == self.bait_session_id).one()
         honeypot = db_session.query(Honeypot).filter(Honeypot.id == self.honeypot_id).one()
 
         #session2 is the matching session
         for id, offset in (('session1', -15), ('session2', 3), ('session3', 15)):
             s = Session(id=id, source_ip='321', destination_ip='123',
-                        received=datetime.utcnow(), timestamp=honeybee.timestamp + timedelta(seconds=offset),
+                        received=datetime.utcnow(), timestamp=bait_session.timestamp + timedelta(seconds=offset),
                         protocol='pop3', source_port=1, destination_port=1, honeypot=honeypot)
             a = Authentication(id=str(uuid.uuid4()), username='a', password='a', successful=True,
                                timestamp=datetime.utcnow())
@@ -71,24 +71,24 @@ class ClassifierTests(unittest.TestCase):
         db_session.commit()
 
         classifier = Classifier()
-        result = classifier.get_matching_session(honeybee)
+        result = classifier.get_matching_session(bait_session)
 
         self.assertEqual('session2', result.id)
 
-    def test_correlation_honeybee_session(self):
+    def test_correlation_bait_session(self):
         """
-        Test if honeybee session is correctly identified as related to a specific honeypot session.
-        We expect the honeybee entity to be classified as a legit (successfully completed) 'honeybee' and that the honeypot
+        Test if bait session is correctly identified as related to a specific honeypot session.
+        We expect the bait entity to be classified as a legit (successfully completed) 'bait_Session' and that the honeypot
         session is deleted.
         """
 
-        #setup the honeypot session we expect to match the honeybee
+        #setup the honeypot session we expect to match the bait_session
         db_session = database.get_session()
         honeypot = db_session.query(Honeypot).filter(Honeypot.id == self.honeypot_id).one()
 
         s_id = str(uuid.uuid4())
         s = Session(id=s_id, source_ip='321', destination_ip='123',
-                    received=datetime.now(), timestamp=self.honeybee_datetime - timedelta(seconds=2),
+                    received=datetime.now(), timestamp=self.bait_session_datetime - timedelta(seconds=2),
                     protocol='pop3', source_port=1, destination_port=1, honeypot=honeypot)
         a = Authentication(id=str(uuid.uuid4()), username='a', password='a', successful=True,
                            timestamp=datetime.utcnow())
@@ -97,14 +97,14 @@ class ClassifierTests(unittest.TestCase):
         db_session.commit()
 
         c = Classifier()
-        c.classify_honeybees(0)
+        c.classify_bait_session(0)
 
-        honeybee = db_session.query(Honeybee).filter(Honeybee.id == self.honeybee_id).one()
+        bait_session = db_session.query(BaitSession).filter(BaitSession.id == self.bait_session_id).one()
         session = db_session.query(Session).filter(Session.id == s_id).first()
 
-        #test that the honeybee got classified
+        #test that the bait session got classified
         self.assertTrue(
-            honeybee.classification == db_session.query(Classification).filter(Classification.type == 'honeybee').one())
+            bait_session.classification == db_session.query(Classification).filter(Classification.type == 'bait_session').one())
         #test that the honeypot session got deleted
         self.assertIsNone(session)
 

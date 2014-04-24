@@ -25,7 +25,7 @@ class BeeDispatcher(object):
     """ Dispatches capabilities in a realistic fashion (with respect to timings) """
 
     def __init__(self, options, bee, my_ip):
-        self.options = options['honeybees'][bee.__class__.__name__]
+        self.options = options['capabilities'][bee.__class__.__name__]
         self.enabled = False
         self.bee = bee
         self.run_flag = True

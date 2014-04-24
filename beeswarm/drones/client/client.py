@@ -101,28 +101,28 @@ class Client(object):
         self.sessions_consumer = consumer.Consumer(sessions, self.config, self.status)
         gevent.spawn(self.sessions_consumer.start_handling)
 
-        honeybees = []
+        capabilities = []
         for b in clientbase.ClientBase.__subclasses__():
-            bee_name = b.__name__.lower()
+            capability_name = b.__name__.lower()
 
-            if bee_name not in self.config['honeybees']:
+            if capability_name not in self.config['capabilities']:
                 logger.warning(
                     "Not loading {0} bee because it has no option in configuration file.".format(b.__name__))
                 continue
                 #skip loading if disabled
-            if not self.config['honeybees'][bee_name]['enabled']:
+            if not self.config['capabilities'][capability_name]['enabled']:
                 logger.warning(
                     "Not loading {0} bee because it is disabled in the configuration file.".format(b.__name__))
                 continue
 
-            options = self.config['honeybees'][bee_name]
+            options = self.config['capabilities'][capability_name]
             bee = b(sessions, options)
-            honeybees.append(bee)
-            self.status['enabled_bees'].append(bee_name)
-            logger.debug('Adding {0} as a honeybee'.format(bee.__class__.__name__))
+            capabilities.append(bee)
+            self.status['enabled_bees'].append(capability_name)
+            logger.debug('Adding {0} as a capability'.format(bee.__class__.__name__))
 
         self.dispatcher_greenlets = []
-        for bee in honeybees:
+        for bee in capabilities:
             dispatcher = BeeDispatcher(self.config, bee, self.my_ip)
             self.dispatchers[bee.__class__.__name__] = dispatcher
             current_greenlet = Greenlet(dispatcher.start)

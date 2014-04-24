@@ -54,25 +54,25 @@ class Scheduler(object):
 
     def do_db_maintenance(self):
         logger.debug('Doing database maintenance')
-        honeybee_retain = datetime.utcnow() - timedelta(days=self.config['honeybee_session_retain'])
+        bait_retain = datetime.utcnow() - timedelta(days=self.config['bait_session_retain'])
         malicious_retain = datetime.utcnow() - timedelta(days=self.config['malicious_session_retain'])
 
         db_session = database_setup.get_session()
 
-        malicious_deleted_count = db_session.query(Session).filter(Session.classification_id != 'honeybee') \
+        malicious_deleted_count = db_session.query(Session).filter(Session.classification_id != 'bait_session') \
                                                            .filter(Session.timestamp < malicious_retain).delete()
 
-        honeybees_deleted_count = db_session.query(Session).filter(Session.classification_id == 'honeybee') \
-                                                           .filter(Session.timestamp < honeybee_retain).delete()
+        bait_deleted_count = db_session.query(Session).filter(Session.classification_id == 'bait_session') \
+                                                           .filter(Session.timestamp < bait_retain).delete()
         db_session.commit()
 
-        logger.debug('Database maintenance finished. Deleted {0} honeybees and {1} malicious sessions)' \
-                     .format(honeybees_deleted_count, malicious_deleted_count))
+        logger.debug('Database maintenance finished. Deleted {0} bait_sessions and {1} malicious sessions)' \
+                     .format(bait_deleted_count, malicious_deleted_count))
 
     def do_classification(self):
         db_session = database_setup.get_session()
         classifier = Classifier()
-        classifier.classify_honeybees(db_session=db_session)
+        classifier.classify_bait_session(db_session=db_session)
         classifier.classify_sessions(db_session=db_session)
         db_session.commit()
 

@@ -27,7 +27,7 @@ class Client(Drone):
     __mapper_args__ = {'polymorphic_identity': 'client'}
 
     id = Column(String, ForeignKey('drone.id'), primary_key=True)
-    honeybees = relationship("Honeybee", cascade="all, delete-orphan", backref='client')
+    bait_sessions = relationship("BaitSession", cascade="all, delete-orphan", backref='client')
     # honeypots that this client will connect to.
     honeypots = relationship("Honeypot", secondary=honeypot_client_mtm)
 
@@ -100,9 +100,9 @@ class Transcript(Base):
     session_id = Column(String, ForeignKey('session.id'))
 
 
-class Honeybee(Session):
-    __tablename__ = 'honeybee'
-    __mapper_args__ = {'polymorphic_identity': 'honeybee'}
+class BaitSession(Session):
+    __tablename__ = 'bait_session'
+    __mapper_args__ = {'polymorphic_identity': 'bait_session'}
 
     id = Column(String, ForeignKey('session.id'), primary_key=True)
     did_connect = Column(Boolean)

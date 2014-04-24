@@ -41,7 +41,7 @@ class Client_Tests(unittest.TestCase):
 
     def test_dispatcher(self):
         options = {
-            'honeybees': {
+            'capabilities': {
                 # NoneType because we're going to pass a None to the dispatcher.
                 'NoneType': {
                     'enabled': True,

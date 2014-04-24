@@ -9,7 +9,7 @@ import gevent
 from beeswarm.server.webapp.auth import Authenticator
 
 from beeswarm.server.db import database
-from beeswarm.server.db.entities import Client, Honeypot, Session, Honeybee, User, Authentication, Transcript
+from beeswarm.server.db.entities import Client, Honeypot, Session, BaitSession, User, Authentication, Transcript
 from beeswarm.server.webapp import app
 
 
@@ -47,7 +47,7 @@ class WebappTests(unittest.TestCase):
 
     def test_basic_client_post(self):
         """
-        Tests if a honeybee dict can be posted without exceptions.
+        Tests if a bait_session dict can be posted without exceptions.
         """
 
         self.login(self.client_id, self.client_password)
@@ -318,11 +318,11 @@ class WebappTests(unittest.TestCase):
         self.logout()
 
     def test_data_sessions_honeybees(self):
-        """ Tests if honeybees are returned properly """
+        """ Tests if bait_sessions are returned properly """
 
         self.login('test', 'test')
         self.populate_honeybees()
-        resp = self.app.get('/data/sessions/honeybees')
+        resp = self.app.get('/data/sessions/bait_sessions')
         table_data = json.loads(resp.data)
         self.assertEquals(len(table_data), 3)
         self.logout()
@@ -382,9 +382,9 @@ class WebappTests(unittest.TestCase):
             original_config = conf.read()
         config_modified = os.stat(app.app.config['SERVER_CONFIG']).st_mtime
         data = {
-            'honeybee_session_retain': 3,
+            'bait_session_retain': 3,
             'malicious_session_retain': 50,
-            'ignore_failed_honeybees': False
+            'ignore_failed_bait_session': False
         }
         self.app.post('/settings', data=data, follow_redirects=True)
         config_next_modified = os.stat(app.app.config['SERVER_CONFIG']).st_mtime
@@ -466,7 +466,7 @@ class WebappTests(unittest.TestCase):
 
         db_session = database.get_session()
         for i in xrange(3):
-            h = Honeybee(
+            h = BaitSession(
                 id=str(uuid.uuid4()),
                 timestamp=datetime.utcnow(),
                 received=datetime.utcnow(),

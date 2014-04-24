@@ -9,9 +9,9 @@
         "certpath": "server.crt",
         "keypath": "server.key"
     },
-    "honeybee_session_retain": 2,
+    "bait_session_retain": 2,
     "malicious_session_retain": 100,
-    "ignore_failed_honeybees": true,
+    "ignore_failed_bait_session": true,
     "iso": {
         "path": "beeswarm_client.iso",
         "offset": -1

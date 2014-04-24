@@ -18,7 +18,7 @@ import datetime
 
 from sqlalchemy.orm import joinedload
 from beeswarm.server.db import database_setup
-from beeswarm.server.db.entities import Classification, Honeybee, Session, Authentication
+from beeswarm.server.db.entities import Classification, BaitSession, Session, Authentication
 
 
 logger = logging.getLogger(__name__)
@@ -28,17 +28,17 @@ class Classifier(object):
     def __init(self):
         self.enabled = True
 
-    # match honeybee with session
-    def get_matching_session(self, honeybee, timediff=5, db_session=None):
+    # match bait session with session
+    def get_matching_session(self, bait_session, timediff=5, db_session=None):
         """
-        Provided a honeybee object a matching session is returned. If no matching
+        Provided a bait_session object a matching session is returned. If no matching
         session is found None is returned.
 
-        :param honeybee: honeybee object which will be used as base for query.
-        :param timediff: +/- allowed time difference between a honeybee and a potential matching session.
+        :param bait_session: bait_session object which will be used as base for query.
+        :param timediff: +/- allowed time difference between a bait_session and a potential matching session.
         """
-        min_datetime = honeybee.timestamp - datetime.timedelta(seconds=timediff)
-        max_datetime = honeybee.timestamp + datetime.timedelta(seconds=timediff)
+        min_datetime = bait_session.timestamp - datetime.timedelta(seconds=timediff)
+        max_datetime = bait_session.timestamp + datetime.timedelta(seconds=timediff)
 
         if not db_session:
             db_session = database_setup.get_session()
@@ -48,17 +48,17 @@ class Classifier(object):
 
         # get all sessions that matches basic properties.
         sessions = db_session.query(Session).options(joinedload(Session.authentication)) \
-            .filter(Session.protocol == honeybee.protocol) \
-            .filter(Session.honeypot == honeybee.honeypot) \
+            .filter(Session.protocol == bait_session.protocol) \
+            .filter(Session.honeypot == bait_session.honeypot) \
             .filter(Session.timestamp >= min_datetime) \
             .filter(Session.timestamp <= max_datetime) \
-            .filter(Session.protocol == honeybee.protocol) \
+            .filter(Session.protocol == bait_session.protocol) \
             .filter(Session.discriminator == None)
 
         # identify the correct session by comparing authentication.
         # this could properly also be done using some fancy ORM/SQL construct.
         for session in sessions:
-            for honey_auth in honeybee.authentication:
+            for honey_auth in bait_session.authentication:
                 for session_auth in session.authentication:
                     if session_auth.username == honey_auth.username and \
                                     session_auth.password == honey_auth.password and \
@@ -68,40 +68,40 @@ class Classifier(object):
 
         return match
 
-    def classify_honeybees(self, delay_seconds=30, db_session=None):
+    def classify_bait_session(self, delay_seconds=30, db_session=None):
         """
-        Will classify all unclassified honeybees as either legit or malicious activity. A honeybee can e.g. be classified
-        as involved in malicious activity if the honeybee is subject to a MiTM attack.
+        Will classify all unclassified bait_sessions as either legit or malicious activity. A bait session can e.g. be classified
+        as involved in malicious activity if the bait session is subject to a MiTM attack.
 
-        :param delay_seconds: no honeybees newer than (now - delay_seconds) will be processed.
+        :param delay_seconds: no bait_sessions newer than (now - delay_seconds) will be processed.
         """
         min_datetime = datetime.datetime.utcnow() - datetime.timedelta(seconds=delay_seconds)
 
         if not db_session:
             db_session = database_setup.get_session()
 
-        honeybees = db_session.query(Honeybee).options(joinedload(Honeybee.authentication)) \
-            .filter(Honeybee.classification_id == 'unclassified') \
-            .filter(Honeybee.did_complete == True) \
-            .filter(Honeybee.timestamp < min_datetime).all()
+        bait_sessions = db_session.query(BaitSession).options(joinedload(BaitSession.authentication)) \
+            .filter(BaitSession.classification_id == 'unclassified') \
+            .filter(BaitSession.did_complete == True) \
+            .filter(BaitSession.timestamp < min_datetime).all()
 
-        for h in honeybees:
-            session_match = self.get_matching_session(h, db_session=db_session)
-            # if we have a match this is legit honeybee traffic
+        for bait_session in bait_sessions:
+            session_match = self.get_matching_session(bait_session, db_session=db_session)
+            # if we have a match this is legit bait session
             if session_match:
-                logger.debug('Classifying honeybee with id {0} as legit honeybee traffic and deleting '
-                             'matching session with id {1}'.format(h.id, session_match.id))
-                h.classification = db_session.query(Classification).filter(Classification.type == 'honeybee').one()
+                logger.debug('Classifying bait session with id {0} as legit bait session and deleting '
+                             'matching session with id {1}'.format(bait_session.id, session_match.id))
+                bait_session.classification = db_session.query(Classification).filter(Classification.type == 'bait_session').one()
                 db_session.delete(session_match)
             # else we classify it as a MiTM attack
             else:
-                h.classification = db_session.query(Classification).filter(Classification.type == 'mitm_1').one()
+                bait_session.classification = db_session.query(Classification).filter(Classification.type == 'mitm_1').one()
 
         db_session.commit()
 
     def classify_sessions(self, delay_seconds=30, db_session=None):
         """
-        Will classify all sessions (which are not honeybees) as malicious activity. Note: The classify_honeybees method
+        Will classify all sessions (which are not bait session) as malicious activity. Note: The classify_bait_session method
         should be called before this method.
 
         :param delay_seconds: no sessions newer than (now - delay_seconds) will be processed.
@@ -120,12 +120,12 @@ class Classifier(object):
             # TODO: This would be more pretty if done with pure orm
             honey_matches = []
             for a in session.authentication:
-                honey_matches = db_session.query(Honeybee).join(Authentication) \
+                honey_matches = db_session.query(BaitSession).join(Authentication) \
                     .filter(Authentication.username == a.username) \
                     .filter(Authentication.password == a.password).all()
 
             if len(honey_matches) > 0:
-                # username/password has previously been transmitted in a honeybee
+                # username/password has previously been transmitted in a bait session
                 logger.debug('Classifying session with id {0} as attack which involved the reused '
                              'of previously transmitted credentials.'.format(session.id))
                 session.classification = db_session.query(Classification).filter(

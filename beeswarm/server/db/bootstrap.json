@@ -11,8 +11,8 @@
             "description_long": "A session that is pending classification."
         },
         {
-            "type": "honeybee",
-            "description_short": "Legit Honeytoken traffic",
+            "type": "bait_session",
+            "description_short": "Legit bait session",
             "description_long": "A session where a Client instance successfully transmitted information to a Honeypot with no indication of malicious activity."
         },
         {
@@ -23,12 +23,12 @@
         {
             "type": "credentials_reuse",
             "description_short": "Attacker used honeytoken.",
-            "description_long": "An attacker tried authenticating using credentials previously transmitted in a honeybee."
+            "description_long": "An attacker tried authenticating using credentials previously transmitted in a bait session."
         },
         {
             "type": "bruteforce",
             "description_short": "Attacker brute-forcing",
-            "description_long": "An attacker connected to a Honeypot instance and tried to authenticate using credentials not transmitted in any recorded honeybee."
+            "description_long": "An attacker connected to a Honeypot instance and tried to authenticate using credentials not transmitted in any recorded bait session."
         },
         {
             "type": "probe",

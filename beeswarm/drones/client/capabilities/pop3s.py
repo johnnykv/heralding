@@ -43,7 +43,7 @@ class pop3s(ClientBase):
 
         try:
             logger.debug(
-                'Sending %s honeybee to %s:%s. (bee id: %s)' % ('pop3', server_host, server_port, session.id))
+                'Sending %s bait session to %s:%s. (bee id: %s)' % ('pop3', server_host, server_port, session.id))
             conn = poplib.POP3_SSL(server_host, server_port)
             session.source_port = conn.sock.getsockname()[1]
 

@@ -48,10 +48,10 @@ class Consumer:
             for session_id in self.sessions.keys():
                 session = self.sessions[session_id]
                 if session.alldone:
-                    logger.debug('Found finished honeybee. (bee id: %s)' % session.id)
+                    logger.debug('Found finished bait session. (bee id: %s)' % session.id)
                     for _logger in self.active_loggers:
                         logger.debug(
-                            'Logging honeybee with %s (session id: %s)' % (logger.__class__.__name__, session.id))
+                            'Logging bait session with %s (session id: %s)' % (logger.__class__.__name__, session.id))
                         _logger.log(session)
                     self.status['total_bees'] += 1
                     del self.sessions[session_id]

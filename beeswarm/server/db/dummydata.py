@@ -18,7 +18,7 @@ import string
 import random
 import uuid
 
-from beeswarm.server.db.entities import Client, Honeybee, Honeypot, Authentication, Classification, Session, Transcript
+from beeswarm.server.db.entities import Client, BaitSession, Honeypot, Authentication, Classification, Session, Transcript
 
 from beeswarm.server.db import database
 
@@ -39,14 +39,14 @@ def fill_dummy_data():
     authentications = []
 
     while len(sessions) < 100:
-        session = Honeybee(id=str(uuid.uuid4()), timestamp=datetime.now(),
+        session = BaitSession(id=str(uuid.uuid4()), timestamp=datetime.now(),
                            source_ip=random.choice(source_ips), source_port=random.randint(1024, 65535),
                            destination_ip='4.3.2.1', destination_port='1111')
 
         session.protocol, session.destination_port = random.choice(protocols)
         session.honeypot = random.choice(honeypots)
         session.client = random.choice(client)
-        session.classification = db_session.query(Classification).filter(Classification.type == 'honeybee').one()
+        session.classification = db_session.query(Classification).filter(Classification.type == 'bait_session').one()
 
         username = ''.join(random.choice(string.lowercase) for x in range(8))
         password = ''.join(random.choice(string.lowercase) for x in range(8))

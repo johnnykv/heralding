@@ -69,7 +69,7 @@ class ftp(ClientBase):
 
         self.sessions[session.id] = session
         logger.debug(
-            'Sending %s honeybee to %s:%s. (bee id: %s)' % ('ftp', server_host, server_port, session.id))
+            'Sending %s bait session to %s:%s. (bee id: %s)' % ('ftp', server_host, server_port, session.id))
 
         self.file_list = []
         try:

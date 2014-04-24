@@ -167,8 +167,8 @@ class LoginForm(Form):
 
 class SettingsForm(Form):
 
-    honeybee_session_retain = IntegerField('Honeybee retention', default=2,
-                                           description='<small><em>days until legit honeybees are deleted.</em></small>',
+    bait_session_retain = IntegerField('Bait session retention', default=2,
+                                           description='<small><em>days until legit bait_sessions are deleted.</em></small>',
                                            validators=[validators.required(message=u'This field is required'),
                                                        validators.NumberRange(min=1)])
     
@@ -177,5 +177,5 @@ class SettingsForm(Form):
                                             validators=[validators.required(message=u'This field is required'),
                                                         validators.NumberRange(min=1)])
 
-    ignore_failed_honeybees = BooleanField('Ignore failed honeybees', default=True,
-                                          description='<small><em>Ignore honeybees that did not connect</em></small>')
+    ignore_failed_bait_session = BooleanField('Ignore failed bait_sessions', default=True,
+                                          description='<small><em>Ignore bait_sessions that did not connect</em></small>')

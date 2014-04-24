@@ -21,7 +21,7 @@ import zmq.green as zmq
 import gevent
 
 from beeswarm.server.db import database_setup
-from beeswarm.server.db.entities import Client, Honeybee, Session, Honeypot, Authentication, Classification, \
+from beeswarm.server.db.entities import Client, BaitSession, Session, Honeypot, Authentication, Classification, \
     Transcript
 from beeswarm.shared.helpers import send_zmq_request
 from beeswarm.shared.message_enum import Messages
@@ -93,9 +93,9 @@ class PersistanceWorker(object):
                                    timestamp=datetime.strptime(auth['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'))
                 session.authentication.append(a)
         elif session_type == 'session_client':
-            if not data['did_complete'] and self.config['ignore_failed_honeybees']:
+            if not data['did_complete'] and self.config['ignore_failed_bait_session']:
                 return
-            session = Honeybee()
+            session = BaitSession()
             client = db_session.query(Client).filter(Client.id == data['client_id']).one()
             client.last_activity = datetime.now()
             session.did_connect = data['did_connect']
