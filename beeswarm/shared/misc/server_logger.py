@@ -59,7 +59,7 @@ class ServerLogger(LoggerBase):
         self.push_socket.connect(config['beeswarm_server']['zmq_url'])
 
     def log(self, session):
-        data = json.dumps(session.to_dict(), default=json_default)
+        data = json.dumps(session.to_dict(), default=json_default, ensure_ascii=False)
         self.push_socket.send('{0} {1}'.format('session_honeypot', data))
 
     def monitor_worker(self):
