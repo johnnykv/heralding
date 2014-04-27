@@ -64,6 +64,15 @@ class NewHoneypotConfigForm(Form):
     ssh_port = IntegerField(default=22, label='Port')
     ssh_key = FileField(default='server.key', label='Key File')
 
+    cert_common = TextField(default='', label='Common Name/Domain name',
+                            description='Leave this field empty to force the drone to automatically use  it\'s own IP '
+                                        'address when creating the certificate')
+    cert_country = TextField(default='', label='Country')
+    cert_state = TextField(default='', label='State')
+    cert_org = TextField(default='', label='Organization')
+    cert_org_unit = TextField(default='', label='Organization Unit')
+    cert_locality = TextField(default='', label='Locality')
+
 
 class NewClientConfigForm(Form):
 

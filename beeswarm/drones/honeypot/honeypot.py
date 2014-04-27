@@ -34,7 +34,7 @@ from beeswarm.drones.honeypot.capabilities import handlerbase
 from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.models.authenticator import Authenticator
 from beeswarm.drones.honeypot.consumer.consumer import Consumer
-from beeswarm.shared.helpers import drop_privileges
+from beeswarm.shared.helpers import drop_privileges, create_self_signed_cert
 from beeswarm.drones.honeypot.models.user import BaitUser
 import requests
 from requests.exceptions import Timeout, ConnectionError
@@ -66,6 +66,19 @@ class Honeypot(object):
                 config = json.load(config_file, object_hook=asciify)
         # write ZMQ keys to files - as expected by pyzmq
         extract_keys(work_dir, config)
+        if not (os.path.isfile(os.path.join(work_dir, 'server.key'))):
+            cert_info = config['certificate_info']
+            #TODO: IF NOT COMMON_NAME: Use own ip address...
+            cert, priv_key = create_self_signed_cert(cert_info['country'], cert_info['state'],
+                                                     cert_info['organization'], cert_info['organization_unit'],
+                                                     cert_info['common_name'])
+            cert_path = os.path.join(work_dir, 'server.crt')
+            key_path = os.path.join(work_dir, 'server.key')
+            with open(cert_path, 'w') as certfile:
+                certfile.write(cert)
+            with open(key_path, 'w') as keyfile:
+                keyfile.write(priv_key)
+
         self.work_dir = work_dir
         self.config = config
         self.key = key
@@ -163,7 +176,7 @@ class Honeypot(object):
                 #Convention: All capability names which end in 's' will be wrapped in ssl.
                 if cap_name.endswith('s'):
                     server = StreamServer(('0.0.0.0', port), cap.handle_session,
-                                              keyfile=self.key, certfile=self.cert)
+                                          keyfile=self.key, certfile=self.cert)
                 else:
                     server = StreamServer(('0.0.0.0', port), cap.handle_session)
 

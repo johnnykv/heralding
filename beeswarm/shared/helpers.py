@@ -61,9 +61,9 @@ def drop_privileges(uid_name='nobody', gid_name='nogroup'):
     logger.info("Privileges dropped, running as {0}/{1}.".format(new_uid_name, new_gid_name))
 
 
-def create_self_signed_cert(directory, cname, kname, cert_country='US', cert_state='state', cert_organization='org',
+def create_self_signed_cert(cert_country='US', cert_state='state', cert_organization='org',
                             cert_locality='local', cert_organizational_unit='unit', cert_common_name='common name'):
-    logger.info('Creating SSL Certificate and Key: {}, {}'.format(cname, kname))
+    logger.info('Creating SSL Certificate and Key.')
     pk = crypto.PKey()
     pk.generate_key(crypto.TYPE_RSA, 1024)
 
@@ -91,20 +91,17 @@ def create_self_signed_cert(directory, cname, kname, cert_country='US', cert_sta
     cert.set_pubkey(pk)
     cert.sign(pk, 'sha1')
 
-    certpath = os.path.join(directory, cname)
-    keypath = os.path.join(directory, kname)
-
-    with open(certpath, 'w') as certfile:
-        certfile.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
+    cert_text = crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
     priv_key_text = crypto.dump_privatekey(crypto.FILETYPE_PEM, pk)
 
-    # We need to do this because Paramiko wants PKCS #1 RSA Key format.
-    # I would really like to add a few swear words here.
-    from Crypto.PublicKey import RSA
-
-    priv_key = RSA.importKey(priv_key_text)
-    with open(keypath, 'w') as keyfile:
-        keyfile.write(priv_key.exportKey('PEM'))
+    return cert_text, priv_key_text
+    # # We need to do this because Paramiko wants PKCS #1 RSA Key format.
+    # # I would really like to add a few swear words here.
+    # from Crypto.PublicKey import RSA
+    #
+    # priv_key = RSA.importKey(priv_key_text)
+    # with open(keypath, 'w') as keyfile:
+    #     keyfile.write(priv_key.exportKey('PEM'))
 
 
 def find_offset(iso_file_path, needle):

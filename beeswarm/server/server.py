@@ -250,8 +250,15 @@ class Server(object):
             # to keep things simple we just use the CN for host for now.
             tcp_host = cert_cn
 
-            create_self_signed_cert(work_dir, 'server.crt', 'server.key', cert_country, cert_state, cert_org,
-                                    cert_locality, cert_org_unit, cert_cn)
+            cert, priv_key = create_self_signed_cert(cert_country, cert_state, cert_org, cert_locality, cert_org_unit,
+                                                     cert_cn)
+
+            cert_path = os.path.join(work_dir, 'server.crt')
+            key_path = os.path.join(work_dir, 'server.key')
+            with open(cert_path, 'w') as certfile:
+                certfile.write(cert)
+            with open(key_path, 'w') as keyfile:
+                keyfile.write(priv_key)
 
             shutil.copyfile(os.path.join(package_directory, 'server/beeswarmcfg.json.dist'),
                             config_file)

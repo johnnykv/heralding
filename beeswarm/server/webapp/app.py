@@ -253,6 +253,14 @@ def configure_drone(id):
                 'enabled': False,
                 'socket': '/dev/log'
             },
+            'certificate_info': {
+                'common_name': form.cert_common.data,
+                'country': form.cert_country.data,
+                'state': form.cert_state.data,
+                'locality': form.cert_locality.data,
+                'organization': form.cert_org.data,
+                'organization_unit': form.cert_org_unit.data
+            },
             'capabilities': {
                 'ftp': {
                     'enabled': form.ftp_enabled.data,
@@ -269,12 +277,12 @@ def configure_drone(id):
                 'pop3': {
                     'enabled': form.pop3_enabled.data,
                     'port': form.pop3_port.data,
-                    'max_attempts': form.pop3_max_attempts.data
+                    'max_attempts': form.pop3_max_attempts.data,
                 },
                 'pop3s': {
                     'enabled': form.pop3s_enabled.data,
                     'port': form.pop3s_port.data,
-                    'max_attempts': form.pop3s_max_attempts.data
+                    'max_attempts': form.pop3s_max_attempts.data,
                 },
                 'ssh': {
                     'enabled': form.ssh_enabled.data,

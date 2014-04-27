@@ -42,6 +42,7 @@
                 <li><a href="#pop3" data-toggle="tab">POP3</a></li>
                 <li><a href="#pop3s" data-toggle="tab">POP3s</a></li>
                 <li><a href="#ssh" data-toggle="tab">SSH</a></li>
+                <li><a href="#certificate" data-toggle="tab">Certificate</a></li>
             </ul>
 
             <div class="tab-content">
@@ -149,6 +150,17 @@
                     <fieldset>
                         <legend>SSH Options</legend>
                         {% for field in [form.ssh_enabled, form.ssh_port, form.ssh_key] %}
+                            {% if not field|bootstrap_is_hidden_field %}
+                                {{ macros.horizontal_field(field) }}
+                            {%- endif %}
+                        {% endfor %}
+                    </fieldset>
+                </div>
+                <div id="certificate" class="tab-pane">
+                    <fieldset>
+                        <legend>Certificate information</legend>
+                         This certificate information will be used for encrypted services (POP3s, HTTPs, etc).
+                        {% for field in [form.cert_common, form.cert_country, form.cert_state, form.cert_org, form.cert_locality, form.cert_org_unit] %}
                             {% if not field|bootstrap_is_hidden_field %}
                                 {{ macros.horizontal_field(field) }}
                             {%- endif %}
