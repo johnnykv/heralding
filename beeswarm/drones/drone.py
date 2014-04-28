@@ -55,7 +55,7 @@ class Drone(object):
         # Honeypot / Client
         self.drone = None
         self.drone_greenlet = None
-        self.command_listener_greenlet = None
+        self.outgoing_msg_greenlet = None
 
         if self.config['general']['fetch_ip']:
             try:
@@ -70,13 +70,29 @@ class Drone(object):
 
     def start(self):
         """ Starts services. """
-        self.command_listener_greenlet = gevent.spawn(self.command_listener)
+
+        cert_path = os.path.join(self.work_dir, 'certificates')
+        public_keys_dir = os.path.join(cert_path, 'public_keys')
+        private_keys_dir = os.path.join(cert_path, 'private_keys')
+
+        client_secret_file = os.path.join(private_keys_dir, "client.key")
+        client_public, client_secret = zmq.auth.load_certificate(client_secret_file)
+        server_public_file = os.path.join(public_keys_dir, "server.key")
+        server_public, _ = zmq.auth.load_certificate(server_public_file)
+
+        self.outgoing_msg_greenlet = gevent.spawn(self.incoming_server_comms, server_public, client_public, client_secret)
+        self.incoming_msg_greenlet = gevent.spawn(self.outgoing_server_comms, server_public, client_public, client_secret)
 
         self._start_drone()
+        gevent.sleep(2)
+        context = zmq.Context()
+        socket = context.socket(zmq.PUSH)
+        socket.connect('ipc://serverRelay')
+        socket.send('HEJ HEJ')
 
         #drop_privileges()
         logger.info('Drone running using id: {0}'.format(self.id))
-        gevent.joinall([self.command_listener_greenlet])
+        gevent.joinall([self.incoming_msg_greenlet])
 
     def _start_drone(self):
         """
@@ -106,42 +122,33 @@ class Drone(object):
             self.drone_greenlet.kill(timeout=5)
 
     # command from server
-    def command_listener(self):
+    def incoming_server_comms(self, server_public, client_public, client_secret):
         context = zmq.Context()
-        socket = context.socket(zmq.SUB)
+        # data (commands) received from server
+        receiving_socket = context.socket(zmq.SUB)
 
-        cert_path = os.path.join(self.work_dir, 'certificates')
-        public_keys_dir = os.path.join(cert_path, 'public_keys')
-        private_keys_dir = os.path.join(cert_path, 'private_keys')
-
-        client_secret_file = os.path.join(private_keys_dir, "client.key")
-        client_public, client_secret = zmq.auth.load_certificate(client_secret_file)
-
-        socket.curve_secretkey = client_secret
-        socket.curve_publickey = client_public
-
-        server_public_file = os.path.join(public_keys_dir, "server.key")
-        server_public, _ = zmq.auth.load_certificate(server_public_file)
-
-        socket.curve_serverkey = server_public
-        socket.setsockopt(zmq.RECONNECT_IVL, 2000)
+        # setup receiving tcp socket
+        receiving_socket.curve_secretkey = client_secret
+        receiving_socket.curve_publickey = client_public
+        receiving_socket.curve_serverkey = server_public
+        receiving_socket.setsockopt(zmq.RECONNECT_IVL, 2000)
         # messages to this specific drone
-        socket.setsockopt(zmq.SUBSCRIBE, self.id)
+        receiving_socket.setsockopt(zmq.SUBSCRIBE, self.id)
         # broadcasts to all drones
-        socket.setsockopt(zmq.SUBSCRIBE, Messages.BROADCAST)
-
-        socket.connect(self.config['beeswarm_server']['zmq_command_url'])
-        logger.debug('Connected to server on {0}'.format(self.config['beeswarm_server']['zmq_command_url']))
+        receiving_socket.setsockopt(zmq.SUBSCRIBE, Messages.BROADCAST)
+        receiving_socket.connect(self.config['beeswarm_server']['zmq_command_url'])
+        logger.debug('Connected receiving socket to server on {0}'.format(self.config['beeswarm_server']['zmq_command_url']))
 
         poller = zmq.Poller()
-        poller.register(socket, zmq.POLLIN)
+        poller.register(receiving_socket, zmq.POLLIN)
+
         while True:
             # .recv() gives no context switch - why not? using poller with timeout instead
             socks = dict(poller.poll(1))
             gevent.sleep()
 
-            if socket in socks and socks[socket] == zmq.POLLIN:
-                message = socket.recv()
+            if receiving_socket in socks and socks[receiving_socket] == zmq.POLLIN:
+                message = receiving_socket.recv()
                 # expected format for drone commands are:
                 # DRONE_ID COMMAND OPTIONAL_DATA
                 # DRONE_ID and COMMAND must not contain spaces
@@ -160,6 +167,36 @@ class Drone(object):
                     logger.warning('Unknown command received.')
                     pass
         logger.warn('Command listener exiting.')
+
+    def outgoing_server_comms(self, server_public, client_public, client_secret):
+        context = zmq.Context()
+        sending_socket = context.socket(zmq.PUSH)
+
+        # setup sending tcp socket
+        sending_socket.curve_secretkey = client_secret
+        sending_socket.curve_publickey = client_public
+        sending_socket.curve_serverkey = server_public
+        sending_socket.setsockopt(zmq.RECONNECT_IVL, 2000)
+        sending_socket.connect(self.config['beeswarm_server']['zmq_url'])
+        logger.debug('Connected sending socket to server on {0}'.format(self.config['beeswarm_server']['zmq_url']))
+
+        # retransmits everything received to beeswarm server using sending_socket
+        internal_server_relay = context.socket(zmq.PULL)
+        internal_server_relay.bind('ipc://serverRelay')
+
+        poller = zmq.Poller()
+        poller.register(internal_server_relay, zmq.POLLIN)
+
+        while True:
+            # .recv() gives no context switch - why not? using poller with timeout instead
+            socks = dict(poller.poll(1))
+            gevent.sleep()
+            if internal_server_relay in socks and socks[internal_server_relay] == zmq.POLLIN:
+                logger.debug('Sending message to server.')
+                message = internal_server_relay.recv()
+                sending_socket.send(message)
+
+        logger.warn('Command sender exiting.')
 
 
 

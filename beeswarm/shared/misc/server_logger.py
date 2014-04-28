@@ -32,51 +32,13 @@ logger = logging.getLogger(__name__)
 
 class ServerLogger(LoggerBase):
     def __init__(self, config, work_dir):
-        self.config = config
-        self.work_dir = work_dir
         context = zmq.Context()
-        self.push_socket = context.socket(zmq.PUSH)
-
-        cert_path = os.path.join(self.work_dir, 'certificates')
-        public_keys_dir = os.path.join(cert_path, 'public_keys')
-        private_keys_dir = os.path.join(cert_path, 'private_keys')
-
-        client_secret_file = os.path.join(private_keys_dir, "client.key")
-        client_public, client_secret = zmq.auth.load_certificate(client_secret_file)
-
-        self.push_socket.curve_secretkey = client_secret
-        self.push_socket.curve_publickey = client_public
-
-        server_public_file = os.path.join(public_keys_dir, "server.key")
-        server_public, _ = zmq.auth.load_certificate(server_public_file)
-
-        self.push_socket.curve_serverkey = server_public
-        self.reconnect_interval = 2000
-        self.push_socket.setsockopt(zmq.RECONNECT_IVL, self.reconnect_interval)
-        self.monitor_socket = self.push_socket.get_monitor_socket()
-        self.monitor_socket.linger = 0
-        gevent.spawn(self.monitor_worker)
-        self.push_socket.connect(config['beeswarm_server']['zmq_url'])
+        self.socket = context.socket(zmq.PUSH)
+        self.socket.connect('ipc://serverRelay')
 
     def log(self, session):
         data = json.dumps(session.to_dict(), default=json_default, ensure_ascii=False)
-        self.push_socket.send('{0} {1}'.format('session_honeypot', data))
-
-    def monitor_worker(self):
-        poller = zmq.Poller()
-        poller.register(self.monitor_socket, zmq.POLLIN)
-        while True:
-            socks = poller.poll(0)
-            if len(socks) > 0:
-                data = recv_monitor_message(self.monitor_socket)
-                event = data['event']
-                value = data['value']
-                if event == zmq.EVENT_CONNECTED:
-                    logger.info('Connected to Beeswarm server')
-                elif event == zmq.EVENT_DISCONNECTED:
-                    logger.warning('Disconnected from Beeswarm server, will reconnect in {0} seconds.'.format(self.reconnect_interval))
-            gevent.sleep()
-
+        self.socket.send('{0} {1}'.format('session_honeypot', data))
 
 def json_default(obj):
     if isinstance(obj, datetime):

@@ -160,7 +160,7 @@
                     <fieldset>
                         <legend>Certificate information</legend>
                          This certificate information will be used for encrypted services (POP3s, HTTPs, etc).
-                        {% for field in [form.cert_common, form.cert_country, form.cert_state, form.cert_org, form.cert_locality, form.cert_org_unit] %}
+                        {% for field in [form.cert_common, form.cert_country, form.cert_state, form.cert_org, form.cert_org_unit, form.cert_locality] %}
                             {% if not field|bootstrap_is_hidden_field %}
                                 {{ macros.horizontal_field(field) }}
                             {%- endif %}

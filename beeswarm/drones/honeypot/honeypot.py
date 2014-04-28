@@ -172,7 +172,6 @@ class Honeypot(object):
             cap = c(self.sessions, options, self.users, self.work_dir)
 
             try:
-                #socket = create_socket(('0.0.0.0', port))
                 #Convention: All capability names which end in 's' will be wrapped in ssl.
                 if cap_name.endswith('s'):
                     server = StreamServer(('0.0.0.0', port), cap.handle_session,
@@ -190,7 +189,6 @@ class Honeypot(object):
             else:
                 logger.info('Started {0} capability listening on port {1}'.format(c.__name__, port))
 
-        drop_privileges()
         logger.info("Honeypot running - see log file (honeypot.log) for attack events.")
 
         gevent.joinall(self.server_greenlets)
