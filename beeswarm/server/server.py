@@ -126,7 +126,7 @@ class Server(object):
         poller.register(drone_command_receiver, zmq.POLLIN)
         while True:
             # .recv() gives no context switch - why not? using poller with timeout instead
-            socks = dict(poller.poll(5))
+            socks = dict(poller.poll(1))
             gevent.sleep()
 
             if drone_command_receiver in socks and socks[drone_command_receiver] == zmq.POLLIN:
@@ -138,14 +138,13 @@ class Server(object):
             elif drone_data_inbound in socks and socks[drone_data_inbound] == zmq.POLLIN:
                 topic, data = drone_data_inbound.recv().split(' ', 1)
                 logger.debug("Received {0} data.".format(topic))
-                if topic == 'session_honeypot' or topic == 'session_client':
+                if topic == Messages.SESSION_HONEYPOT or topic == Messages.SESSION_CLIENT:
                     sessionPublisher.send('{0} {1}'.format(topic, data))
-                if topic == Messages.KEY or topic == Messages.CERT:
+                elif topic == Messages.KEY or topic == Messages.CERT:
                     # TODO: Pass and persist this
                     pass
                 else:
                     logger.warn('Message with unknown topic received: {0}'.format(topic))
-
 
     def start(self, port=5000, maintenance=True):
         """

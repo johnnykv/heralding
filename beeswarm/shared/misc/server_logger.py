@@ -31,14 +31,15 @@ logger = logging.getLogger(__name__)
 
 
 class ServerLogger(LoggerBase):
-    def __init__(self, config, work_dir):
+    def __init__(self, message_type, config, work_dir):
         context = zmq.Context()
         self.socket = context.socket(zmq.PUSH)
         self.socket.connect('ipc://serverRelay')
+        self.message_type = message_type
 
     def log(self, session):
         data = json.dumps(session.to_dict(), default=json_default, ensure_ascii=False)
-        self.socket.send('{0} {1}'.format('session_honeypot', data))
+        self.socket.send('{0} {1}'.format(self.message_type, data))
 
 
 def json_default(obj):

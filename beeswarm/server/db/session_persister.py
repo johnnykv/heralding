@@ -33,26 +33,26 @@ logger = logging.getLogger(__name__)
 class PersistanceWorker(object):
     def __init__(self):
         ctx = zmq.Context()
-        self.subscriber_socket = ctx.socket(zmq.SUB)
-        self.subscriber_socket.connect('ipc://sessionPublisher')
-        self.subscriber_socket.setsockopt(zmq.SUBSCRIBE, 'session')
+        self.subscriber_sessions = ctx.socket(zmq.SUB)
+        self.subscriber_sessions.connect('ipc://sessionPublisher')
+        self.subscriber_sessions.setsockopt(zmq.SUBSCRIBE, '')
         self.first_cfg_received = gevent.event.Event()
         self.config = None
 
     def config_subscriber(self):
         ctx = zmq.Context()
-        subscriber_socket = ctx.socket(zmq.SUB)
-        subscriber_socket.connect('ipc://configPublisher')
-        subscriber_socket.setsockopt(zmq.SUBSCRIBE, '')
+        subscriber_config = ctx.socket(zmq.SUB)
+        subscriber_config.connect('ipc://configPublisher')
+        subscriber_config.setsockopt(zmq.SUBSCRIBE, '')
         send_zmq_request('ipc://configCommands', Messages.PUBLISH_CONFIG)
 
         while True:
             poller = zmq.Poller()
-            poller.register(subscriber_socket, zmq.POLLIN)
+            poller.register(subscriber_config, zmq.POLLIN)
             while True:
                 socks = dict(poller.poll())
-                if subscriber_socket in socks and socks[subscriber_socket] == zmq.POLLIN:
-                    topic, msg = subscriber_socket.recv().split(' ', 1)
+                if subscriber_config in socks and socks[subscriber_config] == zmq.POLLIN:
+                    topic, msg = subscriber_config.recv().split(' ', 1)
                     self.config = json.loads(msg)
                     self.first_cfg_received.set()
                     logger.debug('Config received')
@@ -61,10 +61,17 @@ class PersistanceWorker(object):
         gevent.spawn(self.config_subscriber)
         # we cannot proceede before we have received a initial configuration message
         self.first_cfg_received.wait()
+        poller = zmq.Poller()
+        poller.register(self.subscriber_sessions, zmq.POLLIN)
         while True:
-            topic, session_json = self.subscriber_socket.recv().split(' ', 1)
-            logger.debug('Received message from publisher')
-            self.persist_session(session_json, topic)
+            # .recv() gives no context switch - why not? using poller with timeout instead
+            socks = dict(poller.poll(1))
+            gevent.sleep()
+
+            if self.subscriber_sessions in socks and socks[self.subscriber_sessions] == zmq.POLLIN:
+                topic, session_json = self.subscriber_sessions.recv().split(' ', 1)
+                logger.debug('Received message from publisher')
+                self.persist_session(session_json, topic)
 
     def persist_session(self, session_json, session_type):
         data = json.loads(session_json)
@@ -76,7 +83,7 @@ class PersistanceWorker(object):
         else:
             _honeypot = None
 
-        if session_type == 'session_honeypot':
+        if session_type == Messages.SESSION_HONEYPOT:
             session = Session()
             for entry in data['transcript']:
                 transcript_timestamp = datetime.strptime(entry['timestamp'], '%Y-%m-%dT%H:%M:%S.%f')
@@ -92,7 +99,7 @@ class PersistanceWorker(object):
                                    successful=auth['successful'],
                                    timestamp=datetime.strptime(auth['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'))
                 session.authentication.append(a)
-        elif session_type == 'session_client':
+        elif session_type == Messages.SESSION_CLIENT:
             if not data['did_complete'] and self.config['ignore_failed_bait_session']:
                 return
             session = BaitSession()

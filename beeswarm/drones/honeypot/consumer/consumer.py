@@ -19,6 +19,7 @@ import gevent
 
 from beeswarm.drones.honeypot.consumer.loggers import loggerbase
 from beeswarm.shared.misc.server_logger import ServerLogger
+from beeswarm.shared.message_enum import Messages
 
 logger = logging.getLogger(__name__)
 
@@ -111,7 +112,7 @@ class Consumer:
         loggers = []
         # check if beeswarm server is enabled
         if self.config['beeswarm_server']:
-            loggers.append(ServerLogger(self.config, self.work_dir))
+            loggers.append(ServerLogger(Messages.SESSION_HONEYPOT, self.config, self.work_dir))
 
         # enable generic loggers
         for l in loggerbase.LoggerBase.__subclasses__():

@@ -19,6 +19,7 @@ import gevent
 
 from beeswarm.drones.client.consumer.loggers import loggerbase
 from beeswarm.shared.misc.server_logger import ServerLogger
+from beeswarm.shared.message_enum import Messages
 
 logger = logging.getLogger(__name__)
 
@@ -69,5 +70,5 @@ class Consumer:
 
         # check if beeswarm server is enabled
         if self.config['beeswarm_server']:
-            loggers.append(ServerLogger(self.config, self.work_dir))
+            loggers.append(ServerLogger(Messages.SESSION_CLIENT, self.config, self.work_dir))
         return loggers
