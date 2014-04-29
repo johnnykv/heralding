@@ -95,13 +95,6 @@ def create_self_signed_cert(cert_country='US', cert_state='state', cert_organiza
     priv_key_text = crypto.dump_privatekey(crypto.FILETYPE_PEM, pk)
 
     return cert_text, priv_key_text
-    # # We need to do this because Paramiko wants PKCS #1 RSA Key format.
-    # # I would really like to add a few swear words here.
-    # from Crypto.PublicKey import RSA
-    #
-    # priv_key = RSA.importKey(priv_key_text)
-    # with open(keypath, 'w') as keyfile:
-    #     keyfile.write(priv_key.exportKey('PEM'))
 
 
 def find_offset(iso_file_path, needle):

@@ -65,8 +65,7 @@ class SshWrapper(SSHHandler):
         self.working_dir = None
         self.username = None
 
-        server_key = options['key']
-        SshWrapper.host_key = RSAKey(filename=server_key)
+        SshWrapper.host_key = RSAKey(filename='server.key')
         request = SshWrapper.dummy_request()
         request._sock = socket
 
