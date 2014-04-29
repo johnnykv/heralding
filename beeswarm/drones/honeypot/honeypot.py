@@ -34,13 +34,13 @@ from beeswarm.drones.honeypot.capabilities import handlerbase
 from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.models.authenticator import Authenticator
 from beeswarm.drones.honeypot.consumer.consumer import Consumer
-from beeswarm.shared.helpers import drop_privileges, create_self_signed_cert
+from beeswarm.shared.helpers import drop_privileges, create_self_signed_cert, send_zmq_push, extract_keys
 from beeswarm.drones.honeypot.models.user import BaitUser
 import requests
 from requests.exceptions import Timeout, ConnectionError
 from beeswarm.shared.asciify import asciify
 from beeswarm.shared.models.ui_handler import HoneypotUIHandler
-from beeswarm.shared.helpers import extract_keys
+from beeswarm.shared.message_enum import Messages
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +64,16 @@ class Honeypot(object):
             Honeypot.prepare_environment(work_dir)
             with open('beeswarmcfg.json', 'r') as config_file:
                 config = json.load(config_file, object_hook=asciify)
+        self.work_dir = work_dir
+        self.config = config
+        self.key = key
+        self.cert = cert
+        self.curses_screen = curses_screen
+
+        # TODO: pass honeypot otherwise
+        Session.honeypot_id = self.config['general']['id']
+        self.id = self.config['general']['id']
+
         # write ZMQ keys to files - as expected by pyzmq
         extract_keys(work_dir, config)
         if not (os.path.isfile(os.path.join(work_dir, 'server.key'))):
@@ -78,14 +88,10 @@ class Honeypot(object):
                 certfile.write(cert)
             with open(key_path, 'w') as keyfile:
                 keyfile.write(priv_key)
-
-        self.work_dir = work_dir
-        self.config = config
-        self.key = key
-        self.cert = cert
-        self.curses_screen = curses_screen
-
-        Session.honeypot_id = self.config['general']['id']
+            send_zmq_push('ipc://serverRelay', '{0} {1} {2}'.format(Messages.KEY, self.id, keyfile))
+            print 'c'
+            send_zmq_push('ipc://serverRelay', '{0} {1} {2}'.format(Messages.CERT, self.id, cert))
+            print 'd'
 
         if self.config['general']['fetch_ip']:
             try:

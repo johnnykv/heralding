@@ -40,6 +40,7 @@ class ServerLogger(LoggerBase):
         data = json.dumps(session.to_dict(), default=json_default, ensure_ascii=False)
         self.socket.send('{0} {1}'.format('session_honeypot', data))
 
+
 def json_default(obj):
     if isinstance(obj, datetime):
         return obj.isoformat()

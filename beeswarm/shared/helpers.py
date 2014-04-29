@@ -26,6 +26,7 @@ import json
 import fcntl
 import shutil
 import zmq.green as zmq
+import gevent
 
 import beeswarm
 from beeswarm.shared.message_enum import Messages
@@ -180,6 +181,7 @@ def send_zmq_request(actor_url, request):
     else:
         socket.close()
         return json.loads(result.split(' ', 1)[1])
+    gevent.sleep()
 
 
 # for occasional zmq pushes
@@ -189,6 +191,7 @@ def send_zmq_push(actor_url, data):
     socket.connect(actor_url)
     socket.send(data)
     socket.close()
+    gevent.sleep()
 
 
 def extract_keys(work_dir, config):

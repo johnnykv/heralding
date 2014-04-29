@@ -140,8 +140,12 @@ class Server(object):
                 logger.debug("Received {0} data.".format(topic))
                 if topic == 'session_honeypot' or topic == 'session_client':
                     sessionPublisher.send('{0} {1}'.format(topic, data))
+                if topic == Messages.KEY or topic == Messages.CERT:
+                    # TODO: Pass and persist this
+                    pass
                 else:
                     logger.warn('Message with unknown topic received: {0}'.format(topic))
+
 
     def start(self, port=5000, maintenance=True):
         """

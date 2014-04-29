@@ -56,6 +56,7 @@ class Drone(object):
         self.drone = None
         self.drone_greenlet = None
         self.outgoing_msg_greenlet = None
+        self.incoming_msg_greenlet = None
 
         if self.config['general']['fetch_ip']:
             try:
@@ -80,8 +81,10 @@ class Drone(object):
         server_public_file = os.path.join(public_keys_dir, "server.key")
         server_public, _ = zmq.auth.load_certificate(server_public_file)
 
-        self.outgoing_msg_greenlet = gevent.spawn(self.incoming_server_comms, server_public, client_public, client_secret)
-        self.incoming_msg_greenlet = gevent.spawn(self.outgoing_server_comms, server_public, client_public, client_secret)
+        self.outgoing_msg_greenlet = gevent.spawn(self.incoming_server_comms, server_public,
+                                                  client_public,client_secret)
+        self.incoming_msg_greenlet = gevent.spawn(self.outgoing_server_comms, server_public,
+                                                  client_public, client_secret)
 
         self._start_drone()
 
