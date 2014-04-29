@@ -84,11 +84,6 @@ class Drone(object):
         self.incoming_msg_greenlet = gevent.spawn(self.outgoing_server_comms, server_public, client_public, client_secret)
 
         self._start_drone()
-        gevent.sleep(2)
-        context = zmq.Context()
-        socket = context.socket(zmq.PUSH)
-        socket.connect('ipc://serverRelay')
-        socket.send('HEJ HEJ')
 
         #drop_privileges()
         logger.info('Drone running using id: {0}'.format(self.id))
