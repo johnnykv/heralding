@@ -80,8 +80,8 @@ class Honeypot(object):
             cert_info = config['certificate_info']
             #TODO: IF NOT COMMON_NAME: Use own ip address...
             cert, priv_key = create_self_signed_cert(cert_info['country'], cert_info['state'],
-                                                     cert_info['organization'], cert_info['organization_unit'],
-                                                     cert_info['common_name'])
+                                                     cert_info['organization'], cert_info['locality'],
+                                                     cert_info['organization_unit'], cert_info['common_name'])
             cert_path = os.path.join(work_dir, 'server.crt')
             key_path = os.path.join(work_dir, 'server.key')
             with open(cert_path, 'w') as certfile:
