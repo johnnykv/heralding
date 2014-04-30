@@ -15,6 +15,22 @@
     $(document).on('click', '#btnWizardNext', function () {
         $('#HoneypotWizard').wizard('next', 'foo');
     });
+
+    function show_tab_with_errors() {
+        var divCollection = document.getElementsByTagName("div");
+        for (var i=0; i<divCollection.length; i++) {
+
+            if(divCollection[i].getAttribute("class") == "control-group error") {
+                console.log(divCollection[i].parentNode.parentNode);
+                var id = divCollection[i].parentNode.parentNode.id;
+                $('[href=#'+id+']').tab('show');
+                break;
+            }
+        }
+    }
+
+    $(document).ready(function() {
+        show_tab_with_errors(); });
 </script>
 {% endblock %}
 

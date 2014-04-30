@@ -62,8 +62,8 @@ def drop_privileges(uid_name='nobody', gid_name='nogroup'):
     logger.info("Privileges dropped, running as {0}/{1}.".format(new_uid_name, new_gid_name))
 
 
-def create_self_signed_cert(cert_country='US', cert_state='state', cert_organization='org',
-                            cert_locality='local', cert_organizational_unit='unit', cert_common_name='common name'):
+def create_self_signed_cert(cert_country, cert_state, cert_organization, cert_locality, cert_organizational_unit,
+                            cert_common_name):
     logger.info('Creating SSL Certificate and Key.')
     pk = crypto.PKey()
     pk.generate_key(crypto.TYPE_RSA, 1024)
@@ -71,19 +71,19 @@ def create_self_signed_cert(cert_country='US', cert_state='state', cert_organiza
     cert = crypto.X509()
     sub = cert.get_subject()
 
-    # Later, we'll get these fields from the server
-    # country
+    if cert_common_name:
+        sub.CN = cert_common_name
+    else:
+        # TODO: Autodetect ip of the current drone if now common names upplied
+        sub.CN = '127.0.0.1'
     sub.C = cert_country
-    # state or province name
     sub.ST = cert_state
-    # locality
     sub.L = cert_locality
-    # organization
     sub.O = cert_organization
-    # organizational unit
-    sub.OU = cert_organizational_unit
-    # common name
-    sub.CN = cert_common_name
+
+    #optional
+    if cert_organizational_unit:
+        sub.OU = cert_organizational_unit
 
     cert.set_serial_number(1000)
     cert.gmtime_adj_notBefore(0)

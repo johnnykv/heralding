@@ -1,5 +1,6 @@
 from flask.ext.wtf import Form
 from wtforms import IntegerField, FileField, PasswordField, TextField, BooleanField, ValidationError, validators
+from wtforms.validators import Required, Length
 
 
 def validate_time_range(form, field):
@@ -67,11 +68,11 @@ class NewHoneypotConfigForm(Form):
     cert_common = TextField(default='', label='Common Name/Domain name',
                             description='Leave this field empty to force the drone to automatically use  it\'s own IP '
                                         'address when creating the certificate')
-    cert_country = TextField(default='', label='Country')
-    cert_state = TextField(default='', label='State')
-    cert_org = TextField(default='', label='Organization')
+    cert_country = TextField(validators=[Required(), Length(min=2, max=2)], label='Country')
+    cert_state = TextField(validators=[Required(), Length(min=1, max=64)], label='State')
+    cert_org = TextField(validators=[Required(), Length(min=1, max=64)], label='Organization')
     cert_org_unit = TextField(default='', label='Organization Unit')
-    cert_locality = TextField(default='', label='Locality')
+    cert_locality = TextField(validators=[Required(), Length(min=1, max=64)], label='Locality')
 
 
 class NewClientConfigForm(Form):
