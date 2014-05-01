@@ -232,15 +232,6 @@ def configure_drone(id):
                 'ip': '192.168.1.1',
                 'fetch_ip': False
             },
-            'log_hpfeedslogger': {
-                'enabled': False,
-                'host': 'hpfriends.honeycloud.net',
-                'port': 20000,
-                'ident': '2wtadBoH',
-                'secret': 'mJPyhNhJmLYGbDCt',
-                'chan': 'beeswarm.drones.honeypot',
-                'port_mapping': '{}'
-            },
             'beeswarm_server': {
                 'enabled': True,
                 'zmq_url' : server_zmq_url,

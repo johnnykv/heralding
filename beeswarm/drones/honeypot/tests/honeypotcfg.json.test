@@ -5,15 +5,6 @@
         "honeypot_ip": "192.168.1.1",
         "fetch_ip": false
     },
-    "log_hpfeedslogger": {
-        "enabled": false,
-        "host": "hpfriends.honeycloud.net",
-        "port": 20000,
-        "ident": "2wtadBoH",
-        "secret": "mJPyhNhJmLYGbDCt",
-        "chan": "beeswarm.drones.honeypot",
-        "port_mapping": "{}"
-    },
     "log_server": {
         "enabled": false,
         "server_url": "http://127.0.0.1:5000/ws/honeypot_data"

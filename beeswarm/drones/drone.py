@@ -89,7 +89,7 @@ class Drone(object):
         self._start_drone()
 
         #drop_privileges()
-        logger.info('Drone running using id: {0}'.format(self.id))
+        logger.info('Dr one running using id: {0}'.format(self.id))
         gevent.joinall([self.incoming_msg_greenlet])
 
     def _start_drone(self):
@@ -134,6 +134,7 @@ class Drone(object):
         receiving_socket.setsockopt(zmq.SUBSCRIBE, self.id)
         # broadcasts to all drones
         receiving_socket.setsockopt(zmq.SUBSCRIBE, Messages.BROADCAST)
+
         receiving_socket.connect(self.config['beeswarm_server']['zmq_command_url'])
         logger.debug('Connected receiving socket to server on {0}'.format(self.config['beeswarm_server']['zmq_command_url']))
 

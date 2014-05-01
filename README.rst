@@ -24,8 +24,6 @@ Beeswarm consist of three parts:
   * Generic low interaction honeypot
   * Multiprotocol credentials catching honeypot, comes default with ssh, vnc, pop3, pop3s, ssh, smtp, ftp, http and telnet capability.
   * Extendable, both in terms of new protocols but can also be extended to provide shell-like features.
-  * Supports a variety of loggers (syslog, file logging, hpfeeds, etc).
-  * Can be deployed independently or as part of the full beeswarm setup.
 
 * Client
 
@@ -55,8 +53,8 @@ Developers are encouraged to use the develop feature from distribute:
     $>python setup.py develop
 
 
-Honeypot
-========
+Starting the server
+===================
 The following sections shows how the beeswarm Honeypot can be used as a standalone credentials-catching honeypot.
 
 Preparation
@@ -64,9 +62,27 @@ Preparation
 
 .. code-block::
 
-    $>mkdir workdir
-    $>cd workdir
-    $>sudo beeswarm -hi --prepare
+    $> mkdir server_workdir
+    $> beeswarm --se -v
+    *** Please answer a few configuration options ***
+
+    * Certificate Information *
+    IMPORTANT: Please make sure that "Common Name" is the IP address or fully qualified host name  that you want to use for the server API.
+    Common Name: 127.0.0.1
+    Country: dk
+    State: dnk
+    Locality/City: dk
+    Organization: dnk
+    Organizational unit: q1
+
+    * Network *
+    Port for UI (default: 5000):
+    2014-05-01 19:44:36,268 (beeswarm.shared.helpers) Creating SSL Certificate and Key.
+
+    * Communication between honeypots and server *
+    IP or hostname of server: 127.0.0.1
+    TCP port for session data (default: 5712) :
+    TCP port for drone commands(default: 5713) :
 
 
 Sample usage

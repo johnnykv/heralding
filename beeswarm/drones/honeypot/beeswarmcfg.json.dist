@@ -1,18 +1,9 @@
 {
     "general": {
         "mode": "honeypot",
-        "id": "standalone",
+        "id": "",
         "ip": "",
         "fetch_ip": true
-    },
-    "log_hpfeedslogger": {
-        "enabled": false,
-        "host": "hpfriends.honeycloud.net",
-        "port": 20000,
-        "ident": "2wtadBoH",
-        "secret": "mJPyhNhJmLYGbDCt",
-        "chan": "beeswarm.drones.honeypot",
-        "port_mapping": "{}"
     },
     "log_server": {
         "enabled": false,
