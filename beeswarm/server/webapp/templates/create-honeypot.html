@@ -66,7 +66,7 @@
                 <div id="general" class="tab-pane">
                     <fieldset>
                         <legend>General Options</legend>
-                        {% for field in [form.general_name] %}
+                        {% for field in [form.general__name] %}
                             {% if not field|bootstrap_is_hidden_field %}
                                 {{ macros.horizontal_field(field) }}
                             {%- endif %}
@@ -77,7 +77,7 @@
                 <div id="http" class="tab-pane">
                     <fieldset>
                         <legend>HTTP Options</legend>
-                        {% for field in [form.http_enabled, form.http_port, form.http_banner] %}
+                        {% for field in [form.capabilities__http__enabled, form.capabilities__http__port, form.capabilities__http__banner] %}
                             {% if not field|bootstrap_is_hidden_field %}
                                 {{ macros.horizontal_field(field) }}
                             {%- endif %}
@@ -88,7 +88,7 @@
                 <div id="https" class="tab-pane">
                     <fieldset>
                         <legend>HTTPs Options</legend>
-                        {% for field in [form.https_enabled, form.https_port, form.https_banner] %}
+                        {% for field in [form.capabilities__https__enabled, form.capabilities__https__port, form.capabilities__https__banner] %}
                             {% if not field|bootstrap_is_hidden_field %}
                                 {{ macros.horizontal_field(field) }}
                             {%- endif %}
@@ -99,7 +99,7 @@
                 <div id="ftp" class="tab-pane">
                     <fieldset>
                         <legend>FTP Options</legend>
-                        {% for field in [form.ftp_enabled, form.ftp_banner, form.ftp_port, form.ftp_max_attempts, form.ftp_syst_type] %}
+                        {% for field in [form.capabilities__ftp__enabled, form.capabilities__ftp__banner, form.capabilities__ftp__port, form.capabilities__ftp__max_attempts, form.capabilities__ftp__syst_type] %}
                             {% if not field|bootstrap_is_hidden_field %}
                                 {{ macros.horizontal_field(field) }}
                             {%- endif %}
@@ -110,7 +110,7 @@
                 <div id="smtp" class="tab-pane">
                     <fieldset>
                         <legend>SMTP Options</legend>
-                        {% for field in [form.smtp_enabled, form.smtp_banner, form.smtp_port] %}
+                        {% for field in [form.capabilities__smtp__enabled, form.capabilities__smtp__banner, form.capabilities__smtp__port] %}
                             {% if not field|bootstrap_is_hidden_field %}
                                 {{ macros.horizontal_field(field) }}
                             {%- endif %}
@@ -121,7 +121,7 @@
                 <div id="vnc" class="tab-pane">
                     <fieldset>
                         <legend>VNC Options</legend>
-                        {% for field in [form.vnc_enabled, form.vnc_port] %}
+                        {% for field in [form.capabilities__vnc__enabled, form.capabilities__vnc__port] %}
                             {% if not field|bootstrap_is_hidden_field %}
                                 {{ macros.horizontal_field(field) }}
                             {%- endif %}
@@ -132,7 +132,7 @@
                 <div id="telnet" class="tab-pane">
                     <fieldset>
                         <legend>Telnet Options</legend>
-                        {% for field in [form.telnet_enabled, form.telnet_max_attempts, form.telnet_port] %}
+                        {% for field in [form.capabilities__telnet__enabled, form.capabilities__telnet__max_attempts, form.capabilities__telnet__port] %}
                             {% if not field|bootstrap_is_hidden_field %}
                                 {{ macros.horizontal_field(field) }}
                             {%- endif %}
@@ -143,7 +143,7 @@
                 <div id="pop3" class="tab-pane">
                     <fieldset>
                         <legend>POP3 Options</legend>
-                        {% for field in [form.pop3_enabled, form.pop3_max_attempts, form.pop3_port] %}
+                        {% for field in [form.capabilities__pop3__enabled, form.capabilities__pop3__max_attempts, form.capabilities__pop3__port] %}
                             {% if not field|bootstrap_is_hidden_field %}
                                 {{ macros.horizontal_field(field) }}
                             {%- endif %}
@@ -154,7 +154,7 @@
                 <div id="pop3s" class="tab-pane">
                     <fieldset>
                         <legend>POP3s Options</legend>
-                        {% for field in [form.pop3s_enabled, form.pop3s_max_attempts, form.pop3s_port] %}
+                        {% for field in [form.capabilities__pop3s__enabled, form.capabilities__pop3s__max_attempts, form.capabilities__pop3s__port] %}
                             {% if not field|bootstrap_is_hidden_field %}
                                 {{ macros.horizontal_field(field) }}
                             {%- endif %}
@@ -165,7 +165,7 @@
                 <div id="ssh" class="tab-pane">
                     <fieldset>
                         <legend>SSH Options</legend>
-                        {% for field in [form.ssh_enabled, form.ssh_port, form.ssh_key] %}
+                        {% for field in [form.capabilities__ssh__enabled, form.capabilities__ssh__port, form.capabilities__ssh__key] %}
                             {% if not field|bootstrap_is_hidden_field %}
                                 {{ macros.horizontal_field(field) }}
                             {%- endif %}
@@ -176,7 +176,7 @@
                     <fieldset>
                         <legend>Certificate information</legend>
                          This certificate information will be used for encrypted services (POP3s, HTTPs, etc).
-                        {% for field in [form.cert_common, form.cert_country, form.cert_state, form.cert_org, form.cert_org_unit, form.cert_locality] %}
+                        {% for field in [form.certificate_info__common_name, form.certificate_info__country, form.certificate_info__state, form.certificate_info__organization, form.certificate_info__organization_unit, form.certificate_info__locality] %}
                             {% if not field|bootstrap_is_hidden_field %}
                                 {{ macros.horizontal_field(field) }}
                             {%- endif %}

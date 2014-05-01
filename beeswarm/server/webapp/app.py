@@ -207,13 +207,31 @@ def set_client_mode(drone_id):
     else:
         abort(500, 'Drone has already been assigned.')
 
+
+class DictWrapper():
+    def __init__(self, data):
+        print 'INIT'
+        self.data = data
+
+    def __getattr__(self, name):
+        path = name.split('__')
+        result = self._rec(path, self.data)
+        return result
+
+    def _rec(self, path, item):
+        if len(path) == 1:
+            return item[path[0]]
+        else:
+            return self._rec(path[1:], item[path[0]])
+
 @app.route('/ws/drone/configure/<id>', methods=['GET', 'POST'])
 @login_required
 def configure_drone(id):
     db_session = database_setup.get_session()
     drone = db_session.query(Drone).filter(Drone.id == id).one()
     if drone.discriminator == 'honeypot':
-        form = NewHoneypotConfigForm()
+        configObj = DictWrapper(json.loads(drone.configuration))
+        form = NewHoneypotConfigForm(obj=configObj)
         if not form.validate_on_submit():
             return render_template('create-honeypot.html', form=form, mode_name='Honeypot', user=current_user)
         else:
@@ -226,7 +244,7 @@ def configure_drone(id):
 
             drone_config = {
             'general': {
-                'name': form.general_name.data,
+                'name': form.general__name.data,
                 'mode': 'honeypot',
                 'id': drone.id,
                 'ip': '192.168.1.1',
@@ -245,59 +263,59 @@ def configure_drone(id):
                 'socket': '/dev/log'
             },
             'certificate_info': {
-                'common_name': form.cert_common.data,
-                'country': form.cert_country.data,
-                'state': form.cert_state.data,
-                'locality': form.cert_locality.data,
-                'organization': form.cert_org.data,
-                'organization_unit': form.cert_org_unit.data
+                'common_name': form.certificate_info__common_name.data,
+                'country': form.certificate_info__country.data,
+                'state': form.certificate_info__state.data,
+                'locality': form.certificate_info__locality.data,
+                'organization': form.certificate_info__organization.data,
+                'organization_unit': form.certificate_info__organization_unit.data
             },
             'capabilities': {
                 'ftp': {
-                    'enabled': form.ftp_enabled.data,
-                    'port': form.ftp_port.data,
-                    'max_attempts': form.ftp_max_attempts.data,
-                    'banner': form.ftp_banner.data,
-                    'syst_type': form.ftp_syst_type.data
+                    'enabled': form.capabilities__ftp__enabled.data,
+                    'port': form.capabilities__ftp__port.data,
+                    'max_attempts': form.capabilities__ftp__max_attempts.data,
+                    'banner': form.capabilities__ftp__banner.data,
+                    'syst_type': form.capabilities__ftp__syst_type.data
                 },
                 'telnet': {
-                    'enabled': form.telnet_enabled.data,
-                    'port': form.telnet_port.data,
-                    'max_attempts': form.telnet_max_attempts.data
+                    'enabled': form.capabilities__telnet__enabled.data,
+                    'port': form.capabilities__telnet__port.data,
+                    'max_attempts': form.capabilities__telnet__max_attempts.data
                 },
                 'pop3': {
-                    'enabled': form.pop3_enabled.data,
-                    'port': form.pop3_port.data,
-                    'max_attempts': form.pop3_max_attempts.data,
+                    'enabled': form.capabilities__pop3__enabled.data,
+                    'port': form.capabilities__pop3__port.data,
+                    'max_attempts': form.capabilities__pop3__max_attempts.data,
                 },
                 'pop3s': {
-                    'enabled': form.pop3s_enabled.data,
-                    'port': form.pop3s_port.data,
-                    'max_attempts': form.pop3s_max_attempts.data,
+                    'enabled': form.capabilities__pop3s__enabled.data,
+                    'port': form.capabilities__pop3s__port.data,
+                    'max_attempts': form.capabilities__pop3s__max_attempts.data,
                 },
                 'ssh': {
-                    'enabled': form.ssh_enabled.data,
-                    'port': form.ssh_port.data,
-                    'key': form.ssh_key.data
+                    'enabled': form.capabilities__ssh__enabled.data,
+                    'port': form.capabilities__ssh__port.data,
+                    'key': form.capabilities__ssh__key.data
                 },
                 'http': {
-                    'enabled': form.http_enabled.data,
-                    'port': form.http_port.data,
-                    'banner': form.http_banner.data
+                    'enabled': form.capabilities__http__enabled.data,
+                    'port': form.capabilities__http__port.data,
+                    'banner': form.capabilities__http__banner.data
                 },
                 'https': {
-                    'enabled': form.https_enabled.data,
-                    'port': form.https_port.data,
-                    'banner': form.https_banner.data
+                    'enabled': form.capabilities__https__enabled.data,
+                    'port': form.capabilities__https__port.data,
+                    'banner': form.capabilities__https__banner.data
                 },
                 'smtp': {
-                    'enabled': form.smtp_enabled.data,
-                    'port': form.smtp_port.data,
-                    'banner': form.smtp_banner.data
+                    'enabled': form.capabilities__smtp__enabled.data,
+                    'port': form.capabilities__smtp__port.data,
+                    'banner': form.capabilities__smtp__banner.data
                 },
                 'vnc': {
-                    'enabled': form.vnc_enabled.data,
-                    'port': form.vnc_port.data
+                    'enabled': form.capabilities__vnc__enabled.data,
+                    'port': form.capabilities__vnc__port.data
                 }
             },
             'users': {},
@@ -308,7 +326,7 @@ def configure_drone(id):
             },
         }
             config_json = json.dumps(drone_config, indent=4)
-            drone.name = form.general_name.data
+            drone.name = form.general__name.data
             drone.configuration = config_json
             logging.debug(drone.id)
             logging.debug(drone)

@@ -26,53 +26,55 @@ def validate_time_range(form, field):
 
 class NewHoneypotConfigForm(Form):
 
-    general_name = TextField(default='', label='Name')
+    general__name = TextField(default='', label='Name')
 
-    http_enabled = BooleanField(default=False, label='Enabled')
-    http_port = IntegerField(default=80, label='Port')
-    http_banner = TextField(default='Microsoft-IIS/5.0', label='Server Banner')
+    # __ splits make lookup in dictionary possible
 
-    https_enabled = BooleanField(default=False, label='Enabled')
-    https_port = IntegerField(default=443, label='Port')
-    https_banner = TextField(default='Microsoft-IIS/5.0', label='Server Banner')
+    capabilities__http__enabled = BooleanField(default=False, label='Enabled')
+    capabilities__http__port = IntegerField(default=80, label='Port')
+    capabilities__http__banner = TextField(default='Microsoft-IIS/5.0', label='Server Banner')
 
-    ftp_enabled = BooleanField(default=False, label='Enabled')
-    ftp_port = IntegerField(default=21, label='Port')
-    ftp_max_attempts = IntegerField(default=3, label='Login Attempts')
-    ftp_syst_type = TextField(default='Windows-NT', label='System Type')
-    ftp_banner = TextField(default='Microsoft FTP Server', label='Server Banner')
+    capabilities__https__enabled = BooleanField(default=False, label='Enabled')
+    capabilities__https__port = IntegerField(default=443, label='Port')
+    capabilities__https__banner = TextField(default='Microsoft-IIS/5.0', label='Server Banner')
 
-    smtp_enabled = BooleanField(default=False, label='Enabled')
-    smtp_port = IntegerField(default=25, label='Port')
-    smtp_banner = TextField(default='Microsoft ESMTP MAIL service ready', label='Server Banner')
+    capabilities__ftp__enabled = BooleanField(default=False, label='Enabled')
+    capabilities__ftp__port = IntegerField(default=21, label='Port')
+    capabilities__ftp__max_attempts = IntegerField(default=3, label='Login Attempts')
+    capabilities__ftp__syst_type = TextField(default='Windows-NT', label='System Type')
+    capabilities__ftp__banner = TextField(default='Microsoft FTP Server', label='Server Banner')
 
-    vnc_enabled = BooleanField(default=False, label='Enabled')
-    vnc_port = IntegerField(default=5900, label='Port')
+    capabilities__smtp__enabled = BooleanField(default=False, label='Enabled')
+    capabilities__smtp__port = IntegerField(default=25, label='Port')
+    capabilities__smtp__banner = TextField(default='Microsoft ESMTP MAIL service ready', label='Server Banner')
 
-    telnet_enabled = BooleanField(default=False, label='Enabled')
-    telnet_port = IntegerField(default=23, label='Port')
-    telnet_max_attempts = IntegerField(default=3, label='Login Attempts')
+    capabilities__vnc__enabled = BooleanField(default=False, label='Enabled')
+    capabilities__vnc__port = IntegerField(default=5900, label='Port')
 
-    pop3_enabled = BooleanField(default=False, label='Enabled')
-    pop3_port = IntegerField(default=110, label='Port')
-    pop3_max_attempts = IntegerField(default=3, label='Login Attempts')
+    capabilities__telnet__enabled = BooleanField(default=False, label='Enabled')
+    capabilities__telnet__port = IntegerField(default=23, label='Port')
+    capabilities__telnet__max_attempts = IntegerField(default=3, label='Login Attempts')
 
-    pop3s_enabled = BooleanField(default=False, label='Enabled')
-    pop3s_port = IntegerField(default=995, label='Port')
-    pop3s_max_attempts = IntegerField(default=3, label='Login Attempts')
+    capabilities__pop3__enabled = BooleanField(default=False, label='Enabled')
+    capabilities__pop3__port = IntegerField(default=110, label='Port')
+    capabilities__pop3__max_attempts = IntegerField(default=3, label='Login Attempts')
 
-    ssh_enabled = BooleanField(default=False, label='Enabled')
-    ssh_port = IntegerField(default=22, label='Port')
-    ssh_key = FileField(default='server.key', label='Key File')
+    capabilities__pop3s__enabled = BooleanField(default=False, label='Enabled')
+    capabilities__pop3s__port = IntegerField(default=995, label='Port')
+    capabilities__pop3s__max_attempts = IntegerField(default=3, label='Login Attempts')
 
-    cert_common = TextField(default='', label='Common Name/Domain name',
+    capabilities__ssh__enabled = BooleanField(default=False, label='Enabled')
+    capabilities__ssh__port = IntegerField(default=22, label='Port')
+    capabilities__ssh__key = FileField(default='server.key', label='Key File')
+
+    certificate_info__common_name = TextField(default='', label='Common Name/Domain name',
                             description='Leave this field empty to force the drone to automatically use  it\'s own IP '
                                         'address when creating the certificate')
-    cert_country = TextField(validators=[Required(), Length(min=2, max=2)], label='Country')
-    cert_state = TextField(validators=[Required(), Length(min=1, max=64)], label='State')
-    cert_org = TextField(validators=[Required(), Length(min=1, max=64)], label='Organization')
-    cert_org_unit = TextField(default='', label='Organization Unit')
-    cert_locality = TextField(validators=[Required(), Length(min=1, max=64)], label='Locality')
+    certificate_info__country = TextField(validators=[Required(), Length(min=2, max=2)], label='Country')
+    certificate_info__state = TextField(validators=[Required(), Length(min=1, max=64)], label='State')
+    certificate_info__organization = TextField(validators=[Required(), Length(min=1, max=64)], label='Organization')
+    certificate_info__organization_unit = TextField(default='', label='Organization Unit')
+    certificate_info__locality = TextField(validators=[Required(), Length(min=1, max=64)], label='Locality')
 
 
 class NewClientConfigForm(Form):
