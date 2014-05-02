@@ -73,6 +73,7 @@ def initialize():
     # wait until we have received the first config publish
     first_cfg_received.wait()
 
+
 def config_subscriber():
     global config
     ctx = zmq.Context()
@@ -210,7 +211,6 @@ def set_client_mode(drone_id):
 
 class DictWrapper():
     def __init__(self, data):
-        print 'INIT'
         self.data = data
 
     def __getattr__(self, name):
@@ -238,7 +238,7 @@ def configure_drone(id):
             server_zmq_command_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_command_port'])
             server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
             # TODO: Check if key pair exists
-            result = send_zmq_request('ipc://configCommands', 'gen_zmq_keys ' + str(drone.id))
+            result = send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.GEN_ZMQ_KEYS, str(drone.id)))
             zmq_public = result['public_key']
             zmq_private = result['private_key']
 
@@ -344,7 +344,7 @@ def configure_drone(id):
             server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
             server_zmq_command_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_command_port'])
             # TODO: Check if key pair exists
-            result = send_zmq_request('ipc://configCommands', 'gen_zmq_keys ' + str(drone.id))
+            result = send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.GEN_ZMQ_KEYS, str(drone.id)))
             zmq_public = result['public_key']
             zmq_private = result['private_key']
 
@@ -529,7 +529,7 @@ def drone_key(key):
         drone_id = str(uuid.uuid4())
         server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
         server_zmq_command_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_command_port'])
-        result = send_zmq_request('ipc://configCommands', 'gen_zmq_keys ' + drone_id)
+        result = send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.GEN_ZMQ_KEYS, drone_id))
         zmq_public = result['public_key']
         zmq_private = result['private_key']
         db_session = database_setup.get_session()
@@ -582,7 +582,7 @@ def create_client():
         with open(app.config['CERT_PATH']) as cert:
             cert_str = cert.read()
         server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
-        result = send_zmq_request('ipc://configCommands', 'gen_zmq_keys ' + client_id)
+        result = send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.GEN_ZMQ_KEYS, client_id))
         zmq_public = result['public_key']
         zmq_private = result['private_key']
 
@@ -929,7 +929,7 @@ def update_config(options):
     context = zmq.Context()
     socket = context.socket(zmq.REQ)
     socket.connect('ipc://configCommands')
-    socket.send('set ' + json.dumps(options))
+    socket.send('{0} {1}'.format(Messages.SET, json.dumps(options)))
     reply = socket.recv()
     if reply != Messages.OK:
         logger.warning('Error while requesting config change to actor.')

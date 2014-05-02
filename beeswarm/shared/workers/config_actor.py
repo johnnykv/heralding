@@ -68,9 +68,9 @@ class ConfigActor(Greenlet):
         else:
             cmd = msg
 
-        if cmd == 'set':
+        if cmd == Messages.SET:
             self._handle_command_set(data)
-        elif cmd == 'gen_zmq_keys':
+        elif cmd == Messages.GEN_ZMQ_KEYS:
             self._handle_command_genkeys(data)
         elif cmd == Messages.PUBLISH_CONFIG:
             self._publish_config()

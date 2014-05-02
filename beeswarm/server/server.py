@@ -288,7 +288,7 @@ class Server(object):
             context = zmq.Context()
             socket = context.socket(zmq.REQ)
             socket.connect('ipc://configCommands')
-            socket.send('gen_zmq_keys beeswarm_server')
+            socket.send('{0} {1}'.format(Messages.GEN_ZMQ_KEYS, 'beeswarm_server'))
             result = socket.recv()
             if result.split(' ', 1)[0] == Messages.OK:
                 result = json.loads(result.split(' ', 1)[1])
@@ -296,10 +296,10 @@ class Server(object):
             else:
                 assert(False)
 
-            socket.send('set {0}'.format(json.dumps({'network': {'zmq_server_public_key': zmq_public,
-                                                                 'port': tcp_port, 'host': tcp_host,
-                                                                 'zmq_port': zmq_port,
-                                                                 'zmq_command_port': zmq_command_port,
-                                                                 'zmq_host': zmq_host}})))
+            socket.send('{0} {1}'.format(Messages.SET, json.dumps({'network': {'zmq_server_public_key': zmq_public,
+                                                                   'port': tcp_port, 'host': tcp_host,
+                                                                   'zmq_port': zmq_port,
+                                                                   'zmq_command_port': zmq_command_port,
+                                                                   'zmq_host': zmq_host}})))
             socket.recv()
             configActor.close()
