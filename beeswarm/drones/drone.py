@@ -21,11 +21,12 @@ from requests.exceptions import Timeout, ConnectionError
 import gevent
 from beeswarm.shared.asciify import asciify
 from beeswarm.shared.message_enum import Messages
-from beeswarm.shared.helpers import extract_keys
+from beeswarm.shared.helpers import extract_keys, send_zmq_push
 from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.drones.client.client import Client
 import zmq.green as zmq
 import zmq.auth
+from zmq.utils.monitor import recv_monitor_message
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +95,7 @@ class Drone(object):
 
     def _start_drone(self):
         """
-        Tears down the drone if and restarts it.
+        Tears down the drone and restarts it.
         """
 
         mode = None
@@ -177,7 +178,8 @@ class Drone(object):
         sending_socket.curve_serverkey = server_public
         sending_socket.setsockopt(zmq.RECONNECT_IVL, 2000)
         sending_socket.connect(self.config['beeswarm_server']['zmq_url'])
-        logger.debug('Connected sending socket to server on {0}'.format(self.config['beeswarm_server']['zmq_url']))
+        gevent.spawn(self.monitor_worker, sending_socket.get_monitor_socket(), ' outgoing socket ({0}).'
+                     .format(self.config['beeswarm_server']['zmq_url']))
 
         # retransmits everything received to beeswarm server using sending_socket
         internal_server_relay = context.socket(zmq.PULL)
@@ -196,6 +198,23 @@ class Drone(object):
                 sending_socket.send(message)
 
         logger.warn('Command sender exiting.')
+
+    def monitor_worker(self, monitor_socket, log_name):
+        monitor_socket.linger = 0
+        poller = zmq.Poller()
+        poller.register(monitor_socket, zmq.POLLIN)
+        while True:
+            socks = poller.poll(0)
+            if len(socks) > 0:
+                data = recv_monitor_message(monitor_socket)
+                event = data['event']
+                value = data['value']
+                if event == zmq.EVENT_CONNECTED:
+                    logger.info('Connected to {0}'.format(log_name))
+                    send_zmq_push('ipc://serverRelay', '{0} {1}'.format(Messages.PING, self.id))
+                elif event == zmq.EVENT_DISCONNECTED:
+                    logger.warning('Disconnected from {0}, will reconnect in {1} seconds.'.format(log_name, 5))
+            gevent.sleep()
 
 
 

@@ -18,6 +18,7 @@ import json
 import logging
 import os
 import shutil
+from datetime import datetime
 
 import gevent
 from gevent.pywsgi import WSGIServer
@@ -36,6 +37,8 @@ from beeswarm.shared.asciify import asciify
 from beeswarm.server.db.session_persister import PersistanceWorker
 from beeswarm.shared.workers.config_actor import ConfigActor
 from beeswarm.shared.message_enum import Messages
+from beeswarm.server.db import database_setup
+from beeswarm.server.db.entities import Drone
 
 logger = logging.getLogger(__name__)
 
@@ -143,6 +146,13 @@ class Server(object):
                 elif topic == Messages.KEY or topic == Messages.CERT:
                     # TODO: Pass and persist this
                     pass
+                elif topic == Messages.PING:
+                    drone_id = data
+                    db_session = database_setup.get_session()
+                    drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
+                    drone.last_activity = datetime.now()
+                    db_session.add(drone)
+                    db_session.commit()
                 else:
                     logger.warn('Message with unknown topic received: {0}'.format(topic))
 

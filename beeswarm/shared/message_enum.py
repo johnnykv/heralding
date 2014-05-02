@@ -17,3 +17,5 @@ class Messages(Enum):
     SESSION_CLIENT = 'SESSION_CLIENT'
     SET = 'SET'
     GEN_ZMQ_KEYS = 'GEN_ZMQ_KEYS'
+    PING = 'PING'
+    PONG = 'PING'

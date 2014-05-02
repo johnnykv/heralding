@@ -22,7 +22,6 @@ from datetime import datetime
 import gevent
 import zmq.green as zmq
 import zmq.auth
-from zmq.utils.monitor import recv_monitor_message
 
 from beeswarm.drones.honeypot.consumer.loggers.loggerbase import LoggerBase
 
