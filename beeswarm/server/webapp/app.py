@@ -230,8 +230,12 @@ def configure_drone(id):
     db_session = database_setup.get_session()
     drone = db_session.query(Drone).filter(Drone.id == id).one()
     if drone.discriminator == 'honeypot':
-        configObj = DictWrapper(json.loads(drone.configuration))
-        form = NewHoneypotConfigForm(obj=configObj)
+        if drone.configuration is not None:
+            config_obj = DictWrapper(json.loads(drone.configuration))
+        else:
+            # virgin drone
+            config_obj = None
+        form = NewHoneypotConfigForm(obj=config_obj)
         if not form.validate_on_submit():
             return render_template('create-honeypot.html', form=form, mode_name='Honeypot', user=current_user)
         else:
