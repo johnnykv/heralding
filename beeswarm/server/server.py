@@ -187,6 +187,7 @@ class Server(object):
             self.greenlets.append(maintenance_greenlet)
 
         drop_privileges()
+        logger.info('Server started and priviliges dropped.')
         gevent.joinall(self.greenlets)
 
     def stop(self):
