@@ -165,7 +165,7 @@
                 <div id="ssh" class="tab-pane">
                     <fieldset>
                         <legend>SSH Options</legend>
-                        {% for field in [form.capabilities__ssh__enabled, form.capabilities__ssh__port, form.capabilities__ssh__key] %}
+                        {% for field in [form.capabilities__ssh__enabled, form.capabilities__ssh__port] %}
                             {% if not field|bootstrap_is_hidden_field %}
                                 {{ macros.horizontal_field(field) }}
                             {%- endif %}

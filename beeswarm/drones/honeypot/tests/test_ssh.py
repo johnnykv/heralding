@@ -48,7 +48,7 @@ class Telnet_Tests(unittest.TestCase):
         users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
-        sut = ssh.SSH({}, {'port': 0, 'key': self.key}, users, self.work_dir)
+        sut = ssh.SSH({}, {'port': 0}, users, self.work_dir)
         server = StreamServer(('127.0.0.1', 0), sut.handle_session)
         server.start()
 

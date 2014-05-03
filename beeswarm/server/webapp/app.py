@@ -300,7 +300,6 @@ def configure_drone(id):
                 'ssh': {
                     'enabled': form.capabilities__ssh__enabled.data,
                     'port': form.capabilities__ssh__port.data,
-                    'key': form.capabilities__ssh__key.data
                 },
                 'http': {
                     'enabled': form.capabilities__http__enabled.data,

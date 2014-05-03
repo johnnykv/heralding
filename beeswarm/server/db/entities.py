@@ -40,6 +40,7 @@ class Honeypot(Drone):
     sessions = relationship("Session", cascade="all, delete-orphan", backref='honeypot')
     clients = relationship("Client", secondary=honeypot_client_mtm)
 
+
 class Classification(Base):
     __tablename__ = 'classification'
     type = Column(String, primary_key=True)

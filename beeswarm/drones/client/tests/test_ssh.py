@@ -51,7 +51,7 @@ class SSH_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3, 'key': self.key}, users,
+        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users,
                            self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
@@ -78,7 +78,7 @@ class SSH_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3, 'key': self.key}, users,
+        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3, users,
                            self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
@@ -104,7 +104,7 @@ class SSH_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3, 'key': self.key}, users,
+        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users,
                            self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
@@ -131,7 +131,7 @@ class SSH_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3, 'key': self.key}, users,
+        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users,
                            self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
@@ -161,7 +161,7 @@ class SSH_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3, 'key': self.key}, users,
+        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users,
                            self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
@@ -190,7 +190,7 @@ class SSH_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3, 'key': self.key}, users,
+        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users,
                            self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
@@ -218,7 +218,7 @@ class SSH_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3, 'key': self.key}, users,
+        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users,
                            self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
@@ -246,7 +246,7 @@ class SSH_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3, 'key': self.key}, users,
+        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users,
                            self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
@@ -274,7 +274,7 @@ class SSH_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3, 'key': self.key}, users,
+        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users,
                            self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
@@ -301,7 +301,7 @@ class SSH_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3, 'key': self.key}, users,
+        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users,
                            self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()

@@ -65,7 +65,6 @@ class NewHoneypotConfigForm(Form):
 
     capabilities__ssh__enabled = BooleanField(default=False, label='Enabled')
     capabilities__ssh__port = IntegerField(default=22, label='Port')
-    capabilities__ssh__key = FileField(default='server.key', label='Key File')
 
     certificate_info__common_name = TextField(default='', label='Common Name/Domain name',
                             description='Leave this field empty to force the drone to automatically use  it\'s own IP '
