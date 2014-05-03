@@ -39,6 +39,8 @@ class Honeypot(Drone):
 
     sessions = relationship("Session", cascade="all, delete-orphan", backref='honeypot')
     clients = relationship("Client", secondary=honeypot_client_mtm)
+    # fingerprint of the public key used to interact with attackers and clients
+    cert_digest = Column(String)
 
 
 class Classification(Base):

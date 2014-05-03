@@ -98,6 +98,10 @@ def create_self_signed_cert(cert_country, cert_state, cert_organization, cert_lo
     return cert_text, priv_key_text
 
 
+def generate_cert_digest(str_cert):
+    cert = crypto.load_certificate(crypto.FILETYPE_PEM, str_cert)
+    return cert.digest('SHA256')
+
 def find_offset(iso_file_path, needle):
     """
         An implementation of the Horspool algorithm in python.

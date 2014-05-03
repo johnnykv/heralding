@@ -331,8 +331,6 @@ def configure_drone(id):
             config_json = json.dumps(drone_config, indent=4)
             drone.name = form.general__name.data
             drone.configuration = config_json
-            logging.debug(drone.id)
-            logging.debug(drone)
             db_session.add(drone)
             db_session.commit()
 
@@ -484,8 +482,6 @@ def configure_drone(id):
             config_json = json.dumps(drone_config, indent=4)
 
             drone.configuration = config_json
-            logging.debug(drone.id)
-            logging.debug(drone)
             db_session.add(drone)
             db_session.commit()
 

@@ -32,7 +32,7 @@ from beeswarm.server.webapp import app
 from beeswarm.server.webapp.auth import Authenticator
 from beeswarm.shared.helpers import drop_privileges
 from beeswarm.server.misc.scheduler import Scheduler
-from beeswarm.shared.helpers import find_offset, create_self_signed_cert, update_config_file, send_zmq_request
+from beeswarm.shared.helpers import find_offset, create_self_signed_cert, generate_cert_digest
 from beeswarm.shared.asciify import asciify
 from beeswarm.server.db.session_persister import PersistanceWorker
 from beeswarm.shared.workers.config_actor import ConfigActor
@@ -144,8 +144,18 @@ class Server(object):
                 if topic == Messages.SESSION_HONEYPOT or topic == Messages.SESSION_CLIENT:
                     sessionPublisher.send('{0} {1}'.format(topic, data))
                 elif topic == Messages.KEY or topic == Messages.CERT:
-                    # TODO: Pass and persist this
-                    pass
+                    # for now we just store the fingerprint
+                    # in the future it might be relevant to store the entire public key and private key
+                    # for forensic purposes
+                    if topic == Messages.CERT:
+                        drone_id, cert = data.split(' ', 1)
+                        digest = generate_cert_digest(cert)
+                        logging.debug('Storing public key digest: {0} for drone {1}.'.format(digest, drone_id))
+                        db_session = database_setup.get_session()
+                        drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
+                        drone.cert_digest = digest
+                        db_session.add(drone)
+                        db_session.commit()
                 elif topic == Messages.PING:
                     drone_id = data
                     db_session = database_setup.get_session()
