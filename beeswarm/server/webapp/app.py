@@ -511,7 +511,7 @@ def add_drone():
     drone_keys.append(drone_key)
     gevent.spawn_later(120, reset_drone_key, drone_key)
 
-    server_https = 'https://{0}:{1}/'.format(config['network']['host'], config['network']['port'])
+    server_https = 'https://BEESWARM_SERVER:{0}/'.format(config['network']['web_port'])
     drone_link = '{0}ws/drone/add/{1}'.format(server_https, drone_key)
     iso_link = '/NotWorkingYet'
     return render_template('add_drone.html', user=current_user, drone_link=drone_link,
@@ -719,11 +719,7 @@ def create_client():
         f = Client(id=client_id, configuration=config_json)
         db_session.add(f)
         db_session.commit()
-        server_https = 'https://{0}:{1}/'.format(config['network']['host'], config['network']['port'])
-        config_link = '{0}ws/client/config/{1}'.format(server_https, client_id)
-        iso_link = '/iso/client/{0}.iso'.format(client_id)
-        return render_template('finish-config.html', mode_name='Client', user=current_user,
-                               config_link=config_link, iso_link=iso_link)
+        return render_template('finish-config.html', mode_name='Client', user=current_user)
 
     return render_template('create-client.html', form=form, mode_name='Client', user=current_user)
 

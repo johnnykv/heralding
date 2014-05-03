@@ -111,6 +111,8 @@ if __name__ == '__main__':
     parser.add_argument('--logfile', dest='logfile', default='beeswarm.log')
     parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Logs debug messages.')
     parser.add_argument('-ui', '--userinterface', action='store_true', default=False, help='Logs debug messages.')
+    parser.add_argument('--customize', action='store_true', default=False,
+                        help='Asks for specific network and certificate information on the first run.')
     args = parser.parse_args()
 
     curses_screen = setuplogging(args.logfile, args.verbose, args.userinterface)
@@ -147,7 +149,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     try:
-        m = mode(args.workdir, config, curses_screen=curses_screen)
+        m = mode(args.workdir, config, curses_screen=curses_screen, customize=args.customize)
     except ConfigNotFound as ex:
         logger.error(ex)
         sys.exit(ex)

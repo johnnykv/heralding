@@ -35,7 +35,7 @@ class Drone(object):
 
     """ Aggregates a honeypot or client. """
 
-    def __init__(self, work_dir, config, key='server.key', cert='server.crt', curses_screen=None):
+    def __init__(self, work_dir, config, key='server.key', cert='server.crt', curses_screen=None, **kwargs):
         """
 
         :param work_dir: Working directory (usually the current working directory)

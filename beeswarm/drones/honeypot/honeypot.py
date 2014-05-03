@@ -50,7 +50,7 @@ class Honeypot(object):
     """ This is the main class, which starts up all the capabilities. """
 
     def __init__(self, work_dir, config, key='server.key', cert='server.crt',
-                 curses_screen=None):
+                 curses_screen=None, **kwargs):
         """
             Main class which runs Beeswarm in Honeypot mode.
 

@@ -44,7 +44,7 @@ logger = logging.getLogger(__name__)
 
 
 class Server(object):
-    def __init__(self, work_dir, config, curses_screen=None):
+    def __init__(self, work_dir, config, curses_screen=None, **kwargs):
         """
             Main class for the Web-Interface. It takes care of setting up
             the database, managing the users, etc.
@@ -54,8 +54,9 @@ class Server(object):
         :param curses_screen: This parameter is to maintain a similar interface for
                                all the modes. It is ignored for the Server.
         """
+        customize = kwargs['customize']
         if config is None:
-            Server.prepare_environment(work_dir)
+            Server.prepare_environment(work_dir, customize)
             with open(os.path.join(work_dir, 'beeswarmcfg.json'), 'r') as config_file:
                 config = json.load(config_file, object_hook=asciify)
         self.work_dir = work_dir
@@ -247,31 +248,39 @@ class Server(object):
             gevent.sleep(5)
 
     @staticmethod
-    def prepare_environment(work_dir):
+    def prepare_environment(work_dir, customize):
         package_directory = os.path.dirname(os.path.abspath(beeswarm.__file__))
         config_file = os.path.join(work_dir, 'beeswarmcfg.json')
         if not os.path.isfile(config_file):
-            logging.info('Copying configuration file to workdir.')
             print '*** Please answer a few configuration options ***'
-            print ''
-            print '* Certificate Information *'
-            print 'IMPORTANT: Please make sure that "Common Name" is the IP address or fully qualified host name ' \
-                  ' that you want to use for the server API.'
-            cert_cn = raw_input('Common Name: ')
-            cert_country = raw_input('Country: ')
-            cert_state = raw_input('State: ')
-            cert_locality = raw_input('Locality/City: ')
-            cert_org = raw_input('Organization: ')
-            cert_org_unit = raw_input('Organizational unit: ')
-            print ''
-            print '* Network *'
-            tcp_port = raw_input('Port for UI (default: 5000): ')
-            if tcp_port:
-                tcp_port = int(tcp_port)
+            if customize:
+                logging.info('Copying configuration file to workdir.')
+                print ''
+                print '* Certificate Information *'
+                print 'IMPORTANT: Please make sure that "Common Name" is the IP address or fully qualified host name ' \
+                      ' that you want to use for the server API.'
+                cert_cn = raw_input('Common Name: ')
+                cert_country = raw_input('Country: ')
+                cert_state = raw_input('State: ')
+                cert_locality = raw_input('Locality/City: ')
+                cert_org = raw_input('Organization: ')
+                cert_org_unit = raw_input('Organizational unit: ')
+                print ''
+                print '* Network *'
+                web_port = raw_input('Port for UI (default: 5000): ')
+                if web_port:
+                    web_port = int(web_port)
             else:
-                tcp_port = 5000
-            # to keep things simple we just use the CN for host for now.
-            tcp_host = cert_cn
+                logging.warn('Beeswarm server has been configured using default ssl parameters and network '
+                             'configuration, this could be used to fingerprint the beeswarm server. If you want to '
+                             'customize these options please use the --customize options on first startup.')
+                cert_cn =       '*'
+                cert_country =  'US'
+                cert_state =    'None'
+                cert_locality = 'None'
+                cert_org =      'None'
+                cert_org_unit = 'None'
+                web_port = 5000
 
             cert, priv_key = create_self_signed_cert(cert_country, cert_state, cert_org, cert_locality, cert_org_unit,
                                                      cert_cn)
@@ -287,19 +296,20 @@ class Server(object):
                             config_file)
 
             print ''
-            print '* Communication between honeypots and server *'
+            print '* Communication between drones (honeypots and clients) and server *'
+            print '* Please make sure that drones can always contact the Beeswarm server using the information that' \
+                  ' you are about to enter. *'
+            zmq_port = 5712
+            zmq_command_port = 5713
             zmq_host = raw_input('IP or hostname of server: ')
-            zmq_port = raw_input('TCP port for session data (default: 5712) : ')
-            if zmq_port:
-                zmq_port = int(zmq_port)
-            else:
-                zmq_port = 5712
+            if customize:
+                zmq_port = raw_input('TCP port for session data (default: 5712) : ')
+                if zmq_port:
+                    zmq_port = int(zmq_port)
 
-            zmq_command_port = raw_input('TCP port for drone commands(default: 5713) : ')
-            if zmq_command_port:
-                zmq_command_port = int(zmq_port)
-            else:
-                zmq_command_port = 5713
+                zmq_command_port = raw_input('TCP port for drone commands(default: 5713) : ')
+                if zmq_command_port:
+                    zmq_command_port = int(zmq_port)
 
             #tmp actor while initializing
             configActor = ConfigActor('beeswarmcfg.json', work_dir)
@@ -317,7 +327,7 @@ class Server(object):
                 assert(False)
 
             socket.send('{0} {1}'.format(Messages.SET, json.dumps({'network': {'zmq_server_public_key': zmq_public,
-                                                                   'port': tcp_port, 'host': tcp_host,
+                                                                   'web_port': web_port,
                                                                    'zmq_port': zmq_port,
                                                                    'zmq_command_port': zmq_command_port,
                                                                    'zmq_host': zmq_host}})))
