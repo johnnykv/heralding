@@ -53,13 +53,16 @@ Starting the server
 	Default password for the admin account is: wpwaitacsxhqqo
 	****************************************************************************
 	2014-05-03 23:25:46,027 (beeswarm.server.server) Starting server listening on port 5000
-	2014-05-03 23:29:54,077 (beeswarm.server.server) Server started and priviliges dropped.
+	2014-05-03 23:29:54,077 (beeswarm.server.server) Server started and privileges dropped.
+
+
+After that, browse to https://localhost:5000 to access the administrative interface.
 
 
 The grand scheme
 ================
 
-The following deployment diagram shows the Beeswarm concept when fully operational:
+The following deployment diagram shows the BeeSwarm concept when fully operational:
 
 .. code-block::
 
