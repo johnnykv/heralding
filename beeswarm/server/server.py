@@ -167,16 +167,17 @@ class Server(object):
                 else:
                     logger.warn('Message with unknown topic received: {0}'.format(topic))
 
-    def start(self, port=5000, maintenance=True):
+    def start(self, maintenance=True):
         """
             Starts the BeeSwarm server.
 
         :param port: The port on which the web-app is to run.
         """
         self.started = True
-        logger.info('Starting server listening on port {0}'.format(port))
-
-        http_server = WSGIServer(('', 5000), self.app, keyfile='server.key', certfile='server.crt')
+        web_port = self.config['network']['web_port']
+        logger.info('Starting server listening on port {0}'.format(web_port))
+        print web_port
+        http_server = WSGIServer(('', web_port), self.app, keyfile='server.key', certfile='server.crt')
         http_server_greenlet = gevent.spawn(http_server.serve_forever)
         self.workers['http'] = http_server
         self.greenlets.append(http_server_greenlet)
@@ -271,8 +272,10 @@ class Server(object):
                 web_port = raw_input('Port for UI (default: 5000): ')
                 if web_port:
                     web_port = int(web_port)
+                else:
+                    web_port = 5000
             else:
-                logging.warn('Beeswarm server has been configured using default ssl parameters and network '
+                logging.warn('Beeswarm server will be configured using default ssl parameters and network '
                              'configuration, this could be used to fingerprint the beeswarm server. If you want to '
                              'customize these options please use the --customize options on first startup.')
                 cert_cn =       '*'
@@ -280,7 +283,6 @@ class Server(object):
                 cert_state =    'None'
                 cert_locality = 'None'
                 cert_org =      'None'
-                cert_org_unit = 'None'
                 web_port = 5000
 
             cert, priv_key = create_self_signed_cert(cert_country, cert_state, cert_org, cert_locality, cert_org_unit,
@@ -300,8 +302,7 @@ class Server(object):
             print '* Communication between drones (honeypots and clients) and server *'
             print '* Please make sure that drones can always contact the Beeswarm server using the information that' \
                   ' you are about to enter. *'
-            zmq_port = 5712
-            zmq_command_port = 5713
+
             zmq_host = raw_input('IP or hostname of server: ')
             if customize:
                 zmq_port = raw_input('TCP port for session data (default: 5712) : ')
@@ -311,6 +312,12 @@ class Server(object):
                 zmq_command_port = raw_input('TCP port for drone commands(default: 5713) : ')
                 if zmq_command_port:
                     zmq_command_port = int(zmq_port)
+
+            # default values
+            if not zmq_port:
+                zmq_port = 5712
+            if not zmq_command_port:
+                zmq_command_port = 5713
 
             #tmp actor while initializing
             configActor = ConfigActor('beeswarmcfg.json', work_dir)
