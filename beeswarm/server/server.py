@@ -283,6 +283,7 @@ class Server(object):
                 cert_state =    'None'
                 cert_locality = 'None'
                 cert_org =      'None'
+                cert_org_unit = ''
                 web_port = 5000
 
             cert, priv_key = create_self_signed_cert(cert_country, cert_state, cert_org, cert_locality, cert_org_unit,
@@ -303,21 +304,17 @@ class Server(object):
             print '* Please make sure that drones can always contact the Beeswarm server using the information that' \
                   ' you are about to enter. *'
 
+            zmq_port = 5712
+            zmq_command_port = 5713
             zmq_host = raw_input('IP or hostname of server: ')
             if customize:
                 zmq_port = raw_input('TCP port for session data (default: 5712) : ')
-                if zmq_port:
+                if zmq_port != '':
                     zmq_port = int(zmq_port)
 
                 zmq_command_port = raw_input('TCP port for drone commands(default: 5713) : ')
-                if zmq_command_port:
+                if zmq_command_port != '':
                     zmq_command_port = int(zmq_port)
-
-            # default values
-            if not zmq_port:
-                zmq_port = 5712
-            if not zmq_command_port:
-                zmq_command_port = 5713
 
             #tmp actor while initializing
             configActor = ConfigActor('beeswarmcfg.json', work_dir)
