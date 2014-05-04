@@ -5,6 +5,9 @@ class Messages(Enum):
     STOP = 'STOP'
     START = 'START'
     CONFIG = 'CONFIG'
+    # dump of all configuration elements known to the sender
+    CONFIG_FULL = 'CONFIG_FULL'
+
     BROADCAST = 'BROADCAST'
     OK = 'OK'
     FAIL = 'FAIL'

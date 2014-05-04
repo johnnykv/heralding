@@ -79,7 +79,7 @@ def config_subscriber():
     ctx = zmq.Context()
     subscriber_socket = ctx.socket(zmq.SUB)
     subscriber_socket.connect('ipc://configPublisher')
-    subscriber_socket.setsockopt(zmq.SUBSCRIBE, 'full')
+    subscriber_socket.setsockopt(zmq.SUBSCRIBE, Messages.CONFIG_FULL)
     send_zmq_request('ipc://configCommands', Messages.PUBLISH_CONFIG)
     while True:
         poller = zmq.Poller()
