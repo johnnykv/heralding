@@ -1,2 +1,6 @@
 strictness: high
 autodetect: yes
+
+ignore-paths:
+    - docs
+
