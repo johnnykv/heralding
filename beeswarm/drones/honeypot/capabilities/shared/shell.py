@@ -46,6 +46,7 @@ class OwnGreenTelnetHandler(TelnetHandler):
 class Commands(OwnGreenTelnetHandler):
     """This class implements the shell functionality for the telnet and SSH capabilities"""
 
+
     max_tries = 3
     PROMPT = ''
     WELCOME = ''
@@ -239,7 +240,7 @@ class Commands(OwnGreenTelnetHandler):
             if self.input.cmd:
                 cmd = self.input.cmd.upper()
                 params = self.input.params
-                if self.COMMANDS.has_key(cmd):
+                if cmd in self.COMMANDS:
                     try:
                         self.COMMANDS[cmd](params)
                     except:
@@ -248,5 +249,5 @@ class Commands(OwnGreenTelnetHandler):
                         if self.handleException(t, p, tb):
                             break
                 else:
-                    logger.error("Unknown command '%s'" % cmd)
+                    logger.error("Unknown command '{0}'".format(cmd))
         logger.debug("Exiting handler")

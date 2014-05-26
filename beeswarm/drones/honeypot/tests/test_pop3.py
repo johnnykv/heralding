@@ -47,7 +47,7 @@ class Pop3_Tests(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        sut = pop3.pop3(sessions, {'port': 110, 'max_attempts': 3}, users, self.work_dir)
+        sut = pop3.Pop3(sessions, {'port': 110, 'max_attempts': 3}, users, self.work_dir)
 
         #dont really care about the socket at this point (None...)
         #TODO: mock the socket!
@@ -89,7 +89,7 @@ class Pop3_Tests(unittest.TestCase):
         ]
 
         sessions = {}
-        sut = pop3.pop3(sessions, {'port': 110, 'max_attempts': 3}, users, self.work_dir)
+        sut = pop3.Pop3(sessions, {'port': 110, 'max_attempts': 3}, users, self.work_dir)
 
         server = StreamServer(('127.0.0.1', 0), sut.handle_session)
         server.start()

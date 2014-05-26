@@ -1,4 +1,4 @@
-strictness: high
+strictness: medium
 autodetect: yes
 
 ignore-paths:
