@@ -51,7 +51,7 @@ class POP3S_Test(unittest.TestCase):
 
         options = {'enabled': 'True', 'port': 0, 'max_attempts': 3}
 
-        cap = honeypot_pop3s.pop3s(sessions, options, users, self.work_dir)
+        cap = honeypot_pop3s.Pop3S(sessions, options, users, self.work_dir)
 
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
