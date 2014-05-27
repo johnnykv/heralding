@@ -27,7 +27,6 @@ from zmq.auth.ioloop import IOLoopAuthenticator
 from zmq.auth.certs import load_certificate
 
 import beeswarm
-from beeswarm.server.db import database_setup
 from beeswarm.server.webapp import app
 from beeswarm.server.webapp.auth import Authenticator
 from beeswarm.shared.helpers import drop_privileges
@@ -135,7 +134,7 @@ class Server(object):
 
             if drone_command_receiver in socks and socks[drone_command_receiver] == zmq.POLLIN:
                 data = drone_command_receiver.recv()
-                topic, message = data.split(' ', 1)
+                topic, _ = data.split(' ', 1)
                 logger.debug("Sending drone command to: {0}".format(topic))
                 # pub socket takes care of filtering
                 drone_data_outbound.send(data)
@@ -278,11 +277,11 @@ class Server(object):
                 logging.warn('Beeswarm server will be configured using default ssl parameters and network '
                              'configuration, this could be used to fingerprint the beeswarm server. If you want to '
                              'customize these options please use the --customize options on first startup.')
-                cert_cn =       '*'
-                cert_country =  'US'
-                cert_state =    'None'
+                cert_cn = '*'
+                cert_country = 'US'
+                cert_state = 'None'
                 cert_locality = 'None'
-                cert_org =      'None'
+                cert_org = 'None'
                 cert_org_unit = ''
                 web_port = 5000
 
@@ -317,8 +316,8 @@ class Server(object):
                     zmq_command_port = int(zmq_port)
 
             #tmp actor while initializing
-            configActor = ConfigActor('beeswarmcfg.json', work_dir)
-            configActor.start()
+            config_actor = ConfigActor('beeswarmcfg.json', work_dir)
+            config_actor.start()
 
             context = zmq.Context()
             socket = context.socket(zmq.REQ)
@@ -329,12 +328,12 @@ class Server(object):
                 result = json.loads(result.split(' ', 1)[1])
                 zmq_public, zmq_private = (result['public_key'], result['private_key'])
             else:
-                assert(False)
+                assert False
 
             socket.send('{0} {1}'.format(Messages.SET, json.dumps({'network': {'zmq_server_public_key': zmq_public,
-                                                                   'web_port': web_port,
-                                                                   'zmq_port': zmq_port,
-                                                                   'zmq_command_port': zmq_command_port,
-                                                                   'zmq_host': zmq_host}})))
+                                                                               'web_port': web_port,
+                                                                               'zmq_port': zmq_port,
+                                                                               'zmq_command_port': zmq_command_port,
+                                                                               'zmq_host': zmq_host}})))
             socket.recv()
-            configActor.close()
+            config_actor.close()

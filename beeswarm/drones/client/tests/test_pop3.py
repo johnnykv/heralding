@@ -50,7 +50,9 @@ class POP3_Test(unittest.TestCase):
         Session.authenticator = authenticator
 
         options = {'enabled': 'True', 'port': 0, 'max_attempts': 3}
+
         cap = honeypot_pop3.pop3(sessions, options, users, self.work_dir)
+
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 

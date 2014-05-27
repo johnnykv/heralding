@@ -44,12 +44,12 @@ class TelnetWrapper(Commands):
     """
     PROMPT = '$ '
 
-    def __init__(self, client_address, server, socket, session, vfs):
+    def __init__(self, client_address, server, _socket, session, vfs):
         self.session = session
         self.auth_count = 0
         self.username = None
         request = TelnetWrapper.false_request()
-        request._sock = socket
+        request._sock = _socket
         self.vfs = vfs
         Commands.__init__(self, request, client_address, server, vfs, self.session)
 
@@ -100,6 +100,6 @@ class TelnetWrapper(Commands):
         self.CODES['CSRRIGHT'] = curses.tigetstr('cuf1')
 
     def writecooked(self, text):
-        #TODO: Figure out way to log outgoing without logging "echo"
-        #self.session.transcript_outgoing(text)
+        # TODO: Figure out way to log outgoing without logging "echo"
+        # self.session.transcript_outgoing(text)
         Commands.writecooked(self, text)

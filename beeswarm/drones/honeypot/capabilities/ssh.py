@@ -107,7 +107,7 @@ class SshWrapper(SSHHandler):
             if channel is None:
                 # check to see if any thread is running
                 any_running = False
-                for c, thread in self.channels.items():
+                for _, thread in self.channels.items():
                     if thread.is_alive():
                         any_running = True
                         break

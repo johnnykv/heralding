@@ -21,13 +21,13 @@ from beeswarm.drones.honeypot.capabilities.handlerbase import HandlerBase
 logger = logging.getLogger(__name__)
 
 
-class pop3(HandlerBase):
+class Pop3(HandlerBase):
     max_tries = 10
     cmds = {}
 
     def __init__(self, sessions, options, users, workdir):
-        super(pop3, self).__init__(sessions, options, users, workdir)
-        pop3.max_tries = int(self.options['max_attempts'])
+        super(Pop3, self).__init__(sessions, options, users, workdir)
+        Pop3.max_tries = int(self.options['max_attempts'])
 
     def handle_session(self, gsocket, address):
         session = self.create_session(address, gsocket)
@@ -72,17 +72,17 @@ class pop3(HandlerBase):
 
         session.connected = False
 
-    #APOP mrose c4c9334bac560ecc979e58001b3e22fb
-    #+OK mrose's maildrop has 2 messages (320 octets)
+    # APOP mrose c4c9334bac560ecc979e58001b3e22fb
+    # +OK mrose's maildrop has 2 messages (320 octets)
     def auth_apop(self, session, gsocket, msg):
         raise Exception('Not implemented yet!')
 
-    #USER mrose
-    #+OK User accepted
-    #PASS tanstaaf
-    #+OK Pass accepted
-    #or: "-ERR Authentication failed."
-    #or: "-ERR No username given."
+    # USER mrose
+    # +OK User accepted
+    # PASS tanstaaf
+    # +OK Pass accepted
+    # or: "-ERR Authentication failed."
+    # or: "-ERR No username given."
     def cmd_user(self, session, gsocket, msg):
         session.vdata['USER'] = msg
         self.send_message(session, gsocket, '+OK User accepted')

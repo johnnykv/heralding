@@ -15,7 +15,7 @@
 
 
 import logging
-from beeswarm.drones.honeypot.capabilities.pop3 import pop3
+from beeswarm.drones.honeypot.capabilities.pop3 import Pop3
 
 from beeswarm.drones.honeypot.capabilities.handlerbase import HandlerBase
 
@@ -23,7 +23,7 @@ from beeswarm.drones.honeypot.capabilities.handlerbase import HandlerBase
 logger = logging.getLogger(__name__)
 
 
-class pop3s(pop3, HandlerBase):
+class Pop3S(Pop3, HandlerBase):
     """
     This class will get wrapped in SSL. This is possible because we by convention  wrap
     all capabilities that ends with the letter 's' in SSL."""
