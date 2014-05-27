@@ -18,6 +18,7 @@ import tempfile
 import shutil
 import json
 import os
+import zmq.green as zmq
 
 gevent.monkey.patch_all()
 
@@ -36,14 +37,29 @@ class honeypot_tests(unittest.TestCase):
             self.config_dict = json.load(config_file, object_hook=asciify)
         self.key = os.path.join(os.path.dirname(__file__), 'dummy_key.key')
         self.cert = os.path.join(os.path.dirname(__file__), 'dummy_cert.crt')
+        self.inbox = gevent.queue.Queue()
+        self.mock_relay = gevent.spawn(self.mock_server_relay)
 
     def tearDown(self):
         if os.path.isdir(self.work_dir):
             shutil.rmtree(self.work_dir)
+        self.mock_relay.kill()
+        self.inbox = gevent.queue.Queue()
+
+    def mock_server_relay(self):
+        context = zmq.Context()
+        internal_server_relay = context.socket(zmq.PULL)
+        internal_server_relay.bind('ipc://serverRelay')
+
+        while True:
+            self.inbox.put(internal_server_relay.recv())
 
     def test_init(self):
-        """Tests if the Honeypot class can be instantiated successfully using the default configuration file"""
+        """Tests if the Honeypot class can be instantiated successfully"""
         sut = Honeypot(self.work_dir, self.config_dict, key=self.key, cert=self.cert)
+        # expect two messages containing priv/pub key.
+        gevent.sleep(1)
+        self.assertEqual(self.inbox.qsize(), 2)
 
     def test_user_creation(self):
         """Tests proper generation of BaitUsers from the data in the config file"""

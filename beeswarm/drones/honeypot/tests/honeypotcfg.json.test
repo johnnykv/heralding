@@ -1,8 +1,7 @@
 {
     "general": {
         "mode": "honeypot",
-        "honeypot_id": "h11141df-b2f6-baf4-86c0-f4e163cf69aa",
-        "honeypot_ip": "192.168.1.1",
+        "id": "h11141df-b2f6-baf4-86c0-f4e163cf69aa",
         "fetch_ip": false
     },
     "log_server": {
@@ -12,6 +11,43 @@
     "log_syslog": {
         "enabled": false,
         "socket": "/dev/log"
+    },
+     "beeswarm_server": {
+        "zmq_own_private": [
+            "#   ****  Generated on 2014-05-06 19:08:50.826524 by pyzmq  ****\n",
+            "#   ZeroMQ CURVE **Secret** Certificate\n",
+            "#   DO NOT PROVIDE THIS FILE TO OTHER USERS nor change its permissions.\n",
+            "\n",
+            "metadata\n",
+            "curve\n",
+            "    public-key = \"{][M$EgQEMH?E6R0UeI{o{I9(aZZD+fLPm>/){No\"\n",
+            "    secret-key = \"2e=zc0n=e#J2:FZ2$X!Mg*@Gg9uYf)t*(BJZ3>.(\"\n"
+        ],
+        "enabled": true,
+        "zmq_url": "tcp://127.0.0.1:5712",
+        "zmq_command_url": "tcp://127.0.0.1:5713",
+        "zmq_own_public": [
+            "#   ****  Generated on 2014-05-06 19:08:50.826524 by pyzmq  ****\n",
+            "#   ZeroMQ CURVE Public Certificate\n",
+            "#   Exchange securely, or use a secure mechanism to verify the contents\n",
+            "#   of this file after exchange. Store public certificates in your home\n",
+            "#   directory, in the .curve subdirectory.\n",
+            "\n",
+            "metadata\n",
+            "curve\n",
+            "    public-key = \"{][M$EgQEMH?E6R0UeI{o{I9(aZZD+fLPm>/){No\"\n"
+        ],
+        "zmq_server_public": [
+            "#   ****  Generated on 2014-05-06 19:07:22.444635 by pyzmq  ****\n",
+            "#   ZeroMQ CURVE Public Certificate\n",
+            "#   Exchange securely, or use a secure mechanism to verify the contents\n",
+            "#   of this file after exchange. Store public certificates in your home\n",
+            "#   directory, in the .curve subdirectory.\n",
+            "\n",
+            "metadata\n",
+            "curve\n",
+            "    public-key = \"fnwN%k(5qCx>oR!s:30rODcMf77^7LbflX4V*3W5\"\n"
+        ]
     },
 	"capabilities":
 	{
@@ -68,5 +104,13 @@
     },
     "users": {
         "test": "test"
+    },
+        "certificate_info": {
+        "locality": "das",
+        "country": "dk",
+        "organization_unit": "dk",
+        "state": "dk",
+        "common_name": "",
+        "organization": "dk"
     }
 }

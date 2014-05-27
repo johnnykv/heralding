@@ -112,17 +112,17 @@ class Honeypot(object):
             'managment_url': ''
         }
 
-        #will contain BaitUser objects
+        # will contain BaitUser objects
         self.users = self.create_users()
 
-        #inject authentication mechanism
+        # inject authentication mechanism
         Session.authenticator = Authenticator(self.users)
 
-        #spawning time checker
+        # spawning time checker
         if self.config['timecheck']['enabled']:
             Greenlet.spawn(self.checktime)
 
-        #show curses UI
+        # show curses UI
         if self.curses_screen is not None:
             self.uihandler = HoneypotUIHandler(self.status, self.curses_screen)
             Greenlet.spawn(self.show_status_ui)
