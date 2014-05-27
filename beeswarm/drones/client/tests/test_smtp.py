@@ -29,7 +29,7 @@ from beeswarm.drones.honeypot.capabilities import smtp as hive_smtp
 from beeswarm.drones.honeypot.models.user import BaitUser
 
 from beeswarm.drones.client.capabilities import smtp as bee_smtp
-from beeswarm.drones.client.models.session import BeeSession
+from beeswarm.drones.client.models.session import BaitSession
 
 
 class SMTP_Test(unittest.TestCase):
@@ -63,7 +63,7 @@ class SMTP_Test(unittest.TestCase):
         }
         beesessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
         current_bee = bee_smtp.smtp(beesessions, bee_info)
         current_bee.connect()
         current_bee.login(bee_info['username'], bee_info['password'])
@@ -91,7 +91,7 @@ class SMTP_Test(unittest.TestCase):
         }
         beesessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
         current_bee = bee_smtp.smtp(beesessions, bee_info)
         current_bee.connect()
         current_bee.login(bee_info['username'], bee_info['password'])
@@ -121,7 +121,7 @@ class SMTP_Test(unittest.TestCase):
         }
         beesessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
         current_bee = bee_smtp.smtp(beesessions, bee_info)
 
         from_addr, to_addr, mail_body = current_bee.get_one_mail()

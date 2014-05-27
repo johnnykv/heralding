@@ -17,19 +17,19 @@ from datetime import datetime
 from beeswarm.shared.models.base_session import BaseSession
 
 
-class BeeSession(BaseSession):
+class BaitSession(BaseSession):
 
     client_id = ''
     honeypot_id = ''
 
     def __init__(self, protocol, destination_ip, destination_port, my_ip):
-        super(BeeSession, self).__init__(protocol, source_ip=my_ip, destination_ip=destination_ip,
+        super(BaitSession, self).__init__(protocol, source_ip=my_ip, destination_ip=destination_ip,
                                          destination_port=destination_port)
 
-        assert BeeSession.client_id
+        assert BaitSession.client_id
 
-        self.client_id = BeeSession.client_id
-        self.honeypot_id = BeeSession.honeypot_id
+        self.client_id = BaitSession.client_id
+        self.honeypot_id = BaitSession.honeypot_id
 
         self.did_connect = False
         self.did_login = False

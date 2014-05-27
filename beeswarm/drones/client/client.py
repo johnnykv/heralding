@@ -29,7 +29,7 @@ from beeswarm.shared.models.ui_handler import ClientUIHandler
 gevent.monkey.patch_all()
 
 from beeswarm.drones.client.capabilities import clientbase
-from beeswarm.drones.client.models.session import BeeSession
+from beeswarm.drones.client.models.session import BaitSession
 from beeswarm.drones.client.models.dispatcher import BeeDispatcher
 from beeswarm.shared.asciify import asciify
 from beeswarm.shared.helpers import drop_privileges
@@ -59,9 +59,9 @@ class Client(object):
         # write ZMQ keys to files - as expected by pyzmq
         extract_keys(work_dir, config)
 
-        BeeSession.client_id = self.config['general']['id']
+        BaitSession.client_id = self.config['general']['id']
         # TODO: Handle peering in other place
-        BeeSession.honeypot_id = self.config['general']['id']
+        BaitSession.honeypot_id = self.config['general']['id']
 
         if self.config['public_ip']['fetch_ip']:
             self.my_ip = urllib2.urlopen('http://api-sth01.exip.org/?call=ip').read()

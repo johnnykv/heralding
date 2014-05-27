@@ -32,7 +32,7 @@ from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.capabilities import telnet as hive_telnet
 from beeswarm.drones.honeypot.models.user import BaitUser
 
-from beeswarm.drones.client.models.session import BeeSession
+from beeswarm.drones.client.models.session import BaitSession
 
 
 class Telnet_Test(unittest.TestCase):
@@ -66,7 +66,7 @@ class Telnet_Test(unittest.TestCase):
         }
         beesessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
         current_bee = bee_telnet.telnet(beesessions, bee_info)
         current_bee.connect()
         current_bee.login(bee_info['username'], bee_info['password'])
@@ -92,7 +92,7 @@ class Telnet_Test(unittest.TestCase):
         }
         beesessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
         current_bee = bee_telnet.telnet(beesessions, bee_info)
         for s in current_bee.senses:
             sense = getattr(current_bee, s)
@@ -117,7 +117,7 @@ class Telnet_Test(unittest.TestCase):
         }
         beesessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
         current_bee = bee_telnet.telnet(beesessions, bee_info)
 
         current_bee.connect()
@@ -148,7 +148,7 @@ class Telnet_Test(unittest.TestCase):
         }
         beesessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
         current_bee = bee_telnet.telnet(beesessions, bee_info)
 
         current_bee.connect()
@@ -178,7 +178,7 @@ class Telnet_Test(unittest.TestCase):
         }
         beesessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
         current_bee = bee_telnet.telnet(beesessions, bee_info)
 
         current_bee.connect()
@@ -207,7 +207,7 @@ class Telnet_Test(unittest.TestCase):
         }
         beesessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
         current_bee = bee_telnet.telnet(beesessions, bee_info)
 
         current_bee.connect()
@@ -236,7 +236,7 @@ class Telnet_Test(unittest.TestCase):
         }
         beesessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
         current_bee = bee_telnet.telnet(beesessions, bee_info)
 
         current_bee.connect()
@@ -265,7 +265,7 @@ class Telnet_Test(unittest.TestCase):
         }
         beesessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
         current_bee = bee_telnet.telnet(beesessions, bee_info)
 
         current_bee.connect()
@@ -292,7 +292,7 @@ class Telnet_Test(unittest.TestCase):
         }
         beesessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
         current_bee = bee_telnet.telnet(beesessions, bee_info)
 
         current_bee.connect()

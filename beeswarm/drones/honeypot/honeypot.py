@@ -230,7 +230,7 @@ class Honeypot(object):
         config_file = os.path.join(work_dir, 'beeswarmcfg.json.dist')
         if not os.path.isfile('beeswarmcfg.json'):
             logger.info('Copying configuration file to workdir.')
-            shutil.copyfile(os.path.join(package_directory, 'honeypot/beeswarmcfg.json.dist'),
+            shutil.copyfile(os.path.join(package_directory, 'drones/honeypot/beeswarmcfg.json.dist'),
                             os.path.join(work_dir, 'beeswarmcfg.json'))
 
     @staticmethod

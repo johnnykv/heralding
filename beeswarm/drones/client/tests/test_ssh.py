@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import gevent.monkey
+
 gevent.monkey.patch_all()
 
 import unittest
@@ -25,19 +26,19 @@ from gevent.server import StreamServer
 from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.drones.honeypot.models.authenticator import Authenticator
 from beeswarm.drones.honeypot.models.session import Session
-from beeswarm.drones.honeypot.capabilities import ssh as hive_ssh
+from beeswarm.drones.honeypot.capabilities import ssh as honeypot_ssh
 from beeswarm.drones.honeypot.models.user import BaitUser
 
-from beeswarm.drones.client.capabilities import ssh as bee_ssh
-from beeswarm.drones.client.models.session import BeeSession
+from beeswarm.drones.client.capabilities import ssh as client_ssh
+from beeswarm.drones.client.models.session import BaitSession
 
 
 class SSH_Test(unittest.TestCase):
     def setUp(self):
         self.work_dir = tempfile.mkdtemp()
         Honeypot.prepare_environment(self.work_dir)
-        self.key = os.path.join(os.path.dirname( __file__), 'dummy_key.key')
-        self.cert = os.path.join(os.path.dirname( __file__), 'dummy_cert.crt')
+        self.key = os.path.join(os.path.dirname(__file__), 'dummy_key.key')
+        self.cert = os.path.join(os.path.dirname(__file__), 'dummy_cert.crt')
 
     def tearDown(self):
         if os.path.isdir(self.work_dir):
@@ -51,8 +52,8 @@ class SSH_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users,
-                           self.work_dir)
+        cap = honeypot_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users,
+                           self.work_dir, self.key)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -65,8 +66,8 @@ class SSH_Test(unittest.TestCase):
         }
         beesessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bee = bee_ssh.ssh(beesessions, bee_info)
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        current_bee = client_ssh.ssh(beesessions, bee_info)
         current_bee.connect_login()
         srv.stop()
 
@@ -78,8 +79,8 @@ class SSH_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3, users,
-                           self.work_dir)
+        cap = honeypot_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users,
+                           self.work_dir, self.key)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -92,8 +93,8 @@ class SSH_Test(unittest.TestCase):
         }
         beesessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bee = bee_ssh.ssh(beesessions, bee_info)
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        current_bee = client_ssh.ssh(beesessions, bee_info)
         current_bee.connect_login()
         current_bee.logout()
         srv.stop()
@@ -104,8 +105,8 @@ class SSH_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users,
-                           self.work_dir)
+        cap = honeypot_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users,
+                           self.work_dir, self.key)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -118,8 +119,8 @@ class SSH_Test(unittest.TestCase):
         }
         beesessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bee = bee_ssh.ssh(beesessions, bee_info)
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        current_bee = client_ssh.ssh(beesessions, bee_info)
         for s in current_bee.senses:
             sense = getattr(current_bee, s)
             self.assertTrue(callable(sense))
@@ -131,8 +132,8 @@ class SSH_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users,
-                           self.work_dir)
+        cap = honeypot_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users,
+                           self.work_dir, self.key)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -145,8 +146,8 @@ class SSH_Test(unittest.TestCase):
         }
         beesessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bee = bee_ssh.ssh(beesessions, bee_info)
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        current_bee = client_ssh.ssh(beesessions, bee_info)
         current_bee.connect_login()
 
         # Command: cd
@@ -161,8 +162,8 @@ class SSH_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users,
-                           self.work_dir)
+        cap = honeypot_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users,
+                           self.work_dir, self.key)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -175,8 +176,8 @@ class SSH_Test(unittest.TestCase):
         }
         beesessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bee = bee_ssh.ssh(beesessions, bee_info)
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        current_bee = client_ssh.ssh(beesessions, bee_info)
         current_bee.connect_login()
 
         current_bee.cd('/var')
@@ -190,8 +191,8 @@ class SSH_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users,
-                           self.work_dir)
+        cap = honeypot_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users,
+                           self.work_dir, self.key)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -204,8 +205,8 @@ class SSH_Test(unittest.TestCase):
         }
         beesessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bee = bee_ssh.ssh(beesessions, bee_info)
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        current_bee = client_ssh.ssh(beesessions, bee_info)
         current_bee.connect_login()
 
         resp1 = current_bee.uname('-o')
@@ -218,8 +219,8 @@ class SSH_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users,
-                           self.work_dir)
+        cap = honeypot_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users,
+                           self.work_dir, self.key)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -232,10 +233,11 @@ class SSH_Test(unittest.TestCase):
         }
         beesessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bee = bee_ssh.ssh(beesessions, bee_info)
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        current_bee = client_ssh.ssh(beesessions, bee_info)
         current_bee.connect_login()
 
+        # TODO: What is this? html here?
         resp = current_bee.cat('/var/www/index.html')
         self.assertTrue('</html>' in resp)
 
@@ -246,8 +248,8 @@ class SSH_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users,
-                           self.work_dir)
+        cap = honeypot_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users,
+                           self.work_dir, self.key)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -260,8 +262,8 @@ class SSH_Test(unittest.TestCase):
         }
         beesessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bee = bee_ssh.ssh(beesessions, bee_info)
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        current_bee = client_ssh.ssh(beesessions, bee_info)
         current_bee.connect_login()
 
         resp = current_bee.uptime('-V')
@@ -274,8 +276,8 @@ class SSH_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users,
-                           self.work_dir)
+        cap = honeypot_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users,
+                           self.work_dir, self.key)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -288,8 +290,8 @@ class SSH_Test(unittest.TestCase):
         }
         beesessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bee = bee_ssh.ssh(beesessions, bee_info)
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        current_bee = client_ssh.ssh(beesessions, bee_info)
         current_bee.connect_login()
 
         resp = current_bee.echo('just testing!')
@@ -301,8 +303,8 @@ class SSH_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        cap = hive_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users,
-                           self.work_dir)
+        cap = honeypot_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'max_attempts': 3}, users,
+                           self.work_dir, self.key)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -315,8 +317,8 @@ class SSH_Test(unittest.TestCase):
         }
         beesessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bee = bee_ssh.ssh(beesessions, bee_info)
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        current_bee = client_ssh.ssh(beesessions, bee_info)
         current_bee.connect_login()
 
         resp = current_bee.ls()

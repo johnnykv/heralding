@@ -31,7 +31,7 @@ from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.capabilities import ftp as hive_ftp
 from beeswarm.drones.honeypot.models.user import BaitUser
 
-from beeswarm.drones.client.models.session import BeeSession
+from beeswarm.drones.client.models.session import BaitSession
 
 
 class FTP_Test(unittest.TestCase):
@@ -81,7 +81,7 @@ class FTP_Test(unittest.TestCase):
         }
         beesessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
         current_bee = bee_ftp.ftp(beesessions, bee_info)
 
         current_bee.connect()
@@ -112,7 +112,7 @@ class FTP_Test(unittest.TestCase):
         }
         beesessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
         current_bee = bee_ftp.ftp(beesessions, bee_info)
 
         current_bee.connect()
@@ -148,7 +148,7 @@ class FTP_Test(unittest.TestCase):
         }
         beesessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
         current_bee = bee_ftp.ftp(beesessions, bee_info)
 
         current_bee.connect()
@@ -185,7 +185,7 @@ class FTP_Test(unittest.TestCase):
         }
         beesessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
         current_bee = bee_ftp.ftp(beesessions, bee_info)
 
         current_bee.connect()

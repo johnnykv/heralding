@@ -26,7 +26,7 @@ import shutil
 import tempfile
 
 from beeswarm.drones.honeypot.honeypot import Honeypot
-from beeswarm.drones.client.models.session import BeeSession
+from beeswarm.drones.client.models.session import BaitSession
 from beeswarm.drones.honeypot.models.authenticator import Authenticator
 from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.models.user import BaitUser
@@ -62,7 +62,7 @@ class HTTPS_Test(unittest.TestCase):
             'server': '127.0.0.1'
         }
         beesessions = {}
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
 
         current_bee = bee_https.https(beesessions, bee_info)
         current_bee.do_session('127.0.0.1')

@@ -19,7 +19,7 @@ from mock import Mock
 import gevent
 
 from beeswarm.drones.client.consumer.loggers.loggerbase import LoggerBase
-from beeswarm.drones.client.models.session import BeeSession
+from beeswarm.drones.client.models.session import BaitSession
 from beeswarm.drones.client.consumer.consumer import Consumer
 
 
@@ -30,10 +30,10 @@ class Consumer_test(unittest.TestCase):
         from the queue afterwards.
         """
         sessions = {}
-        BeeSession.client_id = 'dummy_client_id'
-        BeeSession.honeypot_id = 'dummy_hive_id'
+        BaitSession.client_id = 'dummy_client_id'
+        BaitSession.honeypot_id = 'dummy_hive_id'
 
-        beesession = BeeSession('telnet', '1234', '4321', '123')
+        beesession = BaitSession('telnet', '1234', '4321', '123')
         beesession.alldone = True
         sessions[beesession.id] = beesession
 
@@ -70,10 +70,10 @@ class Consumer_test(unittest.TestCase):
         Tests that the consumer does not process bait sessions that are not marked as done.
         """
         sessions = {}
-        BeeSession.client_id = 'dummy_client_id'
-        BeeSession.honeypot_id = 'dummy_hive_id'
+        BaitSession.client_id = 'dummy_client_id'
+        BaitSession.honeypot_id = 'dummy_hive_id'
 
-        beesession = BeeSession('telnet', '123', '1234', '4321')
+        beesession = BaitSession('telnet', '123', '1234', '4321')
         beesession.alldone = False
         sessions[beesession.id] = beesession
 

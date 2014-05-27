@@ -23,7 +23,8 @@ import shutil
 import tempfile
 
 from beeswarm.drones.honeypot.honeypot import Honeypot
-from beeswarm.drones.client.models.session import BeeSession
+from beeswarm.drones.client.models.session import BaitSession
+from beeswarm.drones.client.capabilities.http import http
 from beeswarm.drones.honeypot.models.authenticator import Authenticator
 from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.models.user import BaitUser
@@ -51,18 +52,18 @@ class HTTP_Test(unittest.TestCase):
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
-        bee_info = {
+        bait_info = {
             'timing': 'regular',
             'username': 'test',
             'password': 'test',
             'port': srv.server_port,
             'server': '127.0.0.1'
         }
-        beesessions = {}
+        baitsessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
 
-        current_bee = bee_http.http(beesessions, bee_info)
+        current_bee = http(baitsessions, bait_info)
         current_bee.do_session('127.0.0.1')
         srv.stop()
 

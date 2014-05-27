@@ -29,7 +29,7 @@ from beeswarm.drones.honeypot.capabilities import vnc as hive_vnc
 from beeswarm.drones.honeypot.models.user import BaitUser
 
 from beeswarm.drones.client.capabilities import vnc as bee_vnc
-from beeswarm.drones.client.models.session import BeeSession
+from beeswarm.drones.client.models.session import BaitSession
 
 
 class VNC_Test(unittest.TestCase):
@@ -62,7 +62,7 @@ class VNC_Test(unittest.TestCase):
         }
         beesessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
         current_bee = bee_vnc.vnc(beesessions, bee_info)
         current_bee.do_session('127.0.0.1')
         srv.stop()

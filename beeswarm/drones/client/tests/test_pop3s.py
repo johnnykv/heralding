@@ -26,9 +26,10 @@ from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.drones.honeypot.models.user import BaitUser
 from beeswarm.drones.honeypot.models.authenticator import Authenticator
 from beeswarm.drones.honeypot.models.session import Session
-from beeswarm.drones.honeypot.capabilities import pop3s as hive_pop3s
+from beeswarm.drones.honeypot.capabilities import pop3s as honeypot_pop3s
+from beeswarm.drones.client.capabilities import pop3s as client_pop3s
 
-from beeswarm.drones.client.models.session import BeeSession
+from beeswarm.drones.client.models.session import BaitSession
 
 
 class POP3S_Test(unittest.TestCase):
@@ -49,7 +50,7 @@ class POP3S_Test(unittest.TestCase):
         Session.authenticator = authenticator
 
         options = {'enabled': 'True', 'port': 0, 'max_attempts': 3}
-        cap = hive_pop3s.pop3s(sessions, options, users, self.work_dir)
+        cap = honeypot_pop3s.pop3s(sessions, options, users, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -62,9 +63,9 @@ class POP3S_Test(unittest.TestCase):
         }
         beesessions = {}
 
-        BeeSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
+        BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
 
-        current_bee = bee_pop3s.pop3s(beesessions, bee_info)
+        current_bee = client_pop3s.pop3s(beesessions, bee_info)
         current_bee.do_session('127.0.0.1')
         srv.stop()
 
