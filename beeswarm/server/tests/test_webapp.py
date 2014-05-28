@@ -2,11 +2,12 @@ import json
 import os
 import uuid
 import unittest
-from datetime import datetime
+import tempfile
 import shutil
-import gevent
+from datetime import datetime
 
 from beeswarm.server.webapp.auth import Authenticator
+from beeswarm.shared.workers.config_actor import ConfigActor
 
 import beeswarm.server.db.database_setup as database
 from beeswarm.server.db.entities import Client, Honeypot, Session, BaitSession, User, Authentication, Transcript
@@ -18,7 +19,9 @@ class WebappTests(unittest.TestCase):
         app.app.config['WTF_CSRF_ENABLED'] = False
         app.app.config['CERT_PATH'] = os.path.join(os.path.dirname(__file__), 'beeswarmcfg.json.test')
         app.app.config['SERVER_CONFIG'] = os.path.join(os.path.dirname(__file__), 'beeswarmcfg.json.test')
-
+        self.work_dir = tempfile.mkdtemp()
+        self.config_actor = ConfigActor(os.path.join(os.path.dirname(__file__), 'beeswarmcfg.json.test'), self.work_dir)
+        self.config_actor.start()
         self.app = app.app.test_client()
         self.authenticator = Authenticator()
 
@@ -43,268 +46,268 @@ class WebappTests(unittest.TestCase):
 
     def tearDown(self):
         database.clear_db()
+        self.config_actor.close()
+        shutil.rmtree(self.work_dir)
 
-    def test_basic_client_post(self):
-        """
-        Tests if a bait_session dict can be posted without exceptions.
-        """
-
-        self.login(self.client_id, self.client_password)
-
-        data_dict = {
-            'id': str(uuid.uuid4()),
-            'client_id': self.client_id,
-            'honeypot_id': self.honeypot_id,
-            'protocol': 'pop3',
-            'destination_ip': '127.0.0.1',
-            'destination_port': '110',
-            'source_ip': '123.123.123.123',
-            'source_port': 12345,
-            'timestamp': datetime.utcnow().isoformat(),
-            'did_connect': True,
-            'did_login': True,
-            'did_complete': True,
-            'protocol_data': None,
-            'login_attempts': [{'id': str(uuid.uuid4()), 'username': 'james', 'password': 'bond', 'successful': True,
-                                'timestamp': datetime.utcnow().isoformat()}]
-        }
-
-        r = self.app.post('/ws/client_data', data=json.dumps(data_dict), content_type='application/json')
-        self.assertEquals(r.status, '200 OK')
-
-    def test_basic_unsuccessful_client_post(self):
-        """
-        Tests if an error is returned when data is posted without ID values.
-        """
-
-        self.login(self.client_id, self.client_password)
-
-        #missing id's
-        data_dict = {
-            'protocol': 'pop3',
-            'username': 'james',
-            'password': 'bond',
-            'server_host': '127.0.0.1',
-            'server_port': '110',
-            'source_ip': '123.123.123.123',
-            'source_port': 12345,
-            'timestamp': datetime.utcnow().isoformat(),
-            'did_connect': True,
-            'did_login': True,
-            'did_complete': True,
-            'protocol_data': None
-        }
-
-        r = self.app.post('/ws/client_data', data=json.dumps(data_dict), content_type='application/json')
-        self.assertEquals(r.status, '500 INTERNAL SERVER ERROR')
-
-    def test_basic_honeypot_post(self):
-        """
-        Tests if a session dict can be posted without exceptions.
-        """
-
-        self.login(self.honeypot_id, self.honeypot_password)
-
-        data_dict = {
-            'id': 'ba9fdb3d-0efb-4764-9a6b-d9b86eccda96',
-            'honeypot_id': self.honeypot_id,
-            'destination_ip': '192.168.1.1',
-            'destination_port': 8023,
-            'protocol': 'telnet',
-            'source_ip': '127.0.0.1',
-            'timestamp': '2013-05-07T22:21:19.453828',
-            'source_port': 61175,
-            'login_attempts': [
-                {'username': 'qqq', 'timestamp': '2013-05-07T22:21:20.846805', 'password': 'aa',
-                 'id': '027bd968-f8ea-4a69-8d4c-6cf21476ca10', 'successful': False},
-                {'username': 'as', 'timestamp': '2013-05-07T22:21:21.150571', 'password': 'd',
-                 'id': '603f40a4-e7eb-442d-9fde-0cd3ba707af7', 'successful': False}, ],
-            'transcript': [
-                {'timestamp': '2013-05-07T22:21:20.846805', 'direction': 'in', 'data': 'whoami\r\n'},
-                {'timestamp': '2013-05-07T22:21:21.136800', 'direction': 'out', 'data': 'james_brown\r\n$:~'}]
-        }
-
-        r = self.app.post('/ws/honeypot_data', data=json.dumps(data_dict), content_type='application/json')
-        self.assertEquals(r.status, '200 OK')
-
-    def test_basic_unsuccessful_honeypot_post(self):
-        """
-        Tests if an error is returned when data is posted without ID values.
-        """
-
-        self.login(self.honeypot_id, self.honeypot_password)
-
-        #missing id
-        data_dict = {
-            'honeypot_id': self.honeypot_id,
-            'destination_ip': '192.168.1.1',
-            'destination_port': 8023,
-            'protocol': 'telnet',
-            'source_ip': '127.0.0.1',
-            'timestamp': '2013-05-07T22:21:19.453828',
-            'source_port': 61175,
-            'login_attempts': [
-                {'username': 'qqq', 'timestamp': '2013-05-07T22:21:20.846805', 'password': 'aa',
-                 'id': '027bd968-f8ea-4a69-8d4c-6cf21476ca10', 'successful': False},
-                {'username': 'as', 'timestamp': '2013-05-07T22:21:21.150571', 'password': 'd',
-                 'id': '603f40a4-e7eb-442d-9fde-0cd3ba707af7', 'successful': False}, ],
-            'transcript': [
-                {'timestamp': '2013-05-07T22:21:20.846805', 'direction': 'in', 'data': 'whoami\r\n'},
-                {'timestamp': '2013-05-07T22:21:21.136800', 'direction': 'out', 'data': 'james_brown\r\n$:~'}
-            ]
-        }
-        r = self.app.post('/ws/honeypot_data', data=json.dumps(data_dict), content_type='application/json')
-        self.assertEquals(r.status, '500 INTERNAL SERVER ERROR')
-
-    def test_new_client(self):
-        """
-        Tests if a new Client configuration can be posted successfully
-        """
-
-        post_data = {
-            'http_enabled': True,
-            'http_server': '127.0.0.1',
-            'http_port': 80,
-            'http_active_range': '13:40 - 16:30',
-            'http_sleep_interval': 0,
-            'http_activation_probability': 1,
-            'http_login': 'test',
-            'http_password': 'test',
-
-            'https_enabled': True,
-            'https_server': '127.0.0.1',
-            'https_port': 80,
-            'https_active_range': '13:40 - 16:30',
-            'https_sleep_interval': 0,
-            'https_activation_probability': 1,
-            'https_login': 'test',
-            'https_password': 'test',
-
-            'pop3s_enabled': True,
-            'pop3s_server': '127.0.0.1',
-            'pop3s_port': 80,
-            'pop3s_active_range': '13:40 - 16:30',
-            'pop3s_sleep_interval': 0,
-            'pop3s_activation_probability': 1,
-            'pop3s_login': 'test',
-            'pop3s_password': 'test',
-
-            'ssh_enabled': True,
-            'ssh_server': '127.0.0.1',
-            'ssh_port': 80,
-            'ssh_active_range': '13:40 - 16:30',
-            'ssh_sleep_interval': 0,
-            'ssh_activation_probability': 1,
-            'ssh_login': 'test',
-            'ssh_password': 'test',
-
-            'ftp_enabled': True,
-            'ftp_server': '127.0.0.1',
-            'ftp_port': 80,
-            'ftp_active_range': '13:40 - 16:30',
-            'ftp_sleep_interval': 0,
-            'ftp_activation_probability': 1,
-            'ftp_login': 'test',
-            'ftp_password': 'test',
-
-            'pop3_enabled': True,
-            'pop3_server': '127.0.0.1',
-            'pop3_port': 110,
-            'pop3_active_range': '13:40 - 16:30',
-            'pop3_sleep_interval': 0,
-            'pop3_activation_probability': 1,
-            'pop3_login': 'test',
-            'pop3_password': 'test',
-
-            'smtp_enabled': True,
-            'smtp_server': '127.0.0.1',
-            'smtp_port': 25,
-            'smtp_active_range': '13:40 - 16:30',
-            'smtp_sleep_interval': 0,
-            'smtp_activation_probability': 1,
-            'smtp_login': 'test',
-            'smtp_password': 'test',
-
-            'vnc_enabled': True,
-            'vnc_server': '127.0.0.1',
-            'vnc_port': 5900,
-            'vnc_active_range': '13:40 - 16:30',
-            'vnc_sleep_interval': 0,
-            'vnc_activation_probability': 1,
-            'vnc_login': 'test',
-            'vnc_password': 'test',
-
-            'telnet_enabled': True,
-            'telnet_server': '127.0.0.1',
-            'telnet_port': 23,
-            'telnet_active_range': '13:40 - 16:30',
-            'telnet_sleep_interval': 0,
-            'telnet_activation_probability': 1,
-            'telnet_login': 'test',
-            'telnet_password': 'test',
-        }
-        self.login('test', 'test')
-        resp = self.app.post('/ws/client', data=post_data)
-        self.assertTrue(200, resp.status_code)
-        self.logout()
-
-    def test_new_honeypot(self):
-        """
-        Tests whether new Honeypot configuration can be posted successfully.
-        """
-        post_data = {
-            'http_enabled': True,
-            'http_port': 80,
-            'http_banner': 'Microsoft-IIS/5.0',
-
-            'https_enabled': False,
-            'https_port': 443,
-            'https_banner': 'Microsoft-IIS/5.0',
-
-            'ftp_enabled': False,
-            'ftp_port': 21,
-            'ftp_max_attempts': 3,
-            'ftp_banner': 'Microsoft FTP Server',
-
-            'smtp_enabled': False,
-            'smtp_port': 25,
-            'smtp_banner': 'Microsoft ESMTP MAIL service ready',
-
-            'vnc_enabled': False,
-            'vnc_port': 5900,
-
-            'telnet_enabled': False,
-            'telnet_port': 23,
-            'telnet_max_attempts': 3,
-
-            'pop3_enabled': False,
-            'pop3_port': 110,
-            'pop3_max_attempts': 3,
-
-            'pop3s_enabled': False,
-            'pop3s_port': 110,
-            'pop3s_max_attempts': 3,
-
-            'ssh_enabled': False,
-            'ssh_port': 22,
-            'ssh_key': 'server.key'
-        }
-        self.login('test', 'test')
-        resp = self.app.post('/ws/honeypot', data=post_data)
-        self.assertTrue(200, resp.status_code)
-        self.logout()
-
-    def test_new_honeypot_config(self):
-        """ Tests if a Honeypot config is being returned correctly """
-
-        resp = self.app.get('/ws/honeypot/config/' + self.honeypot_id)
-        self.assertEquals(resp.data, 'test_honeypot_config')
-
-    def test_new_client_config(self):
-        """ Tests if a Client config is being returned correctly """
-
-        resp = self.app.get('/ws/client/config/' + self.client_id)
-        self.assertEquals(resp.data, 'test_client_config')
+    # TODO: All these posts should be moved to ZMQ tests
+    # def test_basic_client_post(self):
+    #     """
+    #     Tests if a bait_session dict can be posted without exceptions.
+    #     """
+    #     self.login(self.client_id, self.client_password)
+    #     data_dict = {
+    #         'id': str(uuid.uuid4()),
+    #         'client_id': self.client_id,
+    #         'honeypot_id': self.honeypot_id,
+    #         'protocol': 'pop3',
+    #         'destination_ip': '127.0.0.1',
+    #         'destination_port': '110',
+    #         'source_ip': '123.123.123.123',
+    #         'source_port': 12345,
+    #         'timestamp': datetime.utcnow().isoformat(),
+    #         'did_connect': True,
+    #         'did_login': True,
+    #         'did_complete': True,
+    #         'protocol_data': None,
+    #         'login_attempts': [{'id': str(uuid.uuid4()), 'username': 'james', 'password': 'bond', 'successful': True,
+    #                             'timestamp': datetime.utcnow().isoformat()}]
+    #     }
+    #     r = self.app.post('/ws/client_data', data=json.dumps(data_dict), content_type='application/json')
+    #     self.assertEquals(r.status, '200 OK')
+    #
+    # def test_basic_unsuccessful_client_post(self):
+    #     """
+    #     Tests if an error is returned when data is posted without ID values.
+    #     """
+    #
+    #     self.login(self.client_id, self.client_password)
+    #
+    #     #missing id's
+    #     data_dict = {
+    #         'protocol': 'pop3',
+    #         'username': 'james',
+    #         'password': 'bond',
+    #         'server_host': '127.0.0.1',
+    #         'server_port': '110',
+    #         'source_ip': '123.123.123.123',
+    #         'source_port': 12345,
+    #         'timestamp': datetime.utcnow().isoformat(),
+    #         'did_connect': True,
+    #         'did_login': True,
+    #         'did_complete': True,
+    #         'protocol_data': None
+    #     }
+    #
+    #     r = self.app.post('/ws/client_data', data=json.dumps(data_dict), content_type='application/json')
+    #     self.assertEquals(r.status, '500 INTERNAL SERVER ERROR')
+    #
+    # def test_basic_honeypot_post(self):
+    #     """
+    #     Tests if a session dict can be posted without exceptions.
+    #     """
+    #
+    #     self.login(self.honeypot_id, self.honeypot_password)
+    #
+    #     data_dict = {
+    #         'id': 'ba9fdb3d-0efb-4764-9a6b-d9b86eccda96',
+    #         'honeypot_id': self.honeypot_id,
+    #         'destination_ip': '192.168.1.1',
+    #         'destination_port': 8023,
+    #         'protocol': 'telnet',
+    #         'source_ip': '127.0.0.1',
+    #         'timestamp': '2013-05-07T22:21:19.453828',
+    #         'source_port': 61175,
+    #         'login_attempts': [
+    #             {'username': 'qqq', 'timestamp': '2013-05-07T22:21:20.846805', 'password': 'aa',
+    #              'id': '027bd968-f8ea-4a69-8d4c-6cf21476ca10', 'successful': False},
+    #             {'username': 'as', 'timestamp': '2013-05-07T22:21:21.150571', 'password': 'd',
+    #              'id': '603f40a4-e7eb-442d-9fde-0cd3ba707af7', 'successful': False}, ],
+    #         'transcript': [
+    #             {'timestamp': '2013-05-07T22:21:20.846805', 'direction': 'in', 'data': 'whoami\r\n'},
+    #             {'timestamp': '2013-05-07T22:21:21.136800', 'direction': 'out', 'data': 'james_brown\r\n$:~'}]
+    #     }
+    #
+    #     r = self.app.post('/ws/honeypot_data', data=json.dumps(data_dict), content_type='application/json')
+    #     self.assertEquals(r.status, '200 OK')
+    #
+    # def test_basic_unsuccessful_honeypot_post(self):
+    #     """
+    #     Tests if an error is returned when data is posted without ID values.
+    #     """
+    #
+    #     self.login(self.honeypot_id, self.honeypot_password)
+    #
+    #     #missing id
+    #     data_dict = {
+    #         'honeypot_id': self.honeypot_id,
+    #         'destination_ip': '192.168.1.1',
+    #         'destination_port': 8023,
+    #         'protocol': 'telnet',
+    #         'source_ip': '127.0.0.1',
+    #         'timestamp': '2013-05-07T22:21:19.453828',
+    #         'source_port': 61175,
+    #         'login_attempts': [
+    #             {'username': 'qqq', 'timestamp': '2013-05-07T22:21:20.846805', 'password': 'aa',
+    #              'id': '027bd968-f8ea-4a69-8d4c-6cf21476ca10', 'successful': False},
+    #             {'username': 'as', 'timestamp': '2013-05-07T22:21:21.150571', 'password': 'd',
+    #              'id': '603f40a4-e7eb-442d-9fde-0cd3ba707af7', 'successful': False}, ],
+    #         'transcript': [
+    #             {'timestamp': '2013-05-07T22:21:20.846805', 'direction': 'in', 'data': 'whoami\r\n'},
+    #             {'timestamp': '2013-05-07T22:21:21.136800', 'direction': 'out', 'data': 'james_brown\r\n$:~'}
+    #         ]
+    #     }
+    #     r = self.app.post('/ws/honeypot_data', data=json.dumps(data_dict), content_type='application/json')
+    #     self.assertEquals(r.status, '500 INTERNAL SERVER ERROR')
+    #
+    # def test_new_client(self):
+    #     """
+    #     Tests if a new Client configuration can be posted successfully
+    #     """
+    #
+    #     post_data = {
+    #         'http_enabled': True,
+    #         'http_server': '127.0.0.1',
+    #         'http_port': 80,
+    #         'http_active_range': '13:40 - 16:30',
+    #         'http_sleep_interval': 0,
+    #         'http_activation_probability': 1,
+    #         'http_login': 'test',
+    #         'http_password': 'test',
+    #
+    #         'https_enabled': True,
+    #         'https_server': '127.0.0.1',
+    #         'https_port': 80,
+    #         'https_active_range': '13:40 - 16:30',
+    #         'https_sleep_interval': 0,
+    #         'https_activation_probability': 1,
+    #         'https_login': 'test',
+    #         'https_password': 'test',
+    #
+    #         'pop3s_enabled': True,
+    #         'pop3s_server': '127.0.0.1',
+    #         'pop3s_port': 80,
+    #         'pop3s_active_range': '13:40 - 16:30',
+    #         'pop3s_sleep_interval': 0,
+    #         'pop3s_activation_probability': 1,
+    #         'pop3s_login': 'test',
+    #         'pop3s_password': 'test',
+    #
+    #         'ssh_enabled': True,
+    #         'ssh_server': '127.0.0.1',
+    #         'ssh_port': 80,
+    #         'ssh_active_range': '13:40 - 16:30',
+    #         'ssh_sleep_interval': 0,
+    #         'ssh_activation_probability': 1,
+    #         'ssh_login': 'test',
+    #         'ssh_password': 'test',
+    #
+    #         'ftp_enabled': True,
+    #         'ftp_server': '127.0.0.1',
+    #         'ftp_port': 80,
+    #         'ftp_active_range': '13:40 - 16:30',
+    #         'ftp_sleep_interval': 0,
+    #         'ftp_activation_probability': 1,
+    #         'ftp_login': 'test',
+    #         'ftp_password': 'test',
+    #
+    #         'pop3_enabled': True,
+    #         'pop3_server': '127.0.0.1',
+    #         'pop3_port': 110,
+    #         'pop3_active_range': '13:40 - 16:30',
+    #         'pop3_sleep_interval': 0,
+    #         'pop3_activation_probability': 1,
+    #         'pop3_login': 'test',
+    #         'pop3_password': 'test',
+    #
+    #         'smtp_enabled': True,
+    #         'smtp_server': '127.0.0.1',
+    #         'smtp_port': 25,
+    #         'smtp_active_range': '13:40 - 16:30',
+    #         'smtp_sleep_interval': 0,
+    #         'smtp_activation_probability': 1,
+    #         'smtp_login': 'test',
+    #         'smtp_password': 'test',
+    #
+    #         'vnc_enabled': True,
+    #         'vnc_server': '127.0.0.1',
+    #         'vnc_port': 5900,
+    #         'vnc_active_range': '13:40 - 16:30',
+    #         'vnc_sleep_interval': 0,
+    #         'vnc_activation_probability': 1,
+    #         'vnc_login': 'test',
+    #         'vnc_password': 'test',
+    #
+    #         'telnet_enabled': True,
+    #         'telnet_server': '127.0.0.1',
+    #         'telnet_port': 23,
+    #         'telnet_active_range': '13:40 - 16:30',
+    #         'telnet_sleep_interval': 0,
+    #         'telnet_activation_probability': 1,
+    #         'telnet_login': 'test',
+    #         'telnet_password': 'test',
+    #     }
+    #     self.login('test', 'test')
+    #     resp = self.app.post('/ws/client', data=post_data)
+    #     self.assertTrue(200, resp.status_code)
+    #     self.logout()
+    #
+    # def test_new_honeypot(self):
+    #     """
+    #     Tests whether new Honeypot configuration can be posted successfully.
+    #     """
+    #     post_data = {
+    #         'http_enabled': True,
+    #         'http_port': 80,
+    #         'http_banner': 'Microsoft-IIS/5.0',
+    #
+    #         'https_enabled': False,
+    #         'https_port': 443,
+    #         'https_banner': 'Microsoft-IIS/5.0',
+    #
+    #         'ftp_enabled': False,
+    #         'ftp_port': 21,
+    #         'ftp_max_attempts': 3,
+    #         'ftp_banner': 'Microsoft FTP Server',
+    #
+    #         'smtp_enabled': False,
+    #         'smtp_port': 25,
+    #         'smtp_banner': 'Microsoft ESMTP MAIL service ready',
+    #
+    #         'vnc_enabled': False,
+    #         'vnc_port': 5900,
+    #
+    #         'telnet_enabled': False,
+    #         'telnet_port': 23,
+    #         'telnet_max_attempts': 3,
+    #
+    #         'pop3_enabled': False,
+    #         'pop3_port': 110,
+    #         'pop3_max_attempts': 3,
+    #
+    #         'pop3s_enabled': False,
+    #         'pop3s_port': 110,
+    #         'pop3s_max_attempts': 3,
+    #
+    #         'ssh_enabled': False,
+    #         'ssh_port': 22,
+    #         'ssh_key': 'server.key'
+    #     }
+    #     self.login('test', 'test')
+    #     resp = self.app.post('/ws/honeypot', data=post_data)
+    #     self.assertTrue(200, resp.status_code)
+    #     self.logout()
+    #
+    # def test_new_honeypot_config(self):
+    #     """ Tests if a Honeypot config is being returned correctly """
+    #
+    #     resp = self.app.get('/ws/honeypot/config/' + self.honeypot_id)
+    #     self.assertEquals(resp.data, 'test_honeypot_config')
+    #
+    # def test_new_client_config(self):
+    #     """ Tests if a Client config is being returned correctly """
+    #
+    #     resp = self.app.get('/ws/client/config/' + self.client_id)
+    #     self.assertEquals(resp.data, 'test_client_config')
 
     def test_data_sessions_all(self):
         """ Tests if all sessions are returned properly"""
@@ -405,7 +408,7 @@ class WebappTests(unittest.TestCase):
         self.login('test', 'test')
         self.populate_honeypots()
         data = [ self.honeypots[0], self.honeypots[1]]
-        self.app.post('/ws/honeypot/delete', data=json.dumps(data))
+        self.app.post('/ws/drone/delete', data=json.dumps(data))
         db_session = database.get_session()
         honeypot_count = db_session.query(Honeypot).count()
         self.assertEquals(3, honeypot_count)
@@ -416,7 +419,7 @@ class WebappTests(unittest.TestCase):
         self.login('test', 'test')
         self.populate_clients()
         data = [self.clients[0], self.clients[1]]
-        self.app.post('/ws/client/delete', data=json.dumps(data))
+        self.app.post('/ws/drone/delete', data=json.dumps(data))
         db_session = database.get_session()
         nclients = db_session.query(Client).count()
         self.assertEquals(3, nclients)
