@@ -337,15 +337,18 @@ class Server(object):
                                                                                'zmq_port': zmq_port,
                                                                                'zmq_command_port': zmq_command_port,
                                                                                'zmq_host': zmq_host},
-                                                                   "sql": {
+                                                                   'sql': {
                                                                        'connection_string': 'sqlite:///beeswarm_sqlite.db'},
-                                                                   "ssl": {
-                                                                       "certpath": "server.crt",
-                                                                       "keypath": "server.key"
+                                                                   'ssl': {
+                                                                       'certpath': 'server.crt',
+                                                                       'keypath': 'server.key'
                                                                    },
-                                                                   "iso": {
-                                                                       "path": "beeswarm_client.iso",
-                                                                       "offset": -1
+                                                                   'iso': {
+                                                                       'path': 'beeswarm_client.iso',
+                                                                       'offset': -1
+                                                                   },
+                                                                   'general': {
+                                                                       'mode': 'server'
                                                                    }
 
             }
