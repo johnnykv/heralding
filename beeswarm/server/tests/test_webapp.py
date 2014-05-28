@@ -8,10 +8,9 @@ import gevent
 
 from beeswarm.server.webapp.auth import Authenticator
 
-from beeswarm.server.db import database
+import beeswarm.server.db.database_setup as database
 from beeswarm.server.db.entities import Client, Honeypot, Session, BaitSession, User, Authentication, Transcript
 from beeswarm.server.webapp import app
-
 
 
 class WebappTests(unittest.TestCase):

@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 class ConfigActor(Greenlet):
     def __init__(self, config_file, work_dir):
         Greenlet.__init__(self)
-        self.config_file = config_file
+        self.config_file = os.path.join(work_dir, config_file)
         self.config = json.load(open(self.config_file, 'r'))
         self.work_dir = work_dir
 

@@ -27,7 +27,7 @@ from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.shared.asciify import asciify
 
 
-class honeypot_tests(unittest.TestCase):
+class HoneypotTests(unittest.TestCase):
     def setUp(self):
         self.work_dir = tempfile.mkdtemp()
         Honeypot.prepare_environment(self.work_dir)

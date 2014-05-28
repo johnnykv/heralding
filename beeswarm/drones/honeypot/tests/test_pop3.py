@@ -22,13 +22,13 @@ from gevent.server import StreamServer
 import gevent
 
 from beeswarm.drones.honeypot.honeypot import Honeypot
-from beeswarm.drones.honeypot.capabilities import pop3
+from beeswarm.drones.honeypot.capabilities.pop3 import Pop3
 from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.models.authenticator import Authenticator
 from beeswarm.drones.honeypot.models.user import BaitUser
 
 
-class Pop3_Tests(unittest.TestCase):
+class Pop3Tests(unittest.TestCase):
     def setUp(self):
         self.work_dir = tempfile.mkdtemp()
         Honeypot.prepare_environment(self.work_dir)
@@ -47,7 +47,7 @@ class Pop3_Tests(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        sut = pop3.Pop3(sessions, {'port': 110, 'max_attempts': 3}, users, self.work_dir)
+        sut = Pop3(sessions, {'port': 110, 'max_attempts': 3}, users, self.work_dir)
 
         #dont really care about the socket at this point (None...)
         #TODO: mock the socket!
@@ -61,7 +61,7 @@ class Pop3_Tests(unittest.TestCase):
         self.assertEqual(1, len(sessions))
         session = sessions.values()[0]
         self.assertEqual(110, session.destination_port)
-        self.assertEqual('pop3', session.protocol)
+        self.assertEqual('Pop3', session.protocol)
         self.assertEquals('192.168.1.200', session.source_ip)
         self.assertEqual(12000, session.source_port)
 
@@ -89,7 +89,7 @@ class Pop3_Tests(unittest.TestCase):
         ]
 
         sessions = {}
-        sut = pop3.Pop3(sessions, {'port': 110, 'max_attempts': 3}, users, self.work_dir)
+        sut = Pop3(sessions, {'port': 110, 'max_attempts': 3}, users, self.work_dir)
 
         server = StreamServer(('127.0.0.1', 0), sut.handle_session)
         server.start()

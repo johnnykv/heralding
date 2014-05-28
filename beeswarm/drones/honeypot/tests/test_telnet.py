@@ -33,7 +33,7 @@ from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.models.authenticator import Authenticator
 
 
-class Telnet_Tests(unittest.TestCase):
+class TelnetTests(unittest.TestCase):
     def setUp(self):
         self.work_dir = tempfile.mkdtemp()
         Honeypot.prepare_environment(self.work_dir)

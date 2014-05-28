@@ -31,13 +31,12 @@ from beeswarm.drones.honeypot.models.user import BaitUser
 from paramiko import SSHClient, AutoAddPolicy, AuthenticationException
 
 
-class Telnet_Tests(unittest.TestCase):
+class SshTests(unittest.TestCase):
     def setUp(self):
         self.work_dir = tempfile.mkdtemp()
-        Honeypot.prepare_environment(self.work_dir)
-
         self.key = os.path.join(os.path.dirname( __file__), 'dummy_key.key')
         self.cert = os.path.join(os.path.dirname( __file__), 'dummy_cert.crt')
+        Honeypot.prepare_environment(self.work_dir)
 
     def tearDown(self):
         if os.path.isdir(self.work_dir):
@@ -48,7 +47,7 @@ class Telnet_Tests(unittest.TestCase):
         users = {'test': BaitUser('test', 'test')}
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
-        sut = ssh.SSH({}, {'port': 0}, users, self.work_dir)
+        sut = ssh.SSH({}, {'port': 0}, users, self.work_dir, self.key)
         server = StreamServer(('127.0.0.1', 0), sut.handle_session)
         server.start()
 

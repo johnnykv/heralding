@@ -17,7 +17,7 @@ import unittest
 import uuid
 from datetime import datetime, timedelta
 
-from beeswarm.server.db import database
+from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, Honeypot
 from beeswarm.server.db.entities import Classification, Session, BaitSession, Authentication
 from beeswarm.server.classifier.classifier import Classifier
@@ -26,14 +26,14 @@ from beeswarm.server.classifier.classifier import Classifier
 class ClassifierTests(unittest.TestCase):
     def setUp(self):
         #'sqlite://' gives a in-memory sqlite database
-        database.setup_db('sqlite://')
+        database_setup.setup_db('sqlite://')
 
         self.client_id = str(uuid.uuid4())
         self.honeypot_id = str(uuid.uuid4())
         self.bait_session_id = str(uuid.uuid4())
         self.bait_session_datetime = datetime.utcnow()
 
-        db_session = database.get_session()
+        db_session = database_setup.get_session()
         client = Client(id=self.client_id)
         honeypot = Honeypot(id=self.honeypot_id)
 
@@ -48,14 +48,14 @@ class ClassifierTests(unittest.TestCase):
         db_session.commit()
 
     def tearDown(self):
-        database.clear_db()
+        database_setup.clear_db()
 
     def test_matching_session(self):
         """
         Test if the get_matching_session method returns the session that matches the given bait session.
         """
 
-        db_session = database.get_session()
+        db_session = database_setup.get_session()
         bait_session = db_session.query(BaitSession).filter(BaitSession.id == self.bait_session_id).one()
         honeypot = db_session.query(Honeypot).filter(Honeypot.id == self.honeypot_id).one()
 
@@ -83,7 +83,7 @@ class ClassifierTests(unittest.TestCase):
         """
 
         #setup the honeypot session we expect to match the bait_session
-        db_session = database.get_session()
+        db_session = database_setup.get_session()
         honeypot = db_session.query(Honeypot).filter(Honeypot.id == self.honeypot_id).one()
 
         s_id = str(uuid.uuid4())
@@ -113,7 +113,7 @@ class ClassifierTests(unittest.TestCase):
         Test if 'standalone' sessions older than X seconds get classified as brute-force attempts.
         """
 
-        db_session = database.get_session()
+        db_session = database_setup.get_session()
         honeypot = db_session.query(Honeypot).filter(Honeypot.id == self.honeypot_id).one()
 
         for id, offset in (('session99', -30), ('session88', -10), ('session77', -2)):
@@ -138,7 +138,7 @@ class ClassifierTests(unittest.TestCase):
         Test if attack which uses previously transmitted credentials is tagged correctly
         """
 
-        db_session = database.get_session()
+        db_session = database_setup.get_session()
         honeypot = db_session.query(Honeypot).filter(Honeypot.id == self.honeypot_id).one()
 
         s = Session(id='session1010', source_ip='321', destination_ip='123',
@@ -161,7 +161,7 @@ class ClassifierTests(unittest.TestCase):
         Test if session without authentication attempts is tagged as probes.
         """
 
-        db_session = database.get_session()
+        db_session = database_setup.get_session()
         honeypot = db_session.query(Honeypot).filter(Honeypot.id == self.honeypot_id).one()
 
         session_id = str(uuid.uuid4())

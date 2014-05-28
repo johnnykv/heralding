@@ -17,7 +17,7 @@ import unittest
 from beeswarm.shared.vnc.decoder import VNCDecoder
 
 
-class vncdecode_tests(unittest.TestCase):
+class VncDecoderTests(unittest.TestCase):
 
     def test_combinations(self):
         """Tests different combinations of challenge/response pairs and checks if

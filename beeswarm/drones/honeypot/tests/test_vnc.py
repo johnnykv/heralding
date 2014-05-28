@@ -31,7 +31,7 @@ from beeswarm.drones.honeypot.models.user import BaitUser
 from beeswarm.shared.vnc_constants import *
 
 
-class VNC_Test(unittest.TestCase):
+class VncTests(unittest.TestCase):
     def setUp(self):
         self.work_dir = tempfile.mkdtemp()
         Honeypot.prepare_environment(self.work_dir)

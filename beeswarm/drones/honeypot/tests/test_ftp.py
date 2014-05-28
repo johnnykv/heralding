@@ -32,7 +32,7 @@ from beeswarm.drones.honeypot.models.authenticator import Authenticator
 from beeswarm.drones.honeypot.models.session import Session
 
 
-class ftp_Tests(unittest.TestCase):
+class FtpTests(unittest.TestCase):
 
     def setUp(self):
         self.work_dir = tempfile.mkdtemp()
