@@ -54,16 +54,20 @@ class Server(object):
                                all the modes. It is ignored for the Server.
         """
         customize = kwargs['customize']
-        if config is None:
-            Server.prepare_environment(work_dir, customize)
-            with open(os.path.join(work_dir, 'beeswarmcfg.json'), 'r') as config_file:
-                config = json.load(config_file, object_hook=asciify)
+
         self.work_dir = work_dir
-        self.config = config
         self.config_file = 'beeswarmcfg.json'
 
+        if config is None:
+            Server.prepare_environment(work_dir, customize)
+            with open(os.path.join(work_dir, self.config_file), 'r') as config_file:
+                self.config = json.load(config_file, object_hook=asciify)
+        else:
+            self.config = config
+
         self.actors = []
-        config_actor = ConfigActor('beeswarmcfg.json', work_dir)
+        config_actor = ConfigActor(self.config_file, work_dir)
+
         config_actor.start()
         self.actors.append(config_actor)
         self.workers = {}
@@ -73,7 +77,7 @@ class Server(object):
         database_setup.setup_db(os.path.join(self.config['sql']['connection_string']))
         self.app = app.app
         self.app.config['CERT_PATH'] = self.config['ssl']['certpath']
-        self.app.config['SERVER_CONFIG'] = 'beeswarmcfg.json'
+        self.app.config['SERVER_CONFIG'] = self.config_file
         self.authenticator = Authenticator()
         self.authenticator.ensure_default_user()
         gevent.spawn(self.message_proxy, work_dir)
@@ -252,6 +256,7 @@ class Server(object):
     def prepare_environment(work_dir, customize):
         package_directory = os.path.dirname(os.path.abspath(beeswarm.__file__))
         config_file = os.path.join(work_dir, 'beeswarmcfg.json')
+
         if not os.path.isfile(config_file):
             print '*** Please answer a few configuration options ***'
             if customize:
@@ -295,9 +300,6 @@ class Server(object):
             with open(key_path, 'w') as keyfile:
                 keyfile.write(priv_key)
 
-            shutil.copyfile(os.path.join(package_directory, 'server/beeswarmcfg.json.dist'),
-                            config_file)
-
             print ''
             print '* Communication between drones (honeypots and clients) and server *'
             print '* Please make sure that drones can always contact the Beeswarm server using the information that' \
@@ -334,6 +336,20 @@ class Server(object):
                                                                                'web_port': web_port,
                                                                                'zmq_port': zmq_port,
                                                                                'zmq_command_port': zmq_command_port,
-                                                                               'zmq_host': zmq_host}})))
+                                                                               'zmq_host': zmq_host},
+                                                                   "sql": {
+                                                                       'connection_string': 'sqlite:///beeswarm_sqlite.db'},
+                                                                   "ssl": {
+                                                                       "certpath": "server.crt",
+                                                                       "keypath": "server.key"
+                                                                   },
+                                                                   "iso": {
+                                                                       "path": "beeswarm_client.iso",
+                                                                       "offset": -1
+                                                                   }
+
+            }
+            )))
+
             socket.recv()
             config_actor.close()

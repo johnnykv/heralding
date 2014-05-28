@@ -32,6 +32,9 @@ class ConfigActor(Greenlet):
     def __init__(self, config_file, work_dir):
         Greenlet.__init__(self)
         self.config_file = os.path.join(work_dir, config_file)
+        if not os.path.exists(self.config_file):
+            self.config = {}
+            self._save_config_file()
         self.config = json.load(open(self.config_file, 'r'))
         self.work_dir = work_dir
 
@@ -80,14 +83,10 @@ class ConfigActor(Greenlet):
 
     def _handle_command_set(self, data):
         new_config = json.loads(data)
-        # all keys must in the original dict
-        if all(key in self.config for key in new_config):
-            self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
-            self.config.update(new_config)
-            self._save_config_file()
-            self._publish_config()
-        else:
-            self.config_commands.send(Messages.FAIL)
+        self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
+        self.config.update(new_config)
+        self._save_config_file()
+        self._publish_config()
 
     def _handle_command_genkeys(self, name):
         private_key, publickey = self._generate_zmq_keys(name)
@@ -99,7 +98,7 @@ class ConfigActor(Greenlet):
         self.config_publisher.send('{0} {1}'.format(Messages.CONFIG_FULL, json.dumps(self.config)))
 
     def _save_config_file(self):
-        with open(self.config_file, 'r+') as config_file:
+        with open(self.config_file, 'w+') as config_file:
             config_file.write(json.dumps(self.config, indent=4))
 
     def _generate_zmq_keys(self, key_name):
