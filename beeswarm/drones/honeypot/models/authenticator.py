@@ -19,7 +19,7 @@ import hmac
 class Authenticator(object):
     def __init__(self, users={}):
 
-        #key: username, value: BaitUser object
+        # key: username, value: BaitUser object
         self.users = users
 
     def try_auth(self, _type, **kwargs):

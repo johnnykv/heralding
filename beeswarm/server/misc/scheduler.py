@@ -34,19 +34,19 @@ class Scheduler(object):
     def start(self):
         self.enabled = True
 
-        #key: method name.
-        #value: parameter for spawn_later (seconds).
+        # key: method name.
+        # value: parameter for spawn_later (seconds).
         schedules = {'do_db_maintenance': 3600,
                      'do_classification': 10}
 
-        #will contain running and stopped (ready()) greenlets.
+        # will contain running and stopped (ready()) greenlets.
         greenlets = {}
 
         while self.enabled:
             for function, seconds in schedules.items():
                 if function not in greenlets or greenlets[function].ready():
                     greenlets[function] = Greenlet(getattr(self, function))
-                    greenlets[function].start_later(schedules[function])
+                    greenlets[function].start_later(seconds)
             gevent.sleep(1)
 
     def stop(self):
