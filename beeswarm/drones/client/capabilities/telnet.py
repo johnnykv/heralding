@@ -89,7 +89,7 @@ class telnet(ClientBase, Commands):
             session.source_port = self.client.sock.getsockname()[1]
             session.did_login = True
         except Exception as err:
-            logger.debug('Caught exception: %s (%s)' % (err, str(type(err))))
+            logger.debug('Caught exception: {0} (1)'.format(err, str(type(err))))
         else:
             while self.command_count < self.command_limit:
                 self.sense()
@@ -138,7 +138,7 @@ class telnet(ClientBase, Commands):
         if self.command_count > self.command_limit:
             self.logout()
             return
-        logger.debug('Sending %s command.' % cmd)
+        logger.debug('Sending {0} command.'.format(cmd))
         self.command_count += 1
         self.client.write_human(cmd + '\r\n')
 

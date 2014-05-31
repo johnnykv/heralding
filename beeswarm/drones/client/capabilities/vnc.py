@@ -42,14 +42,14 @@ class vnc(ClientBase):
         session = self.create_session(server_host, server_port, my_ip)
         self.sessions[session.id] = session
 
-        logger.debug('Sending %s bait session to %s:%s. (bee id: %s)' % ('vnc', server_host, server_port, session.id))
+        logger.debug('Sending {0} bait session to {1}:{2}. (bee id: {3})'.format('vnc', server_host, server_port, session.id))
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             client_socket.connect((server_host, int(server_port)))
             session.source_port = client_socket.getsockname()[1]
 
         except socket.error as e:
-            logger.debug('Caught exception: %s (%s)' % (e, str(type(e))))
+            logger.debug('Caught exception: {0} ({1})'.format(e, str(type(e))))
         else:
             session.did_connect = True
             protocol_version = client_socket.recv(1024)

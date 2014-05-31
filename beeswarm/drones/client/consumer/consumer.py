@@ -24,7 +24,7 @@ from beeswarm.shared.message_enum import Messages
 logger = logging.getLogger(__name__)
 
 
-class Consumer:
+class Consumer(object):
     def __init__(self, sessions, config, status):
         """
             Processes completed sessions from the sessions dict.
@@ -49,10 +49,10 @@ class Consumer:
             for session_id in self.sessions.keys():
                 session = self.sessions[session_id]
                 if session.alldone:
-                    logger.debug('Found finished bait session. (bee id: %s)' % session.id)
+                    logger.debug('Found finished bait session. (bee id: {0})'.format(session.id))
                     for _logger in self.active_loggers:
                         logger.debug(
-                            'Logging bait session with %s (session id: %s)' % (logger.__class__.__name__, session.id))
+                            'Logging bait session with {0} (session id: {1})'.format(logger.__class__.__name__, session.id))
                         _logger.log(session)
                     self.status['total_bees'] += 1
                     del self.sessions[session_id]

@@ -57,7 +57,7 @@ class smtp(ClientBase):
         session = self.create_session(server_host, server_port, my_ip)
 
         logger.debug(
-            'Sending %s bait session to %s:%s. (bee id: %s)' % ('smtp', server_host, server_port, session.id))
+            'Sending {0} bait session to {1}:{2}. (bee id: {3})'.format('smtp', server_host, server_port, session.id))
 
         try:
             self.connect()
@@ -70,7 +70,7 @@ class smtp(ClientBase):
             session.did_login = True
 
         except smtplib.SMTPException as error:
-            logger.debug('Caught exception: %s (%s)' % (error, str(type(error))))
+            logger.debug('Caught exception: {0} ({1})'.format(error, str(type(error))))
         else:
             while self.sent_mails <= self.max_mails:
                 from_addr, to_addr, mail_body = self.get_one_mail()
@@ -81,7 +81,7 @@ class smtp(ClientBase):
                     logger.debug('Malformed email in mbox archive, skipping.')
                     continue
                 else:
-                    logger.debug('Sent mail from (%s) to (%s)' % (from_addr, to_addr))
+                    logger.debug('Sent mail from ({0}) to ({1})'.format(from_addr, to_addr))
                 time.sleep(1)
             self.client.quit()
             session.did_complete = True

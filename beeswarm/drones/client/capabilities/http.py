@@ -57,7 +57,7 @@ class http(ClientBase):
         self.sessions[session.id] = session
 
         logger.debug(
-            'Sending %s bait session to %s:%s. (bee id: %s)' % ('http', server_host, server_port, session.id))
+            'Sending {0} bait session to {1}:{2}. (bee id: {3})'.format('http', server_host, server_port, session.id))
 
         try:
             url = self._make_url(server_host, '/index.html', server_port)
@@ -76,7 +76,7 @@ class http(ClientBase):
                 links = self._get_links(response)
 
         except Exception as err:
-            logger.debug('Caught exception: %s (%s)' % (err, str(type(err))))
+            logger.debug('Caught exception: {0} ({1})'.format(err, str(type(err))))
         else:
             session.timestamp = datetime.now()
         finally:

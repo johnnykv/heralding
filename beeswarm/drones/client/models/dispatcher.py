@@ -34,7 +34,7 @@ class BeeDispatcher(object):
         try:
             self.set_active_interval()
         except (ValueError, AttributeError, KeyError, IndexError) as err:
-            logger.debug('Caught exception: %s (%s)' % (err, str(type(err))))
+            logger.debug('Caught exception: {0} ({1})'.format(err, str(type(err))))
 
         self.activation_probability = self.options['timing']['activation_probability']
         self.sleep_interval = float(self.options['timing']['sleep_interval'])

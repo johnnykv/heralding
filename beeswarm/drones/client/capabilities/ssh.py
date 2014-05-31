@@ -61,7 +61,7 @@ class ssh(ClientBase, Commands):
             session.add_auth_attempt('plaintext', True, username=username, password=password)
             session.did_login = True
         except (SSHException, AuthenticationFailed) as err:
-            logger.debug('Caught exception: %s (%s)' % (err, str(type(err))))
+            logger.debug('Caught exception: {0} ({1})'.format(err, str(type(err))))
         else:
             self.sense()
             comm, param = self.decide()
@@ -76,7 +76,7 @@ class ssh(ClientBase, Commands):
 
         :param cmd: The command to send
         """
-        logger.debug('Sending %s command.' % cmd)
+        logger.debug('Sending {0} command.'.format(cmd))
         self.comm_chan.sendall(cmd + '\n')
 
     def get_response(self):

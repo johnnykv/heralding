@@ -244,7 +244,7 @@ class Commands(OwnGreenTelnetHandler):
                     try:
                         self.COMMANDS[cmd](params)
                     except:
-                        logger.exception('Error calling %s.' % cmd)
+                        logger.exception('Error calling {0}.'.format(cmd))
                         (t, p, tb) = sys.exc_info()
                         if self.handleException(t, p, tb):
                             break

@@ -69,7 +69,7 @@ class ftp(ClientBase):
 
         self.sessions[session.id] = session
         logger.debug(
-            'Sending %s bait session to %s:%s. (bee id: %s)' % ('ftp', server_host, server_port, session.id))
+            'Sending {0} bait session to {1}:{2}. (bee id: {3})'.format('ftp', server_host, server_port, session.id))
 
         self.file_list = []
         try:
@@ -83,7 +83,7 @@ class ftp(ClientBase):
             session.did_login = True
             session.timestamp = datetime.utcnow()
         except ftplib.error_perm as err:
-            logger.debug('Caught exception: %s (%s)' % (err, str(type(err))))
+            logger.debug('Caught exception: {0} ({1})'.format(err, str(type(err))))
         else:
             while self.command_count <= self.command_limit:
                 self.command_count += 1
