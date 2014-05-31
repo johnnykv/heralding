@@ -82,10 +82,10 @@ class FTP_Test(unittest.TestCase):
         beesessions = {}
 
         BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bee = bee_ftp.ftp(beesessions, bee_info)
+        current_bait = bee_ftp.ftp(beesessions, bee_info)
 
-        current_bee.connect()
-        current_bee.login(bee_info['username'], bee_info['password'])
+        current_bait.connect()
+        current_bait.login(bee_info['username'], bee_info['password'])
         srv.stop()
 
     def test_list(self):

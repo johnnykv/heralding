@@ -45,7 +45,7 @@ class SSH_Test(unittest.TestCase):
             shutil.rmtree(self.work_dir)
 
     def test_login(self):
-        """Tests if the SSH bee can Login to the SSH capability"""
+        """Tests if the SSH bait can Login to the SSH capability"""
 
         sessions = {}
         users = {'test': BaitUser('test', 'test')}
@@ -72,7 +72,7 @@ class SSH_Test(unittest.TestCase):
         srv.stop()
 
     def test_logout(self):
-        """Tests if the SSH bee can Logout from the SSH capability"""
+        """Tests if the SSH bait can Logout from the SSH capability"""
 
         sessions = {}
         users = {'test': BaitUser('test', 'test')}
@@ -120,9 +120,9 @@ class SSH_Test(unittest.TestCase):
         beesessions = {}
 
         BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bee = client_ssh.ssh(beesessions, bee_info)
-        for s in current_bee.senses:
-            sense = getattr(current_bee, s)
+        current_bait = client_ssh.ssh(beesessions, bee_info)
+        for s in current_bait.senses:
+            sense = getattr(current_bait, s)
             self.assertTrue(callable(sense))
 
     def test_command_cd(self):

@@ -57,7 +57,7 @@ class smtp(ClientBase):
         session = self.create_session(server_host, server_port, my_ip)
 
         logger.debug(
-            'Sending {0} bait session to {1}:{2}. (bee id: {3})'.format('smtp', server_host, server_port, session.id))
+            'Sending {0} bait session to {1}:{2}. (bait id: {3})'.format('smtp', server_host, server_port, session.id))
 
         try:
             self.connect()

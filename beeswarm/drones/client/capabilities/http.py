@@ -57,7 +57,7 @@ class http(ClientBase):
         self.sessions[session.id] = session
 
         logger.debug(
-            'Sending {0} bait session to {1}:{2}. (bee id: {3})'.format('http', server_host, server_port, session.id))
+            'Sending {0} bait session to {1}:{2}. (bait id: {3})'.format('http', server_host, server_port, session.id))
 
         try:
             url = self._make_url(server_host, '/index.html', server_port)

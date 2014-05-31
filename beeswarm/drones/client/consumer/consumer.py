@@ -49,7 +49,7 @@ class Consumer(object):
             for session_id in self.sessions.keys():
                 session = self.sessions[session_id]
                 if session.alldone:
-                    logger.debug('Found finished bait session. (bee id: {0})'.format(session.id))
+                    logger.debug('Found finished bait session. (bait id: {0})'.format(session.id))
                     for _logger in self.active_loggers:
                         logger.debug(
                             'Logging bait session with {0} (session id: {1})'.format(logger.__class__.__name__, session.id))

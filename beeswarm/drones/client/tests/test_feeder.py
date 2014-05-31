@@ -62,9 +62,9 @@ class Client_Tests(unittest.TestCase):
         dispatcher = BeeDispatcher(options, None, '127.0.0.1')
 
         dispatcher.max_sessions = 1
-        dispatcher.bee = Mock()
+        dispatcher.bait = Mock()
         dispatcher_greenlet = Greenlet(dispatcher.start)
         dispatcher_greenlet.start()
         time.sleep(1)
         dispatcher_greenlet.kill()
-        dispatcher.bee.do_session.assert_called()
+        dispatcher.bait.do_session.assert_called()

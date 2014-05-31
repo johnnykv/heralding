@@ -69,7 +69,7 @@ class ftp(ClientBase):
 
         self.sessions[session.id] = session
         logger.debug(
-            'Sending {0} bait session to {1}:{2}. (bee id: {3})'.format('ftp', server_host, server_port, session.id))
+            'Sending {0} bait session to {1}:{2}. (bait id: {3})'.format('ftp', server_host, server_port, session.id))
 
         self.file_list = []
         try:
@@ -101,7 +101,7 @@ class ftp(ClientBase):
     def sense(self):
         """
             Launches a few "sensing" commands such as 'ls', or 'pwd'
-            and updates the current Bee state.
+            and updates the current bait state.
         """
         cmd_name = random.choice(self.senses)
         command = getattr(self, cmd_name)

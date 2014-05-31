@@ -42,7 +42,7 @@ class POP3_Test(unittest.TestCase):
             shutil.rmtree(self.work_dir)
 
     def test_login(self):
-        """Tests if the POP3 bee can login to the POP3 capability"""
+        """Tests if the POP3 bait can login to the POP3 capability"""
 
         sessions = {}
         users = {'test': BaitUser('test', 'test')}
@@ -67,8 +67,8 @@ class POP3_Test(unittest.TestCase):
 
         BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
 
-        current_bee = client_pop3.pop3(baitsessions, bait_info)
-        current_bee.do_session('127.0.0.1')
+        current_bait = client_pop3.pop3(baitsessions, bait_info)
+        current_bait.do_session('127.0.0.1')
         srv.stop()
 
 if __name__ == '__main__':

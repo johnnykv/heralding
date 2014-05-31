@@ -43,7 +43,7 @@ class HTTPS_Test(unittest.TestCase):
             shutil.rmtree(self.work_dir)
 
     def test_login(self):
-        """ Tests if HTTPs bee can login to the http capability.
+        """ Tests if HTTPs bait can login to the http capability.
         """
         sessions = {}
         users = {'test': BaitUser('test', 'test')}
@@ -64,8 +64,8 @@ class HTTPS_Test(unittest.TestCase):
         beesessions = {}
         BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
 
-        current_bee = bee_https.https(beesessions, bee_info)
-        current_bee.do_session('127.0.0.1')
+        current_bait = bee_https.https(beesessions, bee_info)
+        current_bait.do_session('127.0.0.1')
         srv.stop()
 
 if __name__ == '__main__':

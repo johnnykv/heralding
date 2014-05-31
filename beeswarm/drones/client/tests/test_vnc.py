@@ -42,7 +42,7 @@ class VNC_Test(unittest.TestCase):
             shutil.rmtree(self.work_dir)
 
     def test_login(self):
-        """Tests if the VNC bee can connect to the VNC capability"""
+        """Tests if the VNC bait can connect to the VNC capability"""
 
         sessions = {}
         users = {'test': BaitUser('test', 'test')}
@@ -63,8 +63,8 @@ class VNC_Test(unittest.TestCase):
         beesessions = {}
 
         BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bee = bee_vnc.vnc(beesessions, bee_info)
-        current_bee.do_session('127.0.0.1')
+        current_bait = bee_vnc.vnc(beesessions, bee_info)
+        current_bait.do_session('127.0.0.1')
         srv.stop()
 
 if __name__ == '__main__':

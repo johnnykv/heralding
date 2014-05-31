@@ -107,24 +107,24 @@ class Client(object):
 
             if capability_name not in self.config['capabilities']:
                 logger.warning(
-                    "Not loading {0} bee because it has no option in configuration file.".format(b.__name__))
+                    "Not loading {0} capability because it has no option in configuration file.".format(b.__name__))
                 continue
                 #skip loading if disabled
             if not self.config['capabilities'][capability_name]['enabled']:
                 logger.warning(
-                    "Not loading {0} bee because it is disabled in the configuration file.".format(b.__name__))
+                    "Not loading {0} capability because it is disabled in the configuration file.".format(b.__name__))
                 continue
 
             options = self.config['capabilities'][capability_name]
-            bee = b(sessions, options)
-            capabilities.append(bee)
+            bait_session = b(sessions, options)
+            capabilities.append(bait_session)
             self.status['enabled_bees'].append(capability_name)
-            logger.debug('Adding {0} as a capability'.format(bee.__class__.__name__))
+            logger.debug('Adding {0} as a capability'.format(bait_session.__class__.__name__))
 
         self.dispatcher_greenlets = []
-        for bee in capabilities:
-            dispatcher = BeeDispatcher(self.config, bee, self.my_ip)
-            self.dispatchers[bee.__class__.__name__] = dispatcher
+        for bait_session in capabilities:
+            dispatcher = BeeDispatcher(self.config, bait_session, self.my_ip)
+            self.dispatchers[bait_session.__class__.__name__] = dispatcher
             current_greenlet = Greenlet(dispatcher.start)
             self.dispatcher_greenlets.append(current_greenlet)
             current_greenlet.start()

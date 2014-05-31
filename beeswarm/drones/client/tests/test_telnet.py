@@ -45,7 +45,7 @@ class Telnet_Test(unittest.TestCase):
             shutil.rmtree(self.work_dir)
 
     def test_login(self):
-        """Tests if the Telnet bee can Login to the Telnet capability"""
+        """Tests if the Telnet bait can Login to the Telnet capability"""
 
         sessions = {}
         users = {'test': BaitUser('test', 'test')}
@@ -118,15 +118,15 @@ class Telnet_Test(unittest.TestCase):
         beesessions = {}
 
         BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bee = bee_telnet.telnet(beesessions, bee_info)
+        current_bait = bee_telnet.telnet(beesessions, bee_info)
 
-        current_bee.connect()
-        current_bee.login(bee_info['username'], bee_info['password'])
+        current_bait.connect()
+        current_bait.login(bee_info['username'], bee_info['password'])
 
         # Command: cd
-        self.assertEquals('/', current_bee.state['working_dir'])
-        current_bee.cd('/var')
-        self.assertEquals('/var', current_bee.state['working_dir'])
+        self.assertEquals('/', current_bait.state['working_dir'])
+        current_bait.cd('/var')
+        self.assertEquals('/var', current_bait.state['working_dir'])
 
     def test_command_pwd(self):
 

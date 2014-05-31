@@ -27,7 +27,7 @@ class BeeDispatcher(object):
     def __init__(self, options, bee, my_ip):
         self.options = options['capabilities'][bee.__class__.__name__]
         self.enabled = False
-        self.bee = bee
+        self.bait = bee
         self.run_flag = True
         self.my_ip = my_ip
         self.max_sessions = random.randint(4, 8)
@@ -55,7 +55,7 @@ class BeeDispatcher(object):
                 gevent.sleep(5)
             while self.time_in_range():
                 if self.activation_probability >= random.random():
-                    gevent.spawn(self.bee.do_session, self.my_ip)
+                    gevent.spawn(self.bait.do_session, self.my_ip)
                 gevent.sleep(self.sleep_interval)
 
     def time_in_range(self):
