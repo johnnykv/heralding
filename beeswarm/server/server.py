@@ -349,7 +349,11 @@ class Server(object):
                                                                    },
                                                                    'general': {
                                                                        'mode': 'server'
-                                                                   }
+                                                                   },
+                                                                   'bait_session_retain': True,
+                                                                   'malicious_session_retain': True,
+                                                                   'ignore_failed_bait_session': False
+
 
             }
             )))
