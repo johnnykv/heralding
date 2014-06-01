@@ -69,9 +69,10 @@ $('#logtable').datagrid({
   })
 }).on('click', 'tbody > tr', (function() {
             var id = $(this).find('> td > span').attr('data-id');
-
-            $('#sessionTranscriptTable').datagrid({
-            dataSource: new GenericDataSource({
+            var url = '/data/session/' + id + '/transcript';
+            console.log('Wanting to fetch data from: ' + url)
+            $('#sessionLogTable').datagrid('reload');
+            var dataSource = new GenericDataSource({
             columns: [{
               property: 'time',
               label: 'Time',
@@ -85,8 +86,10 @@ $('#logtable').datagrid({
               label: 'Data',
               sortable: false
             }],
-            url: '/data/session/' + id + '/transcript'
-          })
+            url: url
+          });
+            $('#sessionTranscriptTable').datagrid({
+            dataSource: dataSource
         });
         $('#transcriptmodal').modal('show');
         $('#sessionLogTable').datagrid('reload');

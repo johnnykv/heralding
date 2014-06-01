@@ -13,6 +13,7 @@ GenericDataSource.prototype = {
 
 	data: function (options, callback) {
         var self = this;
+        console.log('Fetching data from ' + self._url);
 		$.ajax(self._url, {
             dataType: 'json',
 			type: 'GET'
