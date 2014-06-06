@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
 # Copyright (C) 2013 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -14,6 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
+import gevent
+import gevent.monkey
+gevent.monkey.patch_all()
+
 import curses
 import logging
 import json
@@ -21,11 +26,6 @@ from argparse import ArgumentParser
 import sys
 import os
 
-import gevent
-import gevent.monkey
-
-
-gevent.monkey.patch_all()
 from gevent import Greenlet
 import requests
 
@@ -39,12 +39,10 @@ from beeswarm.shared.asciify import asciify
 from beeswarm.shared.helpers import is_url
 
 
-
 logger = logging.getLogger()
 
 
 def setuplogging(logfile, verbose, show_ui=False):
-
     """
         Sets up logging to the logfiles/console. If show_ui is true, a curses screen is
         initialized and returned.
@@ -76,7 +74,7 @@ def setuplogging(logfile, verbose, show_ui=False):
         curses.cbreak()
         curses.curs_set(0)
         h, w = curses_screen.getmaxyx()
-        log_win = curses_screen.subwin(10, w, h-10, 0)
+        log_win = curses_screen.subwin(10, w, h - 10, 0)
         curses_log = CursesLogHandler(log_win)
         curses_log.addFilter(LogFilter())
         curses_log.setLevel(loglevel)
