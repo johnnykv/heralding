@@ -70,7 +70,7 @@ $('#logtable').datagrid({
 }).on('click', 'tbody > tr', (function() {
             var id = $(this).find('> td > span').attr('data-id');
             var url = '/data/session/' + id + '/transcript';
-            console.log('Wanting to fetch data from: ' + url)
+            console.log('Wanting to fetch data from: ' + url);
             $('#sessionLogTable').datagrid('reload');
             var dataSource = new GenericDataSource({
             columns: [{
