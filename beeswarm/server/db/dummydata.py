@@ -1,4 +1,4 @@
-# Copyright (C) 2013 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2014 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,9 +18,9 @@ import string
 import random
 import uuid
 
-from beeswarm.server.db.entities import Client, BaitSession, Honeypot, Authentication, Classification, Session, Transcript
-
-from beeswarm.server.db import database
+from beeswarm.server.db.entities import Client, BaitSession, Honeypot, Authentication, Classification, Session, \
+    Transcript
+from beeswarm.server.db import database_setup
 
 
 def fill_dummy_data():
@@ -28,7 +28,7 @@ def fill_dummy_data():
     Populates the server data with dummy data to ease development.
     """
 
-    db_session = database.get_session()
+    db_session = database_setup.get_session()
 
     protocols = [('pop3', 110), ('ssh', 22), ('telnet', 23), ('ftp', 21), ('http', 80)]
     source_ips = ('192.168.1.2', '192.168.2.3', '192.168.3.4', '192.168.4.5')
@@ -40,8 +40,8 @@ def fill_dummy_data():
 
     while len(sessions) < 100:
         session = BaitSession(id=str(uuid.uuid4()), timestamp=datetime.now(),
-                           source_ip=random.choice(source_ips), source_port=random.randint(1024, 65535),
-                           destination_ip='4.3.2.1', destination_port='1111')
+                              source_ip=random.choice(source_ips), source_port=random.randint(1024, 65535),
+                              destination_ip='4.3.2.1', destination_port='1111')
 
         session.protocol, session.destination_port = random.choice(protocols)
         session.honeypot = random.choice(honeypots)
@@ -64,13 +64,14 @@ def fill_dummy_data():
 
     while len(sessions) < 200:
         session = Session(id=str(uuid.uuid4()), timestamp=datetime.now(),
-                           source_ip=random.choice(source_ips), source_port=random.randint(1024, 65535),
-                           destination_ip='4.3.2.1', destination_port='1111')
+                          source_ip=random.choice(source_ips), source_port=random.randint(1024, 65535),
+                          destination_ip='4.3.2.1', destination_port='1111')
 
         session.protocol, session.destination_port = random.choice(protocols)
         session.honeypot = random.choice(honeypots)
 
-        session.classification = db_session.query(Classification).filter(Classification.type == 'credentials_reuse').one()
+        session.classification = db_session.query(Classification).filter(
+            Classification.type == 'credentials_reuse').one()
 
         username = ''.join(random.choice(string.lowercase) for x in range(8))
         password = ''.join(random.choice(string.lowercase) for x in range(8))
@@ -88,5 +89,5 @@ def fill_dummy_data():
 
 
 if __name__ == '__main__':
-    database.setup_db('sqlite:///server_sqlite.db')
+    database_setup.setup_db('sqlite:///beeswarm_sqlite.db')
     fill_dummy_data()
