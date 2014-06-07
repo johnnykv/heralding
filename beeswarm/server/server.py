@@ -179,7 +179,6 @@ class Server(object):
         self.started = True
         web_port = self.config['network']['web_port']
         logger.info('Starting server listening on port {0}'.format(web_port))
-        print web_port
         http_server = WSGIServer(('', web_port), self.app, keyfile='server.key', certfile='server.crt')
         http_server_greenlet = gevent.spawn(http_server.serve_forever)
         self.workers['http'] = http_server

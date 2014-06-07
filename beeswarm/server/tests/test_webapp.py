@@ -8,9 +8,9 @@ from datetime import datetime
 
 from beeswarm.server.webapp.auth import Authenticator
 from beeswarm.shared.workers.config_actor import ConfigActor
-
 import beeswarm.server.db.database_setup as database
-from beeswarm.server.db.entities import Client, Honeypot, Session, BaitSession, User, Authentication, Transcript
+from beeswarm.server.db.entities import Client, Honeypot, Session, BaitSession, User, \
+    Authentication, Transcript, BaitUser
 from beeswarm.server.webapp import app
 
 
@@ -28,7 +28,7 @@ class WebappTests(unittest.TestCase):
         database.setup_db('sqlite://')
         session = database.get_session()
 
-        #dummy entities
+        # dummy entities
         self.authenticator.add_user('test', 'test', 0)
 
         self.client_id = str(uuid.uuid4())
@@ -40,7 +40,7 @@ class WebappTests(unittest.TestCase):
         self.authenticator.add_user(self.honeypot_id, self.honeypot_password, 1)
 
         session.add_all([Client(id=self.client_id, configuration='test_client_config'),
-                         Honeypot(id=self.honeypot_id, configuration='test_honeypot_config') ])
+                         Honeypot(id=self.honeypot_id, configuration='test_honeypot_config')])
 
         session.commit()
 
@@ -51,7 +51,7 @@ class WebappTests(unittest.TestCase):
 
     # TODO: All these posts should be moved to ZMQ tests
     # def test_basic_client_post(self):
-    #     """
+    # """
     #     Tests if a bait_session dict can be posted without exceptions.
     #     """
     #     self.login(self.client_id, self.client_password)
@@ -407,7 +407,7 @@ class WebappTests(unittest.TestCase):
 
         self.login('test', 'test')
         self.populate_honeypots()
-        data = [ self.honeypots[0], self.honeypots[1]]
+        data = [self.honeypots[0], self.honeypots[1]]
         self.app.post('/ws/drone/delete', data=json.dumps(data))
         db_session = database.get_session()
         honeypot_count = db_session.query(Honeypot).count()
@@ -424,6 +424,31 @@ class WebappTests(unittest.TestCase):
         nclients = db_session.query(Client).count()
         self.assertEquals(3, nclients)
 
+    def test_get_baitusers(self):
+        """ Tests GET on the '/ws/bait_users' route."""
+        self.login('test', 'test')
+        self.populate_bait_users()
+        resp = self.app.get('/ws/bait_users')
+        table_data = json.loads(resp.data)
+        self.assertEquals(len(table_data), 2)
+        self.logout()
+
+    def test_post_baitusers(self):
+        """ Tests POST on the '/ws/bait_users' route."""
+        self.login('test', 'test')
+
+        data = [
+            {'username': 'userA', 'password': 'passA'},
+            {'username': 'userB', 'password': 'passB'},
+            {'username': 'userC', 'password': 'passC'}
+        ]
+
+        self.app.post('/ws/bait_users', data=json.dumps(data), follow_redirects=True)
+        db_session = database.get_session()
+        bait_user_count = db_session.query(BaitUser).count()
+        self.assertEquals(bait_user_count, 3)
+        self.logout()
+
     def populate_clients(self):
         """ Populates the database with 4 clients """
 
@@ -437,6 +462,16 @@ class WebappTests(unittest.TestCase):
             f = Client(id=curr_id)
             db_session.add(f)
             db_session.add(u)
+        db_session.commit()
+
+    def populate_bait_users(self):
+        """ Populates the database with 2 bait users """
+        db_session = database.get_session()
+        db_session.query(BaitUser).delete()
+        self.clients = []
+        for c in [('userA', 'passA'), ('userB', 'passB')]:  # We add 4 here, but one is added in the setup method
+            bait_user = BaitUser(username=c[0], password=c[1])
+            db_session.add(bait_user)
         db_session.commit()
 
     def populate_honeypots(self):

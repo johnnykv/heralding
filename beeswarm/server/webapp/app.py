@@ -39,7 +39,7 @@ import beeswarm
 from forms import NewHoneypotConfigForm, NewClientConfigForm, LoginForm, SettingsForm
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, BaitSession, Session, Honeypot, User, Authentication, Classification,\
-                                           BaitUser, Transcript, Drone
+                                        BaitUser, Transcript, Drone
 from beeswarm.shared.helpers import send_zmq_request, send_zmq_push
 from beeswarm.shared.message_enum import Messages
 
@@ -723,6 +723,54 @@ def create_client():
 
     return render_template('create-client.html', form=form, mode_name='Client', user=current_user)
 
+
+# requesting all bait users - or replacing all bait users
+@app.route('/ws/bait_users', methods=['GET', 'POST'])
+@login_required
+def get_bait_users():
+    db_session = database_setup.get_session()
+    if request.method == 'GET':
+        bait_users = db_session.query(BaitUser)
+        rows = []
+        for bait_user in bait_users:
+            row = {'username': bait_user.username, 'password': bait_user.username}
+            rows.append(row)
+        rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
+        return rsp
+    else:
+        db_session.query(BaitUser).delete()
+        bait_users = json.loads(request.data)
+        print bait_users
+        for bait_user in bait_users:
+            new_bait_users = BaitUser(username=bait_user['username'], password=bait_user['password'])
+            db_session.add(new_bait_users)
+    db_session.commit()
+    return ''
+
+# add a list of bait users, if user exists the password will be replaced with the new one
+@app.route('/ws/bait_users/add', methods=['POST'])
+@login_required
+def add_bait_users():
+    db_session = database_setup.get_session()
+    bait_users = json.loads(request.data)
+    for bait_user in bait_users:
+        tmp_bait_user = db_session.merge(BaitUser(username=bait_user.username, password=bait_user.password))
+        # insert or ognore
+        db_session.save(tmp_bait_user)
+    db_session.commit()
+    return ''
+
+# deletes a single bait user or a list of users
+@app.route('/ws/bait_users/delete', methods=['POST'])
+@login_required
+def delete_bait_user():
+    db_session = database_setup.get_session()
+    bait_users = json.loads(request.data)
+    for bait_user in bait_users:
+        bait_user_to_delete = db_session.query(Drone).filter(BaitUser.id == bait_user.username).one()
+        db_session.delete(bait_user_to_delete)
+    db_session.commit()
+    return ''
 
 @app.route('/data/sessions/<_type>', methods=['GET'])
 @login_required
