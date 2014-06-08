@@ -159,6 +159,11 @@ def home():
     return render_template('index.html', user=current_user, status=status, urls=urls)
 
 
+@app.route('/bait_users')
+@login_required
+def bait_users():
+    return render_template('bait_users.html',  user=current_user)
+
 @app.route('/sessions')
 @login_required
 def sessions_all():
@@ -733,7 +738,7 @@ def get_bait_users():
         bait_users = db_session.query(BaitUser)
         rows = []
         for bait_user in bait_users:
-            row = {'username': bait_user.username, 'password': bait_user.username}
+            row = {'username': bait_user.username, 'password': bait_user.password}
             rows.append(row)
         rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
         return rsp
