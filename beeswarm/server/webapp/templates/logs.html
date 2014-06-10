@@ -40,7 +40,6 @@
 </table>
 
 <script type="text/javascript">
-
 $('#logtable').datagrid({
   dataSource: new GenericDataSource({
     columns: [{
@@ -69,30 +68,9 @@ $('#logtable').datagrid({
   })
 }).on('click', 'tbody > tr', (function() {
             var id = $(this).find('> td > span').attr('data-id');
-            var url = '/data/session/' + id + '/transcript';
-            console.log('Wanting to fetch data from: ' + url);
-            $('#sessionLogTable').datagrid('reload');
-            var dataSource = new GenericDataSource({
-            columns: [{
-              property: 'time',
-              label: 'Time',
-              sortable: true
-            },{
-              property: 'direction',
-              label: 'Direction',
-              sortable: true
-            },{
-              property: 'data',
-              label: 'Data',
-              sortable: false
-            }],
-            url: url
-          });
-            $('#sessionTranscriptTable').datagrid({
-            dataSource: dataSource
-        });
-        $('#transcriptmodal').modal('show');
-        $('#sessionLogTable').datagrid('reload');
+            $('#logtable').data('clicked_id', id);
+            $('#sessionTranscriptTable').datagrid('reload');
+            $('#transcriptmodal').modal('show');
         }));
 
 </script>
@@ -134,5 +112,65 @@ $('#logtable').datagrid({
     </div>
 </div>
 
+<script type="text/javascript">
+
+var TranscriptDatasource = function (options) {
+	this._formatter = options.formatter;
+	this._columns = options.columns;
+    this._url = options.url;
+    this._formatter = options.formatter;
+};
+
+TranscriptDatasource.prototype = {
+
+	columns: function () {
+		return this._columns;
+	},
+
+	data: function (options, callback) {
+        var self = this;
+        var session_id = $('#logtable').data('clicked_id');
+        var url = '/data/session/' + session_id + '/transcript';
+        console.log('Fetching session data from: ' + url);
+		$.ajax(url, {
+            dataType: 'json',
+			type: 'GET'
+			}).done(function (response) {
+				var data = response;
+				var count = response.length;
+				var startIndex = options.pageIndex * options.pageSize;
+				var endIndex = startIndex + options.pageSize;
+				var end = (endIndex > count) ? count : endIndex;
+				var pages = Math.ceil(count / options.pageSize);
+				var page = options.pageIndex + 1;
+				var start = startIndex + 1;
+                // TODO: slice and dice server side
+                data = data.slice(startIndex, endIndex);
+                if (self._formatter) self._formatter(data);
+                callback({ data: data, start: start, end: end, count: count, pages: pages, page: page });
+			});
+	}
+};
+
+var dataSource = new TranscriptDatasource({
+            columns: [{
+              property: 'time',
+              label: 'Time',
+              sortable: true
+            },{
+              property: 'direction',
+              label: 'Direction',
+              sortable: true
+            },{
+              property: 'data',
+              label: 'Data',
+              sortable: false
+            }],
+            url: '/data/session/' + 123 + '/transcript'
+          });
+          $('#sessionTranscriptTable').datagrid({
+            dataSource: dataSource
+        });
+</script>
 
 {% endblock content %}
