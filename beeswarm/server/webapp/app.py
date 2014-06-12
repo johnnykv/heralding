@@ -745,7 +745,6 @@ def get_bait_users():
     else:
         db_session.query(BaitUser).delete()
         bait_users = json.loads(request.data)
-        print bait_users
         for bait_user in bait_users:
             new_bait_users = BaitUser(username=bait_user['username'], password=bait_user['password'])
             db_session.add(new_bait_users)
