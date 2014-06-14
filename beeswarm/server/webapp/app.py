@@ -39,7 +39,7 @@ import beeswarm
 from forms import NewHoneypotConfigForm, NewClientConfigForm, LoginForm, SettingsForm
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, BaitSession, Session, Honeypot, User, Authentication, Classification,\
-                                        BaitUser, Transcript, Drone
+                                        BaitUser, Transcript, Drone, Authentication
 from beeswarm.shared.helpers import send_zmq_request, send_zmq_push
 from beeswarm.shared.message_enum import Messages
 
@@ -806,6 +806,20 @@ def data_sessions_attacks(_type):
                'classification': classification, 'id': a.id, 'auth_attempts': auth_attempts}
         rows.append(row)
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
+    return rsp
+
+@app.route('/data/session/<_id>/credentials')
+@login_required
+def data_session_credentials(_id):
+    db_session = database_setup.get_session()
+
+    credentials = db_session.query(Authentication).filter(Authentication.session_id == _id)
+    return_rows = []
+    for c in credentials:
+        return_rows.append({'username': c.username,
+                            'password': c.password,
+                            'successful': c.successful})
+    rsp = Response(response=json.dumps(return_rows, indent=4), status=200, mimetype='application/json')
     return rsp
 
 @app.route('/data/session/<_id>/transcript')
