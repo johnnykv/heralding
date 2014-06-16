@@ -11,82 +11,95 @@
 <h3>Logs - {{ logtype }} <a class="btn btn-info pull-right" href="{{ dataurl }}"><i
         class="icon-download-alt"></i> Export</a></h3>
 <table id="logtable" class="table table-bordered datagrid">
-    	<thead/>
+    <thead/>
 
-		<tfoot>
-		<tr>
-			<th>
-				<div class="datagrid-footer-left" style="display:none;">
-					<div class="grid-controls">
-						<span><span class="grid-start"></span> - <span class="grid-end"></span> of <span class="grid-count"></span></span>
-						<select class="grid-pagesize"><option>5</option><option>20</option><option>50</option></select>
-						<span>Per Page</span>
-					</div>
-				</div>
-				<div class="datagrid-footer-right" style="display:none;">
-					<div class="grid-pager">
-						<button class="btn grid-prevpage"><i class="icon-chevron-left"></i></button>
-						<span>Page</span>
-						<div class="input-append dropdown combobox">
-							<input class="span1" type="text">
-						</div>
-						<span>of <span class="grid-pages"></span></span>
-						<button class="btn grid-nextpage"><i class="icon-chevron-right"></i></button>
-					</div>
-				</div>
-			</th>
-		</tr>
-		</tfoot>
+    <tfoot>
+    <tr>
+        <th>
+            <div class="datagrid-footer-left" style="display:none;">
+                <div class="grid-controls">
+                    <span><span class="grid-start"></span> - <span class="grid-end"></span> of <span
+                            class="grid-count"></span></span>
+                    <select class="grid-pagesize">
+                        <option>5</option>
+                        <option>20</option>
+                        <option>50</option>
+                    </select>
+                    <span>Per Page</span>
+                </div>
+            </div>
+            <div class="datagrid-footer-right" style="display:none;">
+                <div class="grid-pager">
+                    <button class="btn grid-prevpage"><i class="icon-chevron-left"></i></button>
+                    <span>Page</span>
+
+                    <div class="input-append dropdown combobox">
+                        <input class="span1" type="text">
+                    </div>
+                    <span>of <span class="grid-pages"></span></span>
+                    <button class="btn grid-nextpage"><i class="icon-chevron-right"></i></button>
+                </div>
+            </div>
+        </th>
+    </tr>
+    </tfoot>
 </table>
 
 <script type="text/javascript">
-$('#logtable').datagrid({
-  dataSource: new GenericDataSource({
-    columns: [{
-      property: 'time',
-      label: 'Time',
-      sortable: true
-    },{
-      property: 'protocol',
-      label: 'Protocol',
-      sortable: true
-    },{
-      property: 'ip_address',
-      label: 'Source IP',
-      sortable: false
-    },{
-      property: 'classification',
-      label: 'Classification',
-      sortable: false
-    },
-    {
-      property: 'info',
-      label: 'Info',
-      sortable: false
-    }],
-    url: '{{ dataurl }}',
-    formatter: function(items) {
-        $.each(items, function(index, item) {
-        item.time = item.time + '<span style="visibility: hidden;" data-id="' + item.id + '"/>';
-        item.info = '';
-        item.info += '<i id="infoButton" class="fa fa-list-ul fa-fw"></i>';
-        item.info += '<i id="credentialsButton" class="fa fa-user fa-fw"></i>';
-  });
-}
-  })
-}).on('click', '#infoButton', (function() {
-            var id = $(this).parent().parent().find('> td > span').attr('data-id');
-            $('#logtable').data('clicked_id', id);
-            $('#sessionTranscriptTable').datagrid('reload');
-            $('#transcriptmodal').modal('show');
-        }))
-.on('click', '#credentialsButton', (function() {
-            var id = $(this).parent().parent().find('> td > span').attr('data-id');
-            $('#logtable').data('clicked_id', id);
-            $('#credentialsTable').datagrid('reload');
-            $('#credentialsModal').modal('show');
-        }))
-;
+    $('#logtable').datagrid({
+        dataSource: new FlexibleUrlDatasource({
+            columns: [
+                {
+                    property: 'time',
+                    label: 'Time',
+                    sortable: true
+                },
+                {
+                    property: 'protocol',
+                    label: 'Protocol',
+                    sortable: true
+                },
+                {
+                    property: 'ip_address',
+                    label: 'Source IP',
+                    sortable: false
+                },
+                {
+                    property: 'classification',
+                    label: 'Classification',
+                    sortable: false
+                },
+                {
+                    property: 'info',
+                    label: 'Info',
+                    sortable: false
+                }
+            ],
+            formatter: function (items) {
+                $.each(items, function (index, item) {
+                    item.time = item.time + '<span style="visibility: hidden;" data-id="' + item.id + '"/>';
+                    item.info = '';
+                    item.info += '<i id="infoButton" class="fa fa-list-ul fa-fw"></i>';
+                    item.info += '<i id="credentialsButton" class="fa fa-user fa-fw"></i>';
+                });
+            },
+            url_formatter: function () {
+                return '{{ dataurl }}';
+            }
+        })
+    }).on('click', '#infoButton', (function () {
+        var id = $(this).parent().parent().find('> td > span').attr('data-id');
+        $('#logtable').data('clicked_id', id);
+        $('#sessionTranscriptTable').datagrid('reload');
+        $('#transcriptmodal').modal('show');
+    }))
+            .on('click', '#credentialsButton', (function () {
+                var id = $(this).parent().parent().find('> td > span').attr('data-id');
+                $('#logtable').data('clicked_id', id);
+                $('#credentialsTable').datagrid('reload');
+                $('#credentialsModal').modal('show');
+            }))
+    ;
 
 </script>
 
@@ -95,33 +108,39 @@ $('#logtable').datagrid({
         <button type="button" class="close" data-dismiss="modal">x</button>
         <h2>Session Transcript</h2>
     </div>
-<table id="sessionTranscriptTable" class="table table-bordered datagrid">
-    	<thead/>
-		<tfoot>
-		<tr>
-			<th>
-				<div class="datagrid-footer-left" style="display:none;">
-					<div class="grid-controls">
-						<span><span class="grid-start"></span> - <span class="grid-end"></span> of <span class="grid-count"></span></span>
-						<select class="grid-pagesize"><option>5</option><option>20</option><option>50</option></select>
-						<span>Per Page</span>
-					</div>
-				</div>
-				<div class="datagrid-footer-right" style="display:none;">
-					<div class="grid-pager">
-						<button class="btn grid-prevpage"><i class="icon-chevron-left"></i></button>
-						<span>Page</span>
-						<div class="input-append dropdown combobox">
-							<input class="span1" type="text">
-						</div>
-						<span>of <span class="grid-pages"></span></span>
-						<button class="btn grid-nextpage"><i class="icon-chevron-right"></i></button>
-					</div>
-				</div>
-			</th>
-		</tr>
-		</tfoot>
-</table>
+    <table id="sessionTranscriptTable" class="table table-bordered datagrid">
+        <thead/>
+        <tfoot>
+        <tr>
+            <th>
+                <div class="datagrid-footer-left" style="display:none;">
+                    <div class="grid-controls">
+                        <span><span class="grid-start"></span> - <span class="grid-end"></span> of <span
+                                class="grid-count"></span></span>
+                        <select class="grid-pagesize">
+                            <option>5</option>
+                            <option>20</option>
+                            <option>50</option>
+                        </select>
+                        <span>Per Page</span>
+                    </div>
+                </div>
+                <div class="datagrid-footer-right" style="display:none;">
+                    <div class="grid-pager">
+                        <button class="btn grid-prevpage"><i class="icon-chevron-left"></i></button>
+                        <span>Page</span>
+
+                        <div class="input-append dropdown combobox">
+                            <input class="span1" type="text">
+                        </div>
+                        <span>of <span class="grid-pages"></span></span>
+                        <button class="btn grid-nextpage"><i class="icon-chevron-right"></i></button>
+                    </div>
+                </div>
+            </th>
+        </tr>
+        </tfoot>
+    </table>
     <div class="modal-footer">
         <button class="btn" data-dismiss="modal">Close</button>
     </div>
@@ -132,33 +151,39 @@ $('#logtable').datagrid({
         <button type="button" class="close" data-dismiss="modal">x</button>
         <h2>Session Transcript</h2>
     </div>
-<table id="credentialsTable" class="table table-bordered datagrid">
-    	<thead/>
-		<tfoot>
-		<tr>
-			<th>
-				<div class="datagrid-footer-left" style="display:none;">
-					<div class="grid-controls">
-						<span><span class="grid-start"></span> - <span class="grid-end"></span> of <span class="grid-count"></span></span>
-						<select class="grid-pagesize"><option>5</option><option>20</option><option>50</option></select>
-						<span>Per Page</span>
-					</div>
-				</div>
-				<div class="datagrid-footer-right" style="display:none;">
-					<div class="grid-pager">
-						<button class="btn grid-prevpage"><i class="icon-chevron-left"></i></button>
-						<span>Page</span>
-						<div class="input-append dropdown combobox">
-							<input class="span1" type="text">
-						</div>
-						<span>of <span class="grid-pages"></span></span>
-						<button class="btn grid-nextpage"><i class="icon-chevron-right"></i></button>
-					</div>
-				</div>
-			</th>
-		</tr>
-		</tfoot>
-</table>
+    <table id="credentialsTable" class="table table-bordered datagrid">
+        <thead/>
+        <tfoot>
+        <tr>
+            <th>
+                <div class="datagrid-footer-left" style="display:none;">
+                    <div class="grid-controls">
+                        <span><span class="grid-start"></span> - <span class="grid-end"></span> of <span
+                                class="grid-count"></span></span>
+                        <select class="grid-pagesize">
+                            <option>5</option>
+                            <option>20</option>
+                            <option>50</option>
+                        </select>
+                        <span>Per Page</span>
+                    </div>
+                </div>
+                <div class="datagrid-footer-right" style="display:none;">
+                    <div class="grid-pager">
+                        <button class="btn grid-prevpage"><i class="icon-chevron-left"></i></button>
+                        <span>Page</span>
+
+                        <div class="input-append dropdown combobox">
+                            <input class="span1" type="text">
+                        </div>
+                        <span>of <span class="grid-pages"></span></span>
+                        <button class="btn grid-nextpage"><i class="icon-chevron-right"></i></button>
+                    </div>
+                </div>
+            </th>
+        </tr>
+        </tfoot>
+    </table>
     <div class="modal-footer">
         <button class="btn" data-dismiss="modal">Close</button>
     </div>
@@ -167,118 +192,63 @@ $('#logtable').datagrid({
 
 <script type="text/javascript">
 
-var TranscriptDatasource = function (options) {
-	this._formatter = options.formatter;
-	this._columns = options.columns;
-    this._url = options.url;
-    this._formatter = options.formatter;
-};
+    var credentialsDataSource = new FlexibleUrlDatasource({
+        columns: [
+            {
+                property: 'username',
+                label: 'Username',
+                sortable: true
+            },
+            {
+                property: 'password',
+                label: 'Password',
+                sortable: true
+            },
+            {
+                property: 'successful',
+                label: 'Successful',
+                sortable: false
+            }
+        ],
+        url_formatter: function () {
+            var session_id = $('#logtable').data('clicked_id');
+            var url = '/data/session/' + session_id + '/credentials';
+            return url;
+        }
+    });
 
-TranscriptDatasource.prototype = {
+    $('#credentialsTable').datagrid({
+        dataSource: credentialsDataSource
+    });
 
-	columns: function () {
-		return this._columns;
-	},
+    var transcriptDataSource = new FlexibleUrlDatasource({
+        columns: [
+            {
+                property: 'time',
+                label: 'Time',
+                sortable: true
+            },
+            {
+                property: 'direction',
+                label: 'Direction',
+                sortable: true
+            },
+            {
+                property: 'data',
+                label: 'Data',
+                sortable: false
+            }
+        ],
+        url_formatter: function () {
+            var session_id = $('#logtable').data('clicked_id');
+            var url = '/data/session/' + session_id + '/transcript';
+            return url;
+        }
+    });
 
-	data: function (options, callback) {
-        var self = this;
-        var session_id = $('#logtable').data('clicked_id');
-        var url = '/data/session/' + session_id + '/transcript';
-		$.ajax(url, {
-            dataType: 'json',
-			type: 'GET'
-			}).done(function (response) {
-				var data = response;
-				var count = response.length;
-				var startIndex = options.pageIndex * options.pageSize;
-				var endIndex = startIndex + options.pageSize;
-				var end = (endIndex > count) ? count : endIndex;
-				var pages = Math.ceil(count / options.pageSize);
-				var page = options.pageIndex + 1;
-				var start = startIndex + 1;
-                // TODO: slice and dice server side
-                data = data.slice(startIndex, endIndex);
-                if (self._formatter) self._formatter(data);
-                callback({ data: data, start: start, end: end, count: count, pages: pages, page: page });
-			});
-	}
-};
-
-var CredentialsDatasource = function (options) {
-	this._formatter = options.formatter;
-	this._columns = options.columns;
-    this._formatter = options.formatter;
-};
-
-CredentialsDatasource.prototype = {
-
-	columns: function () {
-		return this._columns;
-	},
-
-	data: function (options, callback) {
-        var self = this;
-        var session_id = $('#logtable').data('clicked_id');
-        var url = '/data/session/' + session_id + '/credentials';
-		$.ajax(url, {
-            dataType: 'json',
-			type: 'GET'
-			}).done(function (response) {
-				var data = response;
-				var count = response.length;
-				var startIndex = options.pageIndex * options.pageSize;
-				var endIndex = startIndex + options.pageSize;
-				var end = (endIndex > count) ? count : endIndex;
-				var pages = Math.ceil(count / options.pageSize);
-				var page = options.pageIndex + 1;
-				var start = startIndex + 1;
-                // TODO: slice and dice server side
-                data = data.slice(startIndex, endIndex);
-                if (self._formatter) self._formatter(data);
-                callback({ data: data, start: start, end: end, count: count, pages: pages, page: page });
-			});
-	}
-};
-
-var credentialsDataSource = new CredentialsDatasource({
-            columns: [{
-              property: 'username',
-              label: 'Username',
-              sortable: true
-            },{
-              property: 'password',
-              label: 'Password',
-              sortable: true
-            },{
-              property: 'successful',
-              label: 'Successful',
-              sortable: false
-            }]
-          });
-
-$('#credentialsTable').datagrid({
-            dataSource: credentialsDataSource
-        });
-
-var dataSource = new TranscriptDatasource({
-            columns: [{
-              property: 'time',
-              label: 'Time',
-              sortable: true
-            },{
-              property: 'direction',
-              label: 'Direction',
-              sortable: true
-            },{
-              property: 'data',
-              label: 'Data',
-              sortable: false
-            }]
-          });
-
-$('#sessionTranscriptTable').datagrid({
-            dataSource: dataSource
-        });
+    $('#sessionTranscriptTable').datagrid({
+        dataSource: transcriptDataSource
+    });
 </script>
 
 {% endblock content %}
