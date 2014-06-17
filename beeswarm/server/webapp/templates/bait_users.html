@@ -34,7 +34,7 @@
 
 $('#baittable').datagrid({
     dataOptions: { pageIndex: 0, pageSize: 50 },
-    dataSource: new GenericDataSource({
+    dataSource: new FlexibleUrlDatasource({
     columns: [{
       property: 'username',
       label: 'User',

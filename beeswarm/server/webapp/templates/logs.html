@@ -83,7 +83,7 @@
                     item.info += '<i id="credentialsButton" class="fa fa-user fa-fw"></i>';
                 });
             },
-            url_formatter: function () {
+            url: function () {
                 return '{{ dataurl }}';
             }
         })
@@ -210,7 +210,7 @@
                 sortable: false
             }
         ],
-        url_formatter: function () {
+        url: function () {
             var session_id = $('#logtable').data('clicked_id');
             var url = '/data/session/' + session_id + '/credentials';
             return url;
@@ -239,7 +239,7 @@
                 sortable: false
             }
         ],
-        url_formatter: function () {
+        url: function () {
             var session_id = $('#logtable').data('clicked_id');
             var url = '/data/session/' + session_id + '/transcript';
             return url;
