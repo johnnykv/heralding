@@ -70,17 +70,3 @@ class BaseSession(object):
 
     def to_dict(self):
         return vars(self)
-
-    def to_old_dict(self):
-        return {
-            'honeypot_id': 111,
-            'id': self.id,
-            'timestamp': self.timestamp,
-            'attacker_ip': self.attacker_ip,
-            'attacker_source_port': self.attacker_source_port,
-            'protocol': self.protocol,
-            'honey_ip': self.honey_ip,
-            'honey_port': self.honey_port,
-            'login_attempts': self.login_attempts,
-        }
-
