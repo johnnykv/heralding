@@ -31,6 +31,7 @@ from flask import Flask, render_template, request, redirect, flash, Response, se
 import flask
 from flask.ext.login import LoginManager, login_user, current_user, login_required, logout_user
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy import desc
 from werkzeug.security import check_password_hash
 from werkzeug.datastructures import MultiDict
 from beeswarm.server.webapp.auth import Authenticator
@@ -791,7 +792,7 @@ def data_sessions_attacks(_type):
         return 'Not Found', 404
 
     #select which iterator to use
-    entries = query_iterators[_type]
+    entries = query_iterators[_type].order_by(desc(Session.timestamp))
 
     rows = []
     for a in entries:
