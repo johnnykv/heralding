@@ -19,6 +19,7 @@ from datetime import datetime
 
 import zmq.green as zmq
 import gevent
+from gevent import Greenlet
 
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, BaitSession, Session, Honeypot, Authentication, Classification, \
@@ -30,8 +31,9 @@ from beeswarm.shared.message_enum import Messages
 logger = logging.getLogger(__name__)
 
 
-class PersistanceWorker(object):
+class PersistanceActor(gevent.Greenlet):
     def __init__(self):
+        Greenlet.__init__(self)
         ctx = zmq.Context()
         self.subscriber_sessions = ctx.socket(zmq.SUB)
         self.subscriber_sessions.connect('ipc://sessionPublisher')
@@ -57,7 +59,7 @@ class PersistanceWorker(object):
                     self.first_cfg_received.set()
                     logger.debug('Config received')
 
-    def start(self):
+    def _run(self):
         gevent.spawn(self.config_subscriber)
         # we cannot proceede before we have received a initial configuration message
         self.first_cfg_received.wait()

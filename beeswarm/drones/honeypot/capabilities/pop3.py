@@ -167,7 +167,6 @@ class Pop3(HandlerBase):
 
         self.send_message(session, gsocket, reply)
 
-
     def cmd_quit(self, session, gsocket, msg):
         self.send_message(session, gsocket, '+OK Logging out')
 

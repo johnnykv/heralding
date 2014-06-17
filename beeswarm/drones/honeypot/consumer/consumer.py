@@ -50,6 +50,7 @@ class Consumer:
 
             for session_id in self.sessions.keys():
                 session = self.sessions[session_id]
+
                 if not session.is_connected():
                     for log in active_loggers:
                         session.destination_ip = self.honeypot_ip

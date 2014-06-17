@@ -33,8 +33,8 @@ from beeswarm.shared.helpers import drop_privileges
 from beeswarm.server.misc.scheduler import Scheduler
 from beeswarm.shared.helpers import find_offset, create_self_signed_cert, generate_cert_digest
 from beeswarm.shared.asciify import asciify
-from beeswarm.server.db.session_persister import PersistanceWorker
-from beeswarm.shared.workers.config_actor import ConfigActor
+from beeswarm.server.db.session_persister import PersistanceActor
+from beeswarm.shared.actors.config_actor import ConfigActor
 from beeswarm.shared.message_enum import Messages
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Drone
@@ -81,8 +81,8 @@ class Server(object):
         self.authenticator = Authenticator()
         self.authenticator.ensure_default_user()
         gevent.spawn(self.message_proxy, work_dir)
-        persistanceWorker = PersistanceWorker()
-        gevent.spawn(persistanceWorker.start)
+        persistanceActor = PersistanceActor()
+        persistanceActor.start()
         gevent.sleep()
 
     # distributes messages between external and internal receivers and senders

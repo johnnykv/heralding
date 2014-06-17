@@ -110,7 +110,7 @@ class Drone(object):
             self.drone = mode(self.work_dir, self.config)
             self.drone_greenlet = gevent.spawn(self.drone.start)
 
-    def _stop_drone(self):
+    def stop(self):
         """Stops services"""
         logging.debug('Stopping drone, hang on.')
         if self.drone is not None:

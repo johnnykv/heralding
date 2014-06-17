@@ -7,7 +7,7 @@ import shutil
 from datetime import datetime
 
 from beeswarm.server.webapp.auth import Authenticator
-from beeswarm.shared.workers.config_actor import ConfigActor
+from beeswarm.shared.actors.config_actor import ConfigActor
 import beeswarm.server.db.database_setup as database
 from beeswarm.server.db.entities import Client, Honeypot, Session, BaitSession, User, \
     Authentication, Transcript, BaitUser
