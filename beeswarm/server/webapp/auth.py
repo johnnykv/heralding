@@ -21,6 +21,7 @@ from werkzeug.security import generate_password_hash
 
 logger = logging.getLogger(__name__)
 
+
 class Authenticator(object):
     """ Handles server authentications """
 
@@ -45,10 +46,4 @@ class Authenticator(object):
         pw_hash = generate_password_hash(password)
         u = User(id=userid, nickname=nickname, password=pw_hash, utype=user_type)
         session.add(u)
-        session.commit()
-
-    def remove_user(self, userid):
-        session = database_setup.get_session()
-        to_delete = session.query(User).filter(User.id == userid).one()
-        session.delete(to_delete)
         session.commit()

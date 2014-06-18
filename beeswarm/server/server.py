@@ -65,11 +65,18 @@ class Server(object):
         else:
             self.config = config
 
+        # list of all self-running (actor) objects that receive or send
+        # messages on one or more zmq queues
         self.actors = []
-        config_actor = ConfigActor(self.config_file, work_dir)
 
+        config_actor = ConfigActor(self.config_file, work_dir)
         config_actor.start()
         self.actors.append(config_actor)
+
+        persistanceActor = PersistanceActor()
+        persistanceActor.start()
+        self.actors.append(persistanceActor)
+
         self.workers = {}
         self.greenlets = []
         self.started = False
@@ -81,8 +88,6 @@ class Server(object):
         self.authenticator = Authenticator()
         self.authenticator.ensure_default_user()
         gevent.spawn(self.message_proxy, work_dir)
-        persistanceActor = PersistanceActor()
-        persistanceActor.start()
         gevent.sleep()
 
     # distributes messages between external and internal receivers and senders
@@ -221,7 +226,7 @@ class Server(object):
                 logger.debug('Binary pattern found in ISO at: {0}'.format(config_tar_offset))
                 with open(self.config_file, 'r+') as config_file:
                     self.config['iso']['offset'] = config_tar_offset
-                    #clear file
+                    # clear file
                     config_file.seek(0)
                     config_file.truncate(0)
                     # and  write again
@@ -240,7 +245,7 @@ class Server(object):
                 config_last_modified = poll_last_modified
                 config = self.get_config(self.config_file)
 
-                #kill and stop old greenlet
+                # kill and stop old greenlet
                 maintenance_worker.stop()
                 maintenance_greenlet.kill(timeout=2)
 
@@ -248,7 +253,7 @@ class Server(object):
                 maintenance_worker = Scheduler(config)
                 maintenance_greenlet = gevent.spawn(maintenance_worker.start)
 
-            #check config file for changes every 5 second
+            # check config file for changes every 5 second
             gevent.sleep(5)
 
     @staticmethod
@@ -316,7 +321,7 @@ class Server(object):
                 if zmq_command_port != '':
                     zmq_command_port = int(zmq_port)
 
-            #tmp actor while initializing
+            # tmp actor while initializing
             config_actor = ConfigActor('beeswarmcfg.json', work_dir)
             config_actor.start()
 
