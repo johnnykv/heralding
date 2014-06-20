@@ -3,7 +3,7 @@
         "zmq_command_port": 5713,
         "zmq_port": 5712,
         "web_port": 5000,
-        "zmq_host": "127.0.0.1",
+        "server_host": "127.0.0.1",
         "zmq_server_public_key": [
             "#   ****  Generated on 2014-05-28 20:18:36.897416 by pyzmq  ****\n",
             "#   ZeroMQ CURVE Public Certificate\n",

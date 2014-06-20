@@ -245,8 +245,8 @@ def configure_drone(id):
         if not form.validate_on_submit():
             return render_template('create-honeypot.html', form=form, mode_name='Honeypot', user=current_user)
         else:
-            server_zmq_command_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_command_port'])
-            server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
+            server_zmq_command_url = 'tcp://{0}:{1}'.format(config['network']['server_host'], config['network']['zmq_command_port'])
+            server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['server_host'], config['network']['zmq_port'])
             # TODO: Check if key pair exists
             result = send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.GEN_ZMQ_KEYS, str(drone.id)))
             zmq_public = result['public_key']
@@ -348,8 +348,8 @@ def configure_drone(id):
         if not form.validate_on_submit():
             return render_template('create-client.html', form=form, mode_name='Honeypot', user=current_user)
         else:
-            server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
-            server_zmq_command_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_command_port'])
+            server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['server_host'], config['network']['zmq_port'])
+            server_zmq_command_url = 'tcp://{0}:{1}'.format(config['network']['server_host'], config['network']['zmq_command_port'])
             # TODO: Check if key pair exists
             result = send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.GEN_ZMQ_KEYS, str(drone.id)))
             zmq_public = result['public_key']
@@ -517,7 +517,7 @@ def add_drone():
     drone_keys.append(drone_key)
     gevent.spawn_later(120, reset_drone_key, drone_key)
 
-    server_https = 'https://BEESWARM_SERVER:{0}/'.format(config['network']['web_port'])
+    server_https = 'https://{0}:{1}/'.format(config['network']['server_host'], config['network']['web_port'])
     drone_link = '{0}ws/drone/add/{1}'.format(server_https, drone_key)
     iso_link = '/NotWorkingYet'
     return render_template('add_drone.html', user=current_user, drone_link=drone_link,
@@ -532,8 +532,8 @@ def drone_key(key):
         abort(401)
     else:
         drone_id = str(uuid.uuid4())
-        server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
-        server_zmq_command_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_command_port'])
+        server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['server_host'], config['network']['zmq_port'])
+        server_zmq_command_url = 'tcp://{0}:{1}'.format(config['network']['server_host'], config['network']['zmq_command_port'])
         result = send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.GEN_ZMQ_KEYS, drone_id))
         zmq_public = result['public_key']
         zmq_private = result['private_key']
@@ -586,7 +586,7 @@ def create_client():
     if form.validate_on_submit():
         with open(app.config['CERT_PATH']) as cert:
             cert_str = cert.read()
-        server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['zmq_host'], config['network']['zmq_port'])
+        server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['server_host'], config['network']['zmq_port'])
         result = send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.GEN_ZMQ_KEYS, client_id))
         zmq_public = result['public_key']
         zmq_private = result['private_key']

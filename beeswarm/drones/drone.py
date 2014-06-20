@@ -160,7 +160,7 @@ class Drone(object):
                     self.config = json.loads(data)
                     with open('beeswarmcfg.json', 'w') as local_config:
                         local_config.write(json.dumps(self.config, indent=4))
-                    self._stop_drone()
+                    self.stop()
                     self._start_drone()
                 else:
                     # TODO: Dispatch the message using internal zmq

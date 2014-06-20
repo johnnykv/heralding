@@ -311,7 +311,7 @@ class Server(object):
 
             zmq_port = 5712
             zmq_command_port = 5713
-            zmq_host = raw_input('IP or hostname of server: ')
+            server_hostname = raw_input('IP or hostname of server: ')
             if customize:
                 zmq_port = raw_input('TCP port for session data (default: 5712) : ')
                 if zmq_port != '':
@@ -340,7 +340,7 @@ class Server(object):
                                                                                'web_port': web_port,
                                                                                'zmq_port': zmq_port,
                                                                                'zmq_command_port': zmq_command_port,
-                                                                               'zmq_host': zmq_host},
+                                                                               'server_host': server_hostname},
                                                                    'sql': {
                                                                        'connection_string': 'sqlite:///beeswarm_sqlite.db'},
                                                                    'ssl': {
