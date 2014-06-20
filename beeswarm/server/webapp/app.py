@@ -187,7 +187,7 @@ def sessions_attacks():
 def set_honeypot_mode(drone_id):
     db_session = database_setup.get_session()
     drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
-    if drone.discriminator == None:
+    if type(drone) != type(Honeypot):
         # meh, better way do do this?
         db_session.delete(drone)
         db_session.commit()
@@ -196,14 +196,14 @@ def set_honeypot_mode(drone_id):
         db_session.commit()
         return ''
     else:
-        abort(500, 'Drone has already been assigned.')
+        return ''
 
 @app.route('/ws/drone/client/<drone_id>')
 @login_required
 def set_client_mode(drone_id):
     db_session = database_setup.get_session()
     drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
-    if drone.discriminator == None:
+    if type(drone) != type(Client):
         # meh, better way do do this?
         db_session.delete(drone)
         db_session.commit()
@@ -212,7 +212,7 @@ def set_client_mode(drone_id):
         db_session.commit()
         return ''
     else:
-        abort(500, 'Drone has already been assigned.')
+        return ''
 
 
 class DictWrapper():
