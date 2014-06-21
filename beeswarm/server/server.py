@@ -167,9 +167,18 @@ class Server(object):
                         db_session.commit()
                 elif topic == Messages.PING:
                     drone_id = data
+                    logging.debug('Ping from {0}'.format(drone_id))
                     db_session = database_setup.get_session()
                     drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
                     drone.last_activity = datetime.now()
+                    db_session.add(drone)
+                    db_session.commit()
+                elif topic == Messages.IP:
+                    drone_id, ip_address = data.split(' ', 1)
+                    logging.debug('Drone {0} reported ip: {1}'.format(drone_id, ip_address))
+                    db_session = database_setup.get_session()
+                    drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
+                    drone.ip_address = ip_address
                     db_session.add(drone)
                     db_session.commit()
                 else:

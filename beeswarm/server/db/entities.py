@@ -18,6 +18,7 @@ class Drone(Base):
 
     id = Column(String, primary_key=True)
     name = Column(String, default='')
+    ip_address = Column(String, default='')
     configuration = Column(String)
     last_activity = Column(DateTime, default=datetime.datetime.min)
 

@@ -22,3 +22,4 @@ class Messages(Enum):
     GEN_ZMQ_KEYS = 'GEN_ZMQ_KEYS'
     PING = 'PING'
     PONG = 'PING'
+    IP = 'IP'

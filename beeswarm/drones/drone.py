@@ -16,6 +16,7 @@
 import os
 import logging
 import requests
+import socket
 import json
 from requests.exceptions import Timeout, ConnectionError
 import gevent
@@ -212,6 +213,9 @@ class Drone(object):
                 if event == zmq.EVENT_CONNECTED:
                     logger.info('Connected to {0}'.format(log_name))
                     send_zmq_push('ipc://serverRelay', '{0} {1}'.format(Messages.PING, self.id))
+                    send_zmq_push('ipc://serverRelay', '{0} {1} {2}'.format(Messages.IP,
+                                                                        self.id,
+                                                                        socket.gethostbyname(socket.gethostname())))
                 elif event == zmq.EVENT_DISCONNECTED:
                     logger.warning('Disconnected from {0}, will reconnect in {1} seconds.'.format(log_name, 5))
             gevent.sleep()
