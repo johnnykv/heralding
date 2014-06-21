@@ -94,7 +94,7 @@ class Server(object):
     def message_proxy(self, work_dir):
         """
         drone_data_inboud   is for data comming from drones
-        drone_data_outbound is for commands to the drone, topic must either be a drone ID or all for sending
+        drone_data_outbound is for commands to the drones, topic must either be a drone ID or all for sending
                             a broadcast message to all drones
         """
         ctx = zmq.Context()
@@ -181,6 +181,13 @@ class Server(object):
                     drone.ip_address = ip_address
                     db_session.add(drone)
                     db_session.commit()
+                    # relay to all clients
+                    # TODO: handle deleted honeypots and honeypots that are converted to clients
+                    # Maybe transmit full knowledge map on every ip change?
+                    clients = db_session.query(Drone).filter(Drone.discriminator == 'client')
+                    for client in clients:
+                        outbound_message = '{0} {1} {2}'.format(client.id, Messages.IP)
+                        drone_data_outbound.send(outbound_message)
                 else:
                     logger.warn('Message with unknown topic received: {0}'.format(topic))
 

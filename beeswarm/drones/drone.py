@@ -91,7 +91,7 @@ class Drone(object):
         self._start_drone()
 
         #drop_privileges()
-        logger.info('Dr one running using id: {0}'.format(self.id))
+        logger.info('Drone running using id: {0}'.format(self.id))
         gevent.joinall([self.incoming_msg_greenlet])
 
     def _start_drone(self):
@@ -135,7 +135,7 @@ class Drone(object):
         # messages to this specific drone
         receiving_socket.setsockopt(zmq.SUBSCRIBE, self.id)
         # broadcasts to all drones
-        receiving_socket.setsockopt(zmq.SUBSCRIBE, Messages.BROADCAST)
+        receiving_socket.setsockopt(zmq.SUBSCRIBE, Messages.IP)
 
         receiving_socket.connect(self.config['beeswarm_server']['zmq_command_url'])
         logger.debug('Connected receiving socket to server on {0}'.format(self.config['beeswarm_server']['zmq_command_url']))
@@ -156,8 +156,9 @@ class Drone(object):
                 drone_id, command, data = message.split(' ', 2)
                 logger.debug('Received {0} command.'.format(command))
                 assert(drone_id == self.id)
-                #if we receive a configuration we restart the drone
+                # if we receive a configuration we restart the drone
                 if command == Messages.CONFIG:
+                    # additional payload
                     self.config = json.loads(data)
                     with open('beeswarmcfg.json', 'w') as local_config:
                         local_config.write(json.dumps(self.config, indent=4))
@@ -165,7 +166,8 @@ class Drone(object):
                     self._start_drone()
                 else:
                     # TODO: Dispatch the message using internal zmq
-                    logger.warning('Unknown command received.')
+                    command = message.split(' ')[0]
+                    logger.warning('Unknown command received: {0}'.format(command))
                     pass
         logger.warn('Command listener exiting.')
 
@@ -194,8 +196,8 @@ class Drone(object):
             socks = dict(poller.poll(1))
             gevent.sleep()
             if internal_server_relay in socks and socks[internal_server_relay] == zmq.POLLIN:
-                logger.debug('Sending message to server.')
                 message = internal_server_relay.recv()
+                logger.debug('Relaying {0} message to server.'.format(message.split(' ')[0]))
                 sending_socket.send(message)
 
         logger.warn('Command sender exiting.')

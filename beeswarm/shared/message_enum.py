@@ -8,7 +8,6 @@ class Messages(Enum):
     # dump of all configuration elements known to the sender
     CONFIG_FULL = 'CONFIG_FULL'
 
-    BROADCAST = 'BROADCAST'
     OK = 'OK'
     FAIL = 'FAIL'
     PUBLISH_CONFIG = 'PUBLISH_CONFIG'
