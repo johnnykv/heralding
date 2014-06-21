@@ -60,6 +60,11 @@ class Drone(object):
         self.outgoing_msg_greenlet = None
         self.incoming_msg_greenlet = None
 
+        # messages from server relayed to internal listeners
+        ctx = zmq.Context()
+        self.internal_server_relay = ctx.socket(zmq.PUSH)
+        self.internal_server_relay.bind('ipc://serverCommands')
+
         if self.config['general']['fetch_ip']:
             try:
                 url = 'http://api.externalip.net/ip'
@@ -165,10 +170,7 @@ class Drone(object):
                     self.stop()
                     self._start_drone()
                 else:
-                    # TODO: Dispatch the message using internal zmq
-                    command = message.split(' ')[0]
-                    logger.warning('Unknown command received: {0}'.format(command))
-                    pass
+                    self.internal_server_relay.send('{0} {1}'.format(command, data))
         logger.warn('Command listener exiting.')
 
     def outgoing_server_comms(self, server_public, client_public, client_secret):

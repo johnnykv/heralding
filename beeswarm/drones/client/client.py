@@ -20,11 +20,9 @@ import urllib2
 import gevent
 from gevent.greenlet import Greenlet
 import gevent.monkey
-
 from beeswarm.drones.client import consumer
-
 from beeswarm.shared.models.ui_handler import ClientUIHandler
-
+import zmq.green as zmq
 
 gevent.monkey.patch_all()
 
@@ -34,6 +32,7 @@ from beeswarm.drones.client.models.dispatcher import BeeDispatcher
 from beeswarm.shared.asciify import asciify
 from beeswarm.shared.helpers import drop_privileges
 from beeswarm.shared.helpers import extract_keys
+from beeswarm.shared.message_enum import Messages
 
 # Do not remove this import, it is used to autodetect the capabilities.
 
@@ -52,6 +51,8 @@ class Client(object):
         """
         self.run_flag = True
         self.curses_screen = curses_screen
+        # maps honeypot id to IP
+        self.honeypot_map = {}
 
         with open('beeswarmcfg.json', 'r') as config_file:
             self.config = json.load(config_file, object_hook=asciify)
@@ -143,3 +144,21 @@ class Client(object):
         self.sessions_consumer.stop_handling()
         logger.info('All clients stopped')
         sys.exit(0)
+
+    def server_command_listener(self):
+        client_command_receiver = ctx.socket(zmq.PULL)
+        client_command_receiver.bind('ipc://serverRelay')
+
+        poller = zmq.Poller()
+        poller.register(client_command_receiver, zmq.POLLIN)
+
+        while True:
+            # .recv() gives no context switch - why not? using poller with timeout instead
+            socks = dict(poller.poll(1))
+            gevent.sleep()
+            if client_command_receiver in socks and socks[client_command_receiver] == zmq.POLLIN:
+                topic, data = client_command_receiver.recv().split(' ', 1)
+                logger.debug("Received {0} data.".format(topic))
+                if topic == Messages.IP:
+                    honeypot_id, ip_address = data.split(' ')
+                    self.honeypot_map[honeypot_id, ip_address]
