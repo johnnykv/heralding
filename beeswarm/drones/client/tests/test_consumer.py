@@ -48,7 +48,6 @@ class Consumer_test(unittest.TestCase):
             'active_bees': 0,
             'enabled_bees': [],
             'client_id': uuid.uuid4(),
-            'managment_url': '',
             'ip_address': '127.0.0.1'
         }
 
@@ -88,7 +87,6 @@ class Consumer_test(unittest.TestCase):
             'active_bees': 0,
             'enabled_bees': [],
             'client_id': uuid.uuid4(),
-            'managment_url': '',
             'ip_address': '127.0.0.1'
         }
 

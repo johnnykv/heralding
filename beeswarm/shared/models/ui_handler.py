@@ -109,7 +109,7 @@ class ClientUIHandler(_UIHandler):
         self.addstring_middle('Running: ' + ' '.join(self.status['enabled_bees']))
         self._draw_height += 1
         self.addstring_left('IP Address: {}'.format(self.status['ip_address']))
-        self.addstring_right('Client ID: {}'.format(self.status['client_id']))
+        self.addstring_right('Client ID: {}'.format(self.status['id']))
         self.addstring_left('Total Bees Sent: {}'.format(self.status['total_bees']))
         self.addstring_right('Successful Bees: {}'.format(self.status['active_bees']))
 

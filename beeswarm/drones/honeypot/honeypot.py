@@ -108,8 +108,7 @@ class Honeypot(object):
             'honeypot_id': self.config['general']['id'],
             'total_sessions': 0,
             'active_sessions': 0,
-            'enabled_capabilities': [],
-            'managment_url': ''
+            'enabled_capabilities': []
         }
 
         # will contain BaitUser objects

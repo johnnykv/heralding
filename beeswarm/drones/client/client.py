@@ -20,7 +20,7 @@ import urllib2
 import gevent
 from gevent.greenlet import Greenlet
 import gevent.monkey
-from beeswarm.drones.client import consumer
+from beeswarm.drones.client.consumer.consumer import Consumer
 from beeswarm.shared.models.ui_handler import ClientUIHandler
 import zmq.green as zmq
 
@@ -64,7 +64,7 @@ class Client(object):
         # TODO: Handle peering in other place
         BaitSession.honeypot_id = self.config['general']['id']
 
-        if self.config['public_ip']['fetch_ip']:
+        if self.config['general']['fetch_ip']:
             self.my_ip = urllib2.urlopen('http://api-sth01.exip.org/?call=ip').read()
             logger.info('Fetched {0} as my external ip.'.format(self.my_ip))
         else:
@@ -75,8 +75,7 @@ class Client(object):
             'total_bees': 0,
             'active_bees': 0,
             'enabled_bees': [],
-            'client_id': self.config['general']['client_id'],
-            'managment_url': self.config['beeswarm_server']['managment_url'],
+            'id': self.config['general']['id'],
             'ip_address': self.my_ip
         }
 
@@ -99,7 +98,7 @@ class Client(object):
         sessions = {}
 
         #greenlet to consume and maintain data in sessions list
-        self.sessions_consumer = consumer.Consumer(sessions, self.config, self.status)
+        self.sessions_consumer = Consumer(sessions, self.config, self.status)
         gevent.spawn(self.sessions_consumer.start_handling)
 
         capabilities = []
@@ -146,6 +145,7 @@ class Client(object):
         sys.exit(0)
 
     def server_command_listener(self):
+        ctx = zmq.Context()
         client_command_receiver = ctx.socket(zmq.PULL)
         client_command_receiver.bind('ipc://serverRelay')
 

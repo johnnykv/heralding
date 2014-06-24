@@ -39,14 +39,15 @@ from wtforms import HiddenField
 import beeswarm
 from forms import NewHoneypotConfigForm, NewClientConfigForm, LoginForm, SettingsForm
 from beeswarm.server.db import database_setup
-from beeswarm.server.db.entities import Client, BaitSession, Session, Honeypot, User, Authentication, Classification,\
-                                        BaitUser, Transcript, Drone, Authentication
+from beeswarm.server.db.entities import Client, BaitSession, Session, Honeypot, User, Authentication, Classification, \
+    BaitUser, Transcript, Drone, Authentication
 from beeswarm.shared.helpers import send_zmq_request, send_zmq_push
 from beeswarm.shared.message_enum import Messages
 
 
 def is_hidden_field_filter(field):
     return isinstance(field, HiddenField)
+
 
 app = Flask(__name__)
 app.config['DEBUG'] = False
@@ -67,6 +68,7 @@ first_cfg_received = gevent.event.Event()
 
 # keys used for adding new drones to the system
 drone_keys = []
+
 
 @app.before_first_request
 def initialize():
@@ -92,6 +94,7 @@ def config_subscriber():
                 config = json.loads(msg)
                 first_cfg_received.set()
                 logger.debug('Config received')
+
 
 @login_manager.user_loader
 def user_loader(userid):
@@ -163,7 +166,8 @@ def home():
 @app.route('/bait_users')
 @login_required
 def bait_users():
-    return render_template('bait_users.html',  user=current_user)
+    return render_template('bait_users.html', user=current_user)
+
 
 @app.route('/sessions')
 @login_required
@@ -182,12 +186,13 @@ def sessions_bait():
 def sessions_attacks():
     return render_template('logs.html', logtype='Attacks', user=current_user)
 
+
 @app.route('/ws/drone/honeypot/<drone_id>')
 @login_required
 def set_honeypot_mode(drone_id):
     db_session = database_setup.get_session()
     drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
-    if type(drone) != type(Honeypot):
+    if drone is None or drone.discriminator != 'honeypot':
         # meh, better way do do this?
         db_session.delete(drone)
         db_session.commit()
@@ -198,12 +203,13 @@ def set_honeypot_mode(drone_id):
     else:
         return ''
 
+
 @app.route('/ws/drone/client/<drone_id>')
 @login_required
 def set_client_mode(drone_id):
     db_session = database_setup.get_session()
     drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
-    if type(drone) != type(Client):
+    if drone is None or drone.discriminator != 'client':
         # meh, better way do do this?
         db_session.delete(drone)
         db_session.commit()
@@ -230,29 +236,32 @@ class DictWrapper():
         else:
             return self._rec(path[1:], item[path[0]])
 
-@app.route('/ws/drone/configure/<id>', methods=['GET', 'POST'])
+@app.route('/ws/drone/honeypot/configure/<id>', methods=['GET', 'POST'])
 @login_required
-def configure_drone(id):
+def configure_honeypot(id):
     db_session = database_setup.get_session()
     drone = db_session.query(Drone).filter(Drone.id == id).one()
-    if drone.discriminator == 'honeypot':
-        if drone.configuration is not None:
-            config_obj = DictWrapper(json.loads(drone.configuration))
-        else:
-            # virgin drone
-            config_obj = None
-        form = NewHoneypotConfigForm(obj=config_obj)
-        if not form.validate_on_submit():
-            return render_template('create-honeypot.html', form=form, mode_name='Honeypot', user=current_user)
-        else:
-            server_zmq_command_url = 'tcp://{0}:{1}'.format(config['network']['server_host'], config['network']['zmq_command_port'])
-            server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['server_host'], config['network']['zmq_port'])
-            # TODO: Check if key pair exists
-            result = send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.GEN_ZMQ_KEYS, str(drone.id)))
-            zmq_public = result['public_key']
-            zmq_private = result['private_key']
+    if drone.discriminator != 'honeypot' or drone is None:
+        abort(404, 'Drone with id {0} not found or invalid.'.format(id))
 
-            drone_config = {
+    if drone.configuration is not None:
+        config_obj = DictWrapper(json.loads(drone.configuration))
+    else:
+        # virgin drone
+        config_obj = None
+    form = NewHoneypotConfigForm(obj=config_obj)
+    if not form.validate_on_submit():
+        return render_template('configure-honeypot.html', form=form, mode_name='Honeypot', user=current_user)
+    else:
+        server_zmq_command_url = 'tcp://{0}:{1}'.format(config['network']['server_host'],
+                                                        config['network']['zmq_command_port'])
+        server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['server_host'], config['network']['zmq_port'])
+        # TODO: Check if key pair exists
+        result = send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.GEN_ZMQ_KEYS, str(drone.id)))
+        zmq_public = result['public_key']
+        zmq_private = result['private_key']
+
+        drone_config = {
             'general': {
                 'name': form.general__name.data,
                 'mode': 'honeypot',
@@ -262,7 +271,7 @@ def configure_drone(id):
             },
             'beeswarm_server': {
                 'enabled': True,
-                'zmq_url' : server_zmq_url,
+                'zmq_url': server_zmq_url,
                 'zmq_server_public': config['network']['zmq_server_public_key'],
                 'zmq_own_public': zmq_public,
                 'zmq_own_private': zmq_private,
@@ -334,171 +343,68 @@ def configure_drone(id):
                 'ntp_pool': 'pool.ntp.org'
             },
         }
-            config_json = json.dumps(drone_config, indent=4)
-            drone.name = form.general__name.data
-            drone.configuration = config_json
-            db_session.add(drone)
-            db_session.commit()
+        config_json = json.dumps(drone_config, indent=4)
+        drone.name = form.general__name.data
+        drone.configuration = config_json
+        db_session.add(drone)
+        db_session.commit()
+        print 'saved: '
+        print config_json
+        # everything good, push config to drone if it is listening
+        send_zmq_push('ipc://droneCommandReceiver', '{0} {1} {2}'.format(drone.id, Messages.CONFIG, config_json))
+        return render_template('finish-config-honeypot.html', drone_id=drone.id, user=current_user)
 
-            # everything good, push config to drone if it is listening
-            send_zmq_push('ipc://droneCommandReceiver', '{0} {1} {2}'.format(drone.id, Messages.CONFIG, config_json))
-            return render_template('finish-config.html', drone_id=drone.id, user=current_user)
-    elif drone.discriminator == 'client':
-        form = NewClientConfigForm()
-        if not form.validate_on_submit():
-            return render_template('create-client.html', form=form, mode_name='Honeypot', user=current_user)
-        else:
-            server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['server_host'], config['network']['zmq_port'])
-            server_zmq_command_url = 'tcp://{0}:{1}'.format(config['network']['server_host'], config['network']['zmq_command_port'])
-            # TODO: Check if key pair exists
-            result = send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.GEN_ZMQ_KEYS, str(drone.id)))
-            zmq_public = result['public_key']
-            zmq_private = result['private_key']
+@app.route('/ws/drone/client/configure/<id>', methods=['GET', 'POST'])
+@login_required
+def configure_client(id):
+    db_session = database_setup.get_session()
+    drone = db_session.query(Drone).filter(Drone.id == id).one()
+    if drone.discriminator != 'client' or drone is None:
+        abort(404, 'Drone with id {0} not found or invalid.'.format(id))
 
-            drone_config = {
-                'general': {
-                    'mode': 'client',
-                    'id': drone.id,
-                    'honeypot_id': None
-                },
-                'public_ip': {
-                    'fetch_ip': True
-                },
-                'bait_sessions': {
-                    'http': {
-                        'enabled': form.http_enabled.data,
-                        'server': form.http_server.data,
-                        'port': form.http_port.data,
-                        'timing': {
-                            'active_range': form.http_active_range.data,
-                            'sleep_interval': form.http_sleep_interval.data,
-                            'activation_probability': form.http_activation_probability.data
-                        },
-                        'username': form.http_login.data,
-                        'password': form.http_password.data
-                    },
-                    'ftp': {
-                        'enabled': form.ftp_enabled.data,
-                        'server': form.ftp_server.data,
-                        'port': form.ftp_port.data,
-                        'timing': {
-                            'active_range': form.ftp_active_range.data,
-                            'sleep_interval': form.ftp_sleep_interval.data,
-                            'activation_probability': form.ftp_activation_probability.data
-                        },
-                        'username': form.ftp_login.data,
-                        'password': form.ftp_password.data
-                    },
-                    'https': {
-                        'enabled': form.https_enabled.data,
-                        'server': form.https_server.data,
-                        'port': form.https_port.data,
-                        'timing': {
-                            'active_range': form.https_active_range.data,
-                            'sleep_interval': form.https_sleep_interval.data,
-                            'activation_probability': form.https_activation_probability.data
-                        },
-                        'username': form.https_login.data,
-                        'password': form.https_password.data
-                    },
-                    'pop3': {
-                        'enabled': form.pop3_enabled.data,
-                        'server': form.pop3_server.data,
-                        'port': form.pop3_port.data,
-                        'timing': {
-                            'active_range': form.pop3_active_range.data,
-                            'sleep_interval': form.pop3_sleep_interval.data,
-                            'activation_probability': form.pop3_activation_probability.data
-                        },
-                        'username': form.pop3_login.data,
-                        'password': form.pop3_password.data
-                    },
-                    'ssh': {
-                        'enabled': form.ssh_enabled.data,
-                        'server': form.ssh_server.data,
-                        'port': form.ssh_port.data,
-                        'timing': {
-                            'active_range': form.ssh_active_range.data,
-                            'sleep_interval': form.ssh_sleep_interval.data,
-                            'activation_probability': form.ssh_activation_probability.data
-                        },
-                        'username': form.ssh_login.data,
-                        'password': form.ssh_password.data
-                    },
-                    'pop3s': {
-                        'enabled': form.pop3s_enabled.data,
-                        'server': form.pop3s_server.data,
-                        'port': form.pop3s_port.data,
-                        'timing': {
-                            'active_range': form.pop3s_active_range.data,
-                            'sleep_interval': form.pop3s_sleep_interval.data,
-                            'activation_probability': form.pop3s_activation_probability.data
-                        },
-                        'username': form.pop3s_login.data,
-                        'password': form.pop3s_password.data
-                    },
-                    'smtp': {
-                        'enabled': form.smtp_enabled.data,
-                        'server': form.smtp_server.data,
-                        'port': form.smtp_port.data,
-                        'timing': {
-                            'active_range': form.smtp_active_range.data,
-                            'sleep_interval': form.smtp_sleep_interval.data,
-                            'activation_probability': form.smtp_activation_probability.data
-                        },
-                        'username': form.smtp_login.data,
-                        'local_hostname': form.smtp_local_hostname.data,
-                        'password': form.smtp_password.data
-                    },
-                    'vnc': {
-                        'enabled': form.vnc_enabled.data,
-                        'server': form.vnc_server.data,
-                        'port': form.vnc_port.data,
-                        'timing': {
-                            'active_range': form.vnc_active_range.data,
-                            'sleep_interval': form.vnc_sleep_interval.data,
-                            'activation_probability': form.vnc_activation_probability.data
-                        },
-                        'username': form.vnc_login.data,
-                        'password': form.vnc_password.data
-                    },
-                    'telnet': {
-                        'enabled': form.telnet_enabled.data,
-                        'server': form.telnet_server.data,
-                        'port': form.telnet_port.data,
-                        'timing': {
-                            'active_range': form.telnet_active_range.data,
-                            'sleep_interval': form.telnet_sleep_interval.data,
-                            'activation_probability': form.telnet_activation_probability.data
-                        },
-                        'username': form.telnet_login.data,
-                        'password': form.telnet_password.data
-                    }
-                },
-                'beeswarm_server': {
-                    'enabled': True,
-                    'zmq_url' : server_zmq_url,
-                    'zmq_server_public': config['network']['zmq_server_public_key'],
-                    'zmq_own_public': zmq_public,
-                    'zmq_own_private': zmq_private,
-                    'zmq_command_url': server_zmq_command_url,
-                },
-            }
+    server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['server_host'], config['network']['zmq_port'])
+    server_zmq_command_url = 'tcp://{0}:{1}'.format(config['network']['server_host'],
+                                                    config['network']['zmq_command_port'])
+    # TODO: Check if key pair exists
+    result = send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.GEN_ZMQ_KEYS, str(drone.id)))
+    zmq_public = result['public_key']
+    zmq_private = result['private_key']
 
-            config_json = json.dumps(drone_config, indent=4)
+    drone_config = {
+        'general': {
+            'mode': 'client',
+            'id': drone.id,
+            'fetch_ip': False
+        },
+        'capabilities': {},
+        'beeswarm_server': {
+            'enabled': True,
+            'zmq_url': server_zmq_url,
+            'zmq_server_public': config['network']['zmq_server_public_key'],
+            'zmq_own_public': zmq_public,
+            'zmq_own_private': zmq_private,
+            'zmq_command_url': server_zmq_command_url,
+        },
+    }
 
-            drone.configuration = config_json
-            db_session.add(drone)
-            db_session.commit()
+    config_json = json.dumps(drone_config, indent=4)
+    drone.configuration = config_json
+    db_session.add(drone)
+    db_session.commit()
 
-            # everything good, push config to drone if it is listening
-            send_zmq_push('ipc://droneCommandReceiver', '{0} {1} {2}'.format(drone.id, Messages.CONFIG, config_json))
-            return render_template('finish-config.html', drone_id=drone.id, user=current_user)
-    elif drone.discriminator is None:
-        return render_template('drone_mode.html', drone_id=drone.id, user=current_user)
+    # everything good, push config to drone if it is listening
+    send_zmq_push('ipc://droneCommandReceiver', '{0} {1} {2}'.format(drone.id, Messages.CONFIG, config_json))
+    return render_template('finish-config-client.html', drone_id=drone.id, user=current_user)
+
+@app.route('/ws/drone/configure/<id>', methods=['GET', 'POST'])
+@login_required
+def configure_drone(id):
+    db_session = database_setup.get_session()
+    drone = db_session.query(Drone).filter(Drone.id == id).one()
+    if drone is None:
+        abort(404, 'Drone with id {0} could not be found.'.format(id))
     else:
-        assert(drone is None)
-        abort(404, 'Drone with that id could not be found.')
+        return render_template('drone_mode.html', drone_id=drone.id, user=current_user)
 
 
 def reset_drone_key(key):
@@ -508,6 +414,7 @@ def reset_drone_key(key):
         logger.debug('Removed drone add key.')
     else:
         logger.debug('Tried to remove drone key, but the key was not found.')
+
 
 @app.route('/ws/drone/add', methods=['GET'])
 @login_required
@@ -523,6 +430,7 @@ def add_drone():
     return render_template('add_drone.html', user=current_user, drone_link=drone_link,
                            iso_link=iso_link)
 
+
 # TODO: throttle this
 @app.route('/ws/drone/add/<key>', methods=['GET'])
 def drone_key(key):
@@ -533,7 +441,8 @@ def drone_key(key):
     else:
         drone_id = str(uuid.uuid4())
         server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['server_host'], config['network']['zmq_port'])
-        server_zmq_command_url = 'tcp://{0}:{1}'.format(config['network']['server_host'], config['network']['zmq_command_port'])
+        server_zmq_command_url = 'tcp://{0}:{1}'.format(config['network']['server_host'],
+                                                        config['network']['zmq_command_port'])
         result = send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.GEN_ZMQ_KEYS, drone_id))
         zmq_public = result['public_key']
         zmq_private = result['private_key']
@@ -549,7 +458,7 @@ def drone_key(key):
             'beeswarm_server': {
                 'enabled': True,
                 'zmq_url': server_zmq_url,
-                'zmq_command_url' : server_zmq_command_url,
+                'zmq_command_url': server_zmq_command_url,
                 'zmq_server_public': config['network']['zmq_server_public_key'],
                 'zmq_own_public': zmq_public,
                 'zmq_own_private': zmq_private,
@@ -572,7 +481,7 @@ def delete_drones():
     db_session = database_setup.get_session()
     for drone_id in drone_ids:
         logger.debug('Deleting drone: {0}'.format(drone_id))
-        drone_to_delete= db_session.query(Drone).filter(Drone.id == drone_id).one()
+        drone_to_delete = db_session.query(Drone).filter(Drone.id == drone_id).one()
         db_session.delete(drone_to_delete)
         db_session.commit()
     return ''
@@ -584,8 +493,6 @@ def create_client():
     form = NewClientConfigForm()
     client_id = str(uuid.uuid4())
     if form.validate_on_submit():
-        with open(app.config['CERT_PATH']) as cert:
-            cert_str = cert.read()
         server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['server_host'], config['network']['zmq_port'])
         result = send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.GEN_ZMQ_KEYS, client_id))
         zmq_public = result['public_key']
@@ -594,11 +501,8 @@ def create_client():
         client_config = {
             'general': {
                 'mode': 'client',
-                'client_id': client_id,
-                'honeypot_id': None
-            },
-            'public_ip': {
-                'fetch_ip': True
+                'id': client_id,
+                'fetch_ip': False
             },
             'bait_sessions': {
                 'http': {
@@ -713,7 +617,7 @@ def create_client():
             },
             'beeswarm_server': {
                 'enabled': True,
-                'zmq_url' : server_zmq_url,
+                'zmq_url': server_zmq_url,
                 'zmq_server_public': config['network']['zmq_server_public_key'],
                 'zmq_own_public': zmq_public,
                 'zmq_own_private': zmq_private,
@@ -725,10 +629,7 @@ def create_client():
         f = Client(id=client_id, configuration=config_json)
         db_session.add(f)
         db_session.commit()
-        return render_template('finish-config.html', mode_name='Client', user=current_user)
-
-    return render_template('create-client.html', form=form, mode_name='Client', user=current_user)
-
+        return render_template('finish-config-client.html', user=current_user)
 
 # requesting all bait users - or replacing all bait users
 @app.route('/ws/bait_users', methods=['GET', 'POST'])
@@ -752,6 +653,7 @@ def get_bait_users():
     db_session.commit()
     return ''
 
+
 # add a list of bait users, if user exists the password will be replaced with the new one
 @app.route('/ws/bait_users/add', methods=['POST'])
 @login_required
@@ -765,6 +667,7 @@ def add_bait_users():
     db_session.commit()
     return ''
 
+
 # deletes a single bait user or a list of users
 @app.route('/ws/bait_users/delete', methods=['POST'])
 @login_required
@@ -777,11 +680,12 @@ def delete_bait_user():
     db_session.commit()
     return ''
 
+
 @app.route('/data/sessions/<_type>', methods=['GET'])
 @login_required
 def data_sessions_attacks(_type):
     db_session = database_setup.get_session()
-    #the database_setup will not get hit until we start iterating the query object
+    # the database_setup will not get hit until we start iterating the query object
     query_iterators = {
         'all': db_session.query(Session),
         'bait_sessions': db_session.query(BaitSession),
@@ -791,7 +695,7 @@ def data_sessions_attacks(_type):
     if _type not in query_iterators:
         return 'Not Found', 404
 
-    #select which iterator to use
+    # select which iterator to use
     entries = query_iterators[_type].order_by(desc(Session.timestamp))
 
     rows = []
@@ -809,6 +713,7 @@ def data_sessions_attacks(_type):
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp
 
+
 @app.route('/data/session/<_id>/credentials')
 @login_required
 def data_session_credentials(_id):
@@ -823,6 +728,7 @@ def data_session_credentials(_id):
     rsp = Response(response=json.dumps(return_rows, indent=4), status=200, mimetype='application/json')
     return rsp
 
+
 @app.route('/data/session/<_id>/transcript')
 @login_required
 def data_session_transcript(_id):
@@ -835,6 +741,7 @@ def data_session_transcript(_id):
         return_rows.append(row)
     rsp = Response(response=json.dumps(return_rows, indent=4), status=200, mimetype='application/json')
     return rsp
+
 
 @app.route('/data/honeypots', methods=['GET'])
 @login_required
@@ -849,6 +756,7 @@ def data_honeypots():
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp
 
+
 @app.route('/data/clients', methods=['GET'])
 @login_required
 def data_clients():
@@ -856,11 +764,13 @@ def data_clients():
     clients = db_session.query(Client).all()
     rows = []
     for client in clients:
-        row = {'client_id': client.id, 'bees': db_session.query(BaitSession).filter(BaitSession.client_id == client.id).count(),
+        row = {'client_id': client.id,
+               'bees': db_session.query(BaitSession).filter(BaitSession.client_id == client.id).count(),
                'checked': False, 'name': client.name}
         rows.append(row)
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp
+
 
 @app.route('/data/drones', defaults={'dronetype': None}, methods=['GET'])
 @app.route('/data/drones/<dronetype>', methods=['GET'])
@@ -889,6 +799,7 @@ def data_drones(dronetype):
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp
 
+
 @app.route('/ws/drones', defaults={'dronetype': None})
 @app.route('/ws/drones/<dronetype>')
 @login_required
@@ -912,6 +823,7 @@ def login():
             flash('Logged in successfully')
             return redirect(request.args.get("next") or '/')
     return render_template('login.html', form=form)
+
 
 @app.route('/logout', methods=['GET'])
 @login_required
@@ -1028,6 +940,7 @@ def write_to_iso(temporary_dir, mode):
         with open(config_archive, 'rb') as tarfile:
             isofile.write(tarfile.read())
     return True
+
 
 if __name__ == '__main__':
     app.run()
