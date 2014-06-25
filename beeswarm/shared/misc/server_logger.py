@@ -16,21 +16,17 @@
 import logging
 import uuid
 import json
-import os
 from datetime import datetime
 
-import gevent
 import zmq.green as zmq
 import zmq.auth
-
-from beeswarm.drones.honeypot.consumer.loggers.loggerbase import LoggerBase
 
 
 logger = logging.getLogger(__name__)
 
 
-class ServerLogger(LoggerBase):
-    def __init__(self, message_type, config, work_dir):
+class ServerLogger(object):
+    def __init__(self, message_type):
         context = zmq.Context()
         self.socket = context.socket(zmq.PUSH)
         self.socket.connect('ipc://serverRelay')

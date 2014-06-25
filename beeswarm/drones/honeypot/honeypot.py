@@ -46,7 +46,6 @@ logger = logging.getLogger(__name__)
 
 
 class Honeypot(object):
-
     """ This is the main class, which starts up all the capabilities. """
 
     def __init__(self, work_dir, config, key='server.key', cert='server.crt',
@@ -78,7 +77,7 @@ class Honeypot(object):
         extract_keys(work_dir, config)
         if not (os.path.isfile(os.path.join(work_dir, 'server.key'))):
             cert_info = config['certificate_info']
-            #TODO: IF NOT COMMON_NAME: Use own ip address...
+            # TODO: IF NOT COMMON_NAME: Use own ip address...
             cert, priv_key = create_self_signed_cert(cert_info['country'], cert_info['state'],
                                                      cert_info['organization'], cert_info['locality'],
                                                      cert_info['organization_unit'], cert_info['common_name'])
@@ -129,7 +128,7 @@ class Honeypot(object):
     def show_status_ui(self):
         self.uihandler.run()
 
-    #function to check the time offset
+    # function to check the time offset
     def checktime(self):
         """ Make sure our Honeypot time is consistent, and not too far off
         from the actual time. """
@@ -153,7 +152,7 @@ class Honeypot(object):
         self.sessions = {}
 
         #greenlet to consume the provided sessions
-        self.session_consumer = Consumer(self.sessions, self.honeypot_ip, self.config, self.status, self.work_dir)
+        self.session_consumer = Consumer(self.sessions, self.honeypot_ip, self.config)
         Greenlet.spawn(self.session_consumer.start)
 
         #protocol handlers

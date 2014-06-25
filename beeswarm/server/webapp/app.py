@@ -277,10 +277,6 @@ def configure_honeypot(id):
                 'zmq_own_private': zmq_private,
                 'zmq_command_url': server_zmq_command_url,
             },
-            'log_syslog': {
-                'enabled': False,
-                'socket': '/dev/log'
-            },
             'certificate_info': {
                 'common_name': form.certificate_info__common_name.data,
                 'country': form.certificate_info__country.data,

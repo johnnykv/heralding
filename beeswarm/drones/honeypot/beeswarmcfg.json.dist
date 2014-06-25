@@ -9,10 +9,6 @@
         "enabled": false,
         "server_url": "http://127.0.0.1:5000/ws/honeypot_data"
     },
-    "log_syslog": {
-        "enabled": false,
-        "socket": "/dev/log"
-    },
     "capabilities": {
 		"ftp": {
 			"enabled": true,
