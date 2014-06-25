@@ -18,7 +18,6 @@ import uuid
 from mock import Mock
 import gevent
 
-from beeswarm.drones.client.consumer.loggers.loggerbase import LoggerBase
 from beeswarm.drones.client.models.session import BaitSession
 from beeswarm.drones.client.consumer.consumer import Consumer
 
@@ -38,7 +37,7 @@ class Consumer_test(unittest.TestCase):
         sessions[beesession.id] = beesession
 
         #mock a dummy logger
-        dummy_logger = LoggerBase({})
+        dummy_logger = DummyLogger()
         log_mock = Mock()
         dummy_logger.log = log_mock
 
@@ -53,7 +52,7 @@ class Consumer_test(unittest.TestCase):
 
         consumer = Consumer(sessions, {}, status)
         #inject the dummy logger into the consumer
-        consumer.active_loggers = [dummy_logger]
+        consumer.logger = dummy_logger
         gevent.spawn(consumer.start_handling)
         #forcing cooperative yield.
         gevent.sleep(0)
@@ -77,7 +76,7 @@ class Consumer_test(unittest.TestCase):
         sessions[beesession.id] = beesession
 
         #mock a dummy logger
-        dummy_logger = LoggerBase({})
+        dummy_logger = DummyLogger()
         log_mock = Mock()
         dummy_logger.log = log_mock
 
@@ -91,7 +90,7 @@ class Consumer_test(unittest.TestCase):
         }
 
         consumer = Consumer(sessions, {}, status)
-        consumer.active_loggers = [dummy_logger]
+        consumer.logger = dummy_logger
         gevent.spawn(consumer.start_handling)
         #forcing cooperative yield.
         gevent.sleep(0)
@@ -101,5 +100,10 @@ class Consumer_test(unittest.TestCase):
         #assert that we still has a single item in the queue
         self.assertEquals(len(sessions), 1)
         consumer.stop_handling()
+
+
+class DummyLogger():
+    def log(self, session):
+        pass
 
 
