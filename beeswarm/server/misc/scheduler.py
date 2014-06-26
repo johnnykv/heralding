@@ -21,7 +21,7 @@ from gevent import Greenlet
 
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Session
-from beeswarm.server.classifier.classifier import Classifier
+from beeswarm.server.misc.classifier import Classifier
 
 logger = logging.getLogger(__name__)
 

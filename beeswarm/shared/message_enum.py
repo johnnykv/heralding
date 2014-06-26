@@ -7,6 +7,9 @@ class Messages(Enum):
     CONFIG = 'CONFIG'
     # dump of all configuration elements known to the sender
     CONFIG_FULL = 'CONFIG_FULL'
+    # mapping between clients, honeypots, capabilities and bait users
+    CONFIG_ARCHITECTURE = 'CONFIG_ARCHITECTURE'
+    BROADCAST = 'BROADCAST'
 
     OK = 'OK'
     FAIL = 'FAIL'

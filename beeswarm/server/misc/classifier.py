@@ -68,7 +68,7 @@ class Classifier(object):
 
         return match
 
-    def classify_bait_session(self, delay_seconds=30, db_session=None):
+    def classify_bait_session(self, delay_seconds=10, db_session=None):
         """
         Will classify all unclassified bait_sessions as either legit or malicious activity. A bait session can e.g. be classified
         as involved in malicious activity if the bait session is subject to a MiTM attack.
