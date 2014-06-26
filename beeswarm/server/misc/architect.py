@@ -18,6 +18,8 @@ import gevent
 
 import zmq.green as zmq
 
+from beeswarm.server.db import database_setup
+from beeswarm.server.db.entities import Drone, Client, Honeypot
 from beeswarm.shared.message_enum import Messages
 
 logger = logging.getLogger(__name__)
@@ -44,16 +46,25 @@ class Architect(gevent.greenlet):
         self.droneCommandsReceiver.close()
 
     def _generate_architecture(self):
-        # TODO: - Pair honeypots and clients
-        #       - Assign credentials for bait session
-        #       - Figure out timing issues
-        #       - There should be two modes selectable by the user:
-        #         1. Full auto. Everything is deleted and reconfigured
-        #         2. Semi auto. Everything not configured by the user is configured as a best effort.
-        pass
+        db_session = database_setup.get_session()
+        drones = db_session.query(Drone).all()
+        # following if/elif/else if full auto mode
+        if len(drones) == 0:
+            return
+        elif len(drones) == 1:
+            # TODO: Configure as honeypot
+            pass
+        else:
+            # Algo to distribute honeypots, clients and capabilities.
+            pass
+
+        # TODO: Semi auto more, only configure unconfigured.
+        # TODO: Also maybe reset button on drones pages. Mark drones to reset.
+        # TODO: Would be nice to be display the deceptions configuration as a graph using d3.js
 
     def brodcast_arthitecture(self, configuration):
-        # TODO: DB query
-        for drone in all_drones:
+        db_session = database_setup.get_session()
+        drones = db_session.query(Drone)
+        for drone in drones:
             self.droneCommandsReceiver.send('{0} {1} {2}'.format(drone.id, Messages.CONFIG_ARCHITECTURE, configuration))
 
