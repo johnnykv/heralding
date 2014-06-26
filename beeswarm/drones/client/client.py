@@ -134,7 +134,7 @@ class Client(object):
 
     def stop(self):
         """
-            Stop sending bees.
+            Stop sending bait sessions.
         """
         for g in self.dispatcher_greenlets:
             g.kill()
@@ -142,7 +142,6 @@ class Client(object):
             self.uihandler.stop()
         self.sessions_consumer.stop_handling()
         logger.info('All clients stopped')
-        sys.exit(0)
 
     def server_command_listener(self):
         ctx = zmq.Context()

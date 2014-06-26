@@ -344,8 +344,6 @@ def configure_honeypot(id):
         drone.configuration = config_json
         db_session.add(drone)
         db_session.commit()
-        print 'saved: '
-        print config_json
         # everything good, push config to drone if it is listening
         send_zmq_push('ipc://droneCommandReceiver', '{0} {1} {2}'.format(drone.id, Messages.CONFIG, config_json))
         return render_template('finish-config-honeypot.html', drone_id=drone.id, user=current_user)
