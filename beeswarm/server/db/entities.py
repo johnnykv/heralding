@@ -1,7 +1,9 @@
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Table
-from sqlalchemy.orm import relationship
 import datetime
+import json
+
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Table, Float
+from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 
@@ -9,6 +11,16 @@ Base = declarative_base()
 honeypot_client_mtm = Table('association', Base.metadata,
                             Column('client', String, ForeignKey('client.id')),
                             Column('honeypot', String, ForeignKey('honeypot.id')))
+
+
+class Capability(Base):
+    __tablename__ = 'capability'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    honeypot_id = Column(String, ForeignKey('honeypot.id'))
+    protocol = Column(String)
+    port = Column(Integer)
+    # jsonified python dict
+    protocol_specific_data = Column(String)
 
 
 class Drone(Base):
@@ -19,8 +31,24 @@ class Drone(Base):
     id = Column(String, primary_key=True)
     name = Column(String, default='')
     ip_address = Column(String, default='')
+    zmq_public_key = Column(String)
+    zmq_private_key = Column(String)
     configuration = Column(String)
     last_activity = Column(DateTime, default=datetime.datetime.min)
+
+
+# edge between honeypot and client
+class DroneEdge(Base):
+    __tablename__ = 'droneedge'
+
+    honeypot_id = Column(String, ForeignKey('drone.id'), primary_key=True)
+    client_id = Column(String, ForeignKey('drone.id'), primary_key=True)
+    protocol = Column(String, primary_key=True)
+    timing = Column(String)
+    sleep_interval = Column(Integer)
+    activation_probability = Column(Float)
+    username = Column(String)
+    password = Column(String)
 
 
 class Client(Drone):
@@ -31,17 +59,6 @@ class Client(Drone):
     bait_sessions = relationship("BaitSession", cascade="all, delete-orphan", backref='client')
     # honeypots that this client will connect to.
     honeypots = relationship("Honeypot", secondary=honeypot_client_mtm)
-
-
-class Honeypot(Drone):
-    __tablename__ = 'honeypot'
-    id = Column(String, ForeignKey('drone.id'), primary_key=True)
-    __mapper_args__ = {'polymorphic_identity': 'honeypot'}
-
-    sessions = relationship("Session", cascade="all, delete-orphan", backref='honeypot')
-    clients = relationship("Client", secondary=honeypot_client_mtm)
-    # fingerprint of the public key used to interact with attackers and clients
-    cert_digest = Column(String)
 
 
 class Classification(Base):
@@ -113,6 +130,33 @@ class BaitSession(Session):
     did_login = Column(Boolean)
     did_complete = Column(Boolean)
     client_id = Column(String, ForeignKey('client.id'))
+
+
+class Honeypot(Drone):
+    __tablename__ = 'honeypot'
+    id = Column(String, ForeignKey('drone.id'), primary_key=True)
+    __mapper_args__ = {'polymorphic_identity': 'honeypot'}
+
+    sessions = relationship('Session', cascade='all, delete-orphan', backref='honeypot')
+    clients = relationship('Client', secondary=honeypot_client_mtm)
+    # current capabilities
+    capabilities = relationship('Capability', cascade='all, delete-orphan', backref='honeypot')
+    # fingerprint of the public key used to interact with attackers and clients
+    cert_digest = Column(String)
+
+    #  The following certificate attribute are temporarily
+    #  generation of certificate should be done on the server, hence no need for
+    #  this informaiton here
+    cert_common_name = Column(String)
+    cert_country = Column(String)
+    cert_state = Column(String)
+    cert_locality = Column(String)
+    cert_organization = Column(String)
+    cert_organization_unit = Column(String)
+
+    def add_capability(self, protocol, port, protocol_specific_data):
+        capability = Capability(protocol=protocol, port=port, protocol_specific_data=json.dumps(protocol_specific_data))
+        self.capabilities.append(capability)
 
 
 class User(Base):

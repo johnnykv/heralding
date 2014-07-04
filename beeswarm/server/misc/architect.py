@@ -14,8 +14,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import gevent
+import math
 
+import gevent
 import zmq.green as zmq
 
 from beeswarm.server.db import database_setup
@@ -25,40 +26,30 @@ from beeswarm.shared.message_enum import Messages
 logger = logging.getLogger(__name__)
 
 
-class Architect(gevent.greenlet):
-    def __init__(self):
-        gevent.Greenlet.__init__(self)
+class Architect(object):
+    def __init__(self, honeypot_ratio):
+        self.honeypot_ratio = honeypot_ratio
 
-        context = zmq.Context()
-        self.droneCommandsReceiver = context.socket(zmq.PUSH)
-        self.droneCommandsReceiver.connect('ipc://droneCommandReceiver')
-        self.enabled = True
-
-    def _run(self):
-        while True:
-            # TODO: wait for poke from someone
-            gevent.sleep(5)
-            architecture_document = self._generate_architecture()
-            self.brodcast_arthitecture(architecture_document)
-
-    def _stop(self):
-        self.enabled = False
-        self.droneCommandsReceiver.close()
-
-    def _generate_architecture(self):
+    def generate_architecture(self):
         db_session = database_setup.get_session()
         drones = db_session.query(Drone).all()
         # following if/elif/else if full auto mode
-        if len(drones) == 0:
-            return
-        elif len(drones) == 1:
+        drone_count = len(drones)
+        if drone_count == 0:
+            logger.debug('Not able to generate architecture because only one drone exist.')
+        elif drone_count == 1:
+            logger.debug('Only one drone exists, this will get configured as a honeypot.')
             # TODO: Configure as honeypot
-            pass
         else:
+            number_of_honeypot = math.ceil(drone_count / self.honeypot_ratio)
+            number_of_clients = drone_count - number_of_honeypot
+            logger.debug('Generating architecture with {0} honeypots, {1} clients using a {2} rati.'
+                         .format(number_of_honeypot, number_of_clients, self.honeypot_ratio))
+
             # Algo to distribute honeypots, clients and capabilities.
             pass
 
-        # TODO: Semi auto more, only configure unconfigured.
+        # TODO: Semi auto mode, only configure unconfigured.
         # TODO: Also maybe reset button on drones pages. Mark drones to reset.
         # TODO: Would be nice to be display the deceptions configuration as a graph using d3.js
 

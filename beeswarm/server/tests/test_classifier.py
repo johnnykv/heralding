@@ -20,7 +20,7 @@ from datetime import datetime, timedelta
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, Honeypot
 from beeswarm.server.db.entities import Classification, Session, BaitSession, Authentication
-from beeswarm.server.classifier.classifier import Classifier
+from beeswarm.server.misc.classifier import Classifier
 
 
 class ClassifierTests(unittest.TestCase):

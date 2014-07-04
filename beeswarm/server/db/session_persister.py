@@ -31,7 +31,7 @@ from beeswarm.shared.message_enum import Messages
 logger = logging.getLogger(__name__)
 
 
-class PersistanceActor(gevent.Greenlet):
+class SessionPersister(gevent.Greenlet):
     def __init__(self):
         Greenlet.__init__(self)
         ctx = zmq.Context()

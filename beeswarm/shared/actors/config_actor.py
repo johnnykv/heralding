@@ -21,9 +21,10 @@ import shutil
 
 from gevent import Greenlet
 import zmq.green as zmq
-from zmq.auth.certs import create_certificates, load_certificate
-import beeswarm
+from zmq.auth.certs import create_certificates
 from beeswarm.shared.message_enum import Messages
+from beeswarm.server.db import database_setup
+from beeswarm.server.db.entities import Client, Honeypot, Drone
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,7 @@ class ConfigActor(Greenlet):
         context = zmq.Context()
         self.config_publisher = context.socket(zmq.PUB)
         self.config_commands = context.socket(zmq.REP)
+        self.drone_command_receiver = context.socket(zmq.PUSH)
         self.enabled = True
 
     def close(self):
@@ -52,6 +54,7 @@ class ConfigActor(Greenlet):
         # start accepting incomming messages
         self.config_commands.bind('ipc://configCommands')
         self.config_publisher.bind('ipc://configPublisher')
+        self.drone_command_receiver.bind('ipc://droneCommandReceiver')
         # initial publish of config
         self._publish_config()
 
@@ -70,6 +73,7 @@ class ConfigActor(Greenlet):
             cmd, data = msg.split(' ', 1)
         else:
             cmd = msg
+        logger.debug('Received command: {0}'.format(cmd))
 
         if cmd == Messages.SET:
             self._handle_command_set(data)
@@ -78,7 +82,15 @@ class ConfigActor(Greenlet):
         elif cmd == Messages.PUBLISH_CONFIG:
             self._publish_config()
             self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
+        elif cmd == Messages.DRONE_CONFIG:
+            result = self._handle_command_get_droneconfig(data)
+            self.config_commands.send('{0} {1}'.format(Messages.OK, json.dumps(result)))
+        elif cmd == Messages.DRONE_CONFIG_CHANGED:
+            # send OK straight away - we don't want the sender to wait
+            self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
+            self._handle_command_drone_config_changed(data)
         else:
+            logger.warning('Unknown command received: {0}'.format(cmd))
             self.config_commands.send(Messages.FAIL)
 
     def _handle_command_set(self, data):
@@ -89,9 +101,67 @@ class ConfigActor(Greenlet):
         self._publish_config()
 
     def _handle_command_genkeys(self, name):
-        private_key, publickey = self._generate_zmq_keys(name)
+        private_key, publickey = self._get_zmq_keys(name)
         self.config_commands.send(Messages.OK + ' ' + json.dumps({'public_key': publickey,
                                                                   'private_key': private_key}))
+
+    def _handle_command_drone_config_changed(self, id):
+        config_json = self._get_drone_config(id)
+        self.drone_command_receiver.send('{0} {1} {2}'.format(id, Messages.CONFIG, config_json))
+
+    def _handle_command_get_droneconfig(self, id):
+        return self._get_drone_config(id)
+
+    def _get_drone_config(self, id):
+        db_session = database_setup.get_session()
+        drone = db_session.query(Honeypot).filter(Drone.id == id).first()
+        # lame! what is the correct way?
+        if not drone:
+            drone = db_session.query(Client).filter(Drone.id == id).first()
+        if not drone:
+            drone = db_session.query(Drone).filter(Drone.id == id).first()
+        if not drone:
+            self.config_commands.send(Messages.FAIL)
+
+        server_zmq_url = 'tcp://{0}:{1}'.format(self.config['network']['server_host'], self.config['network']['zmq_port'])
+        server_zmq_command_url = 'tcp://{0}:{1}'.format(self.config['network']['server_host'],
+                                                        self.config['network']['zmq_command_port'])
+
+        private_key, public_key = self._get_zmq_keys(str(drone.id))
+
+        # common section that goes for all types of drones
+        drone_config = {
+            'general': {
+                'mode': drone.discriminator,
+                'id': id,
+                'fetch_ip': False,
+                'name': drone.name
+            },
+            'beeswarm_server': {
+                'zmq_url': server_zmq_url,
+                'zmq_command_url': server_zmq_command_url,
+                'zmq_server_public': self.config['network']['zmq_server_public_key'],
+                'zmq_own_public': public_key,
+                'zmq_own_private': private_key,
+            },
+            'timecheck': {
+                'enabled': True,
+                'poll': 5,
+                'ntp_pool': 'pool.ntp.org'
+            }
+        }
+
+        if drone.discriminator == 'honeypot':
+            drone_config['users'] = {}
+            drone_config['capabilities'] = {}
+            for capability in drone.capabilities:
+                drone_config['capabilities'][capability.protocol] = {'port': capability.port,
+                                                                     'protocol_specific_data': capability.protocol_specific_data}
+        elif drone.discriminator == 'client':
+            # TODO!
+            assert False
+
+        return drone_config
 
     def _publish_config(self):
         logger.debug('Sending config to subscribers.')
@@ -101,24 +171,27 @@ class ConfigActor(Greenlet):
         with open(self.config_file, 'w+') as config_file:
             config_file.write(json.dumps(self.config, indent=4))
 
-    def _generate_zmq_keys(self, key_name):
+    def _get_zmq_keys(self, id):
         cert_path = os.path.join(self.work_dir, 'certificates')
         public_keys = os.path.join(cert_path, 'public_keys')
         private_keys = os.path.join(cert_path, 'private_keys')
-        for _path in [cert_path, public_keys, private_keys]:
-            if not os.path.isdir(_path):
-                os.mkdir(_path)
+        public_key_path = os.path.join(public_keys, '{0}.pub'.format(id))
+        private_key_path = os.path.join(private_keys, '{0}.pri'.format(id))
 
-        tmp_key_dir = tempfile.mkdtemp()
-        try:
-            public_key, private_key = create_certificates(tmp_key_dir, key_name)
-            # the final location for keys
-            public_key_final = os.path.join(public_keys, '{0}.pub'.format(key_name))
-            private_key_final = os.path.join(private_keys, '{0}.pri'.format(key_name))
-            shutil.move(public_key, public_key_final)
-            shutil.move(private_key, private_key_final)
-        finally:
-            shutil.rmtree(tmp_key_dir)
+        if not os.path.isfile(public_key_path) or not os.path.isfile(private_key_path):
+            logging.debug('Generating ZMQ keys for: {0}.'.format(id))
+            for _path in [cert_path, public_keys, private_keys]:
+                if not os.path.isdir(_path):
+                    os.mkdir(_path)
+
+            tmp_key_dir = tempfile.mkdtemp()
+            try:
+                public_key, private_key = create_certificates(tmp_key_dir, id)
+                # the final location for keys
+                shutil.move(public_key, public_key_path)
+                shutil.move(private_key, private_key_path)
+            finally:
+                shutil.rmtree(tmp_key_dir)
 
         # return copy of keys
-        return open(private_key_final, "r").readlines(), open(public_key_final, "r").readlines()
+        return open(private_key_path, "r").readlines(), open(public_key_path, "r").readlines()

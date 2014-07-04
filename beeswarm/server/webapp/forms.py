@@ -24,7 +24,7 @@ def validate_time_range(form, field):
         raise ValidationError('Make sure the time is in correct format: "hh:mm - hh:mm"')
 
 
-class NewHoneypotConfigForm(Form):
+class HoneypotConfigurationForm(Form):
 
     general__name = TextField(default='', label='Name')
 
@@ -32,36 +32,36 @@ class NewHoneypotConfigForm(Form):
 
     capabilities__http__enabled = BooleanField(default=False, label='Enabled')
     capabilities__http__port = IntegerField(default=80, label='Port')
-    capabilities__http__banner = TextField(default='Microsoft-IIS/5.0', label='Server Banner')
+    capabilities__http__protocol_specific_data__banner = TextField(default='Microsoft-IIS/5.0', label='Server Banner')
 
     capabilities__https__enabled = BooleanField(default=False, label='Enabled')
     capabilities__https__port = IntegerField(default=443, label='Port')
-    capabilities__https__banner = TextField(default='Microsoft-IIS/5.0', label='Server Banner')
+    capabilities__https__protocol_specific_data__banner = TextField(default='Microsoft-IIS/5.0', label='Server Banner')
 
     capabilities__ftp__enabled = BooleanField(default=False, label='Enabled')
     capabilities__ftp__port = IntegerField(default=21, label='Port')
-    capabilities__ftp__max_attempts = IntegerField(default=3, label='Login Attempts')
-    capabilities__ftp__syst_type = TextField(default='Windows-NT', label='System Type')
-    capabilities__ftp__banner = TextField(default='Microsoft FTP Server', label='Server Banner')
+    capabilities__ftp__protocol_specific_data__max_attempts = IntegerField(default=3, label='Login Attempts')
+    capabilities__ftp__protocol_specific_data__syst_type = TextField(default='Windows-NT', label='System Type')
+    capabilities__ftp__protocol_specific_data__banner = TextField(default='Microsoft FTP Server', label='Server Banner')
 
     capabilities__smtp__enabled = BooleanField(default=False, label='Enabled')
     capabilities__smtp__port = IntegerField(default=25, label='Port')
-    capabilities__smtp__banner = TextField(default='Microsoft ESMTP MAIL service ready', label='Server Banner')
+    capabilities__smtp__protocol_specific_data__banner = TextField(default='Microsoft ESMTP MAIL service ready', label='Server Banner')
 
     capabilities__vnc__enabled = BooleanField(default=False, label='Enabled')
     capabilities__vnc__port = IntegerField(default=5900, label='Port')
 
     capabilities__telnet__enabled = BooleanField(default=False, label='Enabled')
     capabilities__telnet__port = IntegerField(default=23, label='Port')
-    capabilities__telnet__max_attempts = IntegerField(default=3, label='Login Attempts')
+    capabilities__telnet__protocol_specific_data__max_attempts = IntegerField(default=3, label='Login Attempts')
 
     capabilities__pop3__enabled = BooleanField(default=False, label='Enabled')
     capabilities__pop3__port = IntegerField(default=110, label='Port')
-    capabilities__pop3__max_attempts = IntegerField(default=3, label='Login Attempts')
+    capabilities__pop3__protocol_specific_data__max_attempts = IntegerField(default=3, label='Login Attempts')
 
     capabilities__pop3s__enabled = BooleanField(default=False, label='Enabled')
     capabilities__pop3s__port = IntegerField(default=995, label='Port')
-    capabilities__pop3s__max_attempts = IntegerField(default=3, label='Login Attempts')
+    capabilities__pop3s__protocol_specific_data__max_attempts = IntegerField(default=3, label='Login Attempts')
 
     capabilities__ssh__enabled = BooleanField(default=False, label='Enabled')
     capabilities__ssh__port = IntegerField(default=22, label='Port')

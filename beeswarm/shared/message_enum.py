@@ -25,3 +25,5 @@ class Messages(Enum):
     PING = 'PING'
     PONG = 'PING'
     IP = 'IP'
+    DRONE_CONFIG = 'DRONE_CONFIG'
+    DRONE_CONFIG_CHANGED = 'DRONE_CONFIG_CHANGED'

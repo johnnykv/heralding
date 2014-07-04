@@ -37,7 +37,7 @@ from werkzeug.datastructures import MultiDict
 from beeswarm.server.webapp.auth import Authenticator
 from wtforms import HiddenField
 import beeswarm
-from forms import NewHoneypotConfigForm, NewClientConfigForm, LoginForm, SettingsForm
+from forms import HoneypotConfigurationForm, NewClientConfigForm, LoginForm, SettingsForm
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, BaitSession, Session, Honeypot, User, Authentication, Classification, \
     BaitUser, Transcript, Drone, Authentication
@@ -236,117 +236,144 @@ class DictWrapper():
         else:
             return self._rec(path[1:], item[path[0]])
 
+
 @app.route('/ws/drone/honeypot/configure/<id>', methods=['GET', 'POST'])
 @login_required
 def configure_honeypot(id):
     db_session = database_setup.get_session()
-    drone = db_session.query(Drone).filter(Drone.id == id).one()
-    if drone.discriminator != 'honeypot' or drone is None:
+    honeypot = db_session.query(Honeypot).filter(Drone.id == id).one()
+    if honeypot.discriminator != 'honeypot' or honeypot is None:
         abort(404, 'Drone with id {0} not found or invalid.'.format(id))
-
-    if drone.configuration is not None:
-        config_obj = DictWrapper(json.loads(drone.configuration))
-    else:
-        # virgin drone
-        config_obj = None
-    form = NewHoneypotConfigForm(obj=config_obj)
+    print 'a'
+    config = send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.DRONE_CONFIG, id))
+    print 'b'
+    print config
+    config_obj = DictWrapper(config)
+    # if honeypot.configuration is not None:
+    #     config_obj = DictWrapper(json.loads(honeypot.configuration))
+    # else:
+    #     # virgin drone
+    #     config_obj = None
+    form = HoneypotConfigurationForm(obj=config_obj)
     if not form.validate_on_submit():
         return render_template('configure-honeypot.html', form=form, mode_name='Honeypot', user=current_user)
     else:
-        server_zmq_command_url = 'tcp://{0}:{1}'.format(config['network']['server_host'],
-                                                        config['network']['zmq_command_port'])
-        server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['server_host'], config['network']['zmq_port'])
-        # TODO: Check if key pair exists
-        result = send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.GEN_ZMQ_KEYS, str(drone.id)))
-        zmq_public = result['public_key']
-        zmq_private = result['private_key']
+        honeypot.cert_common_name = form.certificate_info__common_name.data
+        honeypot.cert_country = form.certificate_info__country.data
+        honeypot.cert_state = form.certificate_info__state.data
+        honeypot.cert_locality = form.certificate_info__locality.data
+        honeypot.cert_organization = form.certificate_info__organization.data
+        honeypot.cert_organization_unit = form.certificate_info__organization_unit.data
 
-        drone_config = {
-            'general': {
-                'name': form.general__name.data,
-                'mode': 'honeypot',
-                'id': drone.id,
-                'ip': '192.168.1.1',
-                'fetch_ip': False
-            },
-            'beeswarm_server': {
-                'enabled': True,
-                'zmq_url': server_zmq_url,
-                'zmq_server_public': config['network']['zmq_server_public_key'],
-                'zmq_own_public': zmq_public,
-                'zmq_own_private': zmq_private,
-                'zmq_command_url': server_zmq_command_url,
-            },
-            'certificate_info': {
-                'common_name': form.certificate_info__common_name.data,
-                'country': form.certificate_info__country.data,
-                'state': form.certificate_info__state.data,
-                'locality': form.certificate_info__locality.data,
-                'organization': form.certificate_info__organization.data,
-                'organization_unit': form.certificate_info__organization_unit.data
-            },
-            'capabilities': {
-                'ftp': {
-                    'enabled': form.capabilities__ftp__enabled.data,
-                    'port': form.capabilities__ftp__port.data,
-                    'max_attempts': form.capabilities__ftp__max_attempts.data,
-                    'banner': form.capabilities__ftp__banner.data,
-                    'syst_type': form.capabilities__ftp__syst_type.data
-                },
-                'telnet': {
-                    'enabled': form.capabilities__telnet__enabled.data,
-                    'port': form.capabilities__telnet__port.data,
-                    'max_attempts': form.capabilities__telnet__max_attempts.data
-                },
-                'pop3': {
-                    'enabled': form.capabilities__pop3__enabled.data,
-                    'port': form.capabilities__pop3__port.data,
-                    'max_attempts': form.capabilities__pop3__max_attempts.data,
-                },
-                'pop3s': {
-                    'enabled': form.capabilities__pop3s__enabled.data,
-                    'port': form.capabilities__pop3s__port.data,
-                    'max_attempts': form.capabilities__pop3s__max_attempts.data,
-                },
-                'ssh': {
-                    'enabled': form.capabilities__ssh__enabled.data,
-                    'port': form.capabilities__ssh__port.data,
-                },
-                'http': {
-                    'enabled': form.capabilities__http__enabled.data,
-                    'port': form.capabilities__http__port.data,
-                    'banner': form.capabilities__http__banner.data
-                },
-                'https': {
-                    'enabled': form.capabilities__https__enabled.data,
-                    'port': form.capabilities__https__port.data,
-                    'banner': form.capabilities__https__banner.data
-                },
-                'smtp': {
-                    'enabled': form.capabilities__smtp__enabled.data,
-                    'port': form.capabilities__smtp__port.data,
-                    'banner': form.capabilities__smtp__banner.data
-                },
-                'vnc': {
-                    'enabled': form.capabilities__vnc__enabled.data,
-                    'port': form.capabilities__vnc__port.data
-                }
-            },
-            'users': {},
-            'timecheck': {
-                'enabled': True,
-                'poll': 5,
-                'ntp_pool': 'pool.ntp.org'
-            },
-        }
-        config_json = json.dumps(drone_config, indent=4)
-        drone.name = form.general__name.data
-        drone.configuration = config_json
-        db_session.add(drone)
+        # clear all capabilities
+        honeypot.capabilities = []
+        if form.capabilities__ftp__enabled.data:
+            honeypot.add_capability('ftp', form.capabilities__ftp__port.data,
+                                    {
+                                        'max_attempts': form.capabilities__ftp__protocol_specific_data__max_attempts.data,
+                                        'banner': form.capabilities__ftp__protocol_specific_data__banner.data,
+                                        'syst_type': form.capabilities__ftp__protocol_specific_data__syst_type.data
+                                    })
+
+        if form.capabilities__telnet__enabled.data:
+            honeypot.add_capability('telnet', form.capabilities__telnet__port.data,
+                                    {
+                                        'max_attempts': form.capabilities__telnet__protocol_specific_data__max_attempts.data,
+                                    })
+
+        if form.capabilities__pop3__enabled.data:
+            honeypot.add_capability('pop3', form.capabilities__pop3__port.data,
+                                    {
+                                        'max_attempts': form.capabilities__pop3__protocol_specific_data__max_attempts.data,
+                                    })
+
+        if form.capabilities__pop3s__enabled.data:
+            honeypot.add_capability('pop3s', form.capabilities__pop3s__port.data,
+                                    {
+                                        'max_attempts': form.capabilities__pop3s__protocol_specific_data__max_attempts.data,
+                                    })
+
+        if form.capabilities__ssh__enabled.data:
+            honeypot.add_capability('ssh', form.capabilities__ssh__port.data, {})
+
+        if form.capabilities__http__enabled.data:
+            honeypot.add_capability('http', form.capabilities__http__port.data,
+                                    {
+                                        'banner': form.capabilities__http__protocol_specific_data__banner,
+                                    })
+
+        if form.capabilities__https__enabled.data:
+            honeypot.add_capability('https', form.capabilities__https__port.data,
+                                    {
+                                        'banner': form.capabilities__https__protocol_specific_data__banner,
+                                    })
+
+        if form.capabilities__smtp__enabled.data:
+            honeypot.add_capability('smtp', form.capabilities__smtp__port.data,
+                                    {
+                                        'banner': form.capabilities__smtp__protocol_specific_data__banner,
+                                    })
+
+        if form.capabilities__vnc__enabled.data:
+            honeypot.add_capability('vnc', form.capabilities__vnc__port.data, {})
+
+        # ,
+        # 'capabilities': {
+        #         'ftp': {
+        #             'enabled': form.capabilities__ftp__enabled.data,
+        #             'port': form.capabilities__ftp__port.data,
+        #             'max_attempts': form.capabilities__ftp__max_attempts.data,
+        #             'banner': form.capabilities__ftp__banner.data,
+        #             'syst_type': form.capabilities__ftp__syst_type.data
+        #         },
+        #         'telnet': {
+        #             'enabled': form.capabilities__telnet__enabled.data,
+        #             'port': form.capabilities__telnet__port.data,
+        #             'max_attempts': form.capabilities__telnet__max_attempts.data
+        #         },
+        #         'pop3': {
+        #             'enabled': form.capabilities__pop3__enabled.data,
+        #             'port': form.capabilities__pop3__port.data,
+        #             'max_attempts': form.capabilities__pop3__max_attempts.data,
+        #         },
+        #         'pop3s': {
+        #             'enabled': form.capabilities__pop3s__enabled.data,
+        #             'port': form.capabilities__pop3s__port.data,
+        #             'max_attempts': form.capabilities__pop3s__max_attempts.data,
+        #         },
+        #         'ssh': {
+        #             'enabled': form.capabilities__ssh__enabled.data,
+        #             'port': form.capabilities__ssh__port.data,
+        #         },
+        #         'http': {
+        #             'enabled': form.capabilities__http__enabled.data,
+        #             'port': form.capabilities__http__port.data,
+        #             'banner': form.capabilities__http__banner.data
+        #         },
+        #         'https': {
+        #             'enabled': form.capabilities__https__enabled.data,
+        #             'port': form.capabilities__https__port.data,
+        #             'banner': form.capabilities__https__banner.data
+        #         },
+        #         'smtp': {
+        #             'enabled': form.capabilities__smtp__enabled.data,
+        #             'port': form.capabilities__smtp__port.data,
+        #             'banner': form.capabilities__smtp__banner.data
+        #         },
+        #         'vnc': {
+        #             'enabled': form.capabilities__vnc__enabled.data,
+        #             'port': form.capabilities__vnc__port.data
+        #         }
+        #     }
+        honeypot.name = form.general__name.data
+        db_session.add(honeypot)
         db_session.commit()
-        # everything good, push config to drone if it is listening
-        send_zmq_push('ipc://droneCommandReceiver', '{0} {1} {2}'.format(drone.id, Messages.CONFIG, config_json))
-        return render_template('finish-config-honeypot.html', drone_id=drone.id, user=current_user)
+        # advise config actor that we have change something on a given drone id
+        # TODO: make entity itself know if it has changed and then poke the config actor.
+
+        send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.DRONE_CONFIG_CHANGED, honeypot.id))
+        return render_template('finish-config-honeypot.html', drone_id=honeypot.id, user=current_user)
+
 
 @app.route('/ws/drone/client/configure/<id>', methods=['GET', 'POST'])
 @login_required
@@ -389,6 +416,7 @@ def configure_client(id):
     # everything good, push config to drone if it is listening
     send_zmq_push('ipc://droneCommandReceiver', '{0} {1} {2}'.format(drone.id, Messages.CONFIG, config_json))
     return render_template('finish-config-client.html', drone_id=drone.id, user=current_user)
+
 
 @app.route('/ws/drone/configure/<id>', methods=['GET', 'POST'])
 @login_required
@@ -434,38 +462,12 @@ def drone_key(key):
         abort(401)
     else:
         drone_id = str(uuid.uuid4())
-        server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['server_host'], config['network']['zmq_port'])
-        server_zmq_command_url = 'tcp://{0}:{1}'.format(config['network']['server_host'],
-                                                        config['network']['zmq_command_port'])
-        result = send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.GEN_ZMQ_KEYS, drone_id))
-        zmq_public = result['public_key']
-        zmq_private = result['private_key']
         db_session = database_setup.get_session()
-        # this could be done even simpler by only using the http api to provide the ZMQ keys
-        # everything else could be done using zmq
-        drone_config = {
-            'general': {
-                'mode': '',
-                'id': drone_id,
-                'fetch_ip': False
-            },
-            'beeswarm_server': {
-                'enabled': True,
-                'zmq_url': server_zmq_url,
-                'zmq_command_url': server_zmq_command_url,
-                'zmq_server_public': config['network']['zmq_server_public_key'],
-                'zmq_own_public': zmq_public,
-                'zmq_own_private': zmq_private,
-            }
-        }
-
-        config_json = json.dumps(drone_config, indent=4)
-        drone = Drone(id=drone_id, configuration=config_json)
+        drone = Drone(id=drone_id)
         db_session.add(drone)
         db_session.commit()
-        logger.debug('Generated drone config for {0} on request from {1}'.format(drone_id, request.remote_addr))
-        return config_json
-
+        config_json = send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.DRONE_CONFIG, drone_id))
+        return json.dumps(config_json)
 
 @app.route('/ws/drone/delete', methods=['POST'])
 @login_required
@@ -624,6 +626,7 @@ def create_client():
         db_session.add(f)
         db_session.commit()
         return render_template('finish-config-client.html', user=current_user)
+
 
 # requesting all bait users - or replacing all bait users
 @app.route('/ws/bait_users', methods=['GET', 'POST'])

@@ -179,7 +179,6 @@ def send_zmq_request(actor_url, request):
     socket.send(request)
     result = socket.recv()
     if result.split(' ', 1)[0] != Messages.OK:
-        logger.warning('Error while requesting config change to actor.')
         socket.close()
         assert(False)
     else:

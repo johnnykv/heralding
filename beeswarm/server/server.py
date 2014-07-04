@@ -33,7 +33,7 @@ from beeswarm.shared.helpers import drop_privileges
 from beeswarm.server.misc.scheduler import Scheduler
 from beeswarm.shared.helpers import find_offset, create_self_signed_cert, generate_cert_digest
 from beeswarm.shared.asciify import asciify
-from beeswarm.server.db.session_persister import PersistanceActor
+from beeswarm.server.db.session_persister import SessionPersister
 from beeswarm.shared.actors.config_actor import ConfigActor
 from beeswarm.shared.message_enum import Messages
 from beeswarm.server.db import database_setup
@@ -73,7 +73,7 @@ class Server(object):
         config_actor.start()
         self.actors.append(config_actor)
 
-        persistanceActor = PersistanceActor()
+        persistanceActor = SessionPersister()
         persistanceActor.start()
         self.actors.append(persistanceActor)
 
