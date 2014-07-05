@@ -54,7 +54,8 @@ class ConfigActor(Greenlet):
         # start accepting incomming messages
         self.config_commands.bind('ipc://configCommands')
         self.config_publisher.bind('ipc://configPublisher')
-        self.drone_command_receiver.bind('ipc://droneCommandReceiver')
+        self.drone_command_receiver.connect('ipc://droneCommandReceiver')
+
         # initial publish of config
         self._publish_config()
 
@@ -105,9 +106,9 @@ class ConfigActor(Greenlet):
         self.config_commands.send(Messages.OK + ' ' + json.dumps({'public_key': publickey,
                                                                   'private_key': private_key}))
 
-    def _handle_command_drone_config_changed(self, id):
-        config_json = self._get_drone_config(id)
-        self.drone_command_receiver.send('{0} {1} {2}'.format(id, Messages.CONFIG, config_json))
+    def _handle_command_drone_config_changed(self, drone_id):
+        config_json = self._get_drone_config(drone_id)
+        self.drone_command_receiver.send('{0} {1} {2}'.format(drone_id, Messages.CONFIG, json.dumps(config_json)))
 
     def _handle_command_get_droneconfig(self, id):
         return self._get_drone_config(id)
@@ -152,10 +153,19 @@ class ConfigActor(Greenlet):
         }
 
         if drone.discriminator == 'honeypot':
+            drone_config['certificate_info'] = {
+                'common_name': drone.cert_common_name,
+                'country': drone.cert_country,
+                'state': drone.cert_state,
+                'locality': drone.cert_locality,
+                'organization': drone.cert_organization,
+                'organization_unit': drone.cert_organization_unit
+            }
             drone_config['users'] = {}
             drone_config['capabilities'] = {}
             for capability in drone.capabilities:
                 drone_config['capabilities'][capability.protocol] = {'port': capability.port,
+                                                                     'enabled': True,
                                                                      'protocol_specific_data': capability.protocol_specific_data}
         elif drone.discriminator == 'client':
             # TODO!

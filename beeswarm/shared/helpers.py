@@ -177,6 +177,7 @@ def send_zmq_request(actor_url, request):
     socket = context.socket(zmq.REQ)
     socket.connect(actor_url)
     socket.send(request)
+    gevent.sleep()
     result = socket.recv()
     if result.split(' ', 1)[0] != Messages.OK:
         socket.close()

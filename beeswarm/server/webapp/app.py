@@ -244,11 +244,8 @@ def configure_honeypot(id):
     honeypot = db_session.query(Honeypot).filter(Drone.id == id).one()
     if honeypot.discriminator != 'honeypot' or honeypot is None:
         abort(404, 'Drone with id {0} not found or invalid.'.format(id))
-    print 'a'
-    config = send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.DRONE_CONFIG, id))
-    print 'b'
-    print config
-    config_obj = DictWrapper(config)
+    config_dict = send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.DRONE_CONFIG, id))
+    config_obj = DictWrapper(config_dict)
     # if honeypot.configuration is not None:
     #     config_obj = DictWrapper(json.loads(honeypot.configuration))
     # else:
