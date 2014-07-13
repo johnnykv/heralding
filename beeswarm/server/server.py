@@ -370,8 +370,8 @@ class Server(object):
                                                                    'general': {
                                                                        'mode': 'server'
                                                                    },
-                                                                   'bait_session_retain': True,
-                                                                   'malicious_session_retain': True,
+                                                                   'bait_session_retain': 2,
+                                                                   'malicious_session_retain': 100,
                                                                    'ignore_failed_bait_session': False
 
 
