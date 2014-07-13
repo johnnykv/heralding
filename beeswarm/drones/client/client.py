@@ -21,7 +21,6 @@ import gevent
 from gevent.greenlet import Greenlet
 import gevent.monkey
 from beeswarm.drones.client.consumer.consumer import Consumer
-from beeswarm.shared.models.ui_handler import ClientUIHandler
 import zmq.green as zmq
 
 gevent.monkey.patch_all()
@@ -40,17 +39,15 @@ logger = logging.getLogger(__name__)
 
 
 class Client(object):
-    def __init__(self, work_dir, config, curses_screen=None):
+    def __init__(self, work_dir, config):
 
         """
             Main class which runs Beeswarm in Client mode.
 
         :param work_dir: Working directory (usually the current working directory)
         :param config_arg: Beeswarm configuration dictionary.
-        :param curses_screen: Contains a curses screen object, if UI is enabled. Default is None.
         """
         self.run_flag = True
-        self.curses_screen = curses_screen
         # maps honeypot id to IP
         self.honeypot_map = {}
 
@@ -81,13 +78,6 @@ class Client(object):
 
         self.dispatchers = {}
         self.dispatcher_greenlets = []
-
-        if self.curses_screen is not None:
-            self.uihandler = ClientUIHandler(self.status, self.curses_screen)
-            Greenlet.spawn(self.show_status_ui)
-
-    def show_status_ui(self):
-        self.uihandler.run()
 
     def start(self):
         """
@@ -138,8 +128,6 @@ class Client(object):
         """
         for g in self.dispatcher_greenlets:
             g.kill()
-        if self.curses_screen is not None:
-            self.uihandler.stop()
         self.sessions_consumer.stop_handling()
         logger.info('All clients stopped')
 

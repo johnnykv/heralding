@@ -36,14 +36,13 @@ class Drone(object):
 
     """ Aggregates a honeypot or client. """
 
-    def __init__(self, work_dir, config, key='server.key', cert='server.crt', curses_screen=None, **kwargs):
+    def __init__(self, work_dir, config, key='server.key', cert='server.crt', **kwargs):
         """
 
         :param work_dir: Working directory (usually the current working directory)
         :param config: Beeswarm configuration dictionary, None if no configuration was supplied.
         :param key: Key file used for SSL enabled capabilities
         :param cert: Cert file used for SSL enabled capabilities
-        :param curses_screen: Contains a curses screen object, if UI is enabled. Default is None.
         """
 
         # write ZMQ keys to files - as expected by pyzmq

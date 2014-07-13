@@ -19,7 +19,6 @@ import gevent
 import gevent.monkey
 gevent.monkey.patch_all()
 
-import curses
 import logging
 import json
 from argparse import ArgumentParser
@@ -34,7 +33,6 @@ from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.server.server import Server
 from beeswarm.drones.client.client import Client
 from beeswarm.errors import ConfigNotFound
-from beeswarm.shared.models.ui_handler import CursesLogHandler
 from beeswarm.shared.asciify import asciify
 from beeswarm.shared.helpers import is_url
 
@@ -42,14 +40,11 @@ from beeswarm.shared.helpers import is_url
 logger = logging.getLogger()
 
 
-def setuplogging(logfile, verbose, show_ui=False):
+def setuplogging(logfile, verbose):
     """
-        Sets up logging to the logfiles/console. If show_ui is true, a curses screen is
-        initialized and returned.
+        Sets up logging to the logfiles/console.
     :param logfile: Path of the file to write logs to.
     :param verbose: If True, enables verbose logging.
-    :param show_ui: If True, displays a status screen using curses, with a running log.
-    :return: If show_ui is True, returns a `curses.Window` object representing the entire screen
     """
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.DEBUG)
@@ -61,31 +56,16 @@ def setuplogging(logfile, verbose, show_ui=False):
     else:
         loglevel = logging.INFO
 
-    curses_screen = None
-    if not show_ui:
-        console_log = logging.StreamHandler()
-        console_log.addFilter(LogFilter())
-        console_log.setLevel(loglevel)
-        console_log.setFormatter(formatter)
-        root_logger.addHandler(console_log)
-    else:
-        curses_screen = curses.initscr()
-        curses.noecho()
-        curses.cbreak()
-        curses.curs_set(0)
-        h, w = curses_screen.getmaxyx()
-        log_win = curses_screen.subwin(10, w, h - 10, 0)
-        curses_log = CursesLogHandler(log_win)
-        curses_log.addFilter(LogFilter())
-        curses_log.setLevel(loglevel)
-        curses_log.setFormatter(formatter)
-        root_logger.addHandler(curses_log)
+    console_log = logging.StreamHandler()
+    console_log.addFilter(LogFilter())
+    console_log.setLevel(loglevel)
+    console_log.setFormatter(formatter)
+    root_logger.addHandler(console_log)
 
     file_log = logging.FileHandler(logfile)
     file_log.setLevel(logging.DEBUG)
     file_log.setFormatter(formatter)
     root_logger.addHandler(file_log)
-    return curses_screen
 
 
 class LogFilter(logging.Filter):
@@ -108,13 +88,11 @@ if __name__ == '__main__':
     parser.add_argument('--workdir', dest='workdir', default=os.getcwd())
     parser.add_argument('--logfile', dest='logfile', default='beeswarm.log')
     parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Logs debug messages.')
-    parser.add_argument('-ui', '--userinterface', action='store_true', default=False, help='Logs debug messages.')
     parser.add_argument('--customize', action='store_true', default=False,
                         help='Asks for specific network and certificate information on the first run.')
     args = parser.parse_args()
 
-    curses_screen = setuplogging(args.logfile, args.verbose, args.userinterface)
-
+    setuplogging(args.logfile, args.verbose)
     mode = None
     config = None
     config_file = None
@@ -147,7 +125,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     try:
-        m = mode(args.workdir, config, curses_screen=curses_screen, customize=args.customize)
+        m = mode(args.workdir, config, customize=args.customize)
     except ConfigNotFound as ex:
         logger.error(ex)
         sys.exit(ex)
@@ -162,7 +140,3 @@ if __name__ == '__main__':
     finally:
         gevent.joinall([mode_greenlet], 5)
         # Restore previous terminal state
-        curses.initscr()
-        curses.nocbreak()
-        curses.echo()
-        curses.endwin()

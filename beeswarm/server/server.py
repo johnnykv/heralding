@@ -43,15 +43,13 @@ logger = logging.getLogger(__name__)
 
 
 class Server(object):
-    def __init__(self, work_dir, config, curses_screen=None, **kwargs):
+    def __init__(self, work_dir, config, **kwargs):
         """
             Main class for the Web-Interface. It takes care of setting up
             the database, managing the users, etc.
 
         :param work_dir: The working directory (usually the current working directory).
         :param config_arg: Beeswarm configuration dictionary, None if not configuration was supplied.
-        :param curses_screen: This parameter is to maintain a similar interface for
-                               all the modes. It is ignored for the Server.
         """
         customize = kwargs['customize']
 

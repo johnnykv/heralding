@@ -39,7 +39,6 @@ from beeswarm.drones.honeypot.models.user import BaitUser
 import requests
 from requests.exceptions import Timeout, ConnectionError
 from beeswarm.shared.asciify import asciify
-from beeswarm.shared.models.ui_handler import HoneypotUIHandler
 from beeswarm.shared.message_enum import Messages
 
 logger = logging.getLogger(__name__)
@@ -48,8 +47,7 @@ logger = logging.getLogger(__name__)
 class Honeypot(object):
     """ This is the main class, which starts up all the capabilities. """
 
-    def __init__(self, work_dir, config, key='server.key', cert='server.crt',
-                 curses_screen=None, **kwargs):
+    def __init__(self, work_dir, config, key='server.key', cert='server.crt', **kwargs):
         """
             Main class which runs Beeswarm in Honeypot mode.
 
@@ -57,7 +55,6 @@ class Honeypot(object):
         :param config: Beeswarm configuration dictionary, None if no configuration was supplied.
         :param key: Key file used for SSL enabled capabilities
         :param cert: Cert file used for SSL enabled capabilities
-        :param curses_screen: Contains a curses screen object, if UI is enabled. Default is None.
         """
         if config is None or not os.path.isdir(os.path.join(work_dir, 'data')):
             Honeypot.prepare_environment(work_dir)
@@ -67,7 +64,6 @@ class Honeypot(object):
         self.config = config
         self.key = key
         self.cert = cert
-        self.curses_screen = curses_screen
 
         # TODO: pass honeypot otherwise
         Session.honeypot_id = self.config['general']['id']
@@ -119,14 +115,6 @@ class Honeypot(object):
         # spawning time checker
         if self.config['timecheck']['enabled']:
             Greenlet.spawn(self.checktime)
-
-        # show curses UI
-        if self.curses_screen is not None:
-            self.uihandler = HoneypotUIHandler(self.status, self.curses_screen)
-            Greenlet.spawn(self.show_status_ui)
-
-    def show_status_ui(self):
-        self.uihandler.run()
 
     # function to check the time offset
     def checktime(self):
@@ -196,8 +184,6 @@ class Honeypot(object):
         for g in self.server_greenlets:
             g.kill()
 
-        if self.curses_screen is not None:
-            self.uihandler.stop()
         self.session_consumer.stop()
         logger.info('All workers stopped.')
 
