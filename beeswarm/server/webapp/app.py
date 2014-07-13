@@ -314,54 +314,6 @@ def configure_honeypot(id):
         if form.capabilities__vnc__enabled.data:
             honeypot.add_capability('vnc', form.capabilities__vnc__port.data, {})
 
-        # ,
-        # 'capabilities': {
-        #         'ftp': {
-        #             'enabled': form.capabilities__ftp__enabled.data,
-        #             'port': form.capabilities__ftp__port.data,
-        #             'max_attempts': form.capabilities__ftp__max_attempts.data,
-        #             'banner': form.capabilities__ftp__banner.data,
-        #             'syst_type': form.capabilities__ftp__syst_type.data
-        #         },
-        #         'telnet': {
-        #             'enabled': form.capabilities__telnet__enabled.data,
-        #             'port': form.capabilities__telnet__port.data,
-        #             'max_attempts': form.capabilities__telnet__max_attempts.data
-        #         },
-        #         'pop3': {
-        #             'enabled': form.capabilities__pop3__enabled.data,
-        #             'port': form.capabilities__pop3__port.data,
-        #             'max_attempts': form.capabilities__pop3__max_attempts.data,
-        #         },
-        #         'pop3s': {
-        #             'enabled': form.capabilities__pop3s__enabled.data,
-        #             'port': form.capabilities__pop3s__port.data,
-        #             'max_attempts': form.capabilities__pop3s__max_attempts.data,
-        #         },
-        #         'ssh': {
-        #             'enabled': form.capabilities__ssh__enabled.data,
-        #             'port': form.capabilities__ssh__port.data,
-        #         },
-        #         'http': {
-        #             'enabled': form.capabilities__http__enabled.data,
-        #             'port': form.capabilities__http__port.data,
-        #             'banner': form.capabilities__http__banner.data
-        #         },
-        #         'https': {
-        #             'enabled': form.capabilities__https__enabled.data,
-        #             'port': form.capabilities__https__port.data,
-        #             'banner': form.capabilities__https__banner.data
-        #         },
-        #         'smtp': {
-        #             'enabled': form.capabilities__smtp__enabled.data,
-        #             'port': form.capabilities__smtp__port.data,
-        #             'banner': form.capabilities__smtp__banner.data
-        #         },
-        #         'vnc': {
-        #             'enabled': form.capabilities__vnc__enabled.data,
-        #             'port': form.capabilities__vnc__port.data
-        #         }
-        #     }
         honeypot.name = form.general__name.data
         db_session.add(honeypot)
         db_session.commit()
@@ -379,39 +331,7 @@ def configure_client(id):
     drone = db_session.query(Drone).filter(Drone.id == id).one()
     if drone.discriminator != 'client' or drone is None:
         abort(404, 'Drone with id {0} not found or invalid.'.format(id))
-
-    server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['server_host'], config['network']['zmq_port'])
-    server_zmq_command_url = 'tcp://{0}:{1}'.format(config['network']['server_host'],
-                                                    config['network']['zmq_command_port'])
-    # TODO: Check if key pair exists
-    result = send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.GEN_ZMQ_KEYS, str(drone.id)))
-    zmq_public = result['public_key']
-    zmq_private = result['private_key']
-
-    drone_config = {
-        'general': {
-            'mode': 'client',
-            'id': drone.id,
-            'fetch_ip': False
-        },
-        'capabilities': {},
-        'beeswarm_server': {
-            'enabled': True,
-            'zmq_url': server_zmq_url,
-            'zmq_server_public': config['network']['zmq_server_public_key'],
-            'zmq_own_public': zmq_public,
-            'zmq_own_private': zmq_private,
-            'zmq_command_url': server_zmq_command_url,
-        },
-    }
-
-    config_json = json.dumps(drone_config, indent=4)
-    drone.configuration = config_json
-    db_session.add(drone)
-    db_session.commit()
-
-    # everything good, push config to drone if it is listening
-    send_zmq_push('ipc://droneCommandReceiver', '{0} {1} {2}'.format(drone.id, Messages.CONFIG, config_json))
+    send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.DRONE_CONFIG_CHANGED, drone.id))
     return render_template('finish-config-client.html', drone_id=drone.id, user=current_user)
 
 

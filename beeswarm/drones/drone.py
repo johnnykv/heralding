@@ -142,6 +142,8 @@ class Drone(object):
         receiving_socket.setsockopt(zmq.SUBSCRIBE, Messages.IP)
 
         receiving_socket.connect(self.config['beeswarm_server']['zmq_command_url'])
+        gevent.spawn(self.monitor_worker, receiving_socket.get_monitor_socket(), 'incomming socket ({0}).'
+                     .format(self.config['beeswarm_server']['zmq_url']))
         logger.debug('Connected receiving socket to server on {0}'.format(self.config['beeswarm_server']['zmq_command_url']))
 
         poller = zmq.Poller()
@@ -182,7 +184,7 @@ class Drone(object):
         sending_socket.curve_serverkey = server_public
         sending_socket.setsockopt(zmq.RECONNECT_IVL, 2000)
         sending_socket.connect(self.config['beeswarm_server']['zmq_url'])
-        gevent.spawn(self.monitor_worker, sending_socket.get_monitor_socket(), ' outgoing socket ({0}).'
+        gevent.spawn(self.monitor_worker, sending_socket.get_monitor_socket(), 'outgoing socket ({0}).'
                      .format(self.config['beeswarm_server']['zmq_url']))
 
         # retransmits everything received to beeswarm server using sending_socket

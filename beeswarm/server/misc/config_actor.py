@@ -18,13 +18,14 @@ import logging
 import os
 import tempfile
 import shutil
+import random
 
 from gevent import Greenlet
 import zmq.green as zmq
 from zmq.auth.certs import create_certificates
 from beeswarm.shared.message_enum import Messages
 from beeswarm.server.db import database_setup
-from beeswarm.server.db.entities import Client, Honeypot, Drone
+from beeswarm.server.db.entities import Client, Honeypot, Drone, DroneEdge, BaitUser
 
 logger = logging.getLogger(__name__)
 
@@ -109,9 +110,36 @@ class ConfigActor(Greenlet):
     def _handle_command_drone_config_changed(self, drone_id):
         config_json = self._get_drone_config(drone_id)
         self.drone_command_receiver.send('{0} {1} {2}'.format(drone_id, Messages.CONFIG, json.dumps(config_json)))
+        self._reconfigure_all_clients()
 
     def _handle_command_get_droneconfig(self, id):
         return self._get_drone_config(id)
+
+    def _reconfigure_all_clients(self):
+        db_session = database_setup.get_session()
+        db_session.query(DroneEdge).delete()
+        db_session.commit()
+        honeypots = db_session.query(Honeypot).all()
+        clients = db_session.query(Client).all()
+        # delete old architecture
+        credentials = db_session.query(BaitUser).all()
+        for honeypot in honeypots:
+            for capability in honeypot.capabilities:
+                for client in clients:
+                    # following three variables should be make somewhat user configurable again
+
+                    # the range in which to activate bait sessions
+                    activation_range = '00:00 - 23:59'
+                    # period to sleep before using activation_probability
+                    sleep_interval = '60'
+                    # the probability that a bait session will be activated, 1 is always activate
+                    activation_probability = 1
+                    bait_credentials = random.choice(credentials)
+                    client.add_bait(capability, activation_range, sleep_interval,
+                                    activation_probability, bait_credentials.username, bait_credentials.password)
+        db_session.commit()
+        for client in clients:
+            self._handle_command_drone_config_changed(client.id)
 
     def _get_drone_config(self, id):
         db_session = database_setup.get_session()
@@ -168,8 +196,12 @@ class ConfigActor(Greenlet):
                                                                      'enabled': True,
                                                                      'protocol_specific_data': capability.protocol_specific_data}
         elif drone.discriminator == 'client':
-            # TODO!
-            assert False
+            drone_config['baits'] = {}
+            for bait in drone.baits:
+                drone_config['baits'][bait.capability.protocol] = {'server': bait.capability.honeypot.id,
+                                                                   'port': bait.capability.port,
+                                                                   'username': bait.username,
+                                                                   'password': bait.password}
 
         return drone_config
 

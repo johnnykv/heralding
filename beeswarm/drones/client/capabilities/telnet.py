@@ -24,6 +24,7 @@ from beeswarm.drones.client.capabilities.shared.shell import Commands
 
 logger = logging.getLogger(__name__)
 
+
 class BeeTelnetClient(telnetlib.Telnet):
     IAC = chr(255)
 

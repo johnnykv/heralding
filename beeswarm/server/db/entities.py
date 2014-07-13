@@ -21,6 +21,7 @@ class Capability(Base):
     port = Column(Integer)
     # jsonified python dict
     protocol_specific_data = Column(String)
+    baits = relationship("DroneEdge", backref="capability")
 
 
 class Drone(Base):
@@ -40,11 +41,9 @@ class Drone(Base):
 # edge between honeypot and client
 class DroneEdge(Base):
     __tablename__ = 'droneedge'
-
-    honeypot_id = Column(String, ForeignKey('drone.id'), primary_key=True)
     client_id = Column(String, ForeignKey('drone.id'), primary_key=True)
-    protocol = Column(String, primary_key=True)
-    timing = Column(String)
+    capability_id = Column(Integer, ForeignKey('capability.id'), primary_key=True)
+    activation_range = Column(String)
     sleep_interval = Column(Integer)
     activation_probability = Column(Float)
     username = Column(String)
@@ -57,8 +56,14 @@ class Client(Drone):
 
     id = Column(String, ForeignKey('drone.id'), primary_key=True)
     bait_sessions = relationship("BaitSession", cascade="all, delete-orphan", backref='client')
-    # honeypots that this client will connect to.
-    honeypots = relationship("Honeypot", secondary=honeypot_client_mtm)
+
+    baits = relationship('DroneEdge', cascade='all, delete-orphan', backref='client')
+
+    def add_bait(self, capability, activation_range, sleep_interval, activation_probability, username, password):
+        bait = DroneEdge(capability=capability, activation_range=activation_range, sleep_interval=sleep_interval,
+                         activation_probability=activation_probability, username=username, password=password)
+        bait.client_id = self.id
+        self.baits.append(bait)
 
 
 class Classification(Base):

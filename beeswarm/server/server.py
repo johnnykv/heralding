@@ -14,10 +14,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
-
 import logging
 import os
-import shutil
 from datetime import datetime
 
 import gevent
@@ -34,7 +32,7 @@ from beeswarm.server.misc.scheduler import Scheduler
 from beeswarm.shared.helpers import find_offset, create_self_signed_cert, generate_cert_digest
 from beeswarm.shared.asciify import asciify
 from beeswarm.server.db.session_persister import SessionPersister
-from beeswarm.shared.actors.config_actor import ConfigActor
+from beeswarm.server.misc.config_actor import ConfigActor
 from beeswarm.shared.message_enum import Messages
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Drone
@@ -179,13 +177,6 @@ class Server(object):
                     drone.ip_address = ip_address
                     db_session.add(drone)
                     db_session.commit()
-                    # relay to all clients
-                    # TODO: handle deleted honeypots and honeypots that are converted to clients
-                    # Maybe transmit full knowledge map on every ip change?
-                    clients = db_session.query(Drone).filter(Drone.discriminator == 'client')
-                    for client in clients:
-                        outbound_message = '{0} {1} {2}'.format(client.id, Messages.IP)
-                        drone_data_outbound.send(outbound_message)
                 else:
                     logger.warn('Message with unknown topic received: {0}'.format(topic))
 
