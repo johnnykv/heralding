@@ -28,7 +28,7 @@ from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.capabilities import vnc as hive_vnc
 from beeswarm.drones.honeypot.models.user import BaitUser
 
-from beeswarm.drones.client.capabilities import vnc as bee_vnc
+from beeswarm.drones.client.baits import vnc as bee_vnc
 from beeswarm.drones.client.models.session import BaitSession
 
 

@@ -18,8 +18,8 @@ import random
 import telnetlib
 import time
 
-from beeswarm.drones.client.capabilities.clientbase import ClientBase
-from beeswarm.drones.client.capabilities.shared.shell import Commands
+from beeswarm.drones.client.baits.clientbase import ClientBase
+from beeswarm.drones.client.baits.shared.shell import Commands
 
 
 logger = logging.getLogger(__name__)
@@ -74,23 +74,27 @@ class telnet(ClientBase, Commands):
         password = self.options['password']
         server_host = self.options['server']
         server_port = self.options['port']
-        session = self.create_session(server_host, server_port, my_ip)
+        honeypot_id = self.options['honeypot_id']
+
+        session = self.create_session(server_host, server_port, my_ip, honeypot_id)
         self.sessions[session.id] = session
         logger.debug(
-            'Sending %s bait session to {0}:{1}. (bait id: {3})'.format('telnet', server_host, server_port, session.id))
+            'Sending telnet bait session to {0}:{1}. (bait id: {3})'.format(server_host, server_port, session.id))
 
         try:
             self.connect()
             self.login(login, password)
 
-            #TODO: Handle failed login
             session.add_auth_attempt('plaintext', True, username=login, password=login)
 
             session.did_connect = True
             session.source_port = self.client.sock.getsockname()[1]
             session.did_login = True
+        except InvalidLogin:
+            logger.debug('Telnet session could not login. ({0})'.format(session.id))
+            session.did_login = False
         except Exception as err:
-            logger.debug('Caught exception: {0} (1)'.format(err, str(type(err))))
+            logger.debug('Caught exception: {0} {1}'.format(err, str(err), exc_info=True))
         else:
             while self.command_count < self.command_limit:
                 self.sense()

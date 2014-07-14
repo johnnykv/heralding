@@ -15,7 +15,7 @@
 
 import gevent.monkey
 
-from beeswarm.drones.client.capabilities import telnet as bee_telnet
+from beeswarm.drones.client.baits import telnet as bee_telnet
 
 
 gevent.monkey.patch_all()

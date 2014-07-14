@@ -200,8 +200,16 @@ class Drone(object):
             gevent.sleep()
             if internal_server_relay in socks and socks[internal_server_relay] == zmq.POLLIN:
                 message = internal_server_relay.recv()
-                logger.debug('Relaying {0} message to server.'.format(message.split(' ')[0]))
-                sending_socket.send(message)
+                # inject own id into the message
+                data_split = message.split(' ', 1)
+                if len(data_split) == 1:
+                    topic = data_split[0]
+                    new_message = '{0} {1}'.format(topic, self.id)
+                else:
+                    topic, data = data_split
+                    new_message = '{0} {1} {2}'.format(topic, self.id, data)
+                logger.debug('Relaying {0} message to server.'.format(topic))
+                sending_socket.send(new_message)
 
         logger.warn('Command sender exiting.')
 
@@ -217,9 +225,8 @@ class Drone(object):
                 value = data['value']
                 if event == zmq.EVENT_CONNECTED:
                     logger.info('Connected to {0}'.format(log_name))
-                    send_zmq_push('ipc://serverRelay', '{0} {1}'.format(Messages.PING, self.id))
-                    send_zmq_push('ipc://serverRelay', '{0} {1} {2}'.format(Messages.IP,
-                                                                        self.id,
+                    send_zmq_push('ipc://serverRelay', '{0}'.format(Messages.PING))
+                    send_zmq_push('ipc://serverRelay', '{0} {1}'.format(Messages.IP,
                                                                         socket.gethostbyname(socket.gethostname())))
                 elif event == zmq.EVENT_DISCONNECTED:
                     logger.warning('Disconnected from {0}, will reconnect in {1} seconds.'.format(log_name, 5))

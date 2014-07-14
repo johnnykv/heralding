@@ -24,7 +24,7 @@ import tempfile
 
 from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.drones.client.models.session import BaitSession
-from beeswarm.drones.client.capabilities.http import http
+from beeswarm.drones.client.baits.http import http
 from beeswarm.drones.honeypot.models.authenticator import Authenticator
 from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.models.user import BaitUser

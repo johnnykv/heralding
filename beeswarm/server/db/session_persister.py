@@ -81,7 +81,6 @@ class SessionPersister(gevent.Greenlet):
         classification = db_session.query(Classification).filter(Classification.type == 'unclassified').one()
         if data['honeypot_id'] is not None:
             _honeypot = db_session.query(Honeypot).filter(Honeypot.id == data['honeypot_id']).one()
-            _honeypot.last_activity = datetime.now()
         else:
             _honeypot = None
 

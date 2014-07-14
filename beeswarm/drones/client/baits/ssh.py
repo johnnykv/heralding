@@ -17,8 +17,8 @@ import time
 
 from paramiko import SSHClient, AutoAddPolicy, SSHException
 
-from beeswarm.drones.client.capabilities.clientbase import ClientBase
-from beeswarm.drones.client.capabilities.shared.shell import Commands
+from beeswarm.drones.client.baits.clientbase import ClientBase
+from beeswarm.drones.client.baits.shared.shell import Commands
 from beeswarm.errors import AuthenticationFailed
 
 
@@ -50,7 +50,9 @@ class ssh(ClientBase, Commands):
         password = self.options['password']
         server_host = self.options['server']
         server_port = self.options['port']
-        session = self.create_session(server_host, server_port, my_ip)
+        honeypot_id = self.options['honeypot_id']
+
+        session = self.create_session(server_host, server_port, my_ip, honeypot_id)
 
         self.sessions[session.id] = session
         logger.debug(

@@ -29,7 +29,7 @@ from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.capabilities import ssh as honeypot_ssh
 from beeswarm.drones.honeypot.models.user import BaitUser
 
-from beeswarm.drones.client.capabilities import ssh as client_ssh
+from beeswarm.drones.client.baits import ssh as client_ssh
 from beeswarm.drones.client.models.session import BaitSession
 
 

@@ -27,7 +27,7 @@ from beeswarm.drones.honeypot.models.user import BaitUser
 from beeswarm.drones.honeypot.models.authenticator import Authenticator
 from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.capabilities import pop3s as honeypot_pop3s
-from beeswarm.drones.client.capabilities import pop3s as client_pop3s
+from beeswarm.drones.client.baits import pop3s as client_pop3s
 
 from beeswarm.drones.client.models.session import BaitSession
 

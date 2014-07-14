@@ -12,9 +12,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from beeswarm.drones.client.capabilities import http
+from beeswarm.drones.client.baits import http
 
-from beeswarm.drones.client.capabilities.clientbase import ClientBase
+from beeswarm.drones.client.baits.clientbase import ClientBase
 
 
 class https(http.http, ClientBase):

@@ -15,7 +15,7 @@
 
 import gevent.monkey
 
-from beeswarm.drones.client.capabilities import ftp as bee_ftp
+from beeswarm.drones.client.baits import ftp as bee_ftp
 
 gevent.monkey.patch_all()
 

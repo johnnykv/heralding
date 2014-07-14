@@ -108,9 +108,12 @@ class ConfigActor(Greenlet):
                                                                   'private_key': private_key}))
 
     def _handle_command_drone_config_changed(self, drone_id):
+        self._send_config_to_drone(drone_id)
+        self._reconfigure_all_clients()
+
+    def _send_config_to_drone(self, drone_id):
         config_json = self._get_drone_config(drone_id)
         self.drone_command_receiver.send('{0} {1} {2}'.format(drone_id, Messages.CONFIG, json.dumps(config_json)))
-        self._reconfigure_all_clients()
 
     def _handle_command_get_droneconfig(self, id):
         return self._get_drone_config(id)
@@ -139,7 +142,7 @@ class ConfigActor(Greenlet):
                                     activation_probability, bait_credentials.username, bait_credentials.password)
         db_session.commit()
         for client in clients:
-            self._handle_command_drone_config_changed(client.id)
+            self._send_config_to_drone(client.id)
 
     def _get_drone_config(self, id):
         db_session = database_setup.get_session()
@@ -194,14 +197,19 @@ class ConfigActor(Greenlet):
             for capability in drone.capabilities:
                 drone_config['capabilities'][capability.protocol] = {'port': capability.port,
                                                                      'enabled': True,
-                                                                     'protocol_specific_data': capability.protocol_specific_data}
+                                                                     'protocol_specific_data': json.loads(capability.protocol_specific_data),
+                                                                     ''}
         elif drone.discriminator == 'client':
             drone_config['baits'] = {}
             for bait in drone.baits:
-                drone_config['baits'][bait.capability.protocol] = {'server': bait.capability.honeypot.id,
+                drone_config['baits'][bait.capability.protocol] = {'server': bait.capability.honeypot.ip_address,
                                                                    'port': bait.capability.port,
+                                                                   'honeypot_id': bait.capability.honeypot_id,
                                                                    'username': bait.username,
-                                                                   'password': bait.password}
+                                                                   'password': bait.password,
+                                                                   'active_range': bait.activation_range,
+                                                                   'sleep_interval': bait.sleep_interval,
+                                                                   'activation_probability': bait.activation_probability}
 
         return drone_config
 

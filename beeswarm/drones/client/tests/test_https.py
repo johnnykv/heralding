@@ -15,7 +15,7 @@
 
 import gevent.monkey
 
-from beeswarm.drones.client.capabilities import https as bee_https
+from beeswarm.drones.client.baits import https as bee_https
 
 gevent.monkey.patch_all()
 from gevent.server import StreamServer

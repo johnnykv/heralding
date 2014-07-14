@@ -32,7 +32,7 @@ class ClientBase(object):
     def do_session(self, my_ip):
         raise Exception('Do not call base class!')
 
-    def create_session(self, server_host, server_port, my_ip):
+    def create_session(self, server_host, server_port, my_ip, honeypot_id):
         """
             Creates a new session and adds it to the sessions directory.
 
@@ -42,6 +42,6 @@ class ClientBase(object):
         :return: A new `BeeSession` object.
         """
         protocol = self.__class__.__name__
-        session = BaitSession(protocol, server_host, server_port, my_ip)
+        session = BaitSession(protocol, server_host, server_port, my_ip, honeypot_id)
         self.sessions[session.id] = session
         return session

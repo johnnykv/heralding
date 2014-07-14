@@ -28,7 +28,7 @@ from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.capabilities import smtp as hive_smtp
 from beeswarm.drones.honeypot.models.user import BaitUser
 
-from beeswarm.drones.client.capabilities import smtp as bee_smtp
+from beeswarm.drones.client.baits import smtp as bee_smtp
 from beeswarm.drones.client.models.session import BaitSession
 
 

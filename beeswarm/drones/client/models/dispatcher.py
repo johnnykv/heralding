@@ -25,7 +25,7 @@ class BeeDispatcher(object):
     """ Dispatches capabilities in a realistic fashion (with respect to timings) """
 
     def __init__(self, options, bee, my_ip):
-        self.options = options['capabilities'][bee.__class__.__name__]
+        self.options = options['baits'][bee.__class__.__name__]
         self.enabled = False
         self.bait = bee
         self.run_flag = True
@@ -36,11 +36,11 @@ class BeeDispatcher(object):
         except (ValueError, AttributeError, KeyError, IndexError) as err:
             logger.debug('Caught exception: {0} ({1})'.format(err, str(type(err))))
 
-        self.activation_probability = self.options['timing']['activation_probability']
-        self.sleep_interval = float(self.options['timing']['sleep_interval'])
+        self.activation_probability = self.options['activation_probability']
+        self.sleep_interval = float(self.options['sleep_interval'])
 
     def set_active_interval(self):
-        interval_string = self.options['timing']['active_range']
+        interval_string = self.options['active_range']
         begin, end = interval_string.split('-')
         begin = begin.strip()
         end = end.strip()

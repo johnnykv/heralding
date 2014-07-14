@@ -8,4 +8,4 @@ for fullname in glob.glob(os.path.dirname(__file__)+"/*.py"):
     if name[:-3] == "__init__" or name[:-3] == "clientbase":
         pass
     else:
-        __import__("beeswarm.drones.client.capabilities."+name[:-3])
+        __import__("beeswarm.drones.client.baits."+name[:-3])

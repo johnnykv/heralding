@@ -17,21 +17,15 @@ import poplib
 from datetime import datetime
 import logging
 
-from beeswarm.drones.client.capabilities.clientbase import ClientBase
+from beeswarm.drones.client.baits.clientbase import ClientBase
 
 
 logger = logging.getLogger(__name__)
 
-class pop3(ClientBase):
+class pop3s(ClientBase):
 
     def __init__(self, sessions, options):
-        """
-            Initializes common values.
-
-        :param sessions: A dict which is updated every time a new session is created.
-        :param options: A dict containing all options
-        """
-        super(pop3, self).__init__(sessions, options)
+        super(pop3s, self).__init__(sessions, options)
 
     def do_session(self, my_ip):
         """
@@ -44,13 +38,15 @@ class pop3(ClientBase):
         password = self.options['password']
         server_host = self.options['server']
         server_port = self.options['port']
+        honeypot_id = self.options['honeypot_id']
 
-        session = self.create_session(server_host, server_port, my_ip)
+        session = self.create_session(server_host, server_port, my_ip, honeypot_id)
 
         try:
             logger.debug(
-                'Sending {0} bait session to {1}:{2}. (bait id: {3})'.format('pop3', server_host, server_port, session.id))
-            conn = poplib.POP3(server_host, server_port)
+                'Sending {0} bait session to {1}:{2}. (bait id: {3})'.format('pop3', server_host, server_port,
+                                                                             session.id))
+            conn = poplib.POP3_SSL(server_host, server_port)
             session.source_port = conn.sock.getsockname()[1]
 
             banner = conn.getwelcome()
@@ -59,20 +55,19 @@ class pop3(ClientBase):
 
             conn.user(username)
             conn.pass_(password)
-            #TODO: Handle failed login
+            # TODO: Handle failed login
             session.add_auth_attempt('plaintext', True, username=username, password=password)
             session.did_login = True
             session.timestamp = datetime.utcnow()
-        # except (poplib.error_proto, h_socket.error) as err:
         except Exception as err:
-            logger.debug('Caught exception: %s (%s)' % (err, str(type(err))))
+            logger.debug('Caught exception: {0} ({1})'.format(err, str(type(err))))
         else:
             list_entries = conn.list()[1]
             for entry in list_entries:
-                index, octets = entry.split(' ')
+                index, _ = entry.split(' ')
                 conn.retr(index)
                 conn.dele(index)
-            logger.debug('Found and deleted %i messages on %s' % (len(list_entries), server_host))
+            logger.debug('Found and deleted {0} messages on {1}'.format(len(list_entries), server_host))
             conn.quit()
             session.did_complete = True
         finally:

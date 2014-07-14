@@ -21,7 +21,7 @@ class Capability(Base):
     port = Column(Integer)
     # jsonified python dict
     protocol_specific_data = Column(String)
-    baits = relationship("DroneEdge", backref="capability")
+    baits = relationship("DroneEdge", cascade="all, delete-orphan", backref="capability")
 
 
 class Drone(Base):

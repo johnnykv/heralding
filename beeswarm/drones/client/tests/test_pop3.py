@@ -29,7 +29,7 @@ from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.capabilities import pop3 as honeypot_pop3
 
 from beeswarm.drones.client.models.session import BaitSession
-from beeswarm.drones.client.capabilities import pop3 as client_pop3
+from beeswarm.drones.client.baits import pop3 as client_pop3
 
 
 class POP3_Test(unittest.TestCase):

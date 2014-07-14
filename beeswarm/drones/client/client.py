@@ -25,7 +25,7 @@ import zmq.green as zmq
 
 gevent.monkey.patch_all()
 
-from beeswarm.drones.client.capabilities import clientbase
+from beeswarm.drones.client.baits import clientbase
 from beeswarm.drones.client.models.session import BaitSession
 from beeswarm.drones.client.models.dispatcher import BeeDispatcher
 from beeswarm.shared.asciify import asciify
@@ -58,23 +58,13 @@ class Client(object):
         extract_keys(work_dir, config)
 
         BaitSession.client_id = self.config['general']['id']
-        # TODO: Handle peering in other place
-        BaitSession.honeypot_id = self.config['general']['id']
+
 
         if self.config['general']['fetch_ip']:
             self.my_ip = urllib2.urlopen('http://api-sth01.exip.org/?call=ip').read()
             logger.info('Fetched {0} as my external ip.'.format(self.my_ip))
         else:
             self.my_ip = '127.0.0.1'
-
-        self.status = {
-            'mode': 'Client',
-            'total_bees': 0,
-            'active_bees': 0,
-            'enabled_bees': [],
-            'id': self.config['general']['id'],
-            'ip_address': self.my_ip
-        }
 
         self.dispatchers = {}
         self.dispatcher_greenlets = []
@@ -88,31 +78,21 @@ class Client(object):
         sessions = {}
 
         #greenlet to consume and maintain data in sessions list
-        self.sessions_consumer = Consumer(sessions, self.config, self.status)
+        self.sessions_consumer = Consumer(sessions, self.config)
         gevent.spawn(self.sessions_consumer.start_handling)
 
-        capabilities = []
+        baits = []
         for b in clientbase.ClientBase.__subclasses__():
-            capability_name = b.__name__.lower()
-
-            if capability_name not in self.config['capabilities']:
-                logger.warning(
-                    "Not loading {0} capability because it has no option in configuration file.".format(b.__name__))
-                continue
-                #skip loading if disabled
-            if not self.config['capabilities'][capability_name]['enabled']:
-                logger.warning(
-                    "Not loading {0} capability because it is disabled in the configuration file.".format(b.__name__))
-                continue
-
-            options = self.config['capabilities'][capability_name]
-            bait_session = b(sessions, options)
-            capabilities.append(bait_session)
-            self.status['enabled_bees'].append(capability_name)
-            logger.debug('Adding {0} as a capability'.format(bait_session.__class__.__name__))
+            bait_name = b.__name__.lower()
+            if bait_name in self.config['baits']:
+                options = self.config['baits'][bait_name]
+                bait_session = b(sessions, options)
+                baits.append(bait_session)
+                logger.info('Adding {0} bait'.format(bait_session.__class__.__name__))
+                logger.debug('Bait added with options: {0}'.format(options))
 
         self.dispatcher_greenlets = []
-        for bait_session in capabilities:
+        for bait_session in baits:
             dispatcher = BeeDispatcher(self.config, bait_session, self.my_ip)
             self.dispatchers[bait_session.__class__.__name__] = dispatcher
             current_greenlet = Greenlet(dispatcher.start)
@@ -130,22 +110,3 @@ class Client(object):
             g.kill()
         self.sessions_consumer.stop_handling()
         logger.info('All clients stopped')
-
-    def server_command_listener(self):
-        ctx = zmq.Context()
-        client_command_receiver = ctx.socket(zmq.PULL)
-        client_command_receiver.bind('ipc://serverRelay')
-
-        poller = zmq.Poller()
-        poller.register(client_command_receiver, zmq.POLLIN)
-
-        while True:
-            # .recv() gives no context switch - why not? using poller with timeout instead
-            socks = dict(poller.poll(1))
-            gevent.sleep()
-            if client_command_receiver in socks and socks[client_command_receiver] == zmq.POLLIN:
-                topic, data = client_command_receiver.recv().split(' ', 1)
-                logger.debug("Received {0} data.".format(topic))
-                if topic == Messages.IP:
-                    honeypot_id, ip_address = data.split(' ')
-                    self.honeypot_map[honeypot_id, ip_address]

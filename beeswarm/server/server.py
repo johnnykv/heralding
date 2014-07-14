@@ -139,13 +139,24 @@ class Server(object):
 
             if drone_command_receiver in socks and socks[drone_command_receiver] == zmq.POLLIN:
                 data = drone_command_receiver.recv()
-                topic, _ = data.split(' ', 1)
-                logger.debug("Sending drone command to: {0}".format(topic))
+                drone_id, _ = data.split(' ', 1)
+                logger.debug("Sending drone command to: {0}".format(drone_id))
                 # pub socket takes care of filtering
                 drone_data_outbound.send(data)
             elif drone_data_inbound in socks and socks[drone_data_inbound] == zmq.POLLIN:
-                topic, data = drone_data_inbound.recv().split(' ', 1)
-                logger.debug("Received {0} data.".format(topic))
+                split_data = drone_data_inbound.recv().split(' ', 2)
+                if len(split_data) == 3:
+                    topic, drone_id, data = split_data
+                else:
+                    data = None
+                    topic, drone_id, = split_data
+                logger.debug("Received {0} message from {1}.".format(topic, drone_id))
+                db_session = database_setup.get_session()
+                drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
+                drone.last_activity = datetime.now()
+                db_session.add(drone)
+                db_session.commit()
+
                 if topic == Messages.SESSION_HONEYPOT or topic == Messages.SESSION_CLIENT:
                     sessionPublisher.send('{0} {1}'.format(topic, data))
                 elif topic == Messages.KEY or topic == Messages.CERT:
@@ -153,8 +164,7 @@ class Server(object):
                     # in the future it might be relevant to store the entire public key and private key
                     # for forensic purposes
                     if topic == Messages.CERT:
-                        drone_id, cert = data.split(' ', 1)
-                        digest = generate_cert_digest(cert)
+                        digest = generate_cert_digest(data)
                         logging.debug('Storing public key digest: {0} for drone {1}.'.format(digest, drone_id))
                         db_session = database_setup.get_session()
                         drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
@@ -162,15 +172,9 @@ class Server(object):
                         db_session.add(drone)
                         db_session.commit()
                 elif topic == Messages.PING:
-                    drone_id = data
-                    logging.debug('Ping from {0}'.format(drone_id))
-                    db_session = database_setup.get_session()
-                    drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
-                    drone.last_activity = datetime.now()
-                    db_session.add(drone)
-                    db_session.commit()
+                    pass
                 elif topic == Messages.IP:
-                    drone_id, ip_address = data.split(' ', 1)
+                    ip_address = data
                     logging.debug('Drone {0} reported ip: {1}'.format(drone_id, ip_address))
                     db_session = database_setup.get_session()
                     drone = db_session.query(Drone).filter(Drone.id == drone_id).one()

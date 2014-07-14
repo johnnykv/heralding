@@ -21,7 +21,7 @@ import logging
 import time
 
 import beeswarm
-from beeswarm.drones.client.capabilities.clientbase import ClientBase
+from beeswarm.drones.client.baits.clientbase import ClientBase
 
 
 logger = logging.getLogger(__name__)
@@ -53,8 +53,9 @@ class smtp(ClientBase):
         password = self.options['password']
         server_host = self.options['server']
         server_port = self.options['port']
+        honeypot_id = self.options['honeypot_id']
 
-        session = self.create_session(server_host, server_port, my_ip)
+        session = self.create_session(server_host, server_port, my_ip, honeypot_id)
 
         logger.debug(
             'Sending {0} bait session to {1}:{2}. (bait id: {3})'.format('smtp', server_host, server_port, session.id))

@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class Consumer(object):
-    def __init__(self, sessions, config, status):
+    def __init__(self, sessions, config):
         """
             Processes completed sessions from the sessions dict.
 
@@ -35,7 +35,6 @@ class Consumer(object):
         logger.debug('Consumer created.')
         self.sessions = sessions
         self.config = config
-        self.status = status
         self.enabled = True
         self.logger = ServerLogger(Messages.SESSION_CLIENT)
 

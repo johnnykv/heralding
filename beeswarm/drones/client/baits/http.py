@@ -21,7 +21,7 @@ from lxml.html import document_fromstring
 import requests
 from requests.auth import HTTPBasicAuth
 
-from beeswarm.drones.client.capabilities.clientbase import ClientBase
+from beeswarm.drones.client.baits.clientbase import ClientBase
 
 
 logger = logging.getLogger(__name__)
@@ -51,8 +51,9 @@ class http(ClientBase):
         password = self.options['password']
         server_host = self.options['server']
         server_port = self.options['port']
+        honeypot_id = self.options['honeypot_id']
 
-        session = self.create_session(server_host, server_port, my_ip)
+        session = self.create_session(server_host, server_port, my_ip, honeypot_id)
 
         self.sessions[session.id] = session
 
