@@ -49,7 +49,7 @@ class POP3_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        options = {'enabled': 'True', 'port': 0, 'max_attempts': 3}
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3}}
 
         cap = honeypot_pop3.Pop3(sessions, options, users, self.work_dir)
 
@@ -61,7 +61,8 @@ class POP3_Test(unittest.TestCase):
             'username': 'test',
             'password': 'test',
             'port': srv.server_port,
-            'server': '127.0.0.1'
+            'server': '127.0.0.1',
+            'honeypot_id': '1234'
         }
         baitsessions = {}
 

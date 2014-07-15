@@ -38,7 +38,7 @@ class SMTPChannel(smtpd.SMTPChannel):
         # the push() method is effectively disabled, so the 
         # superclass banner is not sent.
         self._initflag = False
-        self.banner = self.options['banner']
+        self.banner = self.options['protocol_specific_data']['banner']
 
         # States
         self.login_pass_authenticating = False

@@ -56,7 +56,7 @@ class SmtpTests(unittest.TestCase):
 
         sessions = {}
         # Use uncommon port so that we can run test even if the Honeypot is running.
-        options = {'enabled': 'True', 'port': 0, 'banner': 'Test'}
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'test'}}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
@@ -78,7 +78,7 @@ class SmtpTests(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        options = {'enabled': 'True', 'port': 0, 'banner': 'Test'}
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'Test'}}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
@@ -105,7 +105,7 @@ class SmtpTests(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        options = {'enabled': 'True', 'port': 0, 'banner': 'Test'}
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'Test'}}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
@@ -127,7 +127,7 @@ class SmtpTests(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        options = {'enabled': 'True', 'port': 0, 'banner': 'Test'}
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'Test'}}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
@@ -150,7 +150,7 @@ class SmtpTests(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        options = {'enabled': 'True', 'port': 0, 'banner': 'Test'}
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'Test'}}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
@@ -178,7 +178,7 @@ class SmtpTests(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        options = {'enabled': 'True', 'port': 0, 'banner': 'Test'}
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'Test'}}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
@@ -199,7 +199,7 @@ class SmtpTests(unittest.TestCase):
         #provide valid login/pass to authenticator
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
-        options = {'enabled': 'True', 'port': 0, 'banner': 'Test'}
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'Test'}}
         cap = smtp.smtp(sessions, options, users, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()

@@ -54,23 +54,23 @@
 		"ftp": {
 			"enabled": true,
 			"port": 0,
-			"max_attempts": 3,
-			"banner": "Microsoft FTP Server"
+			"protocol_specific_data" : {"max_attempts": 3, "banner": "Microsoft FTP Server"}
 		},
 		"telnet": {
 			"enabled": true,
 			"port": 0,
-			"max_attempts": 3
+			"protocol_specific_data" : {"max_attempts": 3}
+
 		},
 		"pop3": {
 			"enabled": true,
 			"port": 0,
-			"max_attempts": 3
+			"protocol_specific_data" : {"max_attempts": 3}
 		},
 		"pop3s": {
 			"enabled": true,
 			"port": 0,
-			"max_attempts": 3
+			"protocol_specific_data" : {"max_attempts": 3}
 		},
 		"ssh": {
 			"enabled": true,
@@ -80,17 +80,17 @@
 		"http": {
 			"enabled": true,
 			"port": 0,
-			"banner": "Microsoft-IIS/5.0"
+			"protocol_specific_data" : {"banner": "banner..."}
 		},
 		"https": {
 			"enabled": true,
 			"port": 0,
-			"banner": "Microsoft-IIS/5.0"
+			"protocol_specific_data" : {"banner": "banner..."}
 		},
 		"smtp": {
 			"enabled": true,
 			"port": 0,
-			"banner": "Microsoft ESMTP MAIL service ready"
+			"protocol_specific_data" : {"banner": "Microsoft ESMTP MAIL service ready"}
 		},
 		"vnc": {
 			"enabled": true,

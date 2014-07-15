@@ -57,7 +57,8 @@ class HTTP_Test(unittest.TestCase):
             'username': 'test',
             'password': 'test',
             'port': srv.server_port,
-            'server': '127.0.0.1'
+            'server': '127.0.0.1',
+            'honeypot_id': '1234'
         }
         baitsessions = {}
 

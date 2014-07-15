@@ -32,7 +32,7 @@ class BeeFTPHandler(object):
     """Handles a single FTP connection"""
 
     def __init__(self, conn, session, vfs, options):
-        self.banner = options['banner']
+        self.banner = options['protocol_specific_data']['banner']
         self.max_logins = int(options['protocol_specific_data']['max_attempts'])
         self.syst_type = options['syst_type']
         self.curr_logins = 0

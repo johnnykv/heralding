@@ -59,7 +59,8 @@ class HTTPS_Test(unittest.TestCase):
             'username': 'test',
             'password': 'test',
             'port': srv.server_port,
-            'server': '127.0.0.1'
+            'server': '127.0.0.1',
+            'honeypot_id': '1234'
         }
         beesessions = {}
         BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'

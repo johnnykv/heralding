@@ -32,7 +32,7 @@ class Consumer_test(unittest.TestCase):
         BaitSession.client_id = 'dummy_client_id'
         BaitSession.honeypot_id = 'dummy_hive_id'
 
-        beesession = BaitSession('telnet', '1234', '4321', '123')
+        beesession = BaitSession('telnet', '1234', '4321', '123', '123')
         beesession.alldone = True
         sessions[beesession.id] = beesession
 
@@ -41,16 +41,7 @@ class Consumer_test(unittest.TestCase):
         log_mock = Mock()
         dummy_logger.log = log_mock
 
-        status = {
-            'mode': 'Client',
-            'total_bees': 0,
-            'active_bees': 0,
-            'enabled_bees': [],
-            'client_id': uuid.uuid4(),
-            'ip_address': '127.0.0.1'
-        }
-
-        consumer = Consumer(sessions, {}, status)
+        consumer = Consumer(sessions, {})
         #inject the dummy logger into the consumer
         consumer.logger = dummy_logger
         gevent.spawn(consumer.start_handling)
@@ -71,7 +62,7 @@ class Consumer_test(unittest.TestCase):
         BaitSession.client_id = 'dummy_client_id'
         BaitSession.honeypot_id = 'dummy_hive_id'
 
-        beesession = BaitSession('telnet', '123', '1234', '4321')
+        beesession = BaitSession('telnet', '123', '1234', '4321', '123')
         beesession.alldone = False
         sessions[beesession.id] = beesession
 
@@ -80,16 +71,7 @@ class Consumer_test(unittest.TestCase):
         log_mock = Mock()
         dummy_logger.log = log_mock
 
-        status = {
-            'mode': 'Client',
-            'total_bees': 0,
-            'active_bees': 0,
-            'enabled_bees': [],
-            'client_id': uuid.uuid4(),
-            'ip_address': '127.0.0.1'
-        }
-
-        consumer = Consumer(sessions, {}, status)
+        consumer = Consumer(sessions, {})
         consumer.logger = dummy_logger
         gevent.spawn(consumer.start_handling)
         #forcing cooperative yield.

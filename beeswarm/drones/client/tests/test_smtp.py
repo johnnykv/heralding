@@ -49,7 +49,8 @@ class SMTP_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        cap = hive_smtp.smtp(sessions, {'enabled': 'True', 'port': 0, 'banner': 'Test'}, users, self.work_dir)
+        cap = hive_smtp.smtp(sessions, {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'Test'}},
+                             users, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -59,7 +60,8 @@ class SMTP_Test(unittest.TestCase):
             'password': 'test',
             'port': srv.server_port,
             'server': '127.0.0.1',
-            'local_hostname': 'testhost'
+            'local_hostname': 'testhost',
+            'honeypot_id': '1234'
         }
         beesessions = {}
 
@@ -77,7 +79,8 @@ class SMTP_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        cap = hive_smtp.smtp(sessions, {'enabled': 'True', 'port': 0, 'banner': 'Test'}, users, self.work_dir)
+        cap = hive_smtp.smtp(sessions, {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'Test'}},
+                             users, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -107,7 +110,8 @@ class SMTP_Test(unittest.TestCase):
         authenticator = Authenticator(users)
         Session.authenticator = authenticator
 
-        cap = hive_smtp.smtp(sessions, {'enabled': 'True', 'port': 0, 'banner': 'Test'}, users, self.work_dir)
+        cap = hive_smtp.smtp(sessions, {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'Test'}},
+                             users, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
         gevent.sleep()
