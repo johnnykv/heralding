@@ -227,11 +227,15 @@ class Drone(object):
                 value = data['value']
                 if event == zmq.EVENT_CONNECTED:
                     logger.info('Connected to {0}'.format(log_name))
-                    # TODO: these three pushes should only happen on outbound socket
-                    send_zmq_push('ipc://serverRelay', '{0}'.format(Messages.PING))
-                    send_zmq_push('ipc://serverRelay', '{0} {1}'.format(Messages.IP,
-                                                                        socket.gethostbyname(socket.gethostname())))
-                    send_zmq_push('ipc://serverRelay', '{0}'.format(Messages.DRONE_CONFIG))
+                    if 'outgoing' in log_name:
+                        send_zmq_push('ipc://serverRelay', '{0}'.format(Messages.PING))
+                        send_zmq_push('ipc://serverRelay', '{0} {1}'.format(Messages.IP,
+                                                                            socket.gethostbyname(socket.gethostname())))
+                        send_zmq_push('ipc://serverRelay', '{0}'.format(Messages.DRONE_CONFIG))
+                    elif 'incomming':
+                        pass
+                    else:
+                        assert False
                 elif event == zmq.EVENT_DISCONNECTED:
                     logger.warning('Disconnected from {0}, will reconnect in {1} seconds.'.format(log_name, 5))
             gevent.sleep()
