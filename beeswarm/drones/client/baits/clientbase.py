@@ -41,7 +41,7 @@ class ClientBase(object):
         :param my_ip: IP of this Client itself
         :return: A new `BeeSession` object.
         """
-        protocol = self.__class__.__name__
+        protocol = self.__class__.__name__.lower()
         session = BaitSession(protocol, server_host, server_port, my_ip, honeypot_id)
         self.sessions[session.id] = session
         return session

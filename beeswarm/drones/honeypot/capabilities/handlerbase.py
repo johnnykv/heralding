@@ -22,27 +22,26 @@ logger = logging.getLogger(__name__)
 
 
 class HandlerBase(object):
-    def __init__(self, sessions, options, users, workdir):
+    def __init__(self, sessions, options, workdir):
         """
         Base class that all capabilities must inherit from.
 
         :param sessions: a dictionary of Session objects.
         :param options: a dictionary of configuration options.
-        :param users: a dictionary of valid users.
         :param workdir: the directory which contains files for this
                         particular instance of Beeswarm
         """
         self.sessions = sessions
         self.options = options
-        self.users = users
+        self.users = options['users']
         #virtual file system shared by all capabilities
         self.vfsystem = OSFS(os.path.join(workdir, 'data/vfs'))
         #serviceport
         self.port = int(options['port'])
 
     def create_session(self, address, socket):
-        protocol = self.__class__.__name__
-        session = Session(address[0], address[1], protocol, socket)
+        protocol = self.__class__.__name__.lower()
+        session = Session(address[0], address[1], protocol, socket, self.users)
         session.destination_port = self.port
         self.sessions[session.id] = session
         logger.info('Accepted {0} session on port {1} from {2}:{3}. ({4})'.format(protocol, self.port, address[0],
