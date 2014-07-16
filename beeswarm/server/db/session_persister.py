@@ -52,7 +52,7 @@ class SessionPersister(gevent.Greenlet):
             poller = zmq.Poller()
             poller.register(subscriber_config, zmq.POLLIN)
             while True:
-                socks = dict(poller.poll())
+                socks = dict(poller.poll(100))
                 if subscriber_config in socks and socks[subscriber_config] == zmq.POLLIN:
                     topic, msg = subscriber_config.recv().split(' ', 1)
                     self.config = json.loads(msg)
@@ -67,7 +67,7 @@ class SessionPersister(gevent.Greenlet):
         poller.register(self.subscriber_sessions, zmq.POLLIN)
         while True:
             # .recv() gives no context switch - why not? using poller with timeout instead
-            socks = dict(poller.poll(1))
+            socks = dict(poller.poll(100))
             gevent.sleep()
 
             if self.subscriber_sessions in socks and socks[self.subscriber_sessions] == zmq.POLLIN:

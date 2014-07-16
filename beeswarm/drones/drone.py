@@ -15,12 +15,12 @@
 
 import os
 import logging
-import socket
 import json
 
 import requests
 from requests.exceptions import Timeout, ConnectionError
 import gevent
+from gevent import socket
 import zmq.green as zmq
 import zmq.auth
 from zmq.utils.monitor import recv_monitor_message
@@ -88,16 +88,16 @@ class Drone(object):
         server_public_file = os.path.join(public_keys_dir, "server.key")
         server_public, _ = zmq.auth.load_certificate(server_public_file)
 
-        self.outgoing_msg_greenlet = gevent.spawn(self.incoming_server_comms, server_public,
+        self.outgoing_msg_greenlet = gevent.spawn(self.outgoing_server_comms, server_public,
                                                   client_public, client_secret)
-        self.incoming_msg_greenlet = gevent.spawn(self.outgoing_server_comms, server_public,
+        self.incoming_msg_greenlet = gevent.spawn(self.incoming_server_comms, server_public,
                                                   client_public, client_secret)
 
         self._start_drone()
 
         # drop_privileges()
         logger.info('Drone running using id: {0}'.format(self.id))
-        gevent.joinall([self.incoming_msg_greenlet])
+        gevent.joinall([self.outgoing_msg_greenlet])
 
     def _start_drone(self):
         """
@@ -110,6 +110,7 @@ class Drone(object):
             mode = Honeypot
         elif self.config['general']['mode'] == 'client':
             mode = Client
+
         if mode:
             self.drone = mode(self.work_dir, self.config)
             self.drone_greenlet = gevent.spawn(self.drone.start)
@@ -152,7 +153,8 @@ class Drone(object):
         while True:
             # .recv() gives no context switch - why not? using poller with timeout instead
             socks = dict(poller.poll(1))
-            gevent.sleep()
+            # hmm, do we need to sleep here (0.1) works, gevnet.sleep() does not work
+            gevent.sleep(0.1)
 
             if receiving_socket in socks and socks[receiving_socket] == zmq.POLLIN:
                 message = receiving_socket.recv()
@@ -197,7 +199,8 @@ class Drone(object):
         while True:
             # .recv() gives no context switch - why not? using poller with timeout instead
             socks = dict(poller.poll(1))
-            gevent.sleep()
+            # hmm, do we need to sleep here (0.1) works, gevnet.sleep() does not work
+            gevent.sleep(0.1)
             if internal_server_relay in socks and socks[internal_server_relay] == zmq.POLLIN:
                 message = internal_server_relay.recv()
                 # inject own id into the message
@@ -218,7 +221,8 @@ class Drone(object):
         poller = zmq.Poller()
         poller.register(monitor_socket, zmq.POLLIN)
         while True:
-            socks = poller.poll(0)
+            socks = poller.poll(1)
+            gevent.sleep(0.1)
             if len(socks) > 0:
                 data = recv_monitor_message(monitor_socket)
                 event = data['event']
@@ -227,8 +231,9 @@ class Drone(object):
                     logger.info('Connected to {0}'.format(log_name))
                     if 'outgoing' in log_name:
                         send_zmq_push('ipc://serverRelay', '{0}'.format(Messages.PING))
+                        own_ip = gevent.socket.gethostbyname(socket.gethostname())
                         send_zmq_push('ipc://serverRelay', '{0} {1}'.format(Messages.IP,
-                                                                            socket.gethostbyname(socket.gethostname())))
+                                                                            own_ip))
                         send_zmq_push('ipc://serverRelay', '{0}'.format(Messages.DRONE_CONFIG))
                     elif 'incomming':
                         pass

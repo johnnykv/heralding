@@ -86,7 +86,7 @@ def config_subscriber():
         poller = zmq.Poller()
         poller.register(subscriber_socket, zmq.POLLIN)
         while True:
-            socks = dict(poller.poll())
+            socks = dict(poller.poll(100))
             if subscriber_socket in socks and socks[subscriber_socket] == zmq.POLLIN:
                 topic, msg = subscriber_socket.recv().split(' ', 1)
                 config = json.loads(msg)
