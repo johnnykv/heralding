@@ -165,7 +165,8 @@ class Server(object):
                     # in the future it might be relevant to store the entire public key and private key
                     # for forensic purposes
                     if topic == Messages.CERT:
-                        digest = generate_cert_digest(data)
+                        cert = data.split(' ', 1)[1]
+                        digest = generate_cert_digest(cert)
                         logging.debug('Storing public key digest: {0} for drone {1}.'.format(digest, drone_id))
                         db_session = database_setup.get_session()
                         drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
