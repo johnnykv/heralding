@@ -1,3 +1,4 @@
+# pylint: disable-msg=E1101
 # Copyright (C) 2013 Aniket Panse <contact@aniketpanse.in>
 #
 # This program is free software: you can redistribute it and/or modify
