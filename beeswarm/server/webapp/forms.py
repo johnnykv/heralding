@@ -1,5 +1,5 @@
 from flask.ext.wtf import Form
-from wtforms import IntegerField, FileField, PasswordField, TextField, BooleanField, ValidationError, validators
+from wtforms import IntegerField, PasswordField, TextField, BooleanField, ValidationError, validators
 from wtforms.validators import Required, Length
 
 
@@ -25,7 +25,6 @@ def validate_time_range(form, field):
 
 
 class HoneypotConfigurationForm(Form):
-
     general__name = TextField(default='', label='Name')
 
     # __ splits make lookup in dictionary possible
@@ -46,7 +45,8 @@ class HoneypotConfigurationForm(Form):
 
     capabilities__smtp__enabled = BooleanField(default=False, label='Enabled')
     capabilities__smtp__port = IntegerField(default=25, label='Port')
-    capabilities__smtp__protocol_specific_data__banner = TextField(default='Microsoft ESMTP MAIL service ready', label='Server Banner')
+    capabilities__smtp__protocol_specific_data__banner = TextField(default='Microsoft ESMTP MAIL service ready',
+                                                                   label='Server Banner')
 
     capabilities__vnc__enabled = BooleanField(default=False, label='Enabled')
     capabilities__vnc__port = IntegerField(default=5900, label='Port')
@@ -67,8 +67,8 @@ class HoneypotConfigurationForm(Form):
     capabilities__ssh__port = IntegerField(default=22, label='Port')
 
     certificate_info__common_name = TextField(default='', label='Common Name/Domain name',
-                            description='Leave this field empty to force the drone to automatically use  it\'s own IP '
-                                        'address when creating the certificate')
+                                              description='Leave this field empty to force the drone to automatically use  it\'s own IP '
+                                                          'address when creating the certificate')
     certificate_info__country = TextField(validators=[Required(), Length(min=2, max=2)], label='Country')
     certificate_info__state = TextField(validators=[Required(), Length(min=1, max=64)], label='State')
     certificate_info__organization = TextField(validators=[Required(), Length(min=1, max=64)], label='Organization')
@@ -77,7 +77,6 @@ class HoneypotConfigurationForm(Form):
 
 
 class NewClientConfigForm(Form):
-
     http_enabled = BooleanField(default=False, label='Enabled')
     http_server = TextField(default='127.0.0.1', label='Server IP')
     http_port = IntegerField(default=80, label='Port')
@@ -171,22 +170,20 @@ class NewClientConfigForm(Form):
 
 
 class LoginForm(Form):
-
     username = TextField()
     password = PasswordField()
 
 
 class SettingsForm(Form):
-
     bait_session_retain = IntegerField('Bait session retention', default=2,
-                                           description='<small><em>days until legit bait_sessions are deleted.</em></small>',
-                                           validators=[validators.required(message=u'This field is required'),
-                                                       validators.NumberRange(min=1)])
-    
+                                       description='<small><em>days until legit bait_sessions are deleted.</em></small>',
+                                       validators=[validators.required(message=u'This field is required'),
+                                                   validators.NumberRange(min=1)])
+
     malicious_session_retain = IntegerField('Malicious session retention', default=100,
                                             description='<small><em>days until malicious sessions are deleted</em></small>',
                                             validators=[validators.required(message=u'This field is required'),
                                                         validators.NumberRange(min=1)])
 
     ignore_failed_bait_session = BooleanField('Ignore failed bait_sessions', default=True,
-                                          description='<small><em>Ignore bait_sessions that did not connect</em></small>')
+                                              description='<small><em>Ignore bait_sessions that did not connect</em></small>')

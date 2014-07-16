@@ -25,7 +25,7 @@ from beeswarm.server.misc.classifier import Classifier
 
 class ClassifierTests(unittest.TestCase):
     def setUp(self):
-        #'sqlite://' gives a in-memory sqlite database
+        # 'sqlite://' gives a in-memory sqlite database
         database_setup.setup_db('sqlite://')
 
         self.client_id = str(uuid.uuid4())
@@ -38,8 +38,9 @@ class ClassifierTests(unittest.TestCase):
         honeypot = Honeypot(id=self.honeypot_id)
 
         bait_session = BaitSession(id=self.bait_session_id, source_ip='321', destination_ip='123',
-                            received=datetime.utcnow(), timestamp=self.bait_session_datetime, protocol='pop3',
-                            source_port=1, destination_port=1, did_complete=True, client=client, honeypot=honeypot)
+                                   received=datetime.utcnow(), timestamp=self.bait_session_datetime, protocol='pop3',
+                                   source_port=1, destination_port=1, did_complete=True, client=client,
+                                   honeypot=honeypot)
 
         authentication = Authentication(id=str(uuid.uuid4()), username='a', password='a',
                                         successful=True, timestamp=datetime.utcnow())
@@ -59,7 +60,7 @@ class ClassifierTests(unittest.TestCase):
         bait_session = db_session.query(BaitSession).filter(BaitSession.id == self.bait_session_id).one()
         honeypot = db_session.query(Honeypot).filter(Honeypot.id == self.honeypot_id).one()
 
-        #session2 is the matching session
+        # session2 is the matching session
         for id, offset in (('session1', -15), ('session2', 3), ('session3', 15)):
             s = Session(id=id, source_ip='321', destination_ip='123',
                         received=datetime.utcnow(), timestamp=bait_session.timestamp + timedelta(seconds=offset),
@@ -82,7 +83,7 @@ class ClassifierTests(unittest.TestCase):
         session is deleted.
         """
 
-        #setup the honeypot session we expect to match the bait_session
+        # setup the honeypot session we expect to match the bait_session
         db_session = database_setup.get_session()
         honeypot = db_session.query(Honeypot).filter(Honeypot.id == self.honeypot_id).one()
 
@@ -102,9 +103,10 @@ class ClassifierTests(unittest.TestCase):
         bait_session = db_session.query(BaitSession).filter(BaitSession.id == self.bait_session_id).one()
         session = db_session.query(Session).filter(Session.id == s_id).first()
 
-        #test that the bait session got classified
+        # test that the bait session got classified
         self.assertTrue(
-            bait_session.classification == db_session.query(Classification).filter(Classification.type == 'bait_session').one())
+            bait_session.classification == db_session.query(Classification).filter(
+                Classification.type == 'bait_session').one())
         #test that the honeypot session got deleted
         self.assertIsNone(session)
 
@@ -129,7 +131,7 @@ class ClassifierTests(unittest.TestCase):
         c.classify_sessions(5)
 
         result = db_session.query(Session).filter(Session.classification_id == 'bruteforce').all()
-        #we expect the resultset to contain session1 and session2
+        # we expect the resultset to contain session1 and session2
         self.assertEquals(len(result), 2)
 
 
@@ -153,7 +155,7 @@ class ClassifierTests(unittest.TestCase):
         c.classify_sessions(0, db_session)
 
         result = db_session.query(Session).filter(Session.classification_id == 'credentials_reuse').one()
-        #we expect the resultset to contain session1010
+        # we expect the resultset to contain session1010
         self.assertEquals(result.id, 'session1010')
 
     def test_classify_sessions_probe(self):
@@ -175,5 +177,5 @@ class ClassifierTests(unittest.TestCase):
         c.classify_sessions(0, db_session)
 
         result = db_session.query(Session).filter(Session.classification_id == 'probe').one()
-        #we expect the resultset to contain session1010
+        # we expect the resultset to contain session1010
         self.assertEquals(result.id, session_id)

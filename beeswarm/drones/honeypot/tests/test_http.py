@@ -27,7 +27,6 @@ import tempfile
 import shutil
 import os
 from beeswarm.drones.honeypot.honeypot import Honeypot
-from beeswarm.drones.honeypot.models.session import Session
 
 
 class HttpTests(unittest.TestCase):

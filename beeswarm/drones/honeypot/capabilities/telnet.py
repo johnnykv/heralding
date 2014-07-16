@@ -13,12 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import curses
-
 import logging
 import socket
 
 from beeswarm.drones.honeypot.capabilities.handlerbase import HandlerBase
 from beeswarm.drones.honeypot.capabilities.shared.shell import Commands
+
 
 logger = logging.getLogger(__name__)
 

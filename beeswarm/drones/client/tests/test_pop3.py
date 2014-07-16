@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import gevent.monkey
+
 gevent.monkey.patch_all()
 
 import unittest
@@ -23,7 +24,6 @@ import shutil
 
 from gevent.server import StreamServer
 from beeswarm.drones.honeypot.honeypot import Honeypot
-from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.capabilities import pop3 as honeypot_pop3
 
 from beeswarm.drones.client.models.session import BaitSession
@@ -66,6 +66,7 @@ class POP3_Test(unittest.TestCase):
         current_bait = client_pop3.pop3(baitsessions, bait_info)
         current_bait.do_session('127.0.0.1')
         srv.stop()
+
 
 if __name__ == '__main__':
     unittest.main()

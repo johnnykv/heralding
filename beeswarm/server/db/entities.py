@@ -5,6 +5,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Table, Float
 from sqlalchemy.orm import relationship
 
+
 Base = declarative_base()
 
 # table for honeypot <-> client many to many relationship
@@ -149,8 +150,8 @@ class Honeypot(Drone):
     # fingerprint of the public key used to interact with attackers and clients
     cert_digest = Column(String)
 
-    #  The following certificate attribute are temporarily
-    #  generation of certificate should be done on the server, hence no need for
+    # The following certificate attribute are temporarily
+    # generation of certificate should be done on the server, hence no need for
     #  this informaiton here
     cert_common_name = Column(String)
     cert_country = Column(String)

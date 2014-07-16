@@ -27,11 +27,9 @@ from ftplib import FTP
 from gevent.server import StreamServer
 from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.drones.honeypot.capabilities import ftp
-from beeswarm.drones.honeypot.models.session import Session
 
 
 class FtpTests(unittest.TestCase):
-
     def setUp(self):
         self.work_dir = tempfile.mkdtemp()
         Honeypot.prepare_environment(self.work_dir)
@@ -54,7 +52,7 @@ class FtpTests(unittest.TestCase):
         ftp_client = FTP()
         ftp_client.connect('127.0.0.1', srv.server_port, 1)
 
-        #expect perm exception
+        # expect perm exception
         try:
             ftp_client.login('james', 'bond')
             response = ftp_client.getresp()

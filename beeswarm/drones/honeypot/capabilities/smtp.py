@@ -23,8 +23,8 @@ import smtpd
 import asyncore
 import asynchat
 import mailbox
-
 from smtpd import NEWLINE, EMPTYSTRING
+
 from beeswarm.drones.honeypot.capabilities.handlerbase import HandlerBase
 
 
@@ -98,10 +98,9 @@ class SMTPChannel(smtpd.SMTPChannel):
 
         if (self.plain_authenticating and self.login_pass_authenticating and
                 self.cram_authenticating):
-
             self.push('503 Bad sequence of commands')
             self.close_quit()
-        
+
         if self.cram_authenticating:
             self.cram_authenticating = False
             cred = base64.b64decode(arg)
@@ -118,7 +117,7 @@ class SMTPChannel(smtpd.SMTPChannel):
             else:
                 self.push('535 authentication failed')
                 self.close_quit()
-            
+
         elif self.login_uname_authenticating:
             self.login_uname_authenticating = False
             self.username = base64.b64decode(arg)
@@ -185,7 +184,7 @@ class SMTPChannel(smtpd.SMTPChannel):
                 self.push('334 ' + base64.b64encode('Username:'))
                 self.login_uname_authenticating = True
                 return
-        
+
         elif 'CRAM-MD5' in arg:
             self.cram_authenticating = True
             r = random.randint(5000, 20000)
@@ -270,7 +269,6 @@ class SMTPChannel(smtpd.SMTPChannel):
 
 
 class DummySMTPServer(object):
-
     def __init__(self, mail_vfs):
         self.mail_vfs = mail_vfs
         self.mboxpath = self.mail_vfs.getsyspath('mailbox')

@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import gevent.monkey
+
 gevent.monkey.patch_all()
 
 import unittest
@@ -23,7 +24,6 @@ import tempfile
 
 from gevent.server import StreamServer
 from beeswarm.drones.honeypot.honeypot import Honeypot
-from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.capabilities import vnc as hive_vnc
 
 from beeswarm.drones.client.baits import vnc as bee_vnc
@@ -64,6 +64,7 @@ class VNC_Test(unittest.TestCase):
         current_bait = bee_vnc.vnc(beesessions, bee_info)
         current_bait.do_session('127.0.0.1')
         srv.stop()
+
 
 if __name__ == '__main__':
     unittest.main()

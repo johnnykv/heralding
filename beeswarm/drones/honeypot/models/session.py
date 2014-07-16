@@ -16,7 +16,9 @@
 import hmac
 import logging
 from datetime import datetime
+
 from beeswarm.shared.models.base_session import BaseSession
+
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +62,7 @@ class Session(BaseSession):
             def encode_cram_md5(challenge, user, password):
                 response = user + ' ' + hmac.HMAC(password, challenge).hexdigest()
                 return response
+
             if kwargs.get('username') in self.users:
                 uname = kwargs.get('username')
                 digest = kwargs.get('digest')

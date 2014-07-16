@@ -2,161 +2,162 @@
 {% import "macros.html" as macros %}
 
 {% block javascript %}
-    {{ super() }}
-    <script type="text/javascript">
-        $(function () {
-            $('#formtabs a:first').tab('show');
-        });
-    </script>
+{{ super() }}
+<script type="text/javascript">
+    $(function () {
+        $('#formtabs a:first').tab('show');
+    });
+</script>
 {% endblock %}
 
 {% block content %}
-    <div>
-        <h3>New Client Config</h3>
-        <p>
-            You can use the tabs below to customize your new Client configuration. When you're done,
-            click on the generate button.
-        </p>
-    </div>
+<div>
+    <h3>New Client Config</h3>
 
-    <form action="" method="post" class="form form-horizontal">
-        {{ form.hidden_tag() }}
-        {{ macros.form_errors(form, 'only') }}
-        <div class="tabbable tabs-left">
-            <ul class="nav nav-tabs" id="formtabs">
-                <li><a href="#http" data-toggle="tab">HTTP</a></li>
-                <li><a href="#https" data-toggle="tab">HTTPs</a></li>
-                <li><a href="#ftp" data-toggle="tab">FTP</a></li>
-                <li><a href="#smtp" data-toggle="tab">SMTP</a></li>
-                <li><a href="#vnc" data-toggle="tab">VNC</a></li>
-                <li><a href="#telnet" data-toggle="tab">Telnet</a></li>
-                <li><a href="#pop3" data-toggle="tab">POP3</a></li>
-                <li><a href="#pop3" data-toggle="tab">POP3s</a></li>
-                <li><a href="#ssh" data-toggle="tab">SSH</a></li>
-            </ul>
+    <p>
+        You can use the tabs below to customize your new Client configuration. When you're done,
+        click on the generate button.
+    </p>
+</div>
 
-            <div class="tab-content">
-                <div id="http" class="tab-pane">
-                    <fieldset>
-                        <legend>HTTP Options</legend>
-                        {% for field in [form.http_enabled, form.http_server,
-                            form.http_port, form.http_active_range, form.http_sleep_interval,
-                            form.http_activation_probability, form.http_login, form.http_password] %}
-                            {% if not field|bootstrap_is_hidden_field %}
-                                {{ macros.horizontal_field(field) }}
-                            {%- endif %}
-                        {% endfor %}
-                    </fieldset>
-                </div>
+<form action="" method="post" class="form form-horizontal">
+    {{ form.hidden_tag() }}
+    {{ macros.form_errors(form, 'only') }}
+    <div class="tabbable tabs-left">
+        <ul class="nav nav-tabs" id="formtabs">
+            <li><a href="#http" data-toggle="tab">HTTP</a></li>
+            <li><a href="#https" data-toggle="tab">HTTPs</a></li>
+            <li><a href="#ftp" data-toggle="tab">FTP</a></li>
+            <li><a href="#smtp" data-toggle="tab">SMTP</a></li>
+            <li><a href="#vnc" data-toggle="tab">VNC</a></li>
+            <li><a href="#telnet" data-toggle="tab">Telnet</a></li>
+            <li><a href="#pop3" data-toggle="tab">POP3</a></li>
+            <li><a href="#pop3" data-toggle="tab">POP3s</a></li>
+            <li><a href="#ssh" data-toggle="tab">SSH</a></li>
+        </ul>
 
-                <div id="https" class="tab-pane">
-                    <fieldset>
-                        <legend>HTTPs Options</legend>
-                        {% for field in [form.https_enabled, form.https_server,
-                            form.https_port, form.https_active_range, form.https_sleep_interval,
-                            form.https_activation_probability, form.https_login, form.https_password] %}
-                            {% if not field|bootstrap_is_hidden_field %}
-                                {{ macros.horizontal_field(field) }}
-                            {%- endif %}
-                        {% endfor %}
-                    </fieldset>
-                </div>
+        <div class="tab-content">
+            <div id="http" class="tab-pane">
+                <fieldset>
+                    <legend>HTTP Options</legend>
+                    {% for field in [form.http_enabled, form.http_server,
+                    form.http_port, form.http_active_range, form.http_sleep_interval,
+                    form.http_activation_probability, form.http_login, form.http_password] %}
+                    {% if not field|bootstrap_is_hidden_field %}
+                    {{ macros.horizontal_field(field) }}
+                    {%- endif %}
+                    {% endfor %}
+                </fieldset>
+            </div>
 
-                <div id="ftp" class="tab-pane">
-                    <fieldset>
-                        <legend>FTP Options</legend>
-                        {% for field in [form.ftp_enabled, form.ftp_server,
-                            form.ftp_port, form.ftp_active_range, form.ftp_sleep_interval,
-                            form.ftp_activation_probability, form.ftp_login, form.ftp_password] %}
-                            {% if not field|bootstrap_is_hidden_field %}
-                                {{ macros.horizontal_field(field) }}
-                            {%- endif %}
-                        {% endfor %}
-                    </fieldset>
-                </div>
+            <div id="https" class="tab-pane">
+                <fieldset>
+                    <legend>HTTPs Options</legend>
+                    {% for field in [form.https_enabled, form.https_server,
+                    form.https_port, form.https_active_range, form.https_sleep_interval,
+                    form.https_activation_probability, form.https_login, form.https_password] %}
+                    {% if not field|bootstrap_is_hidden_field %}
+                    {{ macros.horizontal_field(field) }}
+                    {%- endif %}
+                    {% endfor %}
+                </fieldset>
+            </div>
 
-                <div id="smtp" class="tab-pane">
-                    <fieldset>
-                        <legend>SMTP Options</legend>
-                        {% for field in [form.smtp_enabled, form.smtp_server,
-                            form.smtp_port, form.smtp_active_range, form.smtp_sleep_interval,
-                            form.smtp_activation_probability, form.smtp_login, form.smtp_password] %}
-                            {% if not field|bootstrap_is_hidden_field %}
-                                {{ macros.horizontal_field(field) }}
-                            {%- endif %}
-                        {% endfor %}
-                    </fieldset>
-                </div>
+            <div id="ftp" class="tab-pane">
+                <fieldset>
+                    <legend>FTP Options</legend>
+                    {% for field in [form.ftp_enabled, form.ftp_server,
+                    form.ftp_port, form.ftp_active_range, form.ftp_sleep_interval,
+                    form.ftp_activation_probability, form.ftp_login, form.ftp_password] %}
+                    {% if not field|bootstrap_is_hidden_field %}
+                    {{ macros.horizontal_field(field) }}
+                    {%- endif %}
+                    {% endfor %}
+                </fieldset>
+            </div>
 
-                <div id="vnc" class="tab-pane">
-                    <fieldset>
-                        <legend>VNC Options</legend>
-                        {% for field in [form.vnc_enabled, form.vnc_server,
-                            form.vnc_port, form.vnc_active_range, form.vnc_sleep_interval,
-                            form.vnc_activation_probability, form.vnc_login, form.vnc_password] %}
-                            {% if not field|bootstrap_is_hidden_field %}
-                                {{ macros.horizontal_field(field) }}
-                            {%- endif %}
-                        {% endfor %}
-                    </fieldset>
-                </div>
+            <div id="smtp" class="tab-pane">
+                <fieldset>
+                    <legend>SMTP Options</legend>
+                    {% for field in [form.smtp_enabled, form.smtp_server,
+                    form.smtp_port, form.smtp_active_range, form.smtp_sleep_interval,
+                    form.smtp_activation_probability, form.smtp_login, form.smtp_password] %}
+                    {% if not field|bootstrap_is_hidden_field %}
+                    {{ macros.horizontal_field(field) }}
+                    {%- endif %}
+                    {% endfor %}
+                </fieldset>
+            </div>
 
-                <div id="telnet" class="tab-pane">
-                    <fieldset>
-                        <legend>Telnet Options</legend>
-                        {% for field in [form.telnet_enabled, form.telnet_server,
-                            form.telnet_port, form.telnet_active_range, form.telnet_sleep_interval,
-                            form.telnet_activation_probability, form.telnet_login, form.telnet_password] %}
-                            {% if not field|bootstrap_is_hidden_field %}
-                                {{ macros.horizontal_field(field) }}
-                            {%- endif %}
-                        {% endfor %}
-                    </fieldset>
-                </div>
+            <div id="vnc" class="tab-pane">
+                <fieldset>
+                    <legend>VNC Options</legend>
+                    {% for field in [form.vnc_enabled, form.vnc_server,
+                    form.vnc_port, form.vnc_active_range, form.vnc_sleep_interval,
+                    form.vnc_activation_probability, form.vnc_login, form.vnc_password] %}
+                    {% if not field|bootstrap_is_hidden_field %}
+                    {{ macros.horizontal_field(field) }}
+                    {%- endif %}
+                    {% endfor %}
+                </fieldset>
+            </div>
 
-                <div id="pop3" class="tab-pane">
-                    <fieldset>
-                        <legend>POP3 Options</legend>
-                        {% for field in [form.pop3_enabled, form.pop3_server,
-                            form.pop3_port, form.pop3_active_range, form.pop3_sleep_interval,
-                            form.pop3_activation_probability, form.pop3_login, form.pop3_password] %}
-                            {% if not field|bootstrap_is_hidden_field %}
-                                {{ macros.horizontal_field(field) }}
-                            {%- endif %}
-                        {% endfor %}
-                    </fieldset>
-                </div>
+            <div id="telnet" class="tab-pane">
+                <fieldset>
+                    <legend>Telnet Options</legend>
+                    {% for field in [form.telnet_enabled, form.telnet_server,
+                    form.telnet_port, form.telnet_active_range, form.telnet_sleep_interval,
+                    form.telnet_activation_probability, form.telnet_login, form.telnet_password] %}
+                    {% if not field|bootstrap_is_hidden_field %}
+                    {{ macros.horizontal_field(field) }}
+                    {%- endif %}
+                    {% endfor %}
+                </fieldset>
+            </div>
 
-                <div id="pop3s" class="tab-pane">
-                    <fieldset>
-                        <legend>POP3s Options</legend>
-                        {% for field in [form.pop3s_enabled, form.pop3s_server,
-                            form.pop3s_port, form.pop3s_active_range, form.pop3s_sleep_interval,
-                            form.pop3s_activation_probability, form.pop3s_login, form.pop3s_password] %}
-                            {% if not field|bootstrap_is_hidden_field %}
-                                {{ macros.horizontal_field(field) }}
-                            {%- endif %}
-                        {% endfor %}
-                    </fieldset>
-                </div>
+            <div id="pop3" class="tab-pane">
+                <fieldset>
+                    <legend>POP3 Options</legend>
+                    {% for field in [form.pop3_enabled, form.pop3_server,
+                    form.pop3_port, form.pop3_active_range, form.pop3_sleep_interval,
+                    form.pop3_activation_probability, form.pop3_login, form.pop3_password] %}
+                    {% if not field|bootstrap_is_hidden_field %}
+                    {{ macros.horizontal_field(field) }}
+                    {%- endif %}
+                    {% endfor %}
+                </fieldset>
+            </div>
 
-                <div id="ssh" class="tab-pane">
-                    <fieldset>
-                        <legend>SSH Options</legend>
-                        {% for field in [form.ssh_enabled, form.ssh_server,
-                            form.ssh_port, form.ssh_active_range, form.ssh_sleep_interval,
-                            form.ssh_activation_probability, form.ssh_login, form.ssh_password] %}
-                            {% if not field|bootstrap_is_hidden_field %}
-                                {{ macros.horizontal_field(field) }}
-                            {%- endif %}
-                        {% endfor %}
-                    </fieldset>
-                </div>
+            <div id="pop3s" class="tab-pane">
+                <fieldset>
+                    <legend>POP3s Options</legend>
+                    {% for field in [form.pop3s_enabled, form.pop3s_server,
+                    form.pop3s_port, form.pop3s_active_range, form.pop3s_sleep_interval,
+                    form.pop3s_activation_probability, form.pop3s_login, form.pop3s_password] %}
+                    {% if not field|bootstrap_is_hidden_field %}
+                    {{ macros.horizontal_field(field) }}
+                    {%- endif %}
+                    {% endfor %}
+                </fieldset>
+            </div>
+
+            <div id="ssh" class="tab-pane">
+                <fieldset>
+                    <legend>SSH Options</legend>
+                    {% for field in [form.ssh_enabled, form.ssh_server,
+                    form.ssh_port, form.ssh_active_range, form.ssh_sleep_interval,
+                    form.ssh_activation_probability, form.ssh_login, form.ssh_password] %}
+                    {% if not field|bootstrap_is_hidden_field %}
+                    {{ macros.horizontal_field(field) }}
+                    {%- endif %}
+                    {% endfor %}
+                </fieldset>
             </div>
         </div>
-        <hr>
-        <div class="controls">
-            <button name="submit" type="submit" class="btn btn-primary">Generate</button>
-        </div>
-    </form>
+    </div>
+    <hr>
+    <div class="controls">
+        <button name="submit" type="submit" class="btn btn-primary">Generate</button>
+    </div>
+</form>
 {% endblock content %}

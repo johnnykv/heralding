@@ -13,25 +13,23 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import json
-import sys
 import logging
 import urllib2
 
 import gevent
 from gevent.greenlet import Greenlet
 import gevent.monkey
-from beeswarm.drones.client.consumer.consumer import Consumer
-import zmq.green as zmq
+
 
 gevent.monkey.patch_all()
 
+from beeswarm.drones.client.consumer.consumer import Consumer
 from beeswarm.drones.client.baits import clientbase
 from beeswarm.drones.client.models.session import BaitSession
 from beeswarm.drones.client.models.dispatcher import BeeDispatcher
 from beeswarm.shared.asciify import asciify
 from beeswarm.shared.helpers import drop_privileges
 from beeswarm.shared.helpers import extract_keys
-from beeswarm.shared.message_enum import Messages
 
 # Do not remove this import, it is used to autodetect the capabilities.
 
@@ -59,7 +57,6 @@ class Client(object):
 
         BaitSession.client_id = self.config['general']['id']
 
-
         if self.config['general']['fetch_ip']:
             self.my_ip = urllib2.urlopen('http://api-sth01.exip.org/?call=ip').read()
             logger.info('Fetched {0} as my external ip.'.format(self.my_ip))
@@ -77,7 +74,7 @@ class Client(object):
 
         sessions = {}
 
-        #greenlet to consume and maintain data in sessions list
+        # greenlet to consume and maintain data in sessions list
         self.sessions_consumer = Consumer(sessions, self.config)
         gevent.spawn(self.sessions_consumer.start_handling)
 

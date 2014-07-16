@@ -22,8 +22,8 @@ from beeswarm.drones.client.baits.clientbase import ClientBase
 
 logger = logging.getLogger(__name__)
 
-class pop3(ClientBase):
 
+class pop3(ClientBase):
     def __init__(self, sessions, options):
         """
             Initializes common values.
@@ -50,7 +50,8 @@ class pop3(ClientBase):
 
         try:
             logger.debug(
-                'Sending {0} bait session to {1}:{2}. (bait id: {3})'.format('pop3', server_host, server_port, session.id))
+                'Sending {0} bait session to {1}:{2}. (bait id: {3})'.format('pop3', server_host, server_port,
+                                                                             session.id))
             conn = poplib.POP3(server_host, server_port)
             session.source_port = conn.sock.getsockname()[1]
 
@@ -60,7 +61,7 @@ class pop3(ClientBase):
 
             conn.user(username)
             conn.pass_(password)
-            #TODO: Handle failed login
+            # TODO: Handle failed login
             session.add_auth_attempt('plaintext', True, username=username, password=password)
             session.did_login = True
             session.timestamp = datetime.utcnow()

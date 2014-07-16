@@ -12,7 +12,9 @@
                     type: 'GET',
                     contentType: 'application/json; charset=utf-8',
                     async: false,
-                    success: function(msg) { window.location.href = '/ws/drone/honeypot/configure/' + '{{ drone_id }}'; }
+                    success: function (msg) {
+                        window.location.href = '/ws/drone/honeypot/configure/' + '{{ drone_id }}';
+                    }
                 });
             }
             else if ($('#clientCheck').prop('checked') == true) {
@@ -21,7 +23,9 @@
                     type: 'GET',
                     contentType: 'application/json; charset=utf-8',
                     async: false,
-                    success: function(msg) { window.location.href = '/ws/drone/client/configure/' + '{{ drone_id }}'; }
+                    success: function (msg) {
+                        window.location.href = '/ws/drone/client/configure/' + '{{ drone_id }}';
+                    }
                 });
             }
         }));

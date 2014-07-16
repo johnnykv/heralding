@@ -17,7 +17,6 @@ from beeswarm.shared.vnc.des import RFBDes
 
 
 class VNCDecoder(object):
-
     def __init__(self, challenge, response, passwd_list):
         self.challenge = challenge
         self.response = response

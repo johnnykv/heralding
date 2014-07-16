@@ -30,7 +30,6 @@ from beeswarm.drones.honeypot.capabilities import smtp
 gevent.monkey.patch_all()
 
 import unittest
-from beeswarm.drones.honeypot.models.session import Session
 
 
 class SmtpTests(unittest.TestCase):
@@ -41,7 +40,7 @@ class SmtpTests(unittest.TestCase):
     def tearDown(self):
         if os.path.isdir(self.work_dir):
             shutil.rmtree(self.work_dir)
-    
+
     def test_connection(self):
         """ Tries to connect and run a EHLO command. Very basic test.
         """
@@ -49,7 +48,7 @@ class SmtpTests(unittest.TestCase):
         sessions = {}
         # Use uncommon port so that we can run test even if the Honeypot is running.
         options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'test'},
-                   'users': {'test': 'test'},}
+                   'users': {'test': 'test'}, }
         cap = smtp.smtp(sessions, options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
@@ -58,7 +57,7 @@ class SmtpTests(unittest.TestCase):
         smtp_.ehlo()
         smtp_.quit()
         srv.stop()
-        
+
     def test_AUTH_CRAM_MD5_reject(self):
         """ Makes sure the server rejects all invalid login attempts that use the
             CRAM-MD5 Authentication method.
@@ -71,7 +70,7 @@ class SmtpTests(unittest.TestCase):
         cap = smtp.smtp(sessions, options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
-        
+
         def encode_cram_md5(challenge, user, password):
             challenge = base64.decodestring(challenge)
             response = user + ' ' + hmac.HMAC(password, challenge).hexdigest()

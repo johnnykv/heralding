@@ -21,8 +21,8 @@ import shutil
 
 import gevent.monkey
 
-gevent.monkey.patch_all()
 
+gevent.monkey.patch_all()
 
 from gevent.server import StreamServer
 from beeswarm.drones.honeypot.honeypot import Honeypot
@@ -48,7 +48,7 @@ class VncTests(unittest.TestCase):
         cap = vnc.vnc(sessions, options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
-        
+
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client_socket.connect(('127.0.0.1', srv.server_port))
 

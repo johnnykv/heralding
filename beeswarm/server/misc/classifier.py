@@ -17,6 +17,7 @@ import logging
 import datetime
 
 from sqlalchemy.orm import joinedload
+
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Classification, BaitSession, Session, Authentication
 
@@ -91,11 +92,13 @@ class Classifier(object):
             if session_match:
                 logger.debug('Classifying bait session with id {0} as legit bait session and deleting '
                              'matching session with id {1}'.format(bait_session.id, session_match.id))
-                bait_session.classification = db_session.query(Classification).filter(Classification.type == 'bait_session').one()
+                bait_session.classification = db_session.query(Classification).filter(
+                    Classification.type == 'bait_session').one()
                 db_session.delete(session_match)
             # else we classify it as a MiTM attack
             else:
-                bait_session.classification = db_session.query(Classification).filter(Classification.type == 'mitm_1').one()
+                bait_session.classification = db_session.query(Classification).filter(
+                    Classification.type == 'mitm_1').one()
 
         db_session.commit()
 

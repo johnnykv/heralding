@@ -15,13 +15,14 @@
 import logging
 import random
 import datetime
+
 import gevent
+
 
 logger = logging.getLogger(__name__)
 
 
 class BeeDispatcher(object):
-
     """ Dispatches capabilities in a realistic fashion (with respect to timings) """
 
     def __init__(self, options, bee, my_ip):

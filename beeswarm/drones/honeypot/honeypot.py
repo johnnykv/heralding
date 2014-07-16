@@ -24,20 +24,17 @@ import ntplib
 import gevent
 from gevent import Greenlet
 from gevent.server import StreamServer
-
-import beeswarm
-
-# Do not remove this import, it is required for auto detect.
-# See capabilities/__init__.py to see how the auto detect works
-from beeswarm.drones.honeypot.capabilities import handlerbase
-
-from beeswarm.drones.honeypot.models.session import Session
-from beeswarm.drones.honeypot.consumer.consumer import Consumer
-from beeswarm.shared.helpers import drop_privileges, create_self_signed_cert, send_zmq_push, extract_keys
 import requests
 from requests.exceptions import Timeout, ConnectionError
+
+import beeswarm
+from beeswarm.drones.honeypot.capabilities import handlerbase
+from beeswarm.drones.honeypot.models.session import Session
+from beeswarm.drones.honeypot.consumer.consumer import Consumer
+from beeswarm.shared.helpers import create_self_signed_cert, send_zmq_push, extract_keys
 from beeswarm.shared.asciify import asciify
 from beeswarm.shared.message_enum import Messages
+
 
 logger = logging.getLogger(__name__)
 
@@ -128,26 +125,26 @@ class Honeypot(object):
         """ Starts services. """
         self.servers = []
         self.server_greenlets = []
-        #will contain Session objects
+        # will contain Session objects
         self.sessions = {}
 
-        #greenlet to consume the provided sessions
+        # greenlet to consume the provided sessions
         self.session_consumer = Consumer(self.sessions, self.honeypot_ip, self.config)
         Greenlet.spawn(self.session_consumer.start)
 
-        #protocol handlers
+        # protocol handlers
         for c in handlerbase.HandlerBase.__subclasses__():
 
             cap_name = c.__name__.lower()
 
             if cap_name in self.config['capabilities']:
                 port = self.config['capabilities'][cap_name]['port']
-                #carve out the options for this specific service
+                # carve out the options for this specific service
                 options = self.config['capabilities'][cap_name]
                 cap = c(self.sessions, options, self.work_dir)
 
                 try:
-                    #Convention: All capability names which end in 's' will be wrapped in ssl.
+                    # Convention: All capability names which end in 's' will be wrapped in ssl.
                     if cap_name.endswith('s'):
                         server = StreamServer(('0.0.0.0', port), cap.handle_session,
                                               keyfile=self.key, certfile=self.cert)
@@ -194,8 +191,8 @@ class Honeypot(object):
         shutil.copytree(os.path.join(package_directory, 'drones/honeypot/data'), os.path.join(work_dir, 'data/'),
                         ignore=Honeypot._ignore_copy_files)
 
-        #this config file is for standalone operations, it will be overwritten during __init__
-        #if a config url is specified.
+        # this config file is for standalone operations, it will be overwritten during __init__
+        # if a config url is specified.
         config_file = os.path.join(work_dir, 'beeswarmcfg.json.dist')
         if not os.path.isfile('beeswarmcfg.json'):
             logger.info('Copying configuration file to workdir.')

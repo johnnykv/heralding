@@ -16,18 +16,20 @@
 import socket
 import random
 import logging
-
 import SocketServer
 
 from beeswarm.drones.honeypot.capabilities.handlerbase import HandlerBase
+
+
+
 
 # Import the constants defined for the VNC protocol
 from beeswarm.shared.vnc_constants import *
 
 logger = logging.getLogger(__name__)
 
-class BeeVNCHandler(SocketServer.StreamRequestHandler):
 
+class BeeVNCHandler(SocketServer.StreamRequestHandler):
     """
         Handler of VNC Connections. This is a rather primitive state machine.
     """
@@ -80,6 +82,7 @@ class vnc(HandlerBase):
             logger.debug('Unexpected end of VNC session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
 
         session.connected = False
+
 
 def get_random_challenge():
     challenge = []

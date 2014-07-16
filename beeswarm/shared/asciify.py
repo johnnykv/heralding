@@ -34,7 +34,7 @@ def _asciify_dict(data):
         if isinstance(key, unicode):
             key = _remove_accents(key)
             key = key.encode('utf-8')
-            ## note new if
+            # # note new if
         if isinstance(value, unicode):
             value = _remove_accents(value)
             value = value.encode('utf-8')

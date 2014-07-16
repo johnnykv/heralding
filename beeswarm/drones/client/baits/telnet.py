@@ -124,7 +124,6 @@ class telnet(ClientBase, Commands):
         self.client.read_until('Password: ')
         self.client.write(password + '\r\n')
         current_data = self.client.read_until('$ ', 10)
-        print current_data
         if not current_data.endswith('$ '):
             raise InvalidLogin
 

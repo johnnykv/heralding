@@ -26,7 +26,6 @@ logger = logging.getLogger(__name__)
 
 
 class ssh(ClientBase, Commands):
-
     def __init__(self, sessions, options):
         """
             Initialize the SSH Bee, and the Base classes.
@@ -59,7 +58,7 @@ class ssh(ClientBase, Commands):
             'Sending %s bait session to {0}:{1}. (bait id: %s)'.format('ssh', server_host, server_port, session.id))
         try:
             self.connect_login()
-            #TODO: Handle failed login
+            # TODO: Handle failed login
             session.add_auth_attempt('plaintext', True, username=username, password=password)
             session.did_login = True
         except (SSHException, AuthenticationFailed) as err:

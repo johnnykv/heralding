@@ -15,9 +15,10 @@
 
 
 import logging
-from beeswarm.drones.honeypot.capabilities.http import http, BeeHTTPHandler
 
+from beeswarm.drones.honeypot.capabilities.http import http, BeeHTTPHandler
 from beeswarm.drones.honeypot.capabilities.handlerbase import HandlerBase
+
 
 logger = logging.getLogger(__name__)
 

@@ -27,7 +27,6 @@ import tempfile
 
 from gevent.server import StreamServer
 from beeswarm.drones.honeypot.honeypot import Honeypot
-from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.capabilities import telnet as hive_telnet
 
 from beeswarm.drones.client.models.session import BaitSession

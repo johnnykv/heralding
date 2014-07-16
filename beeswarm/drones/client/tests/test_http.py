@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import gevent.monkey
+
 gevent.monkey.patch_all()
 from gevent.server import StreamServer
 
@@ -25,7 +26,6 @@ import tempfile
 from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.drones.client.models.session import BaitSession
 from beeswarm.drones.client.baits.http import http
-from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.capabilities import http as hive_http
 
 
@@ -63,6 +63,7 @@ class HTTP_Test(unittest.TestCase):
         current_bait = http(baitsessions, bait_info)
         current_bait.do_session('127.0.0.1')
         srv.stop()
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -17,11 +17,13 @@
 
 import logging
 import os
+
 from gevent import socket
+from fs.path import dirname
 
 from beeswarm.drones.honeypot.capabilities.handlerbase import HandlerBase
 from beeswarm.drones.honeypot.helpers.common import send_whole_file, path_to_ls
-from fs.path import dirname
+
 
 logger = logging.getLogger(__name__)
 
@@ -188,7 +190,7 @@ class BeeFTPHandler(object):
 
     def do_TYPE(self, arg):
         self.transfer_mode = arg
-        self.respond('200 Transfer type set to:'+self.transfer_mode)
+        self.respond('200 Transfer type set to:' + self.transfer_mode)
 
     def getcmd(self):
         return self.conn.recv(512)
@@ -216,7 +218,6 @@ class BeeFTPHandler(object):
 
 
 class ftp(HandlerBase):
-
     def __init__(self, sessions, options, work_dir):
         super(ftp, self).__init__(sessions, options, work_dir)
         self._options = options

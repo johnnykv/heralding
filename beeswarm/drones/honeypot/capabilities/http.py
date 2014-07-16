@@ -16,10 +16,11 @@
 import base64
 import socket
 import logging
-
 from BaseHTTPServer import BaseHTTPRequestHandler
+
 from beeswarm.drones.honeypot.capabilities.handlerbase import HandlerBase
 from beeswarm.drones.honeypot.helpers.common import send_whole_file
+
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,7 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
 
         self._options = options
         if 'banner' in self._options:
-                self._banner = self._options['banner']
+            self._banner = self._options['banner']
         else:
             self._banner = 'Microsoft-IIS/5.0'
         self._session = httpsession
@@ -81,13 +82,12 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
     def version_string(self):
         return self._banner
 
-    #Disable logging provided by BaseHTTPServer
+    # Disable logging provided by BaseHTTPServer
     def log_message(self, format_, *args):
         pass
 
 
 class http(HandlerBase):
-
     HandlerClass = BeeHTTPHandler
 
     def __init__(self, sessions, options, workdir):

@@ -12,13 +12,15 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import gevent
-import gevent.monkey
 import tempfile
 import shutil
 import json
 import os
+
+import gevent
+import gevent.monkey
 import zmq.green as zmq
+
 
 gevent.monkey.patch_all()
 
@@ -65,5 +67,5 @@ class HoneypotTests(unittest.TestCase):
         sut = Honeypot(self.work_dir, self.config_dict, key=self.key, cert=self.cert)
         gevent.spawn(sut.start)
         gevent.sleep(1)
-        #number of capabilities (workers). This value must be updated when adding new capabilities
+        # number of capabilities (workers). This value must be updated when adding new capabilities
         self.assertEquals(9, len(sut.servers))

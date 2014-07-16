@@ -13,7 +13,6 @@
 # You should have received a copy of the GNU General Public License
 
 import unittest
-import uuid
 
 from mock import Mock
 import gevent
@@ -36,13 +35,13 @@ class Consumer_test(unittest.TestCase):
         beesession.alldone = True
         sessions[beesession.id] = beesession
 
-        #mock a dummy logger
+        # mock a dummy logger
         dummy_logger = DummyLogger()
         log_mock = Mock()
         dummy_logger.log = log_mock
 
         consumer = Consumer(sessions, {})
-        #inject the dummy logger into the consumer
+        # inject the dummy logger into the consumer
         consumer.logger = dummy_logger
         gevent.spawn(consumer.start_handling)
         #forcing cooperative yield.
@@ -66,7 +65,7 @@ class Consumer_test(unittest.TestCase):
         beesession.alldone = False
         sessions[beesession.id] = beesession
 
-        #mock a dummy logger
+        # mock a dummy logger
         dummy_logger = DummyLogger()
         log_mock = Mock()
         dummy_logger.log = log_mock
@@ -74,7 +73,7 @@ class Consumer_test(unittest.TestCase):
         consumer = Consumer(sessions, {})
         consumer.logger = dummy_logger
         gevent.spawn(consumer.start_handling)
-        #forcing cooperative yield.
+        # forcing cooperative yield.
         gevent.sleep(0)
 
         #assert that the log method was not called

@@ -24,8 +24,8 @@ from beeswarm.drones.client.baits.clientbase import ClientBase
 
 logger = logging.getLogger(__name__)
 
-class ftp(ClientBase):
 
+class ftp(ClientBase):
     COMMAND_MAP = {
         'pwd': ['list'],
         'list': ['retrieve', 'cwd'],
@@ -77,7 +77,7 @@ class ftp(ClientBase):
             self.connect()
             session.did_connect = True
 
-            #TODO: Catch login failure
+            # TODO: Catch login failure
             self.login(username, password)
             session.add_auth_attempt('plaintext', True, username=username, password=password)
 

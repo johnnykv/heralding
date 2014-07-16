@@ -26,8 +26,8 @@ from beeswarm.drones.client.baits.clientbase import ClientBase
 
 logger = logging.getLogger(__name__)
 
-class http(ClientBase):
 
+class http(ClientBase):
     def __init__(self, sessions, options):
         """
             Initializes common values.

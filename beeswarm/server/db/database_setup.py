@@ -12,21 +12,24 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import logging
 
 import os
 import json
 import logging
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 from entities import Classification
 from entities import BaitUser
 import entities
+
 
 DB_Session = None
 engine = None
 
 logger = logging.getLogger(__name__)
+
 
 def setup_db(connection_string):
     """
@@ -40,7 +43,7 @@ def setup_db(connection_string):
     DB_Session = sessionmaker(bind=engine)
     db_path = os.path.dirname(__file__)
 
-    #bootstrapping the db with classifications types
+    # bootstrapping the db with classifications types
     json_file = open(os.path.join(db_path, 'bootstrap.json'))
     data = json.load(json_file)
     session = get_session()

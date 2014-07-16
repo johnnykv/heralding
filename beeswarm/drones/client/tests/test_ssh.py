@@ -24,7 +24,6 @@ import tempfile
 
 from gevent.server import StreamServer
 from beeswarm.drones.honeypot.honeypot import Honeypot
-from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.capabilities import ssh as honeypot_ssh
 
 from beeswarm.drones.client.baits import ssh as client_ssh

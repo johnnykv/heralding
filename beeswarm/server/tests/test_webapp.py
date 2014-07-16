@@ -52,8 +52,8 @@ class WebappTests(unittest.TestCase):
     # TODO: All these posts should be moved to ZMQ tests
     # def test_basic_client_post(self):
     # """
-    #     Tests if a bait_session dict can be posted without exceptions.
-    #     """
+    # Tests if a bait_session dict can be posted without exceptions.
+    # """
     #     self.login(self.client_id, self.client_password)
     #     data_dict = {
     #         'id': str(uuid.uuid4()),

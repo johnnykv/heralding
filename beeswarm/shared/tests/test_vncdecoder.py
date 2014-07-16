@@ -14,11 +14,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
+
 from beeswarm.shared.vnc.decoder import VNCDecoder
 
 
 class VncDecoderTests(unittest.TestCase):
-
     def test_combinations(self):
         """Tests different combinations of challenge/response pairs and checks if
            we can find the right password.
@@ -36,6 +36,7 @@ class VncDecoderTests(unittest.TestCase):
         # Computed passwords are either truncated to 8 bytes, or padded with '\x00'
         # to the right, so we only check if it starts with the real password.
         self.assertEquals(computed_pass.startswith('1234'), True)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -17,7 +17,6 @@ from beeswarm.drones.client.models.session import BaitSession
 
 
 class ClientBase(object):
-
     """ Base class for Bees. This should only be used after sub-classing. """
 
     def __init__(self, sessions, options):

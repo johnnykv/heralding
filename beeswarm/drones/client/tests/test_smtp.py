@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import gevent.monkey
+
 gevent.monkey.patch_all()
 
 import unittest
@@ -23,7 +24,6 @@ import tempfile
 
 from gevent.server import StreamServer
 from beeswarm.drones.honeypot.honeypot import Honeypot
-from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.capabilities import smtp as hive_smtp
 
 from beeswarm.drones.client.baits import smtp as bee_smtp
@@ -124,6 +124,7 @@ class SMTP_Test(unittest.TestCase):
         self.assertGreater(len(from_addr), 0)
         self.assertGreater(len(to_addr), 0)
         self.assertGreater(len(mail_body), 0)
+
 
 if __name__ == '__main__':
     unittest.main()

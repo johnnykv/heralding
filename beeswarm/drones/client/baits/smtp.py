@@ -26,8 +26,8 @@ from beeswarm.drones.client.baits.clientbase import ClientBase
 
 logger = logging.getLogger(__name__)
 
-class smtp(ClientBase):
 
+class smtp(ClientBase):
     def __init__(self, sessions, options):
         """
             Initializes common values.
@@ -66,7 +66,7 @@ class smtp(ClientBase):
             session.source_port = self.client.sock.getsockname()[1]
             self.login(username, password)
 
-            #TODO: Handle failed login
+            # TODO: Handle failed login
             session.add_auth_attempt('plaintext', True, username=username, password=password)
             session.did_login = True
 

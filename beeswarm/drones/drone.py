@@ -15,25 +15,26 @@
 
 import os
 import logging
-import requests
 import socket
 import json
+
+import requests
 from requests.exceptions import Timeout, ConnectionError
 import gevent
-from beeswarm.shared.asciify import asciify
+import zmq.green as zmq
+import zmq.auth
+from zmq.utils.monitor import recv_monitor_message
+
 from beeswarm.shared.message_enum import Messages
 from beeswarm.shared.helpers import extract_keys, send_zmq_push
 from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.drones.client.client import Client
-import zmq.green as zmq
-import zmq.auth
-from zmq.utils.monitor import recv_monitor_message
+
 
 logger = logging.getLogger(__name__)
 
 
 class Drone(object):
-
     """ Aggregates a honeypot or client. """
 
     def __init__(self, work_dir, config, key='server.key', cert='server.crt', **kwargs):
@@ -88,13 +89,13 @@ class Drone(object):
         server_public, _ = zmq.auth.load_certificate(server_public_file)
 
         self.outgoing_msg_greenlet = gevent.spawn(self.incoming_server_comms, server_public,
-                                                  client_public,client_secret)
+                                                  client_public, client_secret)
         self.incoming_msg_greenlet = gevent.spawn(self.outgoing_server_comms, server_public,
                                                   client_public, client_secret)
 
         self._start_drone()
 
-        #drop_privileges()
+        # drop_privileges()
         logger.info('Drone running using id: {0}'.format(self.id))
         gevent.joinall([self.incoming_msg_greenlet])
 
@@ -144,7 +145,8 @@ class Drone(object):
         receiving_socket.connect(self.config['beeswarm_server']['zmq_command_url'])
         gevent.spawn(self.monitor_worker, receiving_socket.get_monitor_socket(), 'incomming socket ({0}).'
                      .format(self.config['beeswarm_server']['zmq_url']))
-        logger.debug('Connected receiving socket to server on {0}'.format(self.config['beeswarm_server']['zmq_command_url']))
+        logger.debug(
+            'Connected receiving socket to server on {0}'.format(self.config['beeswarm_server']['zmq_command_url']))
 
         poller = zmq.Poller()
         poller.register(receiving_socket, zmq.POLLIN)
@@ -161,7 +163,7 @@ class Drone(object):
                 # DRONE_ID and COMMAND must not contain spaces
                 drone_id, command, data = message.split(' ', 2)
                 logger.debug('Received {0} command.'.format(command))
-                assert(drone_id == self.id)
+                assert (drone_id == self.id)
                 # if we receive a configuration we restart the drone
                 if command == Messages.CONFIG:
                     # additional payload

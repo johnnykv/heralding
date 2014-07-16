@@ -23,6 +23,7 @@ from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Session
 from beeswarm.server.misc.classifier import Classifier
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -60,10 +61,10 @@ class Scheduler(object):
         db_session = database_setup.get_session()
 
         malicious_deleted_count = db_session.query(Session).filter(Session.classification_id != 'bait_session') \
-                                                           .filter(Session.timestamp < malicious_retain).delete()
+            .filter(Session.timestamp < malicious_retain).delete()
 
         bait_deleted_count = db_session.query(Session).filter(Session.classification_id == 'bait_session') \
-                                                           .filter(Session.timestamp < bait_retain).delete()
+            .filter(Session.timestamp < bait_retain).delete()
         db_session.commit()
 
         logger.debug('Database maintenance finished. Deleted {0} bait_sessions and {1} malicious sessions)' \

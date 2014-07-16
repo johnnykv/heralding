@@ -15,9 +15,12 @@
 import logging
 import random
 import string
+
+from werkzeug.security import generate_password_hash
+
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import User
-from werkzeug.security import generate_password_hash
+
 
 logger = logging.getLogger(__name__)
 

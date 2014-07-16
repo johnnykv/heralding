@@ -13,8 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import struct
-from OpenSSL import crypto
-
 import urlparse
 import os
 import pwd
@@ -25,11 +23,13 @@ import socket
 import json
 import fcntl
 import shutil
+
+from OpenSSL import crypto
 import zmq.green as zmq
 import gevent
 
-import beeswarm
 from beeswarm.shared.message_enum import Messages
+
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ def drop_privileges(uid_name='nobody', gid_name='nogroup'):
         return
 
     wanted_uid = pwd.getpwnam(uid_name)[2]
-    #special handling for os x. (getgrname has trouble with gid below 0)
+    # special handling for os x. (getgrname has trouble with gid below 0)
     if platform.mac_ver()[0] and platform.mac_ver()[0] < float('10.9'):
         wanted_gid = -2
     else:
@@ -81,7 +81,7 @@ def create_self_signed_cert(cert_country, cert_state, cert_organization, cert_lo
     sub.L = cert_locality
     sub.O = cert_organization
 
-    #optional
+    # optional
     if cert_organizational_unit:
         sub.OU = cert_organizational_unit
 
@@ -101,6 +101,7 @@ def create_self_signed_cert(cert_country, cert_state, cert_organization, cert_lo
 def generate_cert_digest(str_cert):
     cert = crypto.load_certificate(crypto.FILETYPE_PEM, str_cert)
     return cert.digest('SHA256')
+
 
 def find_offset(iso_file_path, needle):
     """
@@ -145,7 +146,6 @@ def find_offset(iso_file_path, needle):
 # Shamelessly stolen from
 # http://code.activestate.com/recipes/439094-get-the-ip-address-associated-with-a-network-inter/
 def get_local_ipaddress(ifname):
-
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     return socket.inet_ntoa(fcntl.ioctl(
         s.fileno(),
@@ -155,7 +155,6 @@ def get_local_ipaddress(ifname):
 
 
 def update_config_file(configfile, options):
-
     config = get_config_dict(configfile)
 
     with open(configfile, 'r+') as config_file:
@@ -181,7 +180,7 @@ def send_zmq_request(actor_url, request):
     result = socket.recv()
     if result.split(' ', 1)[0] != Messages.OK:
         socket.close()
-        assert(False)
+        assert (False)
     else:
         socket.close()
         return json.loads(result.split(' ', 1)[1])
@@ -199,7 +198,7 @@ def send_zmq_push(actor_url, data):
 
 
 def extract_keys(work_dir, config):
-    #dump keys used for secure communication with beeswarm server
+    # dump keys used for secure communication with beeswarm server
     # safe to rm since we have everything we need in the config
     cert_path = os.path.join(work_dir, 'certificates')
     shutil.rmtree(cert_path, True)

@@ -27,7 +27,6 @@ import tempfile
 
 from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.drones.client.models.session import BaitSession
-from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.capabilities import https as hive_https
 
 
@@ -63,6 +62,7 @@ class HTTPS_Test(unittest.TestCase):
         current_bait = bee_https.https(beesessions, bee_info)
         current_bait.do_session('127.0.0.1')
         srv.stop()
+
 
 if __name__ == '__main__':
     unittest.main()

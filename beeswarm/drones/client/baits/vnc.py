@@ -24,7 +24,6 @@ logger = logging.getLogger(__name__)
 
 
 class vnc(ClientBase):
-
     def __init__(self, sessions, options):
         super(vnc, self).__init__(sessions, options)
 
@@ -43,7 +42,8 @@ class vnc(ClientBase):
         session = self.create_session(server_host, server_port, my_ip, honeypot_id)
         self.sessions[session.id] = session
 
-        logger.debug('Sending {0} bait session to {1}:{2}. (bait id: {3})'.format('vnc', server_host, server_port, session.id))
+        logger.debug(
+            'Sending {0} bait session to {1}:{2}. (bait id: {3})'.format('vnc', server_host, server_port, session.id))
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             client_socket.connect((server_host, int(server_port)))

@@ -37,6 +37,7 @@ from beeswarm.shared.message_enum import Messages
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Drone
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -263,7 +264,7 @@ class Server(object):
                 maintenance_worker.stop()
                 maintenance_greenlet.kill(timeout=2)
 
-                #spawn new worker greenlet and pass the new config
+                # spawn new worker greenlet and pass the new config
                 maintenance_worker = Scheduler(config)
                 maintenance_greenlet = gevent.spawn(maintenance_worker.start)
 

@@ -22,9 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class BaseSession(object):
-
     def __init__(self, protocol, source_ip=None, source_port=None, destination_ip=None, destination_port=None):
-
         self.id = uuid.uuid4()
         self.source_ip = source_ip
         self.source_port = source_port

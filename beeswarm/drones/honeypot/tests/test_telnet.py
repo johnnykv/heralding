@@ -15,7 +15,9 @@
 
 import gevent
 import gevent.monkey
+
 from beeswarm.drones.honeypot.capabilities import telnet
+
 
 gevent.monkey.patch_all()
 from gevent.server import StreamServer
@@ -28,7 +30,6 @@ import os
 import shutil
 
 from beeswarm.drones.honeypot.honeypot import Honeypot
-from beeswarm.drones.honeypot.models.session import Session
 
 
 class TelnetTests(unittest.TestCase):
@@ -43,10 +44,10 @@ class TelnetTests(unittest.TestCase):
     def test_invalid_login(self):
         """Tests if telnet server responds correctly to a invalid login attempt."""
 
-        #curses dependency in the telnetserver need a STDOUT with file descriptor.
+        # curses dependency in the telnetserver need a STDOUT with file descriptor.
         sys.stdout = tempfile.TemporaryFile()
 
-        #initialize capability and start tcp server
+        # initialize capability and start tcp server
         sessions = {}
 
         options = {'enabled': 'True', 'port': 2503, 'protocol_specific_data': {'max_attempts': 3},
@@ -57,7 +58,7 @@ class TelnetTests(unittest.TestCase):
         server.start()
 
         client = telnetlib.Telnet('localhost', 2503)
-        #set this to 1 if having problems with this test
+        # set this to 1 if having problems with this test
         client.set_debuglevel(0)
 
         #this disables all command negotiation.
@@ -80,10 +81,10 @@ class TelnetTests(unittest.TestCase):
     def test_valid_login(self):
         """Tests if telnet server responds correctly to a VALID login attempt."""
 
-        #curses dependency in the telnetserver need a STDOUT with file descriptor.
+        # curses dependency in the telnetserver need a STDOUT with file descriptor.
         sys.stdout = tempfile.TemporaryFile()
 
-        #initialize capability and start tcp server
+        # initialize capability and start tcp server
         sessions = {}
 
         options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
@@ -94,7 +95,7 @@ class TelnetTests(unittest.TestCase):
         server.start()
 
         client = telnetlib.Telnet('localhost', server.server_port)
-        #set this to 1 if having problems with this test
+        # set this to 1 if having problems with this test
         client.set_debuglevel(0)
 
         #this disables all command negotiation.
@@ -117,10 +118,10 @@ class TelnetTests(unittest.TestCase):
     def test_commands(self):
         """Tests the telnet commands"""
 
-        #curses dependency in the telnetserver need a STDOUT with file descriptor.
+        # curses dependency in the telnetserver need a STDOUT with file descriptor.
         sys.stdout = tempfile.TemporaryFile()
 
-        #initialize capability and start tcp server
+        # initialize capability and start tcp server
         sessions = {}
 
         options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'Test', 'max_attempts': 3},
@@ -130,7 +131,7 @@ class TelnetTests(unittest.TestCase):
         server.start()
 
         client = telnetlib.Telnet('localhost', server.server_port)
-        #set this to 1 if having problems with this test
+        # set this to 1 if having problems with this test
         client.set_debuglevel(0)
 
         #this disables all command negotiation.

@@ -17,23 +17,25 @@ import argparse
 import os
 import logging
 import sys
+import socket
+from datetime import timedelta
+
 import gevent
 from gevent.util import wrap_errors
-import socket
 from fs.errors import ResourceNotFoundError
 from fs.path import dirname
 from fs.utils import isdir
 from telnetsrv.green import TelnetHandler
 from telnetsrv.telnetsrvlib import TelnetHandlerBase
 from telnetsrv.telnetsrvlib import command
+
 from beeswarm.drones.honeypot.helpers.common import path_to_ls
-from datetime import timedelta
+
 
 logger = logging.getLogger(__name__)
 
 
 class OwnGreenTelnetHandler(TelnetHandler):
-
     def setup(self):
         TelnetHandlerBase.setup(self)
         # Spawn a greenlet to handle socket input
@@ -43,9 +45,9 @@ class OwnGreenTelnetHandler(TelnetHandler):
         # Sleep for 0.5 second to allow options negotiation
         gevent.sleep(0.5)
 
+
 class Commands(OwnGreenTelnetHandler):
     """This class implements the shell functionality for the telnet and SSH capabilities"""
-
 
     max_tries = 3
     PROMPT = ''

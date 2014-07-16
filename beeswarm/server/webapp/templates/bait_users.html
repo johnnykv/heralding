@@ -3,50 +3,59 @@
 {% block content %}
 <h3>Bait credentials</h3>
 <table id="baittable" class="table table-bordered datagrid">
-    	<thead/>
-		<tfoot>
-		<tr>
-			<th>
-				<div class="datagrid-footer-left" style="display:none;">
-					<div class="grid-controls">
-						<span><span class="grid-start"></span> - <span class="grid-end"></span> of <span class="grid-count"></span></span>
-						<select class="grid-pagesize"><option>5</option><option>20</option><option>50</option></select>
-						<span>Per Page</span>
-					</div>
-				</div>
-				<div class="datagrid-footer-right" style="display:none;">
-					<div class="grid-pager">
-						<button class="btn grid-prevpage"><i class="icon-chevron-left"></i></button>
-						<span>Page</span>
-						<div class="input-append dropdown combobox">
-							<input class="span1" type="text">
-						</div>
-						<span>of <span class="grid-pages"></span></span>
-						<button class="btn grid-nextpage"><i class="icon-chevron-right"></i></button>
-					</div>
-				</div>
-			</th>
-		</tr>
-		</tfoot>
+    <thead/>
+    <tfoot>
+    <tr>
+        <th>
+            <div class="datagrid-footer-left" style="display:none;">
+                <div class="grid-controls">
+                    <span><span class="grid-start"></span> - <span class="grid-end"></span> of <span
+                            class="grid-count"></span></span>
+                    <select class="grid-pagesize">
+                        <option>5</option>
+                        <option>20</option>
+                        <option>50</option>
+                    </select>
+                    <span>Per Page</span>
+                </div>
+            </div>
+            <div class="datagrid-footer-right" style="display:none;">
+                <div class="grid-pager">
+                    <button class="btn grid-prevpage"><i class="icon-chevron-left"></i></button>
+                    <span>Page</span>
+
+                    <div class="input-append dropdown combobox">
+                        <input class="span1" type="text">
+                    </div>
+                    <span>of <span class="grid-pages"></span></span>
+                    <button class="btn grid-nextpage"><i class="icon-chevron-right"></i></button>
+                </div>
+            </div>
+        </th>
+    </tr>
+    </tfoot>
 </table>
 
 <script type="text/javascript">
 
-$('#baittable').datagrid({
-    dataOptions: { pageIndex: 0, pageSize: 50 },
-    dataSource: new FlexibleUrlDatasource({
-    columns: [{
-      property: 'username',
-      label: 'User',
-      sortable: true
-    },{
-      property: 'password',
-      label: 'Password',
-      sortable: true
-    }],
-    url: '/ws/bait_users'
-  })
-});
+    $('#baittable').datagrid({
+        dataOptions: { pageIndex: 0, pageSize: 50 },
+        dataSource: new FlexibleUrlDatasource({
+            columns: [
+                {
+                    property: 'username',
+                    label: 'User',
+                    sortable: true
+                },
+                {
+                    property: 'password',
+                    label: 'Password',
+                    sortable: true
+                }
+            ],
+            url: '/ws/bait_users'
+        })
+    });
 
 </script>
 

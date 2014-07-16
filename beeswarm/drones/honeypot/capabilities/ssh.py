@@ -19,7 +19,6 @@ from telnetsrv.paramiko_ssh import SSHHandler, TelnetToPtyHandler
 from paramiko import RSAKey
 from paramiko.ssh_exception import SSHException
 
-
 from beeswarm.drones.honeypot.capabilities.handlerbase import HandlerBase
 from beeswarm.drones.honeypot.capabilities.shared.shell import Commands
 
@@ -44,7 +43,6 @@ class SSH(HandlerBase):
 
 
 class BeeTelnetHandler(Commands):
-
     def __init__(self, request, client_address, server, vfs, session):
         Commands.__init__(self, request, client_address, server, vfs, session)
 
@@ -76,10 +74,11 @@ class SshWrapper(SSHHandler):
             # BaseRequestHandler does not inherit from object, must call the __init__ directly
             def __init__(self, *args):
                 TelnetToPtyHandler.__init__(self, *args)
+
         self.pty_handler = __MixedPtyHandler
 
     def authCallbackUsername(self, username):
-        #make sure no one can logon
+        # make sure no one can logon
         raise
 
     def authCallback(self, username, password):

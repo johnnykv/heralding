@@ -15,6 +15,7 @@
 
 import gevent
 import gevent.monkey
+
 gevent.monkey.patch_all()
 from gevent.server import StreamServer
 
@@ -25,15 +26,14 @@ import tempfile
 
 from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.drones.honeypot.capabilities import ssh
-from beeswarm.drones.honeypot.models.session import Session
 from paramiko import SSHClient, AutoAddPolicy, AuthenticationException
 
 
 class SshTests(unittest.TestCase):
     def setUp(self):
         self.work_dir = tempfile.mkdtemp()
-        self.key = os.path.join(os.path.dirname( __file__), 'dummy_key.key')
-        self.cert = os.path.join(os.path.dirname( __file__), 'dummy_cert.crt')
+        self.key = os.path.join(os.path.dirname(__file__), 'dummy_key.key')
+        self.cert = os.path.join(os.path.dirname(__file__), 'dummy_cert.crt')
         Honeypot.prepare_environment(self.work_dir)
 
     def tearDown(self):
@@ -41,8 +41,7 @@ class SshTests(unittest.TestCase):
             shutil.rmtree(self.work_dir)
 
     def test_basic_login(self):
-
-        options ={'port': 0, 'users': {'test': 'test'}}
+        options = {'port': 0, 'users': {'test': 'test'}}
         sut = ssh.SSH({}, options, self.work_dir, self.key)
         server = StreamServer(('127.0.0.1', 0), sut.handle_session)
         server.start()

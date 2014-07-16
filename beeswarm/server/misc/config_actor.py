@@ -23,9 +23,11 @@ import random
 from gevent import Greenlet
 import zmq.green as zmq
 from zmq.auth.certs import create_certificates
+
 from beeswarm.shared.message_enum import Messages
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, Honeypot, Drone, DroneEdge, BaitUser
+
 
 logger = logging.getLogger(__name__)
 
@@ -115,8 +117,8 @@ class ConfigActor(Greenlet):
         config_json = self._get_drone_config(drone_id)
         self.drone_command_receiver.send('{0} {1} {2}'.format(drone_id, Messages.CONFIG, json.dumps(config_json)))
 
-    def _handle_command_get_droneconfig(self, id):
-        return self._get_drone_config(id)
+    def _handle_command_get_droneconfig(self, drone_id):
+        return self._get_drone_config(drone_id)
 
     def _reconfigure_all_clients(self):
         db_session = database_setup.get_session()
@@ -144,18 +146,19 @@ class ConfigActor(Greenlet):
         for client in clients:
             self._send_config_to_drone(client.id)
 
-    def _get_drone_config(self, id):
+    def _get_drone_config(self, drone_id):
         db_session = database_setup.get_session()
-        drone = db_session.query(Honeypot).filter(Drone.id == id).first()
+        drone = db_session.query(Honeypot).filter(Drone.id == drone_id).first()
         # lame! what is the correct way?
         if not drone:
-            drone = db_session.query(Client).filter(Drone.id == id).first()
+            drone = db_session.query(Client).filter(Drone.id == drone_id).first()
         if not drone:
-            drone = db_session.query(Drone).filter(Drone.id == id).first()
+            drone = db_session.query(Drone).filter(Drone.id == drone_id).first()
         if not drone:
             self.config_commands.send(Messages.FAIL)
 
-        server_zmq_url = 'tcp://{0}:{1}'.format(self.config['network']['server_host'], self.config['network']['zmq_port'])
+        server_zmq_url = 'tcp://{0}:{1}'.format(self.config['network']['server_host'],
+                                                self.config['network']['zmq_port'])
         server_zmq_command_url = 'tcp://{0}:{1}'.format(self.config['network']['server_host'],
                                                         self.config['network']['zmq_command_port'])
 
@@ -165,7 +168,7 @@ class ConfigActor(Greenlet):
         drone_config = {
             'general': {
                 'mode': drone.discriminator,
-                'id': id,
+                'id': drone_id,
                 'fetch_ip': False,
                 'name': drone.name
             },
@@ -198,10 +201,10 @@ class ConfigActor(Greenlet):
                 users = {}
                 for bait in capability.baits:
                     users[bait.username] = bait.password
-                    print users
                 drone_config['capabilities'][capability.protocol] = {'port': capability.port,
                                                                      'enabled': True,
-                                                                     'protocol_specific_data': json.loads(capability.protocol_specific_data),
+                                                                     'protocol_specific_data': json.loads(
+                                                                         capability.protocol_specific_data),
                                                                      'users': users}
         elif drone.discriminator == 'client':
             drone_config['baits'] = {}

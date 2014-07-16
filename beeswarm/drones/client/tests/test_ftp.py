@@ -26,7 +26,6 @@ import tempfile
 
 from gevent.server import StreamServer
 from beeswarm.drones.honeypot.honeypot import Honeypot
-from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.capabilities import ftp as hive_ftp
 
 from beeswarm.drones.client.models.session import BaitSession
@@ -189,6 +188,7 @@ class FTP_Test(unittest.TestCase):
         current_bee.retrieve(current_bee.state['file_list'][0])
 
         srv.stop()
+
 
 if __name__ == '__main__':
     unittest.main()

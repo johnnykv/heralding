@@ -86,9 +86,8 @@
     }).on('click', 'i.fa', function () {
         var drone_id = $(this).parent().parent().find("td").eq(0).html();
         var icon_id = $(this).attr("id");
-        if (icon_id == 'delete')
-        {
-          $.ajax({
+        if (icon_id == 'delete') {
+            $.ajax({
                 url: '/ws/drone/delete',
                 type: 'POST',
                 contentType: 'application/json; charset=utf-8',
@@ -96,9 +95,8 @@
             });
             $('#dronestable').datagrid('reload');
         }
-        else if (icon_id == 'settings')
-        {
-            window.location.href='/ws/drone/configure/' + drone_id;
+        else if (icon_id == 'settings') {
+            window.location.href = '/ws/drone/configure/' + drone_id;
         }
     });
 

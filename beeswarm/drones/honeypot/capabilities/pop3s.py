@@ -15,8 +15,8 @@
 
 
 import logging
-from beeswarm.drones.honeypot.capabilities.pop3 import Pop3
 
+from beeswarm.drones.honeypot.capabilities.pop3 import Pop3
 from beeswarm.drones.honeypot.capabilities.handlerbase import HandlerBase
 
 

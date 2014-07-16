@@ -26,22 +26,20 @@ from collections import namedtuple
 
 import gevent
 import zmq.green as zmq
-
 from flask import Flask, render_template, request, redirect, flash, Response, send_from_directory, abort
-import flask
 from flask.ext.login import LoginManager, login_user, current_user, login_required, logout_user
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import desc
 from werkzeug.security import check_password_hash
-from werkzeug.datastructures import MultiDict
-from beeswarm.server.webapp.auth import Authenticator
 from wtforms import HiddenField
+
+from beeswarm.server.webapp.auth import Authenticator
 import beeswarm
 from forms import HoneypotConfigurationForm, NewClientConfigForm, LoginForm, SettingsForm
 from beeswarm.server.db import database_setup
-from beeswarm.server.db.entities import Client, BaitSession, Session, Honeypot, User, Authentication, Classification, \
-    BaitUser, Transcript, Drone, Authentication
-from beeswarm.shared.helpers import send_zmq_request, send_zmq_push
+from beeswarm.server.db.entities import Client, BaitSession, Session, Honeypot, User, BaitUser, Transcript, Drone, \
+    Authentication
+from beeswarm.shared.helpers import send_zmq_request
 from beeswarm.shared.message_enum import Messages
 
 
@@ -247,10 +245,10 @@ def configure_honeypot(id):
     config_dict = send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.DRONE_CONFIG, id))
     config_obj = DictWrapper(config_dict)
     # if honeypot.configuration is not None:
-    #     config_obj = DictWrapper(json.loads(honeypot.configuration))
+    # config_obj = DictWrapper(json.loads(honeypot.configuration))
     # else:
-    #     # virgin drone
-    #     config_obj = None
+    # # virgin drone
+    # config_obj = None
     form = HoneypotConfigurationForm(obj=config_obj)
     if not form.validate_on_submit():
         return render_template('configure-honeypot.html', form=form, mode_name='Honeypot', user=current_user)
@@ -385,6 +383,7 @@ def drone_key(key):
         db_session.commit()
         config_json = send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.DRONE_CONFIG, drone_id))
         return json.dumps(config_json)
+
 
 @app.route('/ws/drone/delete', methods=['POST'])
 @login_required

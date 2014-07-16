@@ -15,8 +15,11 @@
 
 import os
 import logging
+
 from fs.osfs import OSFS
+
 from beeswarm.drones.honeypot.models.session import Session
+
 
 logger = logging.getLogger(__name__)
 
@@ -37,9 +40,9 @@ class HandlerBase(object):
             self.users = options['users']
         else:
             self.users = {}
-        #virtual file system shared by all capabilities
+        # virtual file system shared by all capabilities
         self.vfsystem = OSFS(os.path.join(workdir, 'data/vfs'))
-        #serviceport
+        # serviceport
         self.port = int(options['port'])
 
     def create_session(self, address, socket):

@@ -18,6 +18,7 @@ import logging
 
 from beeswarm.drones.honeypot.capabilities.handlerbase import HandlerBase
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -66,7 +67,7 @@ class Pop3(HandlerBase):
                 self.send_message(session, gsocket, '-ERR Unknown command')
             else:
                 return_value = func_to_call(session, gsocket, msg)
-                #state changers!
+                # state changers!
                 if state == 'AUTHORIZATION' or cmd == 'quit':
                     state = return_value
 
@@ -159,7 +160,7 @@ class Pop3(HandlerBase):
         mailspool_num_messages = 0
 
         for index, value in enumerate(user_mailspool):
-            if index not in session.vdata['deleted_index']: # ignore deleted messages
+            if index not in session.vdata['deleted_index']:  # ignore deleted messages
                 mailspool_bytes_size += len(value)
                 mailspool_num_messages += 1
 
@@ -172,9 +173,9 @@ class Pop3(HandlerBase):
 
         user_mailspool = session.vdata['MAILSPOOL']
 
-        #session['deleted_index'].sort(reverse=True)
-        #for index in session['deleted_index']:
-        #    del user_mailspool[index]
+        # session['deleted_index'].sort(reverse=True)
+        # for index in session['deleted_index']:
+        # del user_mailspool[index]
         return ''
 
     def cmd_list(self, session, gsocket, argument):
@@ -185,7 +186,7 @@ class Pop3(HandlerBase):
             mailspool_num_messages = 0
 
             for index, value in enumerate(user_mailspool):
-                if index not in session['deleted_index']: # ignore deleted messages
+                if index not in session['deleted_index']:  # ignore deleted messages
                     mailspool_bytes_size += len(value)
                     mailspool_num_messages += 1
 
@@ -193,7 +194,7 @@ class Pop3(HandlerBase):
             self.send_message(session, gsocket, reply)
 
             for index, value in enumerate(user_mailspool):
-                if index not in session['deleted_index']: # ignore deleted messages
+                if index not in session['deleted_index']:  # ignore deleted messages
                     reply = "%i %i" % (index + 1, len(value))
                     self.send_message(session, gsocket, reply)
             self.send_message(session, gsocket, '.')
