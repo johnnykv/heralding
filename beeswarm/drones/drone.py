@@ -103,15 +103,13 @@ class Drone(object):
         """
         Tears down the drone and restarts it.
         """
-
         mode = None
-        if self.config['general']['mode'] == '':
+        if self.config['general']['mode'] == '' or self.config['general']['mode'] == None:
             logger.info('Drone has not been configured, awaiting configuration from Beeswarm server.')
         elif self.config['general']['mode'] == 'honeypot':
             mode = Honeypot
         elif self.config['general']['mode'] == 'client':
             mode = Client
-
         if mode:
             self.drone = mode(self.work_dir, self.config)
             self.drone_greenlet = gevent.spawn(self.drone.start)
