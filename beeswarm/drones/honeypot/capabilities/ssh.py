@@ -27,11 +27,11 @@ logger = logging.getLogger(__name__)
 
 
 class SSH(HandlerBase):
-    def __init__(self, sessions, options, users, work_dir, key='server.key'):
+    def __init__(self, sessions, options, work_dir, key='server.key'):
         logging.getLogger("telnetsrv.paramiko_ssh ").setLevel(logging.WARNING)
         logging.getLogger("paramiko").setLevel(logging.WARNING)
         self.key = key
-        super(SSH, self).__init__(sessions, options, users, work_dir)
+        super(SSH, self).__init__(sessions, options, work_dir)
 
     def handle_session(self, gsocket, address):
         session = self.create_session(address, gsocket)

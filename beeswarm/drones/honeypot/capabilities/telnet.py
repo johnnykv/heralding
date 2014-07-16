@@ -24,8 +24,8 @@ logger = logging.getLogger(__name__)
 
 
 class Telnet(HandlerBase):
-    def __init__(self, sessions, options, users, work_dir):
-        super(Telnet, self).__init__(sessions, options, users, work_dir)
+    def __init__(self, sessions, options, work_dir):
+        super(Telnet, self).__init__(sessions, options, work_dir)
 
     def handle_session(self, gsocket, address):
         TelnetWrapper.max_tries = int(self.options['protocol_specific_data']['max_attempts'])

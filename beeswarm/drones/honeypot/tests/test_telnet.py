@@ -15,7 +15,6 @@
 
 import gevent
 import gevent.monkey
-from beeswarm.drones.honeypot.models.user import BaitUser
 from beeswarm.drones.honeypot.capabilities import telnet
 
 gevent.monkey.patch_all()
@@ -30,7 +29,6 @@ import shutil
 
 from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.drones.honeypot.models.session import Session
-from beeswarm.drones.honeypot.models.authenticator import Authenticator
 
 
 class TelnetTests(unittest.TestCase):
@@ -50,14 +48,11 @@ class TelnetTests(unittest.TestCase):
 
         #initialize capability and start tcp server
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
 
-        #provide valid login/pass to authenticator
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
+        options = {'enabled': 'True', 'port': 2503, 'protocol_specific_data': {'max_attempts': 3},
+                   'users': {'test': 'test'}}
 
-        options = {'enabled': 'True', 'port': 2503, 'protocol_specific_data': {'max_attempts': 3}}
-        cap = telnet.Telnet(sessions, options, users, self.work_dir)
+        cap = telnet.Telnet(sessions, options, self.work_dir)
         server = StreamServer(('0.0.0.0', 2503), cap.handle_session)
         server.start()
 
@@ -90,14 +85,11 @@ class TelnetTests(unittest.TestCase):
 
         #initialize capability and start tcp server
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
 
-        #provide valid login/pass to authenticator
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
+                   'users': {'test': 'test'}}
 
-        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3}}
-        cap = telnet.Telnet(sessions, options, users, self.work_dir)
+        cap = telnet.Telnet(sessions, options, self.work_dir)
         server = StreamServer(('0.0.0.0', 0), cap.handle_session)
         server.start()
 
@@ -130,14 +122,10 @@ class TelnetTests(unittest.TestCase):
 
         #initialize capability and start tcp server
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
 
-        #provide valid login/pass to authenticator
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
-
-        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'Test', 'max_attempts': 3}}
-        cap = telnet.Telnet(sessions, options, users, self.work_dir)
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'Test', 'max_attempts': 3},
+                   'users': {'test': 'test'}}
+        cap = telnet.Telnet(sessions, options, self.work_dir)
         server = StreamServer(('0.0.0.0', 0), cap.handle_session)
         server.start()
 

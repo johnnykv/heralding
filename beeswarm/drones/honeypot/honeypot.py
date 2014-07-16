@@ -32,10 +32,8 @@ import beeswarm
 from beeswarm.drones.honeypot.capabilities import handlerbase
 
 from beeswarm.drones.honeypot.models.session import Session
-from beeswarm.drones.honeypot.models.authenticator import Authenticator
 from beeswarm.drones.honeypot.consumer.consumer import Consumer
 from beeswarm.shared.helpers import drop_privileges, create_self_signed_cert, send_zmq_push, extract_keys
-from beeswarm.drones.honeypot.models.user import BaitUser
 import requests
 from requests.exceptions import Timeout, ConnectionError
 from beeswarm.shared.asciify import asciify
@@ -106,12 +104,6 @@ class Honeypot(object):
             'enabled_capabilities': []
         }
 
-        # will contain BaitUser objects
-        self.users = self.create_users()
-
-        # inject authentication mechanism
-        Session.authenticator = Authenticator(self.users)
-
         # spawning time checker
         if self.config['timecheck']['enabled']:
             Greenlet.spawn(self.checktime)
@@ -152,7 +144,7 @@ class Honeypot(object):
                 port = self.config['capabilities'][cap_name]['port']
                 #carve out the options for this specific service
                 options = self.config['capabilities'][cap_name]
-                cap = c(self.sessions, options, self.users, self.work_dir)
+                cap = c(self.sessions, options, self.work_dir)
 
                 try:
                     #Convention: All capability names which end in 's' will be wrapped in ssl.
@@ -217,14 +209,3 @@ class Honeypot(object):
             if file_ in ('.placeholder', '.git'):
                 to_ignore.append(file_)
         return to_ignore
-
-    def create_users(self):
-        """Creates the users for the Honeypot. A Client client or an attacker can log in
-        using the credentials supplied in the Honeypot Configuration. """
-
-        users = {}
-        for username in self.config['users']:
-            password = self.config['users'][username]
-            huser = BaitUser(username, password)
-            users[username] = huser
-        return users

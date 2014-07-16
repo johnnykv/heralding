@@ -27,7 +27,6 @@ gevent.monkey.patch_all()
 from gevent.server import StreamServer
 from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.drones.honeypot.capabilities import vnc
-from beeswarm.drones.honeypot.models.user import BaitUser
 from beeswarm.shared.vnc_constants import *
 
 
@@ -44,9 +43,9 @@ class VncTests(unittest.TestCase):
         """ Tests if the VNC capability is up, and tries login.
         """
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        options = {'enabled': 'True', 'port': 0}
-        cap = vnc.vnc(sessions, options, users, self.work_dir)
+
+        options = {'enabled': 'True', 'port': 0, 'users': {'test': 'test'}}
+        cap = vnc.vnc(sessions, options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
         

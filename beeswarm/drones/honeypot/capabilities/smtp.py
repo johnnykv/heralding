@@ -283,8 +283,8 @@ class DummySMTPServer(object):
 
 
 class smtp(HandlerBase):
-    def __init__(self, sessions, options, users, work_dir):
-        super(smtp, self).__init__(sessions, options, users, work_dir)
+    def __init__(self, sessions, options, work_dir):
+        super(smtp, self).__init__(sessions, options, work_dir)
         self._options = options
 
     def handle_session(self, gsocket, address):

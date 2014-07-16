@@ -90,8 +90,8 @@ class http(HandlerBase):
 
     HandlerClass = BeeHTTPHandler
 
-    def __init__(self, sessions, options, users, workdir):
-        super(http, self).__init__(sessions, options, users, workdir)
+    def __init__(self, sessions, options, workdir):
+        super(http, self).__init__(sessions, options, workdir)
         self._options = options
 
     def handle_session(self, gsocket, address):

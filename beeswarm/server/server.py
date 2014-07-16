@@ -27,7 +27,7 @@ from zmq.auth.certs import load_certificate
 import beeswarm
 from beeswarm.server.webapp import app
 from beeswarm.server.webapp.auth import Authenticator
-from beeswarm.shared.helpers import drop_privileges
+from beeswarm.shared.helpers import drop_privileges, send_zmq_request
 from beeswarm.server.misc.scheduler import Scheduler
 from beeswarm.shared.helpers import find_offset, create_self_signed_cert, generate_cert_digest
 from beeswarm.shared.asciify import asciify
@@ -181,6 +181,11 @@ class Server(object):
                     drone.ip_address = ip_address
                     db_session.add(drone)
                     db_session.commit()
+                # drons want it's config transmitted
+                elif topic == Messages.DRONE_CONFIG:
+                    config_dict = send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.DRONE_CONFIG,
+                                                                                            drone_id))
+                    drone_data_outbound.send('{0} {1} {2}'.format(drone_id, Messages.CONFIG, json.dumps(config_dict)))
                 else:
                     logger.warn('Message with unknown topic received: {0}'.format(topic))
 

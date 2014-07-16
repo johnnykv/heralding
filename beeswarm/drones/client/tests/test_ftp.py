@@ -26,10 +26,8 @@ import tempfile
 
 from gevent.server import StreamServer
 from beeswarm.drones.honeypot.honeypot import Honeypot
-from beeswarm.drones.honeypot.models.authenticator import Authenticator
 from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.capabilities import ftp as hive_ftp
-from beeswarm.drones.honeypot.models.user import BaitUser
 
 from beeswarm.drones.client.models.session import BaitSession
 
@@ -61,14 +59,12 @@ class FTP_Test(unittest.TestCase):
         """FTP: Testing different login combinations"""
 
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
 
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test Banner',
-                   'protocol_specific_data': {'max_attempts': 3, 'banner': 'test banner'}, 'syst_type': 'Test Type'}
+                   'protocol_specific_data': {'max_attempts': 3, 'banner': 'test banner'}, 'syst_type': 'Test Type',
+                   'users': {'test': 'test'}}
 
-        cap = hive_ftp.ftp(sessions, options, users, self.work_dir)
+        cap = hive_ftp.ftp(sessions, options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -93,14 +89,12 @@ class FTP_Test(unittest.TestCase):
         """Tests the FTP LIST command"""
 
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
 
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test Banner',
-                   'protocol_specific_data': {'max_attempts': 3, 'banner': 'test banner'}, 'syst_type': 'Test Type'}
+                   'protocol_specific_data': {'max_attempts': 3, 'banner': 'test banner'}, 'syst_type': 'Test Type',
+                   'users': {'test': 'test'}}
 
-        cap = hive_ftp.ftp(sessions, options, users, self.work_dir)
+        cap = hive_ftp.ftp(sessions, options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -130,14 +124,12 @@ class FTP_Test(unittest.TestCase):
         """Tests the FTP CWD command"""
 
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
 
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test Banner',
-                   'protocol_specific_data': {'max_attempts': 3, 'banner': 'test banner'}, 'syst_type': 'Test Type'}
+                   'protocol_specific_data': {'max_attempts': 3, 'banner': 'test banner'}, 'syst_type': 'Test Type',
+                   'users': {'test': 'test'}}
 
-        cap = hive_ftp.ftp(sessions, options, users, self.work_dir)
+        cap = hive_ftp.ftp(sessions, options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -168,14 +160,12 @@ class FTP_Test(unittest.TestCase):
         """Tests the FTP RETR command"""
 
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
 
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test Banner',
-                   'protocol_specific_data': {'max_attempts': 3, 'banner': 'test banner'}, 'syst_type': 'Test Type'}
+                   'protocol_specific_data': {'max_attempts': 3, 'banner': 'test banner'}, 'syst_type': 'Test Type',
+                   'users': {'test': 'test'}}
 
-        cap = hive_ftp.ftp(sessions, options, users, self.work_dir)
+        cap = hive_ftp.ftp(sessions, options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 

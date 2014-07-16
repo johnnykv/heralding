@@ -195,9 +195,14 @@ class ConfigActor(Greenlet):
             drone_config['users'] = {}
             drone_config['capabilities'] = {}
             for capability in drone.capabilities:
+                users = {}
+                for bait in capability.baits:
+                    users[bait.username] = bait.password
+                    print users
                 drone_config['capabilities'][capability.protocol] = {'port': capability.port,
                                                                      'enabled': True,
-                                                                     'protocol_specific_data': json.loads(capability.protocol_specific_data)}
+                                                                     'protocol_specific_data': json.loads(capability.protocol_specific_data),
+                                                                     'users': users}
         elif drone.discriminator == 'client':
             drone_config['baits'] = {}
             for bait in drone.baits:

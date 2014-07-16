@@ -23,8 +23,6 @@ import shutil
 
 from gevent.server import StreamServer
 from beeswarm.drones.honeypot.honeypot import Honeypot
-from beeswarm.drones.honeypot.models.user import BaitUser
-from beeswarm.drones.honeypot.models.authenticator import Authenticator
 from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.capabilities import pop3 as honeypot_pop3
 
@@ -45,13 +43,10 @@ class POP3_Test(unittest.TestCase):
         """Tests if the POP3 bait can login to the POP3 capability"""
 
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
+                   'users': {'test': 'test'}}
 
-        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3}}
-
-        cap = honeypot_pop3.Pop3(sessions, options, users, self.work_dir)
+        cap = honeypot_pop3.Pop3(sessions, options, self.work_dir)
 
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()

@@ -33,7 +33,10 @@ class HandlerBase(object):
         """
         self.sessions = sessions
         self.options = options
-        self.users = options['users']
+        if 'users' in options:
+            self.users = options['users']
+        else:
+            self.users = {}
         #virtual file system shared by all capabilities
         self.vfsystem = OSFS(os.path.join(workdir, 'data/vfs'))
         #serviceport

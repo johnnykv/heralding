@@ -14,7 +14,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import gevent.monkey
-from beeswarm.drones.honeypot.models.user import BaitUser
 
 gevent.monkey.patch_all()
 
@@ -28,7 +27,6 @@ import tempfile
 import shutil
 import os
 from beeswarm.drones.honeypot.honeypot import Honeypot
-from beeswarm.drones.honeypot.models.authenticator import Authenticator
 from beeswarm.drones.honeypot.models.session import Session
 
 
@@ -47,14 +45,11 @@ class HttpTests(unittest.TestCase):
         """
 
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
 
         # Use uncommon port so that you can run the test even if the Honeypot
         # is running.
-        options = {'enabled': 'True', 'port': 0}
-        cap = http.http(sessions, options, users, self.work_dir)
+        options = {'enabled': 'True', 'port': 0, 'users': {'test': 'test'}}
+        cap = http.http(sessions, options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -67,12 +62,10 @@ class HttpTests(unittest.TestCase):
     def test_login(self):
         """ Tries to login using the username/password as test/test.
         """
-        authenticator = Authenticator({'test': BaitUser('test', 'test')})
-        Session.authenticator = authenticator
 
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        cap = http.http(sessions, {'enabled': 'True', 'port': 0}, users, self.work_dir)
+        options = {'enabled': 'True', 'port': 0, 'users': {'test': 'test'}}
+        cap = http.http(sessions, options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 

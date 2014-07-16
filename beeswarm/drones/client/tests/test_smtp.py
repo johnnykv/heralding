@@ -23,10 +23,8 @@ import tempfile
 
 from gevent.server import StreamServer
 from beeswarm.drones.honeypot.honeypot import Honeypot
-from beeswarm.drones.honeypot.models.authenticator import Authenticator
 from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.capabilities import smtp as hive_smtp
-from beeswarm.drones.honeypot.models.user import BaitUser
 
 from beeswarm.drones.client.baits import smtp as bee_smtp
 from beeswarm.drones.client.models.session import BaitSession
@@ -45,12 +43,10 @@ class SMTP_Test(unittest.TestCase):
         """Tests if the SMTP bait can login to the SMTP capability"""
 
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
 
-        cap = hive_smtp.smtp(sessions, {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'Test'}},
-                             users, self.work_dir)
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'Test'},
+                   'users': {'test': 'test'}}
+        cap = hive_smtp.smtp(sessions, options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -75,12 +71,10 @@ class SMTP_Test(unittest.TestCase):
         """Tests if the SMTP bait can send emails to the SMTP capability"""
 
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'Test'},
+                   'users': {'test': 'test'}}
 
-        cap = hive_smtp.smtp(sessions, {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'Test'}},
-                             users, self.work_dir)
+        cap = hive_smtp.smtp(sessions, options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -106,12 +100,10 @@ class SMTP_Test(unittest.TestCase):
         """ Tests if a mail can be properly retrieved from the mail corpus """
 
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'Test'},
+                   'users': {'test': 'test'}}
 
-        cap = hive_smtp.smtp(sessions, {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'Test'}},
-                             users, self.work_dir)
+        cap = hive_smtp.smtp(sessions, options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
         gevent.sleep()

@@ -61,12 +61,6 @@ class HoneypotTests(unittest.TestCase):
         gevent.sleep(1)
         self.assertEqual(self.inbox.qsize(), 2)
 
-    def test_user_creation(self):
-        """Tests proper generation of BaitUsers from the data in the config file"""
-        sut = Honeypot(self.work_dir, self.config_dict, key=self.key, cert=self.cert)
-        sut.create_users()
-        self.assertEquals(1, len(sut.users))
-
     def test_start_serving(self):
         sut = Honeypot(self.work_dir, self.config_dict, key=self.key, cert=self.cert)
         gevent.spawn(sut.start)

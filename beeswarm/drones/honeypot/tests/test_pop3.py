@@ -23,9 +23,6 @@ import gevent
 
 from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.drones.honeypot.capabilities.pop3 import Pop3
-from beeswarm.drones.honeypot.models.session import Session
-from beeswarm.drones.honeypot.models.authenticator import Authenticator
-from beeswarm.drones.honeypot.models.user import BaitUser
 
 
 class Pop3Tests(unittest.TestCase):
@@ -41,13 +38,8 @@ class Pop3Tests(unittest.TestCase):
         """Tests if the basic parts of the session is filled correctly"""
 
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-
-        #provide valid login/pass to authenticator
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
-
-        sut = Pop3(sessions, {'port': 110, 'protocol_specific_data': {'max_attempts': 3}}, users, self.work_dir)
+        options = {'port': 110, 'protocol_specific_data': {'max_attempts': 3}, 'users': {'test': 'test'}}
+        sut = Pop3(sessions, options, self.work_dir)
 
         #dont really care about the socket at this point (None...)
         #TODO: mock the socket!
@@ -61,18 +53,12 @@ class Pop3Tests(unittest.TestCase):
         self.assertEqual(1, len(sessions))
         session = sessions.values()[0]
         self.assertEqual(110, session.destination_port)
-        self.assertEqual('Pop3', session.protocol)
+        self.assertEqual('pop3', session.protocol)
         self.assertEquals('192.168.1.200', session.source_ip)
         self.assertEqual(12000, session.source_port)
 
     def test_login(self):
         """Testing different login combinations"""
-
-        users = {'james': BaitUser('james', 'bond')}
-
-        #provide valid login/pass to authenticator
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
 
         login_sequences = [
             #valid login. valid password
@@ -89,7 +75,8 @@ class Pop3Tests(unittest.TestCase):
         ]
 
         sessions = {}
-        sut = Pop3(sessions, {'port': 110, 'protocol_specific_data': {'max_attempts': 3}}, users, self.work_dir)
+        options = {'port': 110, 'protocol_specific_data': {'max_attempts': 3}, 'users': {'james': 'bond'}}
+        sut = Pop3(sessions, options, self.work_dir)
 
         server = StreamServer(('127.0.0.1', 0), sut.handle_session)
         server.start()

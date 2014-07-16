@@ -27,10 +27,8 @@ import tempfile
 
 from gevent.server import StreamServer
 from beeswarm.drones.honeypot.honeypot import Honeypot
-from beeswarm.drones.honeypot.models.authenticator import Authenticator
 from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.capabilities import telnet as hive_telnet
-from beeswarm.drones.honeypot.models.user import BaitUser
 
 from beeswarm.drones.client.models.session import BaitSession
 
@@ -48,12 +46,9 @@ class Telnet_Test(unittest.TestCase):
         """Tests if the Telnet bait can Login to the Telnet capability"""
 
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
-
-        cap = hive_telnet.Telnet(sessions, {'enabled': 'True', 'port': 0,
-                                            'protocol_specific_data': {'max_attempts': 3}}, users, self.work_dir)
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
+                   'users': {'test': 'test'}}
+        cap = hive_telnet.Telnet(sessions, options, self.work_dir)
 
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
@@ -74,13 +69,12 @@ class Telnet_Test(unittest.TestCase):
         srv.stop()
 
     def test_validate_senses(self):
-        sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
 
-        cap = hive_telnet.Telnet(sessions, {'enabled': 'True', 'port': 0,
-                                            'protocol_specific_data': {'max_attempts': 3}}, users, self.work_dir)
+        sessions = {}
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
+                   'users': {'test': 'test'}}
+
+        cap = hive_telnet.Telnet(sessions, options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -101,12 +95,10 @@ class Telnet_Test(unittest.TestCase):
 
     def test_command_cd(self):
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
 
-        cap = hive_telnet.Telnet(sessions, {'enabled': 'True', 'port': 0,
-                                            'protocol_specific_data': {'max_attempts': 3}}, users, self.work_dir)
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
+                   'users': {'test': 'test'}}
+        cap = hive_telnet.Telnet(sessions, options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -133,12 +125,10 @@ class Telnet_Test(unittest.TestCase):
     def test_command_pwd(self):
 
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
+                   'users': {'test': 'test'}}
 
-        cap = hive_telnet.Telnet(sessions, {'enabled': 'True', 'port': 0,
-                                            'protocol_specific_data': {'max_attempts': 3}}, users, self.work_dir)
+        cap = hive_telnet.Telnet(sessions, options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -164,12 +154,10 @@ class Telnet_Test(unittest.TestCase):
     def test_command_uname(self):
 
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
+                   'users': {'test': 'test'}}
 
-        cap = hive_telnet.Telnet(sessions, {'enabled': 'True', 'port': 0,
-                                            'protocol_specific_data': {'max_attempts': 3}}, users, self.work_dir)
+        cap = hive_telnet.Telnet(sessions, options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -194,12 +182,10 @@ class Telnet_Test(unittest.TestCase):
     def test_command_cat(self):
 
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
+                   'users': {'test': 'test'}}
 
-        cap = hive_telnet.Telnet(sessions, {'enabled': 'True', 'port': 0,
-                                            'protocol_specific_data': {'max_attempts': 3}}, users, self.work_dir)
+        cap = hive_telnet.Telnet(sessions, options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -224,12 +210,10 @@ class Telnet_Test(unittest.TestCase):
     def test_command_uptime(self):
 
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
+                   'users': {'test': 'test'}}
 
-        cap = hive_telnet.Telnet(sessions, {'enabled': 'True', 'port': 0,
-                                            'protocol_specific_data': {'max_attempts': 3}}, users, self.work_dir)
+        cap = hive_telnet.Telnet(sessions, options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -254,12 +238,10 @@ class Telnet_Test(unittest.TestCase):
     def test_command_echo(self):
 
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
+                   'users': {'test': 'test'}}
 
-        cap = hive_telnet.Telnet(sessions, {'enabled': 'True', 'port': 0,
-                                            'protocol_specific_data': {'max_attempts': 3}}, users, self.work_dir)
+        cap = hive_telnet.Telnet(sessions, options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -282,12 +264,10 @@ class Telnet_Test(unittest.TestCase):
 
     def test_command_list(self):
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
+                   'users': {'test': 'test'}}
 
-        cap = hive_telnet.Telnet(sessions, {'enabled': 'True', 'port': 0,
-                                            'protocol_specific_data': {'max_attempts': 3}}, users, self.work_dir)
+        cap = hive_telnet.Telnet(sessions, options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 

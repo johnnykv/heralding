@@ -79,7 +79,7 @@ class telnet(ClientBase, Commands):
         session = self.create_session(server_host, server_port, my_ip, honeypot_id)
         self.sessions[session.id] = session
         logger.debug(
-            'Sending telnet bait session to {0}:{1}. (bait id: {3})'.format(server_host, server_port, session.id))
+            'Sending telnet bait session to {0}:{1}. (bait id: {2})'.format(server_host, server_port, session.id))
 
         try:
             self.connect()
@@ -123,7 +123,8 @@ class telnet(ClientBase, Commands):
         self.client.write(login + '\r\n')
         self.client.read_until('Password: ')
         self.client.write(password + '\r\n')
-        current_data = self.client.read_until('$ ', 5)
+        current_data = self.client.read_until('$ ', 10)
+        print current_data
         if not current_data.endswith('$ '):
             raise InvalidLogin
 

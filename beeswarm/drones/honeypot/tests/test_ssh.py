@@ -26,8 +26,6 @@ import tempfile
 from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.drones.honeypot.capabilities import ssh
 from beeswarm.drones.honeypot.models.session import Session
-from beeswarm.drones.honeypot.models.authenticator import Authenticator
-from beeswarm.drones.honeypot.models.user import BaitUser
 from paramiko import SSHClient, AutoAddPolicy, AuthenticationException
 
 
@@ -44,10 +42,8 @@ class SshTests(unittest.TestCase):
 
     def test_basic_login(self):
 
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
-        sut = ssh.SSH({}, {'port': 0}, users, self.work_dir, self.key)
+        options ={'port': 0, 'users': {'test': 'test'}}
+        sut = ssh.SSH({}, options, self.work_dir, self.key)
         server = StreamServer(('127.0.0.1', 0), sut.handle_session)
         server.start()
 

@@ -24,10 +24,8 @@ import tempfile
 
 from gevent.server import StreamServer
 from beeswarm.drones.honeypot.honeypot import Honeypot
-from beeswarm.drones.honeypot.models.authenticator import Authenticator
 from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.capabilities import ssh as honeypot_ssh
-from beeswarm.drones.honeypot.models.user import BaitUser
 
 from beeswarm.drones.client.baits import ssh as client_ssh
 from beeswarm.drones.client.models.session import BaitSession
@@ -48,12 +46,11 @@ class SSH_Test(unittest.TestCase):
         """Tests if the SSH bait can Login to the SSH capability"""
 
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
 
-        cap = honeypot_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3}},
-                               users, self.work_dir, self.key)
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
+                   'users': {'test': 'test'}}
+
+        cap = honeypot_ssh.SSH(sessions, options, self.work_dir, self.key)
 
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
@@ -76,12 +73,10 @@ class SSH_Test(unittest.TestCase):
         """Tests if the SSH bait can Logout from the SSH capability"""
 
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
+                   'users': {'test': 'test'}}
 
-        cap = honeypot_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3}},
-                               users, self.work_dir, self.key)
+        cap = honeypot_ssh.SSH(sessions, options, self.work_dir, self.key)
 
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
@@ -103,12 +98,10 @@ class SSH_Test(unittest.TestCase):
 
     def test_validate_senses(self):
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
 
-        cap = honeypot_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3}},
-                               users, self.work_dir, self.key)
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
+                   'users': {'test': 'test'}}
+        cap = honeypot_ssh.SSH(sessions, options, self.work_dir, self.key)
 
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
@@ -131,12 +124,10 @@ class SSH_Test(unittest.TestCase):
     def test_command_cd(self):
 
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
+                   'users': {'test': 'test'}}
 
-        cap = honeypot_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3}},
-                               users, self.work_dir, self.key)
+        cap = honeypot_ssh.SSH(sessions, options, self.work_dir, self.key)
 
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
@@ -162,12 +153,10 @@ class SSH_Test(unittest.TestCase):
     def test_command_pwd(self):
 
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
+                   'users': {'test': 'test'}}
 
-        cap = honeypot_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3}},
-                               users, self.work_dir, self.key)
+        cap = honeypot_ssh.SSH(sessions, options, self.work_dir, self.key)
 
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
@@ -192,12 +181,10 @@ class SSH_Test(unittest.TestCase):
     def test_command_uname(self):
 
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
+                   'users': {'test': 'test'}}
 
-        cap = honeypot_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3}},
-                               users, self.work_dir, self.key)
+        cap = honeypot_ssh.SSH(sessions, options, self.work_dir, self.key)
 
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
@@ -221,12 +208,10 @@ class SSH_Test(unittest.TestCase):
     def test_command_cat(self):
 
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
+                   'users': {'test': 'test'}}
 
-        cap = honeypot_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3}},
-                               users, self.work_dir, self.key)
+        cap = honeypot_ssh.SSH(sessions, options, self.work_dir, self.key)
 
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
@@ -251,12 +236,10 @@ class SSH_Test(unittest.TestCase):
     def test_command_uptime(self):
 
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
+                   'users': {'test': 'test'}}
 
-        cap = honeypot_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3}},
-                               users, self.work_dir, self.key)
+        cap = honeypot_ssh.SSH(sessions, options, self.work_dir, self.key)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -279,12 +262,10 @@ class SSH_Test(unittest.TestCase):
     def test_command_echo(self):
 
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
+                   'users': {'test': 'test'}}
 
-        cap = honeypot_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3}},
-                               users, self.work_dir, self.key)
+        cap = honeypot_ssh.SSH(sessions, options, self.work_dir, self.key)
 
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
@@ -307,12 +288,9 @@ class SSH_Test(unittest.TestCase):
 
     def test_command_list(self):
         sessions = {}
-        users = {'test': BaitUser('test', 'test')}
-        authenticator = Authenticator(users)
-        Session.authenticator = authenticator
-
-        cap = honeypot_ssh.SSH(sessions, {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3}},
-                               users, self.work_dir, self.key)
+        options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
+                   'users': {'test': 'test'}}
+        cap = honeypot_ssh.SSH(sessions, options, self.work_dir, self.key)
 
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
