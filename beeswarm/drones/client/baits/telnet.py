@@ -101,6 +101,7 @@ class telnet(ClientBase, Commands):
                 comm, param = self.decide()
                 self.act(comm, param)
                 time.sleep(10)
+            self.act('logout')
         finally:
             session.did_complete = True
             session.alldone = True

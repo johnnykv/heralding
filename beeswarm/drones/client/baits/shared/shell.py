@@ -166,8 +166,11 @@ class Commands(object):
             ])
         return next_command_name, param
 
-    def act(self, cmd_name, params):
+    def act(self, cmd_name, params=None):
         """ Run the specified command with its parameters."""
 
         command = getattr(self, cmd_name)
-        command(params)
+        if params:
+            command(params)
+        else:
+            command()
