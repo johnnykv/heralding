@@ -94,13 +94,9 @@ class SessionPersister(gevent.Greenlet):
                 session.transcript.append(transcript)
 
             for auth in data['login_attempts']:
-                # TODO: Model this better in db model, not all capabilities authenticate with both username/password
-                username = auth.get('username', '')
-                password = auth.get('password', '')
-                a = Authentication(id=auth['id'], username=username, password=password,
-                                   successful=auth['successful'],
-                                   timestamp=datetime.strptime(auth['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'))
-                session.authentication.append(a)
+                authentication = self.extract_auth_entity(auth)
+                session.authentication.append(authentication)
+
         elif session_type == Messages.SESSION_CLIENT:
             if not data['did_complete'] and self.config['ignore_failed_bait_session']:
                 return
@@ -111,6 +107,9 @@ class SessionPersister(gevent.Greenlet):
             session.did_login = data['did_login']
             session.did_complete = data['did_complete']
             session.client = client
+            for auth in data['login_attempts']:
+                authentication = self.extract_auth_entity(auth)
+                session.authentication.append(authentication)
         else:
             logger.warn('Unknown message type: {0}'.format(session_type))
             return
@@ -128,4 +127,13 @@ class SessionPersister(gevent.Greenlet):
 
         db_session.add(session)
         db_session.commit()
+
+    def extract_auth_entity(self, auth_data):
+        username = auth_data.get('username', '')
+        password = auth_data.get('password', '')
+        authentication = Authentication(id=auth_data['id'], username=username, password=password,
+                                        successful=auth_data['successful'],
+                                        timestamp=datetime.strptime(auth_data['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'))
+        return authentication
+
 

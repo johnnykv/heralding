@@ -84,7 +84,6 @@ class Classifier(object):
             .filter(BaitSession.did_complete == True) \
             .filter(BaitSession.timestamp < min_datetime).all()
 
-        logger.debug('Found {0} unclassified bait sessions'.format(len(bait_sessions)))
         for bait_session in bait_sessions:
             session_match = self.get_matching_session(bait_session, db_session=db_session)
             # if we have a match this is legit bait session
@@ -120,14 +119,15 @@ class Classifier(object):
             .all()
 
         for session in sessions:
-            # TODO: This would be more pretty if done with pure orm
-            honey_matches = []
+            bait_match = None
             for a in session.authentication:
-                honey_matches = db_session.query(BaitSession).join(Authentication) \
-                    .filter(Authentication.username == a.username) \
-                    .filter(Authentication.password == a.password).all()
+                bait_match = db_session.query(Authentication).filter(Authentication.username == a.username)\
+                            .filter(Authentication.password == a.password)\
+                            .filter(Session.discriminator == 'bait_session').first()
+                if bait_match:
+                    break
 
-            if len(honey_matches) > 0:
+            if bait_match > 0:
                 # username/password has previously been transmitted in a bait session
                 logger.debug('Classifying session with id {0} as attack which involved the reused '
                              'of previously transmitted credentials.'.format(session.id))
