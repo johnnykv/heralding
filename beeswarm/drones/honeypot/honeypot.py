@@ -151,6 +151,7 @@ class Honeypot(object):
                     else:
                         server = StreamServer(('0.0.0.0', port), cap.handle_session)
 
+                    logger.debug('Adding {0} capability with options: {1}'.format(cap_name, options))
                     self.servers.append(server)
                     self.status['enabled_capabilities'].append(cap_name)
                     server_greenlet = Greenlet(server.start())

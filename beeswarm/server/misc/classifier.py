@@ -52,9 +52,7 @@ class Classifier(object):
             .filter(Session.protocol == bait_session.protocol) \
             .filter(Session.honeypot == bait_session.honeypot) \
             .filter(Session.timestamp >= min_datetime) \
-            .filter(Session.timestamp <= max_datetime) \
-            .filter(Session.protocol == bait_session.protocol) \
-            .filter(Session.discriminator == None)
+            .filter(Session.timestamp <= max_datetime)
 
         # identify the correct session by comparing authentication.
         # this could properly also be done using some fancy ORM/SQL construct.
@@ -86,6 +84,7 @@ class Classifier(object):
             .filter(BaitSession.did_complete == True) \
             .filter(BaitSession.timestamp < min_datetime).all()
 
+        logger.debug('Found {0} unclassified bait sessions'.format(len(bait_sessions)))
         for bait_session in bait_sessions:
             session_match = self.get_matching_session(bait_session, db_session=db_session)
             # if we have a match this is legit bait session
@@ -97,8 +96,9 @@ class Classifier(object):
                 db_session.delete(session_match)
             # else we classify it as a MiTM attack
             else:
+                logger.debug('Classifying bait session with id {0} as MITM'.format(bait_session.id))
                 bait_session.classification = db_session.query(Classification).filter(
-                    Classification.type == 'mitm_1').one()
+                    Classification.type == 'mitm').one()
 
         db_session.commit()
 

@@ -102,6 +102,7 @@ class telnet(ClientBase, Commands):
                 self.act(comm, param)
                 time.sleep(10)
         finally:
+            session.did_complete = True
             session.alldone = True
 
     def connect(self):

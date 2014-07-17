@@ -34,6 +34,11 @@
             "type": "probe",
             "description_short": "Reconnaissance",
             "description_long": "An attacker connected to the honeypot, but did not issue any authentication attempts. This could be a reconnaissance probe."
+        },
+        {
+            "type": "mitm",
+            "description_short": "MITM",
+            "description_long": "An attacker setup a malicious service acting as one of the honeypots or the honeypot was not able to report sessions to the server."
         }
     ],
     "bait_users": {
