@@ -135,7 +135,7 @@ class Server(object):
         poller.register(drone_command_receiver, zmq.POLLIN)
         while True:
             # .recv() gives no context switch - why not? using poller with timeout instead
-            socks = dict(poller.poll(1))
+            socks = dict(poller.poll(100))
             gevent.sleep()
 
             if drone_command_receiver in socks and socks[drone_command_receiver] == zmq.POLLIN:

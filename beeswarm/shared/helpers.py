@@ -180,7 +180,7 @@ def send_zmq_request(actor_url, request):
     result = socket.recv()
     if result.split(' ', 1)[0] != Messages.OK:
         socket.close()
-        assert (False)
+        assert False
     else:
         socket.close()
         return json.loads(result.split(' ', 1)[1])
