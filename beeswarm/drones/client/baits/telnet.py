@@ -85,7 +85,7 @@ class telnet(ClientBase, Commands):
             self.connect()
             self.login(login, password)
 
-            session.add_auth_attempt('plaintext', True, username=login, password=login)
+            session.add_auth_attempt('plaintext', True, username=login, password=password)
 
             session.did_connect = True
             session.source_port = self.client.sock.getsockname()[1]
@@ -102,8 +102,8 @@ class telnet(ClientBase, Commands):
                 self.act(comm, param)
                 time.sleep(10)
             self.act('logout')
-        finally:
             session.did_complete = True
+        finally:
             session.alldone = True
 
     def connect(self):
