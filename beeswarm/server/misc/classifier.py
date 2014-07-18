@@ -51,6 +51,7 @@ class Classifier(object):
         sessions = db_session.query(Session).options(joinedload(Session.authentication)) \
             .filter(Session.protocol == bait_session.protocol) \
             .filter(Session.honeypot == bait_session.honeypot) \
+            .filter(Session.discriminator == None) \
             .filter(Session.timestamp >= min_datetime) \
             .filter(Session.timestamp <= max_datetime)
 
@@ -92,6 +93,7 @@ class Classifier(object):
                              'matching session with id {1}'.format(bait_session.id, session_match.id))
                 bait_session.classification = db_session.query(Classification).filter(
                     Classification.type == 'bait_session').one()
+                db_session.add(bait_session)
                 db_session.delete(session_match)
             # else we classify it as a MiTM attack
             else:
@@ -121,14 +123,12 @@ class Classifier(object):
         for session in sessions:
             bait_match = None
             for a in session.authentication:
-                bait_match = db_session.query(Authentication).filter(Authentication.username == a.username)\
-                            .filter(Authentication.password == a.password)\
-                            .filter(Session.discriminator == 'bait_session').first()
+                bait_match = db_session.query(BaitSession)\
+                    .filter(BaitSession.authentication.any(username=a.username, password=a.password)).first()
                 if bait_match:
                     break
 
-            if bait_match > 0:
-                # username/password has previously been transmitted in a bait session
+            if bait_match:
                 logger.debug('Classifying session with id {0} as attack which involved the reused '
                              'of previously transmitted credentials.'.format(session.id))
                 session.classification = db_session.query(Classification).filter(
