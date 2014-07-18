@@ -17,6 +17,7 @@ import ftplib
 import random
 import logging
 from datetime import datetime
+import gevent
 from ftplib import FTP
 
 from beeswarm.drones.client.baits.clientbase import ClientBase
@@ -41,6 +42,8 @@ class ftp(ClientBase):
         :param options: A dict containing all options
         """
         super(ftp, self).__init__(sessions, options)
+
+        # TODO: This is wrong, self. is shared amongst all connected sessions
         self.state = {
             'current_dir': '/',
             'file_list': [],
@@ -50,8 +53,6 @@ class ftp(ClientBase):
         self.senses = ['pwd', 'list']
         self.actions = ['cwd', 'retrieve']
         self.client = FTP()
-        self.command_count = 0
-        self.command_limit = random.randint(6, 11)
 
     def do_session(self, my_ip):
 
@@ -65,6 +66,7 @@ class ftp(ClientBase):
         server_host = self.options['server']
         server_port = self.options['port']
         honeypot_id = self.options['honeypot_id']
+        command_limit = random.randint(6, 11)
 
         session = self.create_session(server_host, server_port, my_ip, honeypot_id)
 
@@ -86,12 +88,14 @@ class ftp(ClientBase):
         except ftplib.error_perm as err:
             logger.debug('Caught exception: {0} ({1})'.format(err, str(type(err))))
         else:
-            while self.command_count <= self.command_limit:
-                self.command_count += 1
+            command_count = 0
+            while command_count <= command_limit:
+                command_count += 1
                 try:
                     self.sense()
                     cmd, param = self.decide()
                     self.act(cmd, param)
+                    gevent.sleep(random.uniform(0, 3))
                 except IndexError:  # This means we hit an empty folder, or a folder with only files.
                     continue
             session.did_complete = True

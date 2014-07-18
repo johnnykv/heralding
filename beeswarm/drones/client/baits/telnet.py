@@ -75,6 +75,7 @@ class telnet(ClientBase, Commands):
         server_host = self.options['server']
         server_port = self.options['port']
         honeypot_id = self.options['honeypot_id']
+        command_limit = random.randint(6, 11)
 
         session = self.create_session(server_host, server_port, my_ip, honeypot_id)
         self.sessions[session.id] = session
@@ -96,7 +97,9 @@ class telnet(ClientBase, Commands):
         except Exception as err:
             logger.debug('Caught exception: {0} {1}'.format(err, str(err), exc_info=True))
         else:
-            while self.command_count < self.command_limit:
+            command_count = 0
+            while command_count < command_limit:
+                command_count += 1
                 self.sense()
                 comm, param = self.decide()
                 self.act(comm, param)
@@ -142,11 +145,7 @@ class telnet(ClientBase, Commands):
         return response
 
     def send_command(self, cmd):
-        if self.command_count > self.command_limit:
-            self.logout()
-            return
         logger.debug('Sending {0} command.'.format(cmd))
-        self.command_count += 1
         self.client.write_human(cmd + '\r\n')
 
     def process_options(self, *args):

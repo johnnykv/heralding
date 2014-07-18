@@ -22,8 +22,6 @@ class Commands(object):
             'file_list': [],
             'dir_list': [],
         }
-        self.command_count = 0
-        self.command_limit = random.randint(6, 11)
         self.senses = ['pwd', 'uname', 'uptime', 'ls']
         self.actions = ['cd', 'cat', 'echo', 'sudo']
 
@@ -116,7 +114,6 @@ class Commands(object):
             end = random.randint(start + 1, len(opts) - 1)
             param = '-{}'.format(opts[start:end])
         command = getattr(self, cmd_name)
-        self.command_count += 1
         command(param)
 
     def decide(self):
