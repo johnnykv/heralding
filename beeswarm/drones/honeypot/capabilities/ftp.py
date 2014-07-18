@@ -36,7 +36,7 @@ class BeeFTPHandler(object):
     def __init__(self, conn, session, vfs, options):
         self.banner = options['protocol_specific_data']['banner']
         self.max_logins = int(options['protocol_specific_data']['max_attempts'])
-        self.syst_type = options['syst_type']
+        self.syst_type = options['protocol_specific_data']['syst_type']
         self.curr_logins = 0
         self.authenticated = False
         self.conn = conn

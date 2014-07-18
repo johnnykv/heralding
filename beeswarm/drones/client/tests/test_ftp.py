@@ -60,7 +60,7 @@ class FTP_Test(unittest.TestCase):
         sessions = {}
 
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test Banner',
-                   'protocol_specific_data': {'max_attempts': 3, 'banner': 'test banner'}, 'syst_type': 'Test Type',
+                   'protocol_specific_data': {'max_attempts': 3, 'banner': 'test banner', 'syst_type': 'Test Type'},
                    'users': {'test': 'test'}}
 
         cap = hive_ftp.ftp(sessions, options, self.work_dir)
@@ -90,7 +90,7 @@ class FTP_Test(unittest.TestCase):
         sessions = {}
 
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test Banner',
-                   'protocol_specific_data': {'max_attempts': 3, 'banner': 'test banner'}, 'syst_type': 'Test Type',
+                   'protocol_specific_data': {'max_attempts': 3, 'banner': 'test banner', 'syst_type': 'Test Type'},
                    'users': {'test': 'test'}}
 
         cap = hive_ftp.ftp(sessions, options, self.work_dir)
@@ -125,7 +125,7 @@ class FTP_Test(unittest.TestCase):
         sessions = {}
 
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test Banner',
-                   'protocol_specific_data': {'max_attempts': 3, 'banner': 'test banner'}, 'syst_type': 'Test Type',
+                   'protocol_specific_data': {'max_attempts': 3, 'banner': 'test banner', 'syst_type': 'Test Type'},
                    'users': {'test': 'test'}}
 
         cap = hive_ftp.ftp(sessions, options, self.work_dir)
@@ -161,7 +161,7 @@ class FTP_Test(unittest.TestCase):
         sessions = {}
 
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test Banner',
-                   'protocol_specific_data': {'max_attempts': 3, 'banner': 'test banner'}, 'syst_type': 'Test Type',
+                   'protocol_specific_data': {'max_attempts': 3, 'banner': 'test banner', 'syst_type': 'Test Type'},
                    'users': {'test': 'test'}}
 
         cap = hive_ftp.ftp(sessions, options, self.work_dir)
