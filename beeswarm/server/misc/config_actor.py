@@ -143,8 +143,10 @@ class ConfigActor(Greenlet):
                     client.add_bait(capability, activation_range, sleep_interval,
                                     activation_probability, bait_credentials.username, bait_credentials.password)
         db_session.commit()
-        for client in clients:
-            self._send_config_to_drone(client.id)
+
+        drones = db_session.query(Drone).all()
+        for drone in drones:
+            self._send_config_to_drone(drone.id)
 
     def _get_drone_config(self, drone_id):
         db_session = database_setup.get_session()
