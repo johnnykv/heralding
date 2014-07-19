@@ -26,7 +26,7 @@ gevent.monkey.patch_all()
 from beeswarm.drones.client.consumer.consumer import Consumer
 from beeswarm.drones.client.baits import clientbase
 from beeswarm.drones.client.models.session import BaitSession
-from beeswarm.drones.client.models.dispatcher import BeeDispatcher
+from beeswarm.drones.client.models.dispatcher import BaitDispatcher
 from beeswarm.shared.asciify import asciify
 from beeswarm.shared.helpers import drop_privileges
 from beeswarm.shared.helpers import extract_keys
@@ -81,6 +81,7 @@ class Client(object):
         baits = []
         for b in clientbase.ClientBase.__subclasses__():
             bait_name = b.__name__.lower()
+            # if the bait has a entry in the config we consider the bait enabled
             if bait_name in self.config['baits']:
                 options = self.config['baits'][bait_name]
                 bait_session = b(sessions, options)
@@ -90,7 +91,7 @@ class Client(object):
 
         self.dispatcher_greenlets = []
         for bait_session in baits:
-            dispatcher = BeeDispatcher(self.config, bait_session, self.my_ip)
+            dispatcher = BaitDispatcher(self.config, bait_session, self.my_ip)
             self.dispatchers[bait_session.__class__.__name__] = dispatcher
             current_greenlet = Greenlet(dispatcher.start)
             self.dispatcher_greenlets.append(current_greenlet)

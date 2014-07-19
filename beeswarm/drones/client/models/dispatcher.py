@@ -22,16 +22,15 @@ import gevent
 logger = logging.getLogger(__name__)
 
 
-class BeeDispatcher(object):
+class BaitDispatcher(object):
     """ Dispatches capabilities in a realistic fashion (with respect to timings) """
 
-    def __init__(self, options, bee, my_ip):
-        self.options = options['baits'][bee.__class__.__name__]
+    def __init__(self, options, bait, my_ip):
+        self.options = options['baits'][bait.__class__.__name__]
         self.enabled = False
-        self.bait = bee
+        self.bait = bait
         self.run_flag = True
         self.my_ip = my_ip
-        self.max_sessions = random.randint(4, 8)
         try:
             self.set_active_interval()
         except (ValueError, AttributeError, KeyError, IndexError) as err:
@@ -55,6 +54,9 @@ class BeeDispatcher(object):
             while not self.time_in_range():
                 gevent.sleep(5)
             while self.time_in_range():
+                # this could activate several bait sessions, which means
+                # that we should not have session specific state as instance variable in
+                # bait
                 if self.activation_probability >= random.random():
                     gevent.spawn(self.bait.do_session, self.my_ip)
                 gevent.sleep(self.sleep_interval)

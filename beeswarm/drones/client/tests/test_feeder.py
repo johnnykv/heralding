@@ -22,7 +22,7 @@ from mock import Mock
 import gevent
 import gevent.monkey
 
-from beeswarm.drones.client.models.dispatcher import BeeDispatcher
+from beeswarm.drones.client.models.dispatcher import BaitDispatcher
 
 
 gevent.monkey.patch_all()
@@ -57,9 +57,8 @@ class Client_Tests(unittest.TestCase):
             }
         }
 
-        dispatcher = BeeDispatcher(options, None, '127.0.0.1')
+        dispatcher = BaitDispatcher(options, None, '127.0.0.1')
 
-        dispatcher.max_sessions = 1
         dispatcher.bait = Mock()
         dispatcher_greenlet = Greenlet(dispatcher.start)
         dispatcher_greenlet.start()
