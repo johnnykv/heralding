@@ -18,6 +18,7 @@ import random
 import logging
 from datetime import datetime
 import gevent
+from gevent import socket
 from ftplib import FTP
 
 from beeswarm.drones.client.baits.clientbase import ClientBase
@@ -43,16 +44,17 @@ class ftp(ClientBase):
         """
         super(ftp, self).__init__(sessions, options)
 
-        # TODO: This is wrong, self. is shared amongst all connected sessions
+        # TODO: This is wrong, self. is shared amongst all connected sessions, this must be change to
+        # be session state or even better only use one instance of ftp to one session
         self.state = {
             'current_dir': '/',
             'file_list': [],
             'dir_list': [],
             'last_command': 'pwd'  # Assume that client has previously performed a pwd (to avoid IndexErrors)
         }
+        self.client = FTP()
         self.senses = ['pwd', 'list']
         self.actions = ['cwd', 'retrieve']
-        self.client = FTP()
 
     def do_session(self, my_ip):
 
@@ -87,6 +89,8 @@ class ftp(ClientBase):
             session.timestamp = datetime.utcnow()
         except ftplib.error_perm as err:
             logger.debug('Caught exception: {0} ({1})'.format(err, str(type(err))))
+        except socket.error as err:
+            logger.debug('Error while communicating: {0} ({1})'.format(err, str(type(err))))
         else:
             command_count = 0
             while command_count <= command_limit:
@@ -100,7 +104,8 @@ class ftp(ClientBase):
                     continue
             session.did_complete = True
         finally:
-            self.client.quit()
+            if self.client.sock is not None:
+                self.client.quit()
             session.alldone = True
 
     def sense(self):
@@ -182,12 +187,6 @@ class ftp(ClientBase):
         logger.debug('Sending FTP quit command.')
         self.client.quit()
 
-    def connect(self):
-        """
-            Connect to the remote FTP server (Honeypot).
-        """
-        self.client.connect(self.options['server'], self.options['port'])
-
     def login(self, username, password):
         """
             Login to the remote server
@@ -212,3 +211,9 @@ class ftp(ClientBase):
 
     def _save_file(self, data):
         """ Dummy function since FTP.retrbinary() needs a callback """
+
+    def connect(self):
+        """
+            Connect to the remote FTP server (Honeypot).
+        """
+        self.client.connect(self.options['server'], self.options['port'])

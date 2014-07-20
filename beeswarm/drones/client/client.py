@@ -63,7 +63,6 @@ class Client(object):
         else:
             self.my_ip = '127.0.0.1'
 
-        self.dispatchers = {}
         self.dispatcher_greenlets = []
 
     def start(self):
@@ -78,24 +77,20 @@ class Client(object):
         self.sessions_consumer = Consumer(sessions, self.config)
         gevent.spawn(self.sessions_consumer.start_handling)
 
-        baits = []
-        for b in clientbase.ClientBase.__subclasses__():
-            bait_name = b.__name__.lower()
-            # if the bait has a entry in the config we consider the bait enabled
-            if bait_name in self.config['baits']:
-                options = self.config['baits'][bait_name]
-                bait_session = b(sessions, options)
-                baits.append(bait_session)
-                logger.info('Adding {0} bait'.format(bait_session.__class__.__name__))
-                logger.debug('Bait added with options: {0}'.format(options))
-
         self.dispatcher_greenlets = []
-        for bait_session in baits:
-            dispatcher = BaitDispatcher(self.config, bait_session, self.my_ip)
-            self.dispatchers[bait_session.__class__.__name__] = dispatcher
-            current_greenlet = Greenlet(dispatcher.start)
-            self.dispatcher_greenlets.append(current_greenlet)
-            current_greenlet.start()
+
+        for honeypot_id, entry in self.config['baits'].items():
+            for b in clientbase.ClientBase.__subclasses__():
+                bait_name = b.__name__.lower()
+                # if the bait has a entry in the config we consider the bait enabled
+                if bait_name in entry:
+                    bait_options = entry[bait_name]
+                    bait_session = b(sessions, bait_options)
+                    dispatcher = BaitDispatcher(bait_options, bait_session, self.my_ip)
+                    dispatcher.start()
+                    self.dispatcher_greenlets.append(dispatcher)
+                    logger.info('Adding {0} bait'.format(bait_session.__class__.__name__))
+                    logger.debug('Bait added with options: {0}'.format(bait_options))
 
         drop_privileges()
         gevent.joinall(self.dispatcher_greenlets)

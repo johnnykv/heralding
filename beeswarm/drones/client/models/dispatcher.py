@@ -17,16 +17,18 @@ import random
 import datetime
 
 import gevent
+from gevent import Greenlet
 
 
 logger = logging.getLogger(__name__)
 
 
-class BaitDispatcher(object):
+class BaitDispatcher(Greenlet):
     """ Dispatches capabilities in a realistic fashion (with respect to timings) """
 
     def __init__(self, options, bait, my_ip):
-        self.options = options['baits'][bait.__class__.__name__]
+        Greenlet.__init__(self)
+        self.options = options
         self.enabled = False
         self.bait = bait
         self.run_flag = True
@@ -49,7 +51,7 @@ class BaitDispatcher(object):
         self.start_time = datetime.time(int(begin_hours), int(begin_min))
         self.end_time = datetime.time(int(end_hours), int(end_min))
 
-    def start(self):
+    def _run(self):
         while self.run_flag:
             while not self.time_in_range():
                 gevent.sleep(5)

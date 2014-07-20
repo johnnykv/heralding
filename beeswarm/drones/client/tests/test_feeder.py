@@ -40,10 +40,7 @@ class Client_Tests(unittest.TestCase):
             shutil.rmtree(self.work_dir)
 
     def test_dispatcher(self):
-        options = {
-            'baits': {
-                # NoneType because we're going to pass a None to the dispatcher.
-                'NoneType': {
+        options =  {
                     'enabled': True,
                     'server': '127.0.0.1',
                     'active_range': '00:00 - 23:59',
@@ -51,11 +48,7 @@ class Client_Tests(unittest.TestCase):
                     'activation_probability': '1',
                     'username': 'test',
                     'password': 'test',
-                    'port': 8080
-                },
-
-            }
-        }
+                    'port': 8080 }
 
         dispatcher = BaitDispatcher(options, None, '127.0.0.1')
 

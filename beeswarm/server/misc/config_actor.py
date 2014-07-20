@@ -114,8 +114,9 @@ class ConfigActor(Greenlet):
         self._reconfigure_all_clients()
 
     def _send_config_to_drone(self, drone_id):
-        config_json = self._get_drone_config(drone_id)
-        self.drone_command_receiver.send('{0} {1} {2}'.format(drone_id, Messages.CONFIG, json.dumps(config_json)))
+        config = self._get_drone_config(drone_id)
+        logger.debug('Sending config to {0}: {1}'.format(drone_id, config))
+        self.drone_command_receiver.send('{0} {1} {2}'.format(drone_id, Messages.CONFIG, json.dumps(config)))
 
     def _handle_command_get_droneconfig(self, drone_id):
         return self._get_drone_config(drone_id)
@@ -197,7 +198,6 @@ class ConfigActor(Greenlet):
                 'organization': drone.cert_organization,
                 'organization_unit': drone.cert_organization_unit
             }
-            drone_config['users'] = {}
             drone_config['capabilities'] = {}
             for capability in drone.capabilities:
                 users = {}
@@ -211,14 +211,18 @@ class ConfigActor(Greenlet):
         elif drone.discriminator == 'client':
             drone_config['baits'] = {}
             for bait in drone.baits:
-                drone_config['baits'][bait.capability.protocol] = {'server': bait.capability.honeypot.ip_address,
-                                                                   'port': bait.capability.port,
-                                                                   'honeypot_id': bait.capability.honeypot_id,
-                                                                   'username': bait.username,
-                                                                   'password': bait.password,
-                                                                   'active_range': bait.activation_range,
-                                                                   'sleep_interval': bait.sleep_interval,
-                                                                   'activation_probability': bait.activation_probability}
+                _bait = {'server': bait.capability.honeypot.ip_address,
+                         'port': bait.capability.port,
+                         'honeypot_id': bait.capability.honeypot_id,
+                         'username': bait.username,
+                         'password': bait.password,
+                         'active_range': bait.activation_range,
+                         'sleep_interval': bait.sleep_interval,
+                         'activation_probability': bait.activation_probability}
+                if bait.capability.honeypot_id not in drone_config['baits']:
+                    drone_config['baits'][bait.capability.honeypot_id] = {}
+                assert bait.capability.protocol not in drone_config['baits'][bait.capability.honeypot_id]
+                drone_config['baits'][bait.capability.honeypot_id][bait.capability.protocol] = _bait
 
         return drone_config
 
