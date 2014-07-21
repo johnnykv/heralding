@@ -19,6 +19,7 @@ import os
 import logging
 import sys
 import socket
+import traceback
 from datetime import timedelta
 
 import gevent
@@ -120,13 +121,18 @@ class Commands(OwnGreenTelnetHandler):
         if len(params) > 1:
             self.writeline('cd: string not in pwd: {0}'.format(' '.join(params)))
             return
-        arg = params[0]
-        while arg.startswith('../') or arg == '..':
-            if newdir.endswith('/'):
-                newdir = newdir[:-1]
-            newdir = dirname(newdir)
-            arg = arg[3:]
-        newdir = os.path.join(newdir, arg)
+        if len(params) > 0:
+            arg = params[0]
+            # TODO: Not too sure about what's going on here, need to investigate.
+            while arg.startswith('../') or arg == '..':
+                if newdir.endswith('/'):
+                    newdir = newdir[:-1]
+                newdir = dirname(newdir)
+                arg = arg[3:]
+            newdir = os.path.join(newdir, arg)
+        else:
+            newdir = os.path.join(newdir, '/')
+
         try:
             if self.vfs.isdir(newdir):
                 self.working_dir = newdir[:]
@@ -241,6 +247,8 @@ class Commands(OwnGreenTelnetHandler):
             self.input = self.input_reader(self, read_line)
             self.raw_input = self.input.raw
             if self.input.cmd:
+                # TODO: Command should not be converted to upper
+                # looks funny in error messages.
                 cmd = self.input.cmd.upper()
                 params = self.input.params
                 if cmd in self.COMMANDS:
@@ -252,5 +260,10 @@ class Commands(OwnGreenTelnetHandler):
                         if self.handleException(t, p, tb):
                             break
                 else:
+                    self.writeline('-bash: {0}: command not found'.format(cmd))
                     logger.error("Unknown command '{0}'".format(cmd))
         logger.debug("Exiting handler")
+
+    def handleException(self, exc_type, exc_param, exc_tb):
+        logger.warning('Exception during telnet sessions: {0}'.format(''.join(traceback.format_exception(exc_type, exc_param, exc_tb) )))
+        return True
