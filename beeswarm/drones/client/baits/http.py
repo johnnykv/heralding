@@ -40,7 +40,7 @@ class http(ClientBase):
         self.max_requests = random.randint(3, 4)
         self.sent_requests = 0
 
-    def do_session(self, my_ip):
+    def start(self):
 
         """
             Launches a new HTTP client session on the server taken from the `self.options` dict.
@@ -53,7 +53,7 @@ class http(ClientBase):
         server_port = self.options['port']
         honeypot_id = self.options['honeypot_id']
 
-        session = self.create_session(server_host, server_port, my_ip, honeypot_id)
+        session = self.create_session(server_host, server_port, honeypot_id)
 
         self.sessions[session.id] = session
 

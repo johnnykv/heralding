@@ -35,7 +35,6 @@ class Session(BaseSession):
         self.connected = True
         self.authenticated = False
         self.honeypot_id = Session.honeypot_id
-        # TODO: Pass users as a list in options
         self.users = users
 
         # for session specific volatile data (will not get logged)

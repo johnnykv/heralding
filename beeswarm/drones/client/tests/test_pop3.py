@@ -64,7 +64,7 @@ class POP3_Test(unittest.TestCase):
         BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
 
         current_bait = client_pop3.pop3(baitsessions, bait_info)
-        current_bait.do_session('127.0.0.1')
+        current_bait.start()
         srv.stop()
 
 

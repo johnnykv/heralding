@@ -26,14 +26,13 @@ logger = logging.getLogger(__name__)
 class BaitDispatcher(Greenlet):
     """ Dispatches capabilities in a realistic fashion (with respect to timings) """
 
-    def __init__(self, sessions, bait_type, bait_options, my_ip):
+    def __init__(self, sessions, bait_type, bait_options):
         Greenlet.__init__(self)
         self.options = bait_options
         self.enabled = False
         self.bait_type = bait_type
         self.run_flag = True
         # my_ip and sessions should be moved from here
-        self.my_ip = my_ip
         self.sessions = sessions
         try:
             self.set_active_interval()
@@ -61,7 +60,7 @@ class BaitDispatcher(Greenlet):
                 if self.activation_probability >= random.random():
                     # TODO: sessions whould be moved from here, too many has knowledge of the sessions list
                     bait = self.bait_type(self.sessions, self.options)
-                    gevent.spawn(bait.do_session, self.my_ip)
+                    gevent.spawn(bait.start)
                 gevent.sleep(self.sleep_interval)
 
     def time_in_range(self):

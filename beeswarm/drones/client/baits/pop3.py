@@ -33,7 +33,7 @@ class pop3(ClientBase):
         """
         super(pop3, self).__init__(sessions, options)
 
-    def do_session(self, my_ip):
+    def start(self):
         """
             Launches a new POP3 client session on the server taken from the `self.options` dict.
 
@@ -46,7 +46,7 @@ class pop3(ClientBase):
         server_port = self.options['port']
         honeypot_id = self.options['honeypot_id']
 
-        session = self.create_session(server_host, server_port, my_ip, honeypot_id)
+        session = self.create_session(server_host, server_port, honeypot_id)
 
         try:
             logger.debug(

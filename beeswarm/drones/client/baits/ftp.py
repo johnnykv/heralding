@@ -44,8 +44,6 @@ class ftp(ClientBase):
         """
         super(ftp, self).__init__(sessions, options)
 
-        # TODO: This is wrong, self. is shared amongst all connected sessions, this must be change to
-        # be session state or even better only use one instance of ftp to one session
         self.state = {
             'current_dir': '/',
             'file_list': [],
@@ -56,7 +54,7 @@ class ftp(ClientBase):
         self.senses = ['pwd', 'list']
         self.actions = ['cwd', 'retrieve']
 
-    def do_session(self, my_ip):
+    def start(self):
 
         """
             Launches a new FTP client session on the server taken from the `self.options` dict.
@@ -70,7 +68,7 @@ class ftp(ClientBase):
         honeypot_id = self.options['honeypot_id']
         command_limit = random.randint(6, 11)
 
-        session = self.create_session(server_host, server_port, my_ip, honeypot_id)
+        session = self.create_session(server_host, server_port, honeypot_id)
 
         self.sessions[session.id] = session
         logger.debug(

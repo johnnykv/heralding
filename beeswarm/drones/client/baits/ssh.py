@@ -39,7 +39,7 @@ class ssh(ClientBase, Commands):
         self.client.set_missing_host_key_policy(AutoAddPolicy())
         self.comm_chan = None
 
-    def do_session(self, my_ip):
+    def start(self):
         """
             Launches a new SSH client session on the server taken from the `self.options` dict.
 
@@ -51,7 +51,7 @@ class ssh(ClientBase, Commands):
         server_port = self.options['port']
         honeypot_id = self.options['honeypot_id']
 
-        session = self.create_session(server_host, server_port, my_ip, honeypot_id)
+        session = self.create_session(server_host, server_port, honeypot_id)
 
         self.sessions[session.id] = session
         logger.debug(

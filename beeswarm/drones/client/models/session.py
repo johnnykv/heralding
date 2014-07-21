@@ -19,8 +19,8 @@ from beeswarm.shared.models.base_session import BaseSession
 class BaitSession(BaseSession):
     client_id = ''
 
-    def __init__(self, protocol, destination_ip, destination_port, my_ip, honeypot_id):
-        super(BaitSession, self).__init__(protocol, source_ip=my_ip, destination_ip=destination_ip,
+    def __init__(self, protocol, destination_ip, destination_port, honeypot_id):
+        super(BaitSession, self).__init__(protocol, destination_ip=destination_ip,
                                           destination_port=destination_port)
 
         assert BaitSession.client_id

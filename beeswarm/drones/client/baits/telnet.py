@@ -63,7 +63,7 @@ class telnet(ClientBase, Commands):
         Commands.__init__(self)
         self.client = None
 
-    def do_session(self, my_ip):
+    def start(self):
         """
             Launches a new Telnet client session on the server taken from the `self.options` dict.
 
@@ -77,7 +77,7 @@ class telnet(ClientBase, Commands):
         honeypot_id = self.options['honeypot_id']
         command_limit = random.randint(6, 11)
 
-        session = self.create_session(server_host, server_port, my_ip, honeypot_id)
+        session = self.create_session(server_host, server_port, honeypot_id)
         self.sessions[session.id] = session
         logger.debug(
             'Sending telnet bait session to {0}:{1}. (bait id: {2})'.format(server_host, server_port, session.id))

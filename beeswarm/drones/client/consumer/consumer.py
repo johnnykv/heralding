@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class Consumer(object):
-    def __init__(self, sessions, config):
+    def __init__(self, sessions, config, own_ip):
         """
             Processes completed sessions from the sessions dict.
 
@@ -37,13 +37,15 @@ class Consumer(object):
         self.config = config
         self.enabled = True
         self.logger = ServerLogger(Messages.SESSION_CLIENT)
+        self.own_ip = own_ip
 
     def start_handling(self, sleep_time=1):
         while self.enabled:
             for session_id in self.sessions.keys():
                 session = self.sessions[session_id]
                 if session.alldone:
-                    logger.debug('Found finished bait session. (bait id: {0})'.format(session.id))
+                    logger.debug('Found finished {0} bait session. (bait id: {1})'.format(session.protocol, session.id))
+                    session.source_ip = self.own_ip
                     self.logger.log(session)
                     del self.sessions[session_id]
             gevent.sleep(sleep_time)

@@ -50,11 +50,11 @@ class Client_Tests(unittest.TestCase):
                     'password': 'test',
                     'port': 8080 }
 
-        dispatcher = BaitDispatcher({}, None, options,  '127.0.0.1')
+        dispatcher = BaitDispatcher({}, None, options)
 
         dispatcher.bait_type = Mock()
         dispatcher_greenlet = Greenlet(dispatcher.start)
         dispatcher_greenlet.start()
         time.sleep(1)
         dispatcher_greenlet.kill()
-        dispatcher.bait_type.do_session.assert_called()
+        dispatcher.bait_type.start.assert_called()

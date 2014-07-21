@@ -74,7 +74,7 @@ class Client(object):
         sessions = {}
 
         # greenlet to consume and maintain data in sessions list
-        self.sessions_consumer = Consumer(sessions, self.config)
+        self.sessions_consumer = Consumer(sessions, self.config, self.my_ip)
         gevent.spawn(self.sessions_consumer.start_handling)
 
         self.dispatcher_greenlets = []
@@ -85,11 +85,11 @@ class Client(object):
                 # if the bait has a entry in the config we consider the bait enabled
                 if bait_name in entry:
                     bait_options = entry[bait_name]
-                    bait_session = b(sessions, bait_options)
-                    dispatcher = BaitDispatcher(bait_options, bait_session, self.my_ip)
+                    #bait_session = b(sessions, bait_options)
+                    dispatcher = BaitDispatcher(sessions, b, bait_options)
                     dispatcher.start()
                     self.dispatcher_greenlets.append(dispatcher)
-                    logger.info('Adding {0} bait'.format(bait_session.__class__.__name__))
+                    logger.info('Adding {0} bait'.format(bait_name))
                     logger.debug('Bait added with options: {0}'.format(bait_options))
 
         drop_privileges()

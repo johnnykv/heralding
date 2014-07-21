@@ -42,7 +42,7 @@ class smtp(ClientBase):
         mbox_archive = os.path.join(package_dir, 'shared/data/archive.mbox')
         self.mailbox = mailbox.mbox(mbox_archive)
 
-    def do_session(self, my_ip):
+    def start(self):
         """
             Launches a new SMTP client session on the server taken from the `self.options` dict.
 
@@ -55,7 +55,7 @@ class smtp(ClientBase):
         server_port = self.options['port']
         honeypot_id = self.options['honeypot_id']
 
-        session = self.create_session(server_host, server_port, my_ip, honeypot_id)
+        session = self.create_session(server_host, server_port, honeypot_id)
 
         logger.debug(
             'Sending {0} bait session to {1}:{2}. (bait id: {3})'.format('smtp', server_host, server_port, session.id))

@@ -27,7 +27,7 @@ class vnc(ClientBase):
     def __init__(self, sessions, options):
         super(vnc, self).__init__(sessions, options)
 
-    def do_session(self, my_ip):
+    def start(self):
         """
             Launches a new Telnet client session on the server taken from the `self.options` dict.
             This session always fails.
@@ -39,7 +39,7 @@ class vnc(ClientBase):
         server_port = self.options['port']
         honeypot_id = self.options['honeypot_id']
 
-        session = self.create_session(server_host, server_port, my_ip, honeypot_id)
+        session = self.create_session(server_host, server_port, honeypot_id)
         self.sessions[session.id] = session
 
         logger.debug(

@@ -23,24 +23,23 @@ class ClientBase(object):
         """
             Initializes common values.
         :param sessions: A dict which is updated every time a new session is created.
-        :param options: A dict containing all options
+        :param options: A dict containing the options entry for this bait
         """
         self.sessions = sessions
         self.options = options
 
-    def do_session(self, my_ip):
+    def start(self, my_ip):
         raise Exception('Do not call base class!')
 
-    def create_session(self, server_host, server_port, my_ip, honeypot_id):
+    def create_session(self, server_host, server_port, honeypot_id):
         """
             Creates a new session and adds it to the sessions directory.
 
         :param server_host: IP address of the server
         :param server_port: Server port
-        :param my_ip: IP of this Client itself
         :return: A new `BeeSession` object.
         """
         protocol = self.__class__.__name__.lower()
-        session = BaitSession(protocol, server_host, server_port, my_ip, honeypot_id)
+        session = BaitSession(protocol, server_host, server_port, honeypot_id)
         self.sessions[session.id] = session
         return session
