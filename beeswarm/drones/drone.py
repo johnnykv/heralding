@@ -64,6 +64,7 @@ class Drone(object):
         ctx = zmq.Context()
         self.internal_server_relay = ctx.socket(zmq.PUSH)
         self.internal_server_relay.bind('ipc://serverCommands')
+        self.config_received = gevent.event.Event()
 
         if self.config['general']['fetch_ip']:
             try:
@@ -93,10 +94,7 @@ class Drone(object):
         self.incoming_msg_greenlet = gevent.spawn(self.incoming_server_comms, server_public,
                                                   client_public, client_secret)
 
-        self._start_drone()
-
-        # drop_privileges()
-        logger.info('Drone running using id: {0}'.format(self.id))
+        logger.info('Waiting for detailed configuration from Beeswarm server.')
         gevent.joinall([self.outgoing_msg_greenlet])
 
     def _start_drone(self):
@@ -114,6 +112,7 @@ class Drone(object):
         if mode:
             self.drone = mode(self.work_dir, self.config)
             self.drone_greenlet = gevent.spawn(self.drone.start)
+            logger.info('Drone configured and running'.format(self.id))
 
     def stop(self):
         """Stops services"""
@@ -141,11 +140,12 @@ class Drone(object):
         # broadcasts to all drones
         receiving_socket.setsockopt(zmq.SUBSCRIBE, Messages.IP)
 
+        logger.debug(
+            'Trying to connect receiving socket to server on {0}'.format(self.config['beeswarm_server']['zmq_command_url']))
+
         receiving_socket.connect(self.config['beeswarm_server']['zmq_command_url'])
         gevent.spawn(self.monitor_worker, receiving_socket.get_monitor_socket(), 'incomming socket ({0}).'
                      .format(self.config['beeswarm_server']['zmq_url']))
-        logger.debug(
-            'Connected receiving socket to server on {0}'.format(self.config['beeswarm_server']['zmq_command_url']))
 
         poller = zmq.Poller()
         poller.register(receiving_socket, zmq.POLLIN)
@@ -166,7 +166,7 @@ class Drone(object):
                 assert (drone_id == self.id)
                 # if we receive a configuration we restart the drone
                 if command == Messages.CONFIG:
-                    # additional payload
+                    self.config_received.set()
                     self.config = json.loads(data)
                     with open('beeswarmcfg.json', 'w') as local_config:
                         local_config.write(json.dumps(self.config, indent=4))
@@ -185,6 +185,8 @@ class Drone(object):
         sending_socket.curve_publickey = client_public
         sending_socket.curve_serverkey = server_public
         sending_socket.setsockopt(zmq.RECONNECT_IVL, 2000)
+        logger.debug(
+            'Trying to connect sending socket to server on {0}'.format(self.config['beeswarm_server']['zmq_url']))
         sending_socket.connect(self.config['beeswarm_server']['zmq_url'])
         gevent.spawn(self.monitor_worker, sending_socket.get_monitor_socket(), 'outgoing socket ({0}).'
                      .format(self.config['beeswarm_server']['zmq_url']))
