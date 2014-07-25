@@ -27,7 +27,6 @@ import sys
 import os
 
 from gevent import Greenlet
-import requests
 
 from beeswarm.drones.drone import Drone
 from beeswarm.drones.honeypot.honeypot import Honeypot
@@ -35,7 +34,7 @@ from beeswarm.server.server import Server
 from beeswarm.drones.client.client import Client
 from beeswarm.errors import ConfigNotFound
 from beeswarm.shared.asciify import asciify
-from beeswarm.shared.helpers import is_url
+from beeswarm.shared.helpers import is_url, extract_config_from_api
 
 
 logger = logging.getLogger()
@@ -67,7 +66,6 @@ def setuplogging(logfile, verbose):
     file_log.setLevel(logging.DEBUG)
     file_log.setFormatter(formatter)
     root_logger.addHandler(file_log)
-
 
 class LogFilter(logging.Filter):
     def filter(self, rec):
@@ -101,10 +99,7 @@ if __name__ == '__main__':
     if is_url(args.configurl):
         # meh, MiTM problem here... Acceptable? Workaround?
         # maybe print fingerprint on the web ui and let user verify manually?
-        conf = requests.get(args.configurl, verify=False)
-        config = json.loads(conf.text, object_hook=asciify)
-        with open('beeswarmcfg.json', 'w') as local_config:
-            local_config.write(json.dumps(config, indent=4))
+        extract_config_from_api(args.configurl)
 
     if os.path.isfile('beeswarmcfg.json'):
         with open('beeswarmcfg.json', 'r') as config_file:

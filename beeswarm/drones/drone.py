@@ -26,7 +26,7 @@ import zmq.auth
 from zmq.utils.monitor import recv_monitor_message
 
 from beeswarm.shared.message_enum import Messages
-from beeswarm.shared.helpers import extract_keys, send_zmq_push
+from beeswarm.shared.helpers import extract_keys, send_zmq_push, extract_config_from_api, asciify
 from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.drones.client.client import Client
 
@@ -59,6 +59,8 @@ class Drone(object):
         self.drone_greenlet = None
         self.outgoing_msg_greenlet = None
         self.incoming_msg_greenlet = None
+
+        self.config_url_dropper_greenlet = None
 
         # messages from server relayed to internal listeners
         ctx = zmq.Context()
@@ -94,13 +96,19 @@ class Drone(object):
         self.incoming_msg_greenlet = gevent.spawn(self.incoming_server_comms, server_public,
                                                   client_public, client_secret)
 
+        self.config_url_dropper_greenlet = gevent.spawn(self.config_url_drop_poller)
+
         logger.info('Waiting for detailed configuration from Beeswarm server.')
         gevent.joinall([self.outgoing_msg_greenlet])
 
     def _start_drone(self):
         """
-        Tears down the drone and restarts it.
+        Restarts the drone
         """
+
+        with open('beeswarmcfg.json', 'r') as config_file:
+            self.config = json.load(config_file, object_hook=asciify)
+
         mode = None
         if self.config['general']['mode'] == '' or self.config['general']['mode'] == None:
             logger.info('Drone has not been configured, awaiting configuration from Beeswarm server.')
@@ -119,6 +127,7 @@ class Drone(object):
         logging.debug('Stopping drone, hang on.')
         if self.drone is not None:
             self.drone.stop()
+            self.drone = None
         # just some time for the drone to powerdown to be nice.
         gevent.sleep(2)
         if self.drone_greenlet is not None:
@@ -167,9 +176,9 @@ class Drone(object):
                 # if we receive a configuration we restart the drone
                 if command == Messages.CONFIG:
                     self.config_received.set()
-                    self.config = json.loads(data)
+                    config = json.loads(data)
                     with open('beeswarmcfg.json', 'w') as local_config:
-                        local_config.write(json.dumps(self.config, indent=4))
+                        local_config.write(json.dumps(config, indent=4))
                     self.stop()
                     self._start_drone()
                 else:
@@ -244,6 +253,20 @@ class Drone(object):
                 elif event == zmq.EVENT_DISCONNECTED:
                     logger.warning('Disconnected from {0}, will reconnect in {1} seconds.'.format(log_name, 5))
             gevent.sleep()
+
+    # restarts the drone if a new file containing a new config url is dropped in the workdir
+    def config_url_drop_poller(self):
+        while True:
+            gevent.sleep(1)
+            dropped_config_url_file = os.path.join(self.work_dir, 'API_CONFIG_URL')
+            if os.path.isfile(dropped_config_url_file):
+                with open(dropped_config_url_file,'r') as _file:
+                    config_url = open(_file).read()
+                logger.info('Found dropped api config url in {0}, with content: {1}.'.format(self.work_dir, config_url))
+                os.remove(dropped_config_url_file)
+                extract_config_from_api(config_url)
+                self.stop()
+                self._start_drone()
 
 
 
