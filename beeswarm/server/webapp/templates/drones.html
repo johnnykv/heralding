@@ -78,12 +78,13 @@
                 $.each(items, function (index, item) {
                     item.time = item.time + '<span style="visibility: hidden;" data-id="' + item.id + '"/>';
                     item.actions = '';
-                    item.actions += '<i id="delete" class="fa fa-trash-o fa-fw"></i>';
-                    item.actions += '<i id="settings" class="fa fa-wrench fa-fw"></i>';
+                    item.actions += '<a id="delete" href="#" class="btn btn-danger btn-mini"><i class="icon-white icon-trash"></i></a> ';
+                    item.actions += '<a id="settings" href="#" class="btn btn-primary btn-mini"><i class="icon-white icon-wrench"></i></a>';
                 });
             }
         })
-    }).on('click', 'i.fa', function () {
+    }).on('click', 'a', function () {
+        console.log('CLICK');
         var drone_id = $(this).parent().parent().find("td").eq(0).html();
         var icon_id = $(this).attr("id");
         if (icon_id == 'delete') {
