@@ -78,8 +78,10 @@
                 $.each(items, function (index, item) {
                     item.time = item.time + '<span style="visibility: hidden;" data-id="' + item.id + '"/>';
                     item.actions = '';
-                    item.actions += '<a id="delete" href="#" class="btn btn-danger btn-mini"><i class="icon-white icon-trash"></i></a> ';
+                    item.actions += '<div class="btn-group" style="float: right;" >';
                     item.actions += '<a id="settings" href="#" class="btn btn-primary btn-mini"><i class="icon-white icon-wrench"></i></a>';
+                    item.actions += '<a id="delete" href="#" class="btn btn-danger btn-mini"><i class="icon-white icon-trash"></i></a>';
+                    item.actions += '</div>';
                 });
             }
         })

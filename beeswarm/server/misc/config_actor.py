@@ -93,6 +93,13 @@ class ConfigActor(Greenlet):
             # send OK straight away - we don't want the sender to wait
             self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
             self._handle_command_drone_config_changed(data)
+        elif cmd == Messages.BAIT_USER_ADDED:
+            self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
+            self._handle_command_bait_user_changed(data)
+        elif cmd == Messages.BAIT_USER_DELETED:
+            self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
+            self._handle_command_bait_user_changed(data)
+            pass
         else:
             logger.warning('Unknown command received: {0}'.format(cmd))
             self.config_commands.send(Messages.FAIL)
@@ -112,6 +119,17 @@ class ConfigActor(Greenlet):
     def _handle_command_drone_config_changed(self, drone_id):
         self._send_config_to_drone(drone_id)
         self._reconfigure_all_clients()
+
+    def _handle_command_bait_user_changed(self, data):
+        id, username, password = data.split(' ')
+        db_session = database_setup.get_session()
+        drone_edge = db_session.query(DroneEdge).filter(DroneEdge.username == username,
+                                                        DroneEdge.password == password).first()
+        # A drone is using the bait users, reconfigure all
+        # TODO: This is lazy, we should only reconfigure the drone(s) who are actually
+        # using the credentials
+        if drone_edge:
+            self._reconfigure_all_clients()
 
     def _send_config_to_drone(self, drone_id):
         config = self._get_drone_config(drone_id)

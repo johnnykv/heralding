@@ -575,7 +575,7 @@ def add_bait_users():
     bait_users = json.loads(request.data)
     for bait_user in bait_users:
         tmp_bait_user = db_session.merge(BaitUser(username=bait_user.username, password=bait_user.password))
-        # insert or ognore
+        # insert or ignore
         db_session.save(tmp_bait_user)
     db_session.commit()
     return ''
@@ -591,6 +591,10 @@ def delete_bait_user():
     for id in bait_users:
         bait_user_to_delete = db_session.query(BaitUser).filter(BaitUser.id == int(id)).one()
         db_session.delete(bait_user_to_delete)
+        send_zmq_request('ipc://configCommands', '{0} {1} {2} {3}'.format(Messages.BAIT_USER_DELETED,
+                                                                          bait_user_to_delete.id,
+                                                                          bait_user_to_delete.username,
+                                                                          bait_user_to_delete.password))
     db_session.commit()
     return ''
 
