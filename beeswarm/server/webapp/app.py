@@ -574,6 +574,9 @@ def add_bait_users():
     db_session = database_setup.get_session()
     bait_users = json.loads(request.data)
     for bait_user in bait_users:
+        # TODO: Also validate client side
+        if bait_user['username'] == '':
+            continue
         existing_bait_user = db_session.query(BaitUser).filter(BaitUser.username == bait_user['username'],
                                                                BaitUser.password == bait_user['password'])
         if not existing_bait_user:
