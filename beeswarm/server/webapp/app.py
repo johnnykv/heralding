@@ -553,7 +553,7 @@ def get_bait_users():
         bait_users = db_session.query(BaitUser)
         rows = []
         for bait_user in bait_users:
-            row = {'username': bait_user.username, 'password': bait_user.password}
+            row = {'id': bait_user.id, 'username': bait_user.username, 'password': bait_user.password}
             rows.append(row)
         rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
         return rsp
@@ -586,9 +586,10 @@ def add_bait_users():
 @login_required
 def delete_bait_user():
     db_session = database_setup.get_session()
+    # list of bait user id's
     bait_users = json.loads(request.data)
-    for bait_user in bait_users:
-        bait_user_to_delete = db_session.query(Drone).filter(BaitUser.id == bait_user.username).one()
+    for id in bait_users:
+        bait_user_to_delete = db_session.query(BaitUser).filter(BaitUser.id == int(id)).one()
         db_session.delete(bait_user_to_delete)
     db_session.commit()
     return ''

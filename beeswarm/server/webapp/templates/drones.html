@@ -84,7 +84,6 @@
             }
         })
     }).on('click', 'a', function () {
-        console.log('CLICK');
         var drone_id = $(this).parent().parent().find("td").eq(0).html();
         var icon_id = $(this).attr("id");
         if (icon_id == 'delete') {

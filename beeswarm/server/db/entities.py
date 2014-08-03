@@ -196,5 +196,6 @@ class User(Base):
 class BaitUser(Base):
     __tablename__ = 'baituser'
 
-    username = Column(String(32), primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    username = Column(String(32))
     password = Column(String(32))
