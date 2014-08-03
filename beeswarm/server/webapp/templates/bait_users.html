@@ -36,6 +36,42 @@
     </tfoot>
 </table>
 
+<form class="form-inline" id="addBaitUserForm">
+  <input name="username" type="text" class="input-large" placeholder="Username">
+  <input name="password" type="text" class="input-large" placeholder="Password">
+  <button type="submit" class="btn btn-success btn-small"><i class="icon-white icon-plus"></i></button>
+</form>
+
+<script>
+
+function clearFormRefreshGrid(data) {
+    $("#addBaitUserForm").trigger('reset');
+    $('#baittable').datagrid('reload');
+
+}
+
+$("#addBaitUserForm").submit(function (event) {
+
+    event.preventDefault();
+
+    var $form = $(this),
+            username = $form.find("input[name='username']").val(),
+            password = $form.find("input[name='password']").val();
+
+    $.ajax({
+        url: '/ws/bait_users/add',
+        success: clearFormRefreshGrid,
+        type: 'POST',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify([
+            { password: password, username: username },
+        ])
+    });
+
+});
+</script>
+
+
 <script type="text/javascript">
 
     $('#baittable').datagrid({

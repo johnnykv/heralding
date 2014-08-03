@@ -574,9 +574,11 @@ def add_bait_users():
     db_session = database_setup.get_session()
     bait_users = json.loads(request.data)
     for bait_user in bait_users:
-        tmp_bait_user = db_session.merge(BaitUser(username=bait_user.username, password=bait_user.password))
-        # insert or ignore
-        db_session.save(tmp_bait_user)
+        existing_bait_user = db_session.query(BaitUser).filter(BaitUser.username == bait_user['username'],
+                                                               BaitUser.password == bait_user['password'])
+        if not existing_bait_user:
+            new_bait_user = BaitUser(username=bait_user['username'], password=bait_user['password'])
+            db_session.add(new_bait_user)
     db_session.commit()
     return ''
 
