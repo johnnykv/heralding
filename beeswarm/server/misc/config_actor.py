@@ -99,7 +99,9 @@ class ConfigActor(Greenlet):
         elif cmd == Messages.BAIT_USER_DELETED:
             self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
             self._handle_command_bait_user_changed(data)
-            pass
+        elif cmd == Messages.DRONE_DELETE:
+            self._handle_command_delete_drone(data)
+            self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
         else:
             logger.warning('Unknown command received: {0}'.format(cmd))
             self.config_commands.send(Messages.FAIL)
@@ -276,3 +278,14 @@ class ConfigActor(Greenlet):
 
         # return copy of keys
         return open(private_key_path, "r").readlines(), open(public_key_path, "r").readlines()
+
+    def _handle_command_delete_drone(self, data):
+        drone_id = data
+        logger.debug('Deleting drone: {0}'.format(drone_id))
+        db_session = database_setup.get_session()
+        drone_to_delete = db_session.query(Drone).filter(Drone.id == drone_id).one()
+        db_session.delete(drone_to_delete)
+        db_session.commit()
+        # tell the drone to kill itself
+        self.drone_command_receiver.send('{0} {1} '.format(drone_id, Messages.DRONE_DELETE))
+        self._reconfigure_all_clients()

@@ -336,6 +336,7 @@ def configure_client(id):
 @app.route('/ws/drone/configure/<id>', methods=['GET', 'POST'])
 @login_required
 def configure_drone(id):
+    print id
     db_session = database_setup.get_session()
     drone = db_session.query(Drone).filter(Drone.id == id).one()
     if drone is None:
@@ -390,12 +391,8 @@ def drone_key(key):
 def delete_drones():
     # list of drone id's'
     drone_ids = json.loads(request.data)
-    db_session = database_setup.get_session()
     for drone_id in drone_ids:
-        logger.debug('Deleting drone: {0}'.format(drone_id))
-        drone_to_delete = db_session.query(Drone).filter(Drone.id == drone_id).one()
-        db_session.delete(drone_to_delete)
-        db_session.commit()
+        send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.DRONE_DELETE, drone_id))
     return ''
 
 

@@ -76,17 +76,17 @@
             url: '{{ dataurl }}',
             formatter: function (items) {
                 $.each(items, function (index, item) {
-                    item.time = item.time + '<span style="visibility: hidden;" data-id="' + item.id + '"/>';
+                    item.last_activity = item.last_activity + '<span style="visibility: hidden;" data-id="' + item.id + '"/>';
                     item.actions = '';
                     item.actions += '<div class="btn-group" style="float: right;" >';
-                    item.actions += '<a id="settings" href="#" class="btn btn-primary btn-mini"><i class="icon-white icon-wrench"></i></a>';
-                    item.actions += '<a id="delete" href="#" class="btn btn-danger btn-mini"><i class="icon-white icon-trash"></i></a>';
+                    item.actions += '<a id="settings" data-id=' + item.id +' href="#" class="btn btn-primary btn-mini"><i class="icon-white icon-wrench"></i></a>';
+                    item.actions += '<a id="delete" data-id=' + item.id +' href="#" class="btn btn-danger btn-mini"><i class="icon-white icon-trash"></i></a>';
                     item.actions += '</div>';
                 });
             }
         })
     }).on('click', 'a', function () {
-        var drone_id = $(this).parent().parent().find("td").eq(0).html();
+        var drone_id = $(this).attr("data-id");
         var icon_id = $(this).attr("id");
         if (icon_id == 'delete') {
             $.ajax({

@@ -181,6 +181,8 @@ class Drone(object):
                         local_config.write(json.dumps(config, indent=4))
                     self.stop()
                     self._start_drone()
+                elif command == Messages.DRONE_DELETE:
+                    self._handle_delete()
                 else:
                     self.internal_server_relay.send('{0} {1}'.format(command, data))
         logger.warn('Command listener exiting.')
@@ -253,6 +255,10 @@ class Drone(object):
                 elif event == zmq.EVENT_DISCONNECTED:
                     logger.warning('Disconnected from {0}, will reconnect in {1} seconds.'.format(log_name, 5))
             gevent.sleep()
+
+    def _handle_delete(self):
+        self.drone.stop()
+        logger.warning('Drone has been deleted by the beeswarm server.')
 
     # restarts the drone if a new file containing a new config url is dropped in the workdir
     def config_url_drop_poller(self):
