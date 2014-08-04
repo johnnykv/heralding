@@ -16,6 +16,7 @@
 import os
 import logging
 import json
+import sys
 
 import requests
 from requests.exceptions import Timeout, ConnectionError
@@ -259,6 +260,7 @@ class Drone(object):
     def _handle_delete(self):
         self.drone.stop()
         logger.warning('Drone has been deleted by the beeswarm server.')
+        sys.exit(0)
 
     # restarts the drone if a new file containing a new config url is dropped in the workdir
     def config_url_drop_poller(self):

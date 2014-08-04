@@ -279,6 +279,18 @@ class ConfigActor(Greenlet):
         # return copy of keys
         return open(private_key_path, "r").readlines(), open(public_key_path, "r").readlines()
 
+    def _remove_zmq_keys(self, id):
+        cert_path = os.path.join(self.work_dir, 'certificates')
+        public_keys = os.path.join(cert_path, 'public_keys')
+        private_keys = os.path.join(cert_path, 'private_keys')
+        public_key_path = os.path.join(public_keys, '{0}.pub'.format(id))
+        private_key_path = os.path.join(private_keys, '{0}.pri'.format(id))
+
+        for _file in [public_key_path, private_key_path]:
+            if os.path.isfile(_file):
+                os.remove(_file)
+
+
     def _handle_command_delete_drone(self, data):
         drone_id = data
         logger.debug('Deleting drone: {0}'.format(drone_id))
@@ -288,4 +300,5 @@ class ConfigActor(Greenlet):
         db_session.commit()
         # tell the drone to kill itself
         self.drone_command_receiver.send('{0} {1} '.format(drone_id, Messages.DRONE_DELETE))
+        self._remove_zmq_keys(drone_id)
         self._reconfigure_all_clients()
