@@ -25,6 +25,7 @@ import uuid
 from collections import namedtuple
 
 import gevent
+import gevent.lock
 import zmq.green as zmq
 from flask import Flask, render_template, request, redirect, flash, Response, send_from_directory, abort
 from flask.ext.login import LoginManager, login_user, current_user, login_required, logout_user
@@ -39,7 +40,7 @@ from forms import HoneypotConfigurationForm, NewClientConfigForm, LoginForm, Set
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, BaitSession, Session, Honeypot, User, BaitUser, Transcript, Drone, \
     Authentication
-from beeswarm.shared.helpers import send_zmq_request
+from beeswarm.shared.helpers import send_zmq_request_socket
 from beeswarm.shared.message_enum import Messages
 
 
@@ -67,6 +68,11 @@ first_cfg_received = gevent.event.Event()
 # keys used for adding new drones to the system
 drone_keys = []
 
+context = zmq.Context()
+config_actor_socket = context.socket(zmq.REQ)
+config_actor_socket.connect('ipc://configCommands')
+request_lock = gevent.lock.RLock()
+
 
 @app.before_first_request
 def initialize():
@@ -75,13 +81,22 @@ def initialize():
     first_cfg_received.wait()
 
 
+def send_config_request(request):
+    global config_actor_socket
+    request_lock.acquire()
+    try:
+        return send_zmq_request_socket(config_actor_socket, request)
+    finally:
+        request_lock.release()
+
+
 def config_subscriber():
     global config
     ctx = zmq.Context()
     subscriber_socket = ctx.socket(zmq.SUB)
     subscriber_socket.connect('ipc://configPublisher')
     subscriber_socket.setsockopt(zmq.SUBSCRIBE, Messages.CONFIG_FULL)
-    send_zmq_request('ipc://configCommands', Messages.PUBLISH_CONFIG)
+    send_config_request(Messages.PUBLISH_CONFIG)
     while True:
         poller = zmq.Poller()
         poller.register(subscriber_socket, zmq.POLLIN)
@@ -242,7 +257,7 @@ def configure_honeypot(id):
     honeypot = db_session.query(Honeypot).filter(Drone.id == id).one()
     if honeypot.discriminator != 'honeypot' or honeypot is None:
         abort(404, 'Drone with id {0} not found or invalid.'.format(id))
-    config_dict = send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.DRONE_CONFIG, id))
+    config_dict = send_config_request('{0} {1}'.format(Messages.DRONE_CONFIG, id))
     config_obj = DictWrapper(config_dict)
     # if honeypot.configuration is not None:
     # config_obj = DictWrapper(json.loads(honeypot.configuration))
@@ -318,7 +333,7 @@ def configure_honeypot(id):
         # advise config actor that we have change something on a given drone id
         # TODO: make entity itself know if it has changed and then poke the config actor.
 
-        send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.DRONE_CONFIG_CHANGED, honeypot.id))
+        send_config_request('{0} {1}'.format(Messages.DRONE_CONFIG_CHANGED, honeypot.id))
         return render_template('finish-config-honeypot.html', drone_id=honeypot.id, user=current_user)
 
 
@@ -329,7 +344,7 @@ def configure_client(id):
     drone = db_session.query(Drone).filter(Drone.id == id).one()
     if drone.discriminator != 'client' or drone is None:
         abort(404, 'Drone with id {0} not found or invalid.'.format(id))
-    send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.DRONE_CONFIG_CHANGED, drone.id))
+    send_config_request('{0} {1}'.format(Messages.DRONE_CONFIG_CHANGED, drone.id))
     return render_template('finish-config-client.html', drone_id=drone.id, user=current_user)
 
 
@@ -381,7 +396,7 @@ def drone_key(key):
         drone = Drone(id=drone_id)
         db_session.add(drone)
         db_session.commit()
-        config_json = send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.DRONE_CONFIG, drone_id))
+        config_json = send_config_request('{0} {1}'.format(Messages.DRONE_CONFIG, drone_id))
         return json.dumps(config_json)
 
 
@@ -391,7 +406,7 @@ def delete_drones():
     # list of drone id's'
     drone_ids = json.loads(request.data)
     for drone_id in drone_ids:
-        send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.DRONE_DELETE, drone_id))
+        send_config_request('{0} {1}'.format(Messages.DRONE_DELETE, drone_id))
     return ''
 
 
@@ -402,7 +417,7 @@ def create_client():
     client_id = str(uuid.uuid4())
     if form.validate_on_submit():
         server_zmq_url = 'tcp://{0}:{1}'.format(config['network']['server_host'], config['network']['zmq_port'])
-        result = send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.GEN_ZMQ_KEYS, client_id))
+        result = send_config_request('{0} {1}'.format(Messages.GEN_ZMQ_KEYS, client_id))
         zmq_public = result['public_key']
         zmq_private = result['private_key']
 
@@ -573,7 +588,7 @@ def add_bait_users():
         # TODO: Also validate client side
         if bait_user['username'] == '':
             continue
-        send_zmq_request('ipc://configCommands', '{0} {1} {2}'.format(Messages.BAIT_USER_ADD, bait_user['username'], bait_user['password']))
+        send_config_request('{0} {1} {2}'.format(Messages.BAIT_USER_ADD, bait_user['username'], bait_user['password']))
     return ''
 
 
@@ -584,7 +599,7 @@ def delete_bait_user():
     # list of bait user id's
     bait_users = json.loads(request.data)
     for id in bait_users:
-        send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.BAIT_USER_DELETE, id))
+        send_config_request('{0} {1}'.format(Messages.BAIT_USER_DELETE, id))
     return ''
 
 

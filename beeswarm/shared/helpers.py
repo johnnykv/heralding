@@ -189,6 +189,15 @@ def send_zmq_request(actor_url, request):
     gevent.sleep()
 
 
+def send_zmq_request_socket(socket, request):
+    socket.send(request)
+    result = socket.recv()
+    if result.split(' ', 1)[0] != Messages.OK:
+        assert False
+    else:
+        return json.loads(result.split(' ', 1)[1])
+
+
 # for occasional zmq pushes
 def send_zmq_push(actor_url, data):
     context = zmq.Context()

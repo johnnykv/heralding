@@ -129,7 +129,7 @@ class ConfigActor(Greenlet):
         if bait_user:
             db_session.delete(bait_user)
             db_session.commit()
-            self._bait_user_changed(bait_user_id)
+            self._bait_user_changed(bait_user.username, bait_user.password)
         else:
             logger.warning('Tried to delete non-existing bait user with id {0}.'.format(bait_user_id))
 
@@ -143,18 +143,15 @@ class ConfigActor(Greenlet):
             db_session.add(new_bait_user)
             db_session.commit()
 
-    def _bait_user_changed(self, data):
-        bait_user_id = int(data)
+    def _bait_user_changed(self, username, password):
         db_session = database_setup.get_session()
-        bait_user = db_session.query(BaitUser).filter(BaitUser.id == bait_user_id).one()
-        if bait_user:
-            drone_edge = db_session.query(DroneEdge).filter(DroneEdge.username == bait_user.username,
-                                                            DroneEdge.password == bait_user.password).first()
-            # A drone is using the bait users, reconfigure all
-            # TODO: This is lazy, we should only reconfigure the drone(s) who are actually
-            # using the credentials
-            if drone_edge:
-                self._reconfigure_all_clients()
+        drone_edge = db_session.query(DroneEdge).filter(DroneEdge.username == username,
+                                                        DroneEdge.password == password).first()
+        # A drone is using the bait users, reconfigure all
+        # TODO: This is lazy, we should only reconfigure the drone(s) who are actually
+        # using the credentials
+        if drone_edge:
+            self._reconfigure_all_clients()
 
     def _send_config_to_drone(self, drone_id):
         config = self._get_drone_config(drone_id)
