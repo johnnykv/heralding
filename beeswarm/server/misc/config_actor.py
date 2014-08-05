@@ -93,12 +93,12 @@ class ConfigActor(Greenlet):
             # send OK straight away - we don't want the sender to wait
             self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
             self._handle_command_drone_config_changed(data)
-        elif cmd == Messages.BAIT_USER_ADDED:
+        elif cmd == Messages.BAIT_USER_ADD:
+            self._handle_command_bait_user_add(data)
             self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
-            self._handle_command_bait_user_changed(data)
-        elif cmd == Messages.BAIT_USER_DELETED:
+        elif cmd == Messages.BAIT_USER_DELETE:
+            self._handle_command_bait_user_delete(data)
             self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
-            self._handle_command_bait_user_changed(data)
         elif cmd == Messages.DRONE_DELETE:
             self._handle_command_delete_drone(data)
             self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
@@ -122,16 +122,39 @@ class ConfigActor(Greenlet):
         self._send_config_to_drone(drone_id)
         self._reconfigure_all_clients()
 
-    def _handle_command_bait_user_changed(self, data):
-        id, username, password = data.split(' ')
+    def _handle_command_bait_user_delete(self, data):
+        bait_user_id = int(data)
         db_session = database_setup.get_session()
-        drone_edge = db_session.query(DroneEdge).filter(DroneEdge.username == username,
-                                                        DroneEdge.password == password).first()
-        # A drone is using the bait users, reconfigure all
-        # TODO: This is lazy, we should only reconfigure the drone(s) who are actually
-        # using the credentials
-        if drone_edge:
-            self._reconfigure_all_clients()
+        bait_user = db_session.query(BaitUser).filter(BaitUser.id == bait_user_id).one()
+        if bait_user:
+            db_session.delete(bait_user)
+            db_session.commit()
+            self._bait_user_changed(bait_user_id)
+        else:
+            logger.warning('Tried to delete non-existing bait user with id {0}.'.format(bait_user_id))
+
+    def _handle_command_bait_user_add(self, data):
+        username, password = data.split(' ')
+        db_session = database_setup.get_session()
+        existing_bait_user = db_session.query(BaitUser).filter(BaitUser.username == username,
+                                                               BaitUser.password == password).first()
+        if not existing_bait_user:
+            new_bait_user = BaitUser(username=username, password=password)
+            db_session.add(new_bait_user)
+            db_session.commit()
+
+    def _bait_user_changed(self, data):
+        bait_user_id = int(data)
+        db_session = database_setup.get_session()
+        bait_user = db_session.query(BaitUser).filter(BaitUser.id == bait_user_id).one()
+        if bait_user:
+            drone_edge = db_session.query(DroneEdge).filter(DroneEdge.username == bait_user.username,
+                                                            DroneEdge.password == bait_user.password).first()
+            # A drone is using the bait users, reconfigure all
+            # TODO: This is lazy, we should only reconfigure the drone(s) who are actually
+            # using the credentials
+            if drone_edge:
+                self._reconfigure_all_clients()
 
     def _send_config_to_drone(self, drone_id):
         config = self._get_drone_config(drone_id)

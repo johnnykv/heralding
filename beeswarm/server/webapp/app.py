@@ -336,7 +336,6 @@ def configure_client(id):
 @app.route('/ws/drone/configure/<id>', methods=['GET', 'POST'])
 @login_required
 def configure_drone(id):
-    print id
     db_session = database_setup.get_session()
     drone = db_session.query(Drone).filter(Drone.id == id).one()
     if drone is None:
@@ -574,12 +573,7 @@ def add_bait_users():
         # TODO: Also validate client side
         if bait_user['username'] == '':
             continue
-        existing_bait_user = db_session.query(BaitUser).filter(BaitUser.username == bait_user['username'],
-                                                               BaitUser.password == bait_user['password'])
-        if not existing_bait_user:
-            new_bait_user = BaitUser(username=bait_user['username'], password=bait_user['password'])
-            db_session.add(new_bait_user)
-    db_session.commit()
+        send_zmq_request('ipc://configCommands', '{0} {1} {2}'.format(Messages.BAIT_USER_ADD, bait_user['username'], bait_user['password']))
     return ''
 
 
@@ -587,17 +581,10 @@ def add_bait_users():
 @app.route('/ws/bait_users/delete', methods=['POST'])
 @login_required
 def delete_bait_user():
-    db_session = database_setup.get_session()
     # list of bait user id's
     bait_users = json.loads(request.data)
     for id in bait_users:
-        bait_user_to_delete = db_session.query(BaitUser).filter(BaitUser.id == int(id)).one()
-        db_session.delete(bait_user_to_delete)
-        send_zmq_request('ipc://configCommands', '{0} {1} {2} {3}'.format(Messages.BAIT_USER_DELETED,
-                                                                          bait_user_to_delete.id,
-                                                                          bait_user_to_delete.username,
-                                                                          bait_user_to_delete.password))
-    db_session.commit()
+        send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.BAIT_USER_DELETE, id))
     return ''
 
 
