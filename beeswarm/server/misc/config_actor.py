@@ -310,7 +310,6 @@ class ConfigActor(Greenlet):
             if os.path.isfile(_file):
                 os.remove(_file)
 
-
     def _handle_command_delete_drone(self, data):
         drone_id = data
         logger.debug('Deleting drone: {0}'.format(drone_id))
