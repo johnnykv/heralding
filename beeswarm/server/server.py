@@ -229,7 +229,7 @@ class Server(object):
         return config
 
     def start_maintenance_tasks(self):
-        
+
         maintenance_worker = Scheduler(self.config)
         maintenance_greenlet = gevent.spawn(maintenance_worker.start)
 
