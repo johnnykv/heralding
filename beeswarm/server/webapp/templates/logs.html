@@ -79,27 +79,29 @@
                 $.each(items, function (index, item) {
                     item.time = item.time + '<span style="visibility: hidden;" data-id="' + item.id + '"/>';
                     item.info = '';
-                    item.info += '<i id="infoButton" class="fa fa-list-ul fa-fw"></i>';
-                    item.info += '<i id="credentialsButton" class="fa fa-user fa-fw"></i>';
+                    item.info += '<div class="btn-group" style="float: right;" >';
+                    item.info += '<a id="info" data-id=' + item.id + ' href="#" class="btn btn-primary btn-mini"><i class="icon-white icon-list"></i></a>';
+                    item.info += '<a id="credentials" data-id=' + item.id + ' href="#" class="btn btn-primary btn-mini"><i class="icon-white icon-user"></i></a>';
+                    item.info += '</div>';
                 });
             },
             url: function () {
                 return '{{ dataurl }}';
             }
-        })
-    }).on('click', '#infoButton', (function () {
-        var id = $(this).parent().parent().find('> td > span').attr('data-id');
-        $('#logtable').data('clicked_id', id);
-        $('#sessionTranscriptTable').datagrid('reload');
-        $('#transcriptmodal').modal('show');
-    }))
-            .on('click', '#credentialsButton', (function () {
-                var id = $(this).parent().parent().find('> td > span').attr('data-id');
-                $('#logtable').data('clicked_id', id);
-                $('#credentialsTable').datagrid('reload');
-                $('#credentialsModal').modal('show');
-            }))
-    ;
+        })}).on('click', 'a', function () {
+        var drone_id = $(this).attr("data-id");
+        var icon_id = $(this).attr("id");
+        $('#logtable').data('clicked_id', drone_id);
+        if (icon_id == 'info') {
+            console.log('info');
+            $('#sessionTranscriptTable').datagrid('reload');
+            $('#transcriptmodal').modal('show');
+        }
+        else if (icon_id == 'credentials') {
+            $('#credentialsTable').datagrid('reload');
+            $('#credentialsModal').modal('show');
+        }
+    });
 
 </script>
 
@@ -210,6 +212,17 @@
                 sortable: false
             }
         ],
+        formatter: function (items) {
+            $.each(items, function (index, item) {
+                if (item.successful == false) {
+                    item.successful = 'No';
+                }
+                else {
+                    item.successful = 'Yes';
+                }
+            });
+        },
+
         url: function () {
             var session_id = $('#logtable').data('clicked_id');
             var url = '/data/session/' + session_id + '/credentials';
