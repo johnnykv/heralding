@@ -258,8 +258,9 @@ class Drone(object):
             gevent.sleep()
 
     def _handle_delete(self):
+        if self.drone:
         self.drone.stop()
-        logger.warning('Drone has been deleted by the beeswarm server.')
+            logger.warning('Drone has been deleted by the beeswarm server.')
         sys.exit(0)
 
     # restarts the drone if a new file containing a new config url is dropped in the workdir
