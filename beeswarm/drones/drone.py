@@ -259,7 +259,7 @@ class Drone(object):
 
     def _handle_delete(self):
         if self.drone:
-        self.drone.stop()
+            self.drone.stop()
             logger.warning('Drone has been deleted by the beeswarm server.')
         sys.exit(0)
 
