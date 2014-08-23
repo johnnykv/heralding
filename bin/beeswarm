@@ -99,7 +99,11 @@ if __name__ == '__main__':
     if is_url(args.configurl):
         # meh, MiTM problem here... Acceptable? Workaround?
         # maybe print fingerprint on the web ui and let user verify manually?
-        extract_config_from_api(args.configurl)
+        config_extracted = extract_config_from_api(args.configurl)
+        if not config_extracted:
+            logger.error('Error while extracting configuration from {0}, please make sure that the correct url was '
+                         'provided.'.format(args.configurl))
+            sys.exit(1)
 
     if os.path.isfile('beeswarmcfg.json'):
         with open('beeswarmcfg.json', 'r') as config_file:

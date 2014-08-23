@@ -231,8 +231,11 @@ def extract_keys(work_dir, config):
 def extract_config_from_api(config_url):
     # meh, MiTM problem here... Acceptable? Workaround?
     # maybe print fingerprint on the web ui and let user verify manually?
-    conf = requests.get(config_url, verify=False)
-    print conf
-    config = json.loads(conf.text, object_hook=asciify)
-    with open('beeswarmcfg.json', 'w') as local_config:
-        local_config.write(json.dumps(config, indent=4))
+    req = requests.get(config_url, verify=False)
+    if req.status_code == 200:
+        config = json.loads(req.text, object_hook=asciify)
+        with open('beeswarmcfg.json', 'w') as local_config:
+            local_config.write(json.dumps(config, indent=4))
+        return True
+    else:
+        return False
