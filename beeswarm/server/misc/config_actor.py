@@ -315,9 +315,10 @@ class ConfigActor(Greenlet):
         logger.debug('Deleting drone: {0}'.format(drone_id))
         db_session = database_setup.get_session()
         drone_to_delete = db_session.query(Drone).filter(Drone.id == drone_id).one()
-        db_session.delete(drone_to_delete)
-        db_session.commit()
-        # tell the drone to kill itself
-        self.drone_command_receiver.send('{0} {1} '.format(drone_id, Messages.DRONE_DELETE))
-        self._remove_zmq_keys(drone_id)
-        self._reconfigure_all_clients()
+        if drone_to_delete:
+            db_session.delete(drone_to_delete)
+            db_session.commit()
+            # tell the drone to kill itself
+            self.drone_command_receiver.send('{0} {1} '.format(drone_id, Messages.DRONE_DELETE))
+            self._remove_zmq_keys(drone_id)
+            self._reconfigure_all_clients()
