@@ -31,7 +31,7 @@ import beeswarm
 from beeswarm.drones.honeypot.capabilities import handlerbase
 from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.consumer.consumer import Consumer
-from beeswarm.shared.helpers import create_self_signed_cert, send_zmq_push, extract_keys
+from beeswarm.shared.helpers import create_self_signed_cert, send_zmq_push, extract_keys, get_most_likely_ip
 from beeswarm.shared.asciify import asciify
 from beeswarm.shared.message_enum import Messages
 
@@ -68,10 +68,15 @@ class Honeypot(object):
         extract_keys(work_dir, config)
         if not (os.path.isfile(os.path.join(work_dir, 'server.key'))):
             cert_info = config['certificate_info']
-            # TODO: IF NOT COMMON_NAME: Use own ip address...
+            if cert_info['common_name']:
+                cert_info['common_name'] = cert_info['common_name']
+            else:
+                cert_info['common_name'] = get_most_likely_ip()
+
             cert, priv_key = create_self_signed_cert(cert_info['country'], cert_info['state'],
                                                      cert_info['organization'], cert_info['locality'],
                                                      cert_info['organization_unit'], cert_info['common_name'])
+
             cert_path = os.path.join(work_dir, 'server.crt')
             key_path = os.path.join(work_dir, 'server.key')
             with open(cert_path, 'w') as certfile:
@@ -91,15 +96,6 @@ class Honeypot(object):
                 logger.warning('Could not fetch public ip: {0}'.format(e))
         else:
             self.honeypot_ip = ''
-
-        self.status = {
-            'mode': 'Honeypot',
-            'ip_address': self.honeypot_ip,
-            'honeypot_id': self.config['general']['id'],
-            'total_sessions': 0,
-            'active_sessions': 0,
-            'enabled_capabilities': []
-        }
 
         # spawning time checker
         if self.config['timecheck']['enabled']:
@@ -153,7 +149,6 @@ class Honeypot(object):
 
                     logger.debug('Adding {0} capability with options: {1}'.format(cap_name, options))
                     self.servers.append(server)
-                    self.status['enabled_capabilities'].append(cap_name)
                     server_greenlet = Greenlet(server.start())
                     self.server_greenlets.append(server_greenlet)
 

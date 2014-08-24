@@ -25,6 +25,7 @@ import fcntl
 import shutil
 
 from OpenSSL import crypto
+import netifaces
 import zmq.green as zmq
 import gevent
 import requests
@@ -72,12 +73,7 @@ def create_self_signed_cert(cert_country, cert_state, cert_organization, cert_lo
 
     cert = crypto.X509()
     sub = cert.get_subject()
-
-    if cert_common_name:
-        sub.CN = cert_common_name
-    else:
-        # TODO: Autodetect ip of the current drone if now common names upplied
-        sub.CN = '127.0.0.1'
+    sub.CN = cert_common_name
     sub.C = cert_country
     sub.ST = cert_state
     sub.L = cert_locality
@@ -145,15 +141,18 @@ def find_offset(iso_file_path, needle):
         return None
 
 
-# Shamelessly stolen from
-# http://code.activestate.com/recipes/439094-get-the-ip-address-associated-with-a-network-inter/
-def get_local_ipaddress(ifname):
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    return socket.inet_ntoa(fcntl.ioctl(
-        s.fileno(),
-        0x8915,  # SIOCGIFADDR
-        struct.pack('256s', ifname[:15])
-    )[20:24])
+def get_most_likely_ip():
+    for interface_name in netifaces.interfaces():
+        if interface_name.startswith('lo'):
+            continue
+        # TODO: continue if network interface is down
+        addresses = netifaces.ifaddresses(interface_name)
+        if netifaces.AF_INET in addresses:
+            if 'addr' in addresses:
+                logger.debug('Found likely IP {0} on IF {1}'.format(interface_name, addresses['addr']))
+                return addresses['addr']
+
+    return '127.0.0.1'
 
 
 def update_config_file(configfile, options):
