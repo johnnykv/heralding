@@ -93,7 +93,6 @@
         var icon_id = $(this).attr("id");
         $('#logtable').data('clicked_id', drone_id);
         if (icon_id == 'info') {
-            console.log('info');
             $('#sessionTranscriptTable').datagrid('reload');
             $('#transcriptmodal').modal('show');
         }
@@ -151,7 +150,7 @@
 <div id="credentialsModal" class="modal hide fade" tabindex="-1">
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal">x</button>
-        <h2>Session Transcript</h2>
+        <h2>Credentials</h2>
     </div>
     <table id="credentialsTable" class="table table-bordered datagrid">
         <thead/>
