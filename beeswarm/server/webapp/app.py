@@ -130,36 +130,18 @@ def home():
         'nclients': db_session.query(Client).count(),
         'nsessions': db_session.query(Session).count(),
         'nbees': db_session.query(BaitSession).count(),
-        'nattacks': db_session.query(Session).filter(Session.classification_id != 'bait_session' and
-                                                     Session.classification_id is not None).count(),
+        'nattacks': db_session.query(Session).filter(Session.classification_id != 'bait_session')\
+                                             .filter(Session.classification_id is not None).count(),
         'attacks': {
-            'http': db_session.query(Session).filter(Session.classification_id != 'bait_session' and
-                                                     Session.classification_id is not None and
-                                                     Session.protocol == 'http').count(),
-            'vnc': db_session.query(Session).filter(Session.classification_id != 'bait_session' and
-                                                    Session.classification_id is not None and
-                                                    Session.protocol == 'vnc').count(),
-            'ssh': db_session.query(Session).filter(Session.classification_id != 'bait_session' and
-                                                    Session.classification_id is not None and
-                                                    Session.protocol == 'ssh').count(),
-            'ftp': db_session.query(Session).filter(Session.classification_id != 'bait_session' and
-                                                    Session.classification_id is not None and
-                                                    Session.protocol == 'ftp').count(),
-            'https': db_session.query(Session).filter(Session.classification_id != 'bait_session' and
-                                                      Session.classification_id is not None and
-                                                      Session.protocol == 'https').count(),
-            'pop3': db_session.query(Session).filter(Session.classification_id != 'bait_session' and
-                                                     Session.classification_id is not None and
-                                                     Session.protocol == 'pop3').count(),
-            'pop3s': db_session.query(Session).filter(Session.classification_id != 'bait_session' and
-                                                      Session.classification_id is not None and
-                                                      Session.protocol == 'pop3s').count(),
-            'smtp': db_session.query(Session).filter(Session.classification_id != 'bait_session' and
-                                                     Session.classification_id is not None and
-                                                     Session.protocol == 'smtp').count(),
-            'telnet': db_session.query(Session).filter(Session.classification_id != 'bait_session' and
-                                                       Session.classification_id is not None and
-                                                       Session.protocol == 'telnet').count(),
+            'http': get_num_attacks('http'),
+            'vnc': get_num_attacks('vnc'),
+            'ssh': get_num_attacks('ssh'),
+            'ftp': get_num_attacks('ftp'),
+            'https': get_num_attacks('https'),
+            'pop3': get_num_attacks('pop3'),
+            'pop3s': get_num_attacks('pop3s'),
+            'smtp': get_num_attacks('smtp'),
+            'telnet': get_num_attacks('telnet'),
         },
         'bees': {
             'successful': db_session.query(BaitSession).filter(BaitSession.did_login).count(),
@@ -175,6 +157,12 @@ def home():
     }
     return render_template('index.html', user=current_user, status=status, urls=urls)
 
+
+def get_num_attacks(protocol):
+    db_session = database_setup.get_session()
+    return db_session.query(Session).filter(Session.classification_id != 'bait_session')\
+                                    .filter(Session.classification_id is not None)\
+                                    .filter(Session.protocol == protocol).count()
 
 @app.route('/bait_users')
 @login_required

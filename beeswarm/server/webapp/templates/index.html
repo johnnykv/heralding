@@ -21,10 +21,28 @@
                     <th>%</th>
                 </tr>
                 <tr>
-                    <td>http</td>
-                    <td>{{ status.attacks.http }}</td>
+                    <td>telnet</td>
+                    <td>{{ status.attacks.telnet }}</td>
                     {% if status.nattacks > 0 %}
-                    <td>{{ '%0.2f' % (status.attacks.http/status.nattacks * 100) }}%</td>
+                    <td>{{ '%0.2f' % (status.attacks.telnet/status.nattacks * 100) }}%</td>
+                    {% else %}
+                    <td>No Attacks</td>
+                    {% endif %}
+                </tr>
+                <tr>
+                    <td>ssh</td>
+                    <td>{{ status.attacks.ssh }}</td>
+                    {% if status.nattacks > 0 %}
+                    <td>{{ '%0.2f' % (status.attacks.ssh/status.nattacks * 100) }}%</td>
+                    {% else %}
+                    <td>No Attacks</td>
+                    {% endif %}
+                </tr>
+                <tr>
+                    <td>pop3</td>
+                    <td>{{ status.attacks.pop3 }}</td>
+                    {% if status.nattacks > 0 %}
+                    <td>{{ '%0.2f' % (status.attacks.pop3/status.nattacks * 100) }}%</td>
                     {% else %}
                     <td>No Attacks</td>
                     {% endif %}
@@ -40,10 +58,10 @@
 
                 </tr>
                 <tr>
-                    <td>ssh</td>
-                    <td>{{ status.attacks.ssh }}</td>
+                    <td>http</td>
+                    <td>{{ status.attacks.http }}</td>
                     {% if status.nattacks > 0 %}
-                    <td>{{ '%0.2f' % (status.attacks.ssh/status.nattacks * 100) }}%</td>
+                    <td>{{ '%0.2f' % (status.attacks.http/status.nattacks * 100) }}%</td>
                     {% else %}
                     <td>No Attacks</td>
                     {% endif %}
@@ -62,24 +80,6 @@
                     <td>{{ status.attacks.pop3s }}</td>
                     {% if status.nattacks > 0 %}
                     <td>{{ '%0.2f' % (status.attacks.pop3s/status.nattacks * 100) }}%</td>
-                    {% else %}
-                    <td>No Attacks</td>
-                    {% endif %}
-                </tr>
-                <tr>
-                    <td>pop3</td>
-                    <td>{{ status.attacks.pop3 }}</td>
-                    {% if status.nattacks > 0 %}
-                    <td>{{ '%0.2f' % (status.attacks.pop3/status.nattacks * 100) }}%</td>
-                    {% else %}
-                    <td>No Attacks</td>
-                    {% endif %}
-                </tr>
-                <tr>
-                    <td>telnet</td>
-                    <td>{{ status.attacks.telnet }}</td>
-                    {% if status.nattacks > 0 %}
-                    <td>{{ '%0.2f' % (status.attacks.telnet/status.nattacks * 100) }}%</td>
                     {% else %}
                     <td>No Attacks</td>
                     {% endif %}
