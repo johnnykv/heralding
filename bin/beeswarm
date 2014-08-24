@@ -28,6 +28,7 @@ import os
 
 from gevent import Greenlet
 
+import beeswarm
 from beeswarm.drones.drone import Drone
 from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.server.server import Server
@@ -67,6 +68,7 @@ def setuplogging(logfile, verbose):
     file_log.setFormatter(formatter)
     root_logger.addHandler(file_log)
 
+
 class LogFilter(logging.Filter):
     def filter(self, rec):
         if rec.name == 'paramiko.transport':
@@ -95,6 +97,7 @@ if __name__ == '__main__':
     mode = None
     config = None
     config_file = None
+    logger.info('Initializing BeeSwarm version {0}'.format(beeswarm.version))
 
     if is_url(args.configurl):
         # meh, MiTM problem here... Acceptable? Workaround?

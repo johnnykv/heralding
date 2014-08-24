@@ -2,10 +2,11 @@ import multiprocessing
 from ez_setup import use_setuptools
 use_setuptools()
 from setuptools import setup, find_packages
+import beeswarm
 
 setup(
     name='Beeswarm',
-    version='0.4.0',
+    version=beeswarm.version,
     packages=find_packages(exclude=['bin', 'docs']),
     scripts=['bin/beeswarm'],
     url='https://github.com/honeynet/beeswarm',
