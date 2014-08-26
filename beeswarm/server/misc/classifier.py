@@ -93,6 +93,8 @@ class Classifier(object):
                              'matching session with id {1}'.format(bait_session.id, session_match.id))
                 bait_session.classification = db_session.query(Classification).filter(
                     Classification.type == 'bait_session').one()
+                bait_session.transcript = session_match.transcript
+                bait_session.session_data = session_match.session_data
                 db_session.add(bait_session)
                 db_session.delete(session_match)
             # else we classify it as a MiTM attack
