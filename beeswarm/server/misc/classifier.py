@@ -81,7 +81,7 @@ class Classifier(object):
             db_session = database_setup.get_session()
 
         bait_sessions = db_session.query(BaitSession).options(joinedload(BaitSession.authentication)) \
-            .filter(BaitSession.classification_id == 'unclassified') \
+            .filter(BaitSession.classification_id == 'pending') \
             .filter(BaitSession.did_complete == True) \
             .filter(BaitSession.timestamp < min_datetime).all()
 
@@ -117,7 +117,7 @@ class Classifier(object):
 
         sessions = db_session.query(Session).filter(Session.discriminator == None) \
             .filter(Session.timestamp <= min_datetime) \
-            .filter(Session.classification_id == 'unclassified') \
+            .filter(Session.classification_id == 'pending') \
             .all()
 
         for session in sessions:

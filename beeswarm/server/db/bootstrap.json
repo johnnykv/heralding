@@ -6,8 +6,8 @@
             "description_long": "Classification used for testing purposes."
         },
         {
-            "type": "unclassified",
-            "description_short": "Unclassified session",
+            "type": "pending",
+            "description_short": "Pending",
             "description_long": "A session that is pending classification."
         },
         {

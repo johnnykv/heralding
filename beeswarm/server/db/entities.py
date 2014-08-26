@@ -91,7 +91,7 @@ class Session(Base):
     destination_ip = Column(String)
     destination_port = Column(Integer)
     honeypot_id = Column(String, ForeignKey('honeypot.id'))
-    classification_id = Column(String, ForeignKey('classification.type'), nullable=False, default='unclassified')
+    classification_id = Column(String, ForeignKey('classification.type'), nullable=False, default='pending')
     classification = relationship('Classification')
 
 

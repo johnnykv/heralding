@@ -79,7 +79,7 @@ class SessionPersister(gevent.Greenlet):
         data = json.loads(session_json)
         logger.debug('Persisting {0} session: {1}'.format(session_type, data))
         db_session = database_setup.get_session()
-        classification = db_session.query(Classification).filter(Classification.type == 'unclassified').one()
+        classification = db_session.query(Classification).filter(Classification.type == 'pending').one()
         if data['honeypot_id'] is not None:
             _honeypot = db_session.query(Honeypot).filter(Honeypot.id == data['honeypot_id']).one()
         else:
