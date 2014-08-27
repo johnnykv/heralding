@@ -1,8 +1,10 @@
---allow-all-external
 --allow-unverified pyDes
+--allow-external pyDes
 pyzmq>=14.1.1
 fs
+pycrypto
 Crypto
+ecdsa
 cssselect
 nose
 gevent>=1.0
