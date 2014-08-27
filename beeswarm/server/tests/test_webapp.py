@@ -17,8 +17,6 @@ from beeswarm.server.webapp import app
 class WebappTests(unittest.TestCase):
     def setUp(self):
         app.app.config['WTF_CSRF_ENABLED'] = False
-        app.app.config['CERT_PATH'] = os.path.join(os.path.dirname(__file__), 'beeswarmcfg.json.test')
-        app.app.config['SERVER_CONFIG'] = os.path.join(os.path.dirname(__file__), 'beeswarmcfg.json.test')
         self.work_dir = tempfile.mkdtemp()
         self.config_actor = ConfigActor(os.path.join(os.path.dirname(__file__), 'beeswarmcfg.json.test'), self.work_dir)
         self.config_actor.start()
@@ -374,27 +372,6 @@ class WebappTests(unittest.TestCase):
         expected_result = [{u'direction': u'outgoing', u'data': u'whoami', u'time': u'{0}'.format(string_timestamp)},
                            {u'direction': u'outgoing', u'data': u'root\r\n', u'time': u'{0}'.format(string_timestamp)}]
         self.assertDictEqual(sorted(data)[0], sorted(expected_result)[0])
-
-
-    def test_settings(self):
-        """ Tests if new settings are successfully written to the config file """
-
-        self.login('test', 'test')
-        with open(app.app.config['SERVER_CONFIG'], 'r') as conf:
-            original_config = conf.read()
-        config_modified = os.stat(app.app.config['SERVER_CONFIG']).st_mtime
-        data = {
-            'bait_session_retain': 3,
-            'malicious_session_retain': 50,
-            'ignore_failed_bait_session': False
-        }
-        self.app.post('/settings', data=data, follow_redirects=True)
-        config_next_modified = os.stat(app.app.config['SERVER_CONFIG']).st_mtime
-        self.assertTrue(config_next_modified > config_modified)
-
-        # Restore original configuration
-        with open(app.app.config['SERVER_CONFIG'], 'w') as conf:
-            conf.write(original_config)
 
     def test_login_logout(self):
         """ Tests basic login/logout """

@@ -69,7 +69,6 @@ class Server(object):
         config_actor = ConfigActor(self.config_file, work_dir)
         config_actor.start()
         self.actors.append(config_actor)
-        gevent.sleep()
 
         persistanceActor = SessionPersister()
         persistanceActor.start()
@@ -83,12 +82,9 @@ class Server(object):
         database_setup.setup_db(os.path.join(self.config['sql']['connection_string']))
         self.app = app.app
         self.app.config['CERT_PATH'] = self.config['ssl']['certpath']
-        self.app.config['SERVER_CONFIG'] = self.config_file
         self.authenticator = Authenticator()
         self.authenticator.ensure_default_user()
-        gevent.sleep()
         gevent.spawn(self.message_proxy, work_dir)
-        gevent.sleep()
 
     # distributes messages between external and internal receivers and senders
     def message_proxy(self, work_dir):

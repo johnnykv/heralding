@@ -95,12 +95,6 @@ def config_subscriber():
 gevent.spawn(config_subscriber)
 
 
-@app.before_first_request
-def initialize():
-    # wait until we have received the first config publish
-    first_cfg_received.wait()
-
-
 def send_config_request(request):
     global config_actor_socket
     request_lock.acquire()
