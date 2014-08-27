@@ -17,5 +17,5 @@ setup(
     long_description=open('README.rst').read(),
     description='Honeytoken transmission, reception and analysis.',
     test_suite='nose.collector',
-    install_requires=open('requirements.txt').read().splitlines(),
+    install_requires=open('requirements.txt').read().splitlines()[2:],
 )
