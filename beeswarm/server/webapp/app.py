@@ -74,22 +74,6 @@ config_actor_socket.connect('ipc://configCommands')
 request_lock = gevent.lock.RLock()
 
 
-@app.before_first_request
-def initialize():
-    gevent.spawn(config_subscriber)
-    # wait until we have received the first config publish
-    first_cfg_received.wait()
-
-
-def send_config_request(request):
-    global config_actor_socket
-    request_lock.acquire()
-    try:
-        return send_zmq_request_socket(config_actor_socket, request)
-    finally:
-        request_lock.release()
-
-
 def config_subscriber():
     global config
     ctx = zmq.Context()
@@ -108,6 +92,22 @@ def config_subscriber():
                 first_cfg_received.set()
                 logger.debug('Config received')
 
+gevent.spawn(config_subscriber)
+
+
+@app.before_first_request
+def initialize():
+    # wait until we have received the first config publish
+    first_cfg_received.wait()
+
+
+def send_config_request(request):
+    global config_actor_socket
+    request_lock.acquire()
+    try:
+        return send_zmq_request_socket(config_actor_socket, request)
+    finally:
+        request_lock.release()
 
 @login_manager.user_loader
 def user_loader(userid):

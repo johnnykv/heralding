@@ -69,10 +69,12 @@ class Server(object):
         config_actor = ConfigActor(self.config_file, work_dir)
         config_actor.start()
         self.actors.append(config_actor)
+        gevent.sleep()
 
         persistanceActor = SessionPersister()
         persistanceActor.start()
         self.actors.append(persistanceActor)
+        gevent.sleep()
 
         self.workers = {}
         self.greenlets = []
@@ -84,6 +86,7 @@ class Server(object):
         self.app.config['SERVER_CONFIG'] = self.config_file
         self.authenticator = Authenticator()
         self.authenticator.ensure_default_user()
+        gevent.sleep()
         gevent.spawn(self.message_proxy, work_dir)
         gevent.sleep()
 
