@@ -80,7 +80,6 @@ def config_subscriber():
     subscriber_socket = ctx.socket(zmq.SUB)
     subscriber_socket.connect('ipc://configPublisher')
     subscriber_socket.setsockopt(zmq.SUBSCRIBE, Messages.CONFIG_FULL)
-    send_config_request(Messages.PUBLISH_CONFIG)
     while True:
         poller = zmq.Poller()
         poller.register(subscriber_socket, zmq.POLLIN)
@@ -92,8 +91,6 @@ def config_subscriber():
                 first_cfg_received.set()
                 logger.debug('Config received')
 
-gevent.spawn(config_subscriber)
-
 
 def send_config_request(request):
     global config_actor_socket
@@ -102,6 +99,9 @@ def send_config_request(request):
         return send_zmq_request_socket(config_actor_socket, request)
     finally:
         request_lock.release()
+
+gevent.spawn(config_subscriber)
+gevent.spawn_later(1, send_config_request, Messages.PUBLISH_CONFIG)
 
 @login_manager.user_loader
 def user_loader(userid):
