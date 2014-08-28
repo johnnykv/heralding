@@ -308,12 +308,12 @@ class Server(object):
             zmq_command_port = 5713
             server_hostname = raw_input('IP or hostname of server: ')
             if customize:
-                zmq_port = raw_input('TCP port for session data (default: 5712) : ')
-                if zmq_port != '':
+                zmq_port_input = raw_input('TCP port for session data (default: 5712) : ')
+                if zmq_port_input != '':
                     zmq_port = int(zmq_port)
 
-                zmq_command_port = raw_input('TCP port for drone commands(default: 5713) : ')
-                if zmq_command_port != '':
+                zmq_command_port_input = raw_input('TCP port for drone commands(default: 5713) : ')
+                if zmq_command_port_input != '':
                     zmq_command_port = int(zmq_port)
 
             # tmp actor while initializing
