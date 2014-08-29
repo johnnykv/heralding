@@ -291,19 +291,19 @@ def configure_honeypot(id):
         if form.capabilities__http__enabled.data:
             honeypot.add_capability('http', form.capabilities__http__port.data,
                                     {
-                                        'banner': form.capabilities__http__protocol_specific_data__banner,
+                                        'banner': form.capabilities__http__protocol_specific_data__banner.data,
                                     })
 
         if form.capabilities__https__enabled.data:
             honeypot.add_capability('https', form.capabilities__https__port.data,
                                     {
-                                        'banner': form.capabilities__https__protocol_specific_data__banner,
+                                        'banner': form.capabilities__https__protocol_specific_data__banner.data,
                                     })
 
         if form.capabilities__smtp__enabled.data:
             honeypot.add_capability('smtp', form.capabilities__smtp__port.data,
                                     {
-                                        'banner': form.capabilities__smtp__protocol_specific_data__banner,
+                                        'banner': form.capabilities__smtp__protocol_specific_data__banner.data,
                                     })
 
         if form.capabilities__vnc__enabled.data:
