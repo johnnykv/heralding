@@ -1,5 +1,5 @@
-Beeswarm |Build Status| |coverage| |landscape| 
-==============================================
+Beeswarm |Build Status| |coverage| |landscape| |version|
+==========================================================
 
 .. |Build Status| image:: https://travis-ci.org/honeynet/beeswarm.png?branch=master
                        :target: https://travis-ci.org/honeynet/beeswarm
@@ -8,6 +8,8 @@ Beeswarm |Build Status| |coverage| |landscape|
 .. |landscape| image:: https://landscape.io/github/honeynet/beeswarm/master/landscape.png
    :target: https://landscape.io/github/honeynet/beeswarm/master
    :alt: Code Health
+.. |version| image:: https://pypip.in/v/Beeswarm/badge.png
+   :target: https://pypi.python.org/pypi/Beeswarm/
    
 Beeswarm is a honeypot project which provides easy configuration, deployment and managment of honeypots.
 Beeswarm operates by deploying fake end-user systems (clients) and services (honeypots). Beeswarm uses these systems to provides
