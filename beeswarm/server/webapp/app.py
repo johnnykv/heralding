@@ -328,7 +328,7 @@ def configure_client(id):
         abort(404, 'Drone with id {0} not found or invalid.'.format(id))
     config_dict = send_config_request('{0} {1}'.format(Messages.DRONE_CONFIG, id))
     config_obj = DictWrapper(config_dict)
-    form = NewClientConfigForm(config_obj)
+    form = NewClientConfigForm(obj=config_obj)
     if not form.validate_on_submit():
         return render_template('configure-client.html', form=form, mode_name='Client', user=current_user)
     else:
