@@ -21,6 +21,7 @@ import _socket
 import json
 
 import ntplib
+
 import gevent
 from gevent import Greenlet
 from gevent.server import StreamServer
@@ -115,11 +116,16 @@ class Honeypot(object):
         ntp_poll = self.config['timecheck']['ntp_pool']
         while True:
             clnt = ntplib.NTPClient()
-            response = clnt.request(ntp_poll, version=3)
-            diff = response.offset
-            if abs(diff) >= 5:
-                logger.error('Timings found to be far off. ({0})'.format(diff))
-                sys.exit(1)
+            try:
+                response = clnt.request(ntp_poll, version=3)
+                diff = response.offset
+                if abs(diff) >= 15:
+                    logger.error('Timings found to be far off, shutting down drone ({0})'.format(diff))
+                    sys.exit(1)
+                else:
+                    logger.debug('Polled ntp server and found that drone has {0} seconds offset.'.format(diff))
+            except (ntplib.NTPException, _socket.error) as ex:
+                logger.warning('Error while polling ntp server: {0}'.format(ex))
             gevent.sleep(poll * 60 * 60)
 
     def start(self):
