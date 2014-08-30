@@ -173,13 +173,20 @@ class ConfigActor(Greenlet):
             for capability in honeypot.capabilities:
                 for client in clients:
                     # following three variables should be make somewhat user configurable again
-
-                    # the range in which to activate bait sessions
-                    activation_range = '00:00 - 23:59'
-                    # period to sleep before using activation_probability
-                    sleep_interval = '60'
-                    # the probability that a bait session will be activated, 1 is always activate
-                    activation_probability = 1
+                    client_timings = json.loads(client.bait_timings)
+                    if capability.protocol in client_timings:
+                        # the time range in which to activate the bait sessions
+                        activation_range = client_timings[capability.protocol]['active_range']
+                        # period to sleep before using activation_probability
+                        sleep_interval = client_timings[capability.protocol]['sleep_interval']
+                        # the probability that a bait session will be activated, 1 is always activate
+                        activation_probability = client_timings[capability.protocol]['activation_probability']
+                    else:
+                        logger.warning('Bait timings for {0} not found on client drone {1}({2}), using defaults instead'
+                                       .format(capability.protocol, client.name, client.id))
+                        activation_range = '00:00 - 23:59'
+                        sleep_interval = '60'
+                        activation_probability = 1
                     bait_credentials = random.choice(credentials)
                     client.add_bait(capability, activation_range, sleep_interval,
                                     activation_probability, bait_credentials.username, bait_credentials.password)
