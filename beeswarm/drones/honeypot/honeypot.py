@@ -193,14 +193,6 @@ class Honeypot(object):
         shutil.copytree(os.path.join(package_directory, 'drones/honeypot/data'), os.path.join(work_dir, 'data/'),
                         ignore=Honeypot._ignore_copy_files)
 
-        # this config file is for standalone operations, it will be overwritten during __init__
-        # if a config url is specified.
-        config_file = os.path.join(work_dir, 'beeswarmcfg.json.dist')
-        if not os.path.isfile('beeswarmcfg.json'):
-            logger.info('Copying configuration file to workdir.')
-            shutil.copyfile(os.path.join(package_directory, 'drones/honeypot/beeswarmcfg.json.dist'),
-                            os.path.join(work_dir, 'beeswarmcfg.json'))
-
     @staticmethod
     def _ignore_copy_files(path, content):
         to_ignore = []
