@@ -125,7 +125,7 @@ class ConfigActor(Greenlet):
     def _handle_command_bait_user_delete(self, data):
         bait_user_id = int(data)
         db_session = database_setup.get_session()
-        bait_user = db_session.query(BaitUser).filter(BaitUser.id == bait_user_id).one()
+        bait_user = db_session.query(BaitUser).filter(BaitUser.id == bait_user_id).first()
         if bait_user:
             db_session.delete(bait_user)
             db_session.commit()
@@ -314,7 +314,7 @@ class ConfigActor(Greenlet):
         drone_id = data
         logger.debug('Deleting drone: {0}'.format(drone_id))
         db_session = database_setup.get_session()
-        drone_to_delete = db_session.query(Drone).filter(Drone.id == drone_id).one()
+        drone_to_delete = db_session.query(Drone).filter(Drone.id == drone_id).first()
         if drone_to_delete:
             db_session.delete(drone_to_delete)
             db_session.commit()
