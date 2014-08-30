@@ -40,8 +40,8 @@
             <div id="http" class="tab-pane">
                 <fieldset>
                     <legend>HTTP Options</legend>
-                    {% for field in [form.http_active_range, form.http_sleep_interval,
-                    form.http_activation_probability] %}
+                    {% for field in [form.bait_timings__http__active_range, form.bait_timings__http__sleep_interval,
+                    form.bait_timings__http__activation_probability] %}
                     {% if not field|bootstrap_is_hidden_field %}
                     {{ macros.horizontal_field(field) }}
                     {%- endif %}
@@ -52,8 +52,8 @@
             <div id="https" class="tab-pane">
                 <fieldset>
                     <legend>HTTPs Options</legend>
-                    {% for field in [form.https_active_range, form.https_sleep_interval,
-                    form.https_activation_probability] %}
+                    {% for field in [form.bait_timings__https__active_range, form.bait_timings__https__sleep_interval,
+                    form.bait_timings__https__activation_probability] %}
                     {% if not field|bootstrap_is_hidden_field %}
                     {{ macros.horizontal_field(field) }}
                     {%- endif %}
@@ -64,8 +64,8 @@
             <div id="ftp" class="tab-pane">
                 <fieldset>
                     <legend>FTP Options</legend>
-                    {% for field in [form.ftp_active_range, form.ftp_sleep_interval,
-                    form.ftp_activation_probability] %}
+                    {% for field in [form.bait_timings__ftp__active_range, form.bait_timings__ftp__sleep_interval,
+                    form.bait_timings__ftp__activation_probability] %}
                     {% if not field|bootstrap_is_hidden_field %}
                     {{ macros.horizontal_field(field) }}
                     {%- endif %}
@@ -76,8 +76,8 @@
             <div id="smtp" class="tab-pane">
                 <fieldset>
                     <legend>SMTP Options</legend>
-                    {% for field in [form.smtp_active_range, form.smtp_sleep_interval,
-                    form.smtp_activation_probability] %}
+                    {% for field in [form.bait_timings__smtp__active_range, form.bait_timings__smtp__sleep_interval,
+                    form.bait_timings__smtp__activation_probability] %}
                     {% if not field|bootstrap_is_hidden_field %}
                     {{ macros.horizontal_field(field) }}
                     {%- endif %}
@@ -88,8 +88,8 @@
             <div id="vnc" class="tab-pane">
                 <fieldset>
                     <legend>VNC Options</legend>
-                    {% for field in [form.vnc_active_range, form.vnc_sleep_interval,
-                    form.vnc_activation_probability] %}
+                    {% for field in [form.bait_timings__vnc__active_range, form.bait_timings__vnc__sleep_interval,
+                    form.bait_timings__vnc__activation_probability] %}
                     {% if not field|bootstrap_is_hidden_field %}
                     {{ macros.horizontal_field(field) }}
                     {%- endif %}
@@ -100,8 +100,8 @@
             <div id="telnet" class="tab-pane">
                 <fieldset>
                     <legend>Telnet Options</legend>
-                    {% for field in [form.telnet_active_range, form.telnet_sleep_interval,
-                    form.telnet_activation_probability] %}
+                    {% for field in [form.bait_timings__telnet__active_range, form.bait_timings__telnet__sleep_interval,
+                    form.bait_timings__telnet__activation_probability] %}
                     {% if not field|bootstrap_is_hidden_field %}
                     {{ macros.horizontal_field(field) }}
                     {%- endif %}
@@ -112,8 +112,8 @@
             <div id="pop3" class="tab-pane">
                 <fieldset>
                     <legend>POP3 Options</legend>
-                    {% for field in [form.pop3_active_range, form.pop3_sleep_interval,
-                    form.pop3_activation_probability] %}
+                    {% for field in [form.bait_timings__pop3__active_range, form.bait_timings__pop3__sleep_interval,
+                    form.bait_timings__pop3__activation_probability] %}
                     {% if not field|bootstrap_is_hidden_field %}
                     {{ macros.horizontal_field(field) }}
                     {%- endif %}
@@ -124,8 +124,8 @@
             <div id="pop3s" class="tab-pane">
                 <fieldset>
                     <legend>POP3s Options</legend>
-                    {% for field in [form.pop3s_active_range, form.pop3s_sleep_interval,
-                    form.pop3s_activation_probability] %}
+                    {% for field in [form.bait_timings__pop3s__active_range, form.bait_timings__pop3s__sleep_interval,
+                    form.bait_timings__pop3s__activation_probability] %}
                     {% if not field|bootstrap_is_hidden_field %}
                     {{ macros.horizontal_field(field) }}
                     {%- endif %}
@@ -136,8 +136,8 @@
             <div id="ssh" class="tab-pane">
                 <fieldset>
                     <legend>SSH Options</legend>
-                    {% for field in [form.ssh_active_range, form.ssh_sleep_interval,
-                    form.ssh_activation_probability] %}
+                    {% for field in [form.bait_timings__ssh__active_range, form.bait_timings__ssh__sleep_interval,
+                    form.bait_timings__ssh__activation_probability] %}
                     {% if not field|bootstrap_is_hidden_field %}
                     {{ macros.horizontal_field(field) }}
                     {%- endif %}

@@ -270,6 +270,10 @@ class ConfigActor(Greenlet):
                     drone_config['baits'][bait.capability.honeypot_id] = {}
                 assert bait.capability.protocol not in drone_config['baits'][bait.capability.honeypot_id]
                 drone_config['baits'][bait.capability.honeypot_id][bait.capability.protocol] = _bait
+            if drone.bait_timings:
+                drone_config['bait_timings'] = json.loads(drone.bait_timings)
+            else:
+                drone_config['bait_timings'] = {}
 
         return drone_config
 

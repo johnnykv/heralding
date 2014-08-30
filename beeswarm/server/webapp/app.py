@@ -334,49 +334,49 @@ def configure_client(id):
     else:
         bait_timing_config = {
             'http': {
-                'active_range': form.http_active_range.data,
-                'sleep_interval': form.http_sleep_interval.data,
-                'activation_probability': form.http_activation_probability.data
+                'active_range': form.bait_timings__http__active_range.data,
+                'sleep_interval': form.bait_timings__http__sleep_interval.data,
+                'activation_probability': form.bait_timings__http__activation_probability.data
             },
             'ftp': {
-                'active_range': form.ftp_active_range.data,
-                'sleep_interval': form.ftp_sleep_interval.data,
-                'activation_probability': form.ftp_activation_probability.data
+                'active_range': form.bait_timings__ftp__active_range.data,
+                'sleep_interval': form.bait_timings__ftp__sleep_interval.data,
+                'activation_probability': form.bait_timings__ftp__activation_probability.data
             },
             'https': {
-                'active_range': form.https_active_range.data,
-                'sleep_interval': form.https_sleep_interval.data,
-                'activation_probability': form.https_activation_probability.data
+                'active_range': form.bait_timings__https__active_range.data,
+                'sleep_interval': form.bait_timings__https__sleep_interval.data,
+                'activation_probability': form.bait_timings__https__activation_probability.data
             },
             'pop3': {
-                'active_range': form.pop3_active_range.data,
-                'sleep_interval': form.pop3_sleep_interval.data,
-                'activation_probability': form.pop3_activation_probability.data
+                'active_range': form.bait_timings__pop3__active_range.data,
+                'sleep_interval': form.bait_timings__pop3__sleep_interval.data,
+                'activation_probability': form.bait_timings__pop3__activation_probability.data
             },
             'ssh': {
-                'active_range': form.ssh_active_range.data,
-                'sleep_interval': form.ssh_sleep_interval.data,
-                'activation_probability': form.ssh_activation_probability.data
+                'active_range': form.bait_timings__ssh__active_range.data,
+                'sleep_interval': form.bait_timings__ssh__sleep_interval.data,
+                'activation_probability': form.bait_timings__ssh__activation_probability.data
             },
             'pop3s': {
-                'active_range': form.pop3s_active_range.data,
-                'sleep_interval': form.pop3s_sleep_interval.data,
-                'activation_probability': form.pop3s_activation_probability.data
+                'active_range': form.bait_timings__pop3s__active_range.data,
+                'sleep_interval': form.bait_timings__pop3s__sleep_interval.data,
+                'activation_probability': form.bait_timings__pop3s__activation_probability.data
             },
             'smtp': {
-                'active_range': form.smtp_active_range.data,
-                'sleep_interval': form.smtp_sleep_interval.data,
-                'activation_probability': form.smtp_activation_probability.data
+                'active_range': form.bait_timings__smtp__active_range.data,
+                'sleep_interval': form.bait_timings__smtp__sleep_interval.data,
+                'activation_probability': form.bait_timings__smtp__activation_probability.data
             },
             'vnc': {
-                'active_range': form.vnc_active_range.data,
-                'sleep_interval': form.vnc_sleep_interval.data,
-                'activation_probability': form.vnc_activation_probability.data
+                'active_range': form.bait_timings__vnc__active_range.data,
+                'sleep_interval': form.bait_timings__vnc__sleep_interval.data,
+                'activation_probability': form.bait_timings__vnc__activation_probability.data
             },
             'telnet': {
-                'active_range': form.telnet_active_range.data,
-                'sleep_interval': form.telnet_sleep_interval.data,
-                'activation_probability': form.telnet_activation_probability.data
+                'active_range': form.bait_timings__telnet__active_range.data,
+                'sleep_interval': form.bait_timings__telnet__sleep_interval.data,
+                'activation_probability': form.bait_timings__telnet__activation_probability.data
             }
         }
 

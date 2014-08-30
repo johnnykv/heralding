@@ -77,50 +77,50 @@ class HoneypotConfigurationForm(Form):
 
 
 class NewClientConfigForm(Form):
-    http_active_range = TextField(validators=[validate_time_range], default='00:00 - 23:59',
+    bait_timings__http__active_range = TextField(validators=[validate_time_range], default='00:00 - 23:59',
                                   description='<small><em>hh:mm - hh:mm</em></small>', label='Activity Time')
-    http_sleep_interval = TextField(default=720, label='Sleep Interval')
-    http_activation_probability = TextField(default=0.4, label='Activation Probability')
+    bait_timings__http__sleep_interval = TextField(default=720, label='Sleep Interval')
+    bait_timings__http__activation_probability = TextField(default=0.4, label='Activation Probability')
 
-    https_active_range = TextField(validators=[validate_time_range], default='00:00 - 23:59',
+    bait_timings__https__active_range = TextField(validators=[validate_time_range], default='00:00 - 23:59',
                                    description='<small><em>hh:mm - hh:mm</em></small>', label='Activity Time')
-    https_sleep_interval = TextField(default=720, label='Sleep Interval')
-    https_activation_probability = TextField(default=0.4, label='Activation Probability')
+    bait_timings__https__sleep_interval = TextField(default=720, label='Sleep Interval')
+    bait_timings__https__activation_probability = TextField(default=0.4, label='Activation Probability')
 
-    pop3_active_range = TextField(validators=[validate_time_range], default='00:00 - 23:59',
+    bait_timings__pop3__active_range = TextField(validators=[validate_time_range], default='00:00 - 23:59',
                                   description='<small><em>hh:mm - hh:mm</em></small>', label='Activity Time')
-    pop3_sleep_interval = TextField(default=720, label='Sleep Interval')
-    pop3_activation_probability = TextField(default=0.4, label='Activation Probability')
+    bait_timings__pop3__sleep_interval = TextField(default=720, label='Sleep Interval')
+    bait_timings__pop3__activation_probability = TextField(default=0.4, label='Activation Probability')
 
-    pop3s_active_range = TextField(validators=[validate_time_range], default='00:00 - 23:59',
+    bait_timings__pop3s__active_range = TextField(validators=[validate_time_range], default='00:00 - 23:59',
                                    description='<small><em>hh:mm - hh:mm</em></small>', label='Activity Time')
-    pop3s_sleep_interval = TextField(default=720, label='Sleep Interval')
-    pop3s_activation_probability = TextField(default=0.4, label='Activation Probability')
+    bait_timings__pop3s__sleep_interval = TextField(default=720, label='Sleep Interval')
+    bait_timings__pop3s__activation_probability = TextField(default=0.4, label='Activation Probability')
 
-    smtp_active_range = TextField(validators=[validate_time_range], default='00:00 - 23:59',
+    bait_timings__smtp__active_range = TextField(validators=[validate_time_range], default='00:00 - 23:59',
                                   description='<small><em>hh:mm - hh:mm</em></small>', label='Activity Time')
-    smtp_sleep_interval = TextField(default=720, label='Sleep Interval')
-    smtp_activation_probability = TextField(default=0.4, label='Activation Probability')
+    bait_timings__smtp__sleep_interval = TextField(default=720, label='Sleep Interval')
+    bait_timings__smtp__activation_probability = TextField(default=0.4, label='Activation Probability')
 
-    vnc_active_range = TextField(validators=[validate_time_range], default='00:00 - 23:59',
+    bait_timings__vnc__active_range = TextField(validators=[validate_time_range], default='00:00 - 23:59',
                                  description='<small><em>hh:mm - hh:mm</em></small>', label='Activity Time')
-    vnc_sleep_interval = TextField(default=720, label='Sleep Interval')
-    vnc_activation_probability = TextField(default=0.4, label='Activation Probability')
+    bait_timings__vnc__sleep_interval = TextField(default=720, label='Sleep Interval')
+    bait_timings__vnc__activation_probability = TextField(default=0.4, label='Activation Probability')
 
-    telnet_active_range = TextField(validators=[validate_time_range], default='00:00 - 23:59',
+    bait_timings__telnet__active_range = TextField(validators=[validate_time_range], default='00:00 - 23:59',
                                     description='<small><em>hh:mm - hh:mm</em></small>', label='Activity Time')
-    telnet_sleep_interval = TextField(default=720, label='Sleep Interval')
-    telnet_activation_probability = TextField(default=0.4, label='Activation Probability')
+    bait_timings__telnet__sleep_interval = TextField(default=720, label='Sleep Interval')
+    bait_timings__telnet__activation_probability = TextField(default=0.4, label='Activation Probability')
 
-    ssh_active_range = TextField(validators=[validate_time_range], default='00:00 - 23:59',
+    bait_timings__ssh__active_range = TextField(validators=[validate_time_range], default='00:00 - 23:59',
                                  description='<small><em>hh:mm - hh:mm</em></small>', label='Activity Time')
-    ssh_sleep_interval = TextField(default=720, label='Sleep Interval')
-    ssh_activation_probability = TextField(default=0.4, label='Activation Probability')
+    bait_timings__ssh__sleep_interval = TextField(default=720, label='Sleep Interval')
+    bait_timings__ssh__activation_probability = TextField(default=0.4, label='Activation Probability')
 
-    ftp_active_range = TextField(validators=[validate_time_range], default='00:00 - 23:59',
+    bait_timings__ftp__active_range = TextField(validators=[validate_time_range], default='00:00 - 23:59',
                                  description='<small><em>hh:mm - hh:mm</em></small>', label='Activity Time')
-    ftp_sleep_interval = TextField(default=720, label='Sleep Interval')
-    ftp_activation_probability = TextField(default=0.4, label='Activation Probability')
+    bait_timings__ftp__sleep_interval = TextField(default=720, label='Sleep Interval')
+    bait_timings__ftp__activation_probability = TextField(default=0.4, label='Activation Probability')
 
 
 class LoginForm(Form):
