@@ -59,6 +59,11 @@ class Honeypot(object):
         self.config = config
         self.key = key
         self.cert = cert
+        self._servers = []
+        self._server_greenlets = []
+        # will contain Session objects
+        self._sessions = {}
+        self._session_consumer = None
 
         # TODO: pass honeypot otherwise
         Session.honeypot_id = self.config['general']['id']
@@ -119,14 +124,9 @@ class Honeypot(object):
 
     def start(self):
         """ Starts services. """
-        self.servers = []
-        self.server_greenlets = []
-        # will contain Session objects
-        self.sessions = {}
-
         # greenlet to consume the provided sessions
-        self.session_consumer = Consumer(self.sessions, self.honeypot_ip, self.config)
-        Greenlet.spawn(self.session_consumer.start)
+        self._session_consumer = Consumer(self._sessions, self.honeypot_ip, self.config)
+        Greenlet.spawn(self._session_consumer.start)
 
         # protocol handlers
         for c in handlerbase.HandlerBase.__subclasses__():
@@ -137,7 +137,7 @@ class Honeypot(object):
                 port = self.config['capabilities'][cap_name]['port']
                 # carve out the options for this specific service
                 options = self.config['capabilities'][cap_name]
-                cap = c(self.sessions, options, self.work_dir)
+                cap = c(self._sessions, options, self.work_dir)
 
                 try:
                     # Convention: All capability names which end in 's' will be wrapped in ssl.
@@ -148,9 +148,9 @@ class Honeypot(object):
                         server = StreamServer(('0.0.0.0', port), cap.handle_session)
 
                     logger.debug('Adding {0} capability with options: {1}'.format(cap_name, options))
-                    self.servers.append(server)
+                    self._servers.append(server)
                     server_greenlet = Greenlet(server.start())
-                    self.server_greenlets.append(server_greenlet)
+                    self._server_greenlets.append(server_greenlet)
 
                 except _socket.error as ex:
                     logger.error("Could not start {0} server on port {1}. Error: {2}".format(c.__name__, port, ex))
@@ -159,17 +159,17 @@ class Honeypot(object):
 
         logger.info("Honeypot running.")
 
-        gevent.joinall(self.server_greenlets)
+        gevent.joinall(self._server_greenlets)
 
     def stop(self):
         """Stops services"""
-        for s in self.servers:
+        for s in self._servers:
             s.stop()
 
-        for g in self.server_greenlets:
+        for g in self._server_greenlets:
             g.kill()
-
-        self.session_consumer.stop()
+        if self._session_consumer:
+            self._session_consumer.stop()
         logger.info('All workers stopped.')
 
     @staticmethod

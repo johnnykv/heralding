@@ -68,4 +68,4 @@ class HoneypotTests(unittest.TestCase):
         gevent.spawn(sut.start)
         gevent.sleep(1)
         # number of capabilities (workers). This value must be updated when adding new capabilities
-        self.assertEquals(9, len(sut.servers))
+        self.assertEquals(9, len(sut._servers))
