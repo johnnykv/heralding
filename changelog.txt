@@ -1,0 +1,25 @@
+0.5.0
+ - Breaks backwards compatibility!
+ - Added possibility to configure bait session timings.
+ - Better handling of NTP errors.
+
+0.4.13
+ - Error handling when requesting initial config from non-responding server.
+
+0.4.12
+ - Fixed serialization bug when processing banners.
+
+0.4.11
+- Fixed default ports that was not honored during --customize.
+
+0.4.10
+- Delaying config request.
+
+0.4.9
+- Workaround for config message.
+
+0.4.8
+- Fixed missing requirements.
+
+0.4.7
+- Fixed whitespace after shebang.

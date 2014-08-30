@@ -59,6 +59,7 @@ class Client(Drone):
     bait_sessions = relationship("BaitSession", cascade="all, delete-orphan", backref='client')
 
     baits = relationship('DroneEdge', cascade='all, delete-orphan', backref='client')
+    bait_timings = Column(String)
 
     def add_bait(self, capability, activation_range, sleep_interval, activation_probability, username, password):
         bait = DroneEdge(capability=capability, activation_range=activation_range, sleep_interval=sleep_interval,

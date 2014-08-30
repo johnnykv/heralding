@@ -326,8 +326,67 @@ def configure_client(id):
     drone = db_session.query(Drone).filter(Drone.id == id).one()
     if drone.discriminator != 'client' or drone is None:
         abort(404, 'Drone with id {0} not found or invalid.'.format(id))
-    send_config_request('{0} {1}'.format(Messages.DRONE_CONFIG_CHANGED, drone.id))
-    return render_template('finish-config-client.html', drone_id=drone.id, user=current_user)
+    config_dict = send_config_request('{0} {1}'.format(Messages.DRONE_CONFIG, id))
+    config_obj = DictWrapper(config_dict)
+    form = NewClientConfigForm(config_obj)
+    if not form.validate_on_submit():
+        return render_template('configure-client.html', form=form, mode_name='Client', user=current_user)
+    else:
+        bait_timing_config = {
+            'http': {
+                'active_range': form.http_active_range.data,
+                'sleep_interval': form.http_sleep_interval.data,
+                'activation_probability': form.http_activation_probability.data
+            },
+            'ftp': {
+                'active_range': form.ftp_active_range.data,
+                'sleep_interval': form.ftp_sleep_interval.data,
+                'activation_probability': form.ftp_activation_probability.data
+            },
+            'https': {
+                'active_range': form.https_active_range.data,
+                'sleep_interval': form.https_sleep_interval.data,
+                'activation_probability': form.https_activation_probability.data
+            },
+            'pop3': {
+                'active_range': form.pop3_active_range.data,
+                'sleep_interval': form.pop3_sleep_interval.data,
+                'activation_probability': form.pop3_activation_probability.data
+            },
+            'ssh': {
+                'active_range': form.ssh_active_range.data,
+                'sleep_interval': form.ssh_sleep_interval.data,
+                'activation_probability': form.ssh_activation_probability.data
+            },
+            'pop3s': {
+                'active_range': form.pop3s_active_range.data,
+                'sleep_interval': form.pop3s_sleep_interval.data,
+                'activation_probability': form.pop3s_activation_probability.data
+            },
+            'smtp': {
+                'active_range': form.smtp_active_range.data,
+                'sleep_interval': form.smtp_sleep_interval.data,
+                'activation_probability': form.smtp_activation_probability.data
+            },
+            'vnc': {
+                'active_range': form.vnc_active_range.data,
+                'sleep_interval': form.vnc_sleep_interval.data,
+                'activation_probability': form.vnc_activation_probability.data
+            },
+            'telnet': {
+                'active_range': form.telnet_active_range.data,
+                'sleep_interval': form.telnet_sleep_interval.data,
+                'activation_probability': form.telnet_activation_probability.data
+            }
+        }
+
+        drone.bait_timings = json.dumps(bait_timing_config)
+        db_session.add(drone)
+        db_session.commit()
+
+        send_config_request('{0} {1}'.format(Messages.DRONE_CONFIG_CHANGED, drone.id))
+        return render_template('finish-config-client.html', drone_id=drone.id, user=current_user)
+
 
 
 @app.route('/ws/drone/configure/<id>', methods=['GET', 'POST'])
