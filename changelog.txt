@@ -1,0 +1,24 @@
+0.4.14
+ - Handling simultaneous deletion of drones and bait users
+ - Fixed bug where default bait users was created on every startup
+
+0.4.13
+ - Error handling when requesting initial config from non-responding server.
+
+0.4.12
+ - Fixed serialization bug when processing banners.
+
+0.4.11
+- Fixed default ports that was not honored during --customize.
+
+0.4.10
+- Delaying config request.
+
+0.4.9
+- Workaround for config message.
+
+0.4.8
+- Fixed missing requirements.
+
+0.4.7
+- Fixed whitespace after shebang.
