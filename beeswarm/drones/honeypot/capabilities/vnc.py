@@ -20,9 +20,6 @@ import SocketServer
 
 from beeswarm.drones.honeypot.capabilities.handlerbase import HandlerBase
 
-
-
-
 # Import the constants defined for the VNC protocol
 from beeswarm.shared.vnc_constants import *
 
@@ -60,12 +57,11 @@ class BeeVNCHandler(SocketServer.StreamRequestHandler):
         client_response_ = self.request.recv(1024)
 
         # This could result in an ugly log file, since the des_challenge is just an array of 4 bytes
-        self.session.try_auth('des_challenge', challenge=repr(challenge), response=repr(client_response_))
-        self.terminate()
-
-    def terminate(self):
-        # Sends authentication failed to the client
-        self.request.send(AUTH_FAILED)
+        self.session.try_auth('des_challenge', challenge=challenge, response=client_response_)
+        if self.session.authenticated:
+            self.request.send(AUTH_SUCCESSFUL)
+        else:
+            self.request.send(AUTH_FAILED)
         self.finish()
 
 

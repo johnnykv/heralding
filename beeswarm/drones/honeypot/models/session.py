@@ -18,7 +18,7 @@ import logging
 from datetime import datetime
 
 from beeswarm.shared.models.base_session import BaseSession
-
+from beeswarm.shared.misc.rfbes import RFBDes
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +71,19 @@ class Session(BaseSession):
                 _, ideal_digest = ideal_response.split()
                 if ideal_digest == digest:
                     authenticated = True
+        elif _type == 'des_challenge':
+            challenge = kwargs.get('challenge')
+            response = kwargs.get('response')
+            for valid_password in self.users.values():
+                aligned_password = (valid_password + '\0' * 8)[:8]
+                des = RFBDes(aligned_password)
+                expected_response = des.encrypt(challenge)
+                if response == expected_response:
+                    authenticated = True
+                    kwargs['password'] = aligned_password
+                    break
+        else:
+            assert False
 
         if authenticated:
             self.authenticated = True

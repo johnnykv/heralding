@@ -1,6 +1,9 @@
+0.4.15:
+ - Fixed bug involving VNC bait sessions getting classified wrong.
+
 0.4.14
- - Handling simultaneous deletion of drones and bait users
- - Fixed bug where default bait users was created on every startup
+ - Handling simultaneous deletion of drones and bait users.
+ - Fixed bug where default bait users was created on every startup.
 
 0.4.13
  - Error handling when requesting initial config from non-responding server.
