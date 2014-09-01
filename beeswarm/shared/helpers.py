@@ -149,9 +149,13 @@ def get_most_likely_ip():
         # TODO: continue if network interface is down
         addresses = netifaces.ifaddresses(interface_name)
         if netifaces.AF_INET in addresses:
-            if 'addr' in addresses:
-                logger.debug('Found likely IP {0} on IF {1}'.format(interface_name, addresses['addr']))
-                return addresses['addr']
+            for item in addresses[netifaces.AF_INET]:
+                if 'addr' in item:
+                    logger.debug('Found likely IP {0} on interface {1}'.format(item['addr'], interface_name))
+                    return item['addr']
+                    # well, actually the interface could have more IP's... But for now we assume that the IP
+                    # we want is the first in the list on the IF.
+                    break
 
     return '127.0.0.1'
 
