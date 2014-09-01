@@ -1,5 +1,8 @@
-import zmq.green as zmq
+try:
+    import zmq.green as zmq
+    zmq_context = zmq.Context()
+except ImportError:
+    pass
 
 version = '0.4.15'
 
-zmq_context = zmq.Context()
