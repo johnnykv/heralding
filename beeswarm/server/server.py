@@ -54,18 +54,17 @@ class Server(object):
 
         self.work_dir = work_dir
         self.config_file = 'beeswarmcfg.json'
-
         if config is None:
             Server.prepare_environment(work_dir, customize)
             with open(os.path.join(work_dir, self.config_file), 'r') as config_file:
                 self.config = json.load(config_file, object_hook=asciify)
         else:
             self.config = config
-
         # list of all self-running (actor) objects that receive or send
         # messages on one or more zmq queues
         self.actors = []
 
+        gevent.spawn(self.message_proxy, work_dir)
         config_actor = ConfigActor(self.config_file, work_dir)
         config_actor.start()
         self.actors.append(config_actor)
@@ -84,7 +83,6 @@ class Server(object):
         self.app.config['CERT_PATH'] = self.config['ssl']['certpath']
         self.authenticator = Authenticator()
         self.authenticator.ensure_default_user()
-        gevent.spawn(self.message_proxy, work_dir)
 
     # distributes messages between external and internal receivers and senders
     def message_proxy(self, work_dir):
@@ -93,8 +91,6 @@ class Server(object):
         drone_data_outbound is for commands to the drones, topic must either be a drone ID or all for sending
                             a broadcast message to all drones
         """
-        ctx = zmq.Context()
-
         public_keys_dir = os.path.join(work_dir, 'certificates', 'public_keys')
         secret_keys_dir = os.path.join(work_dir, 'certificates', 'private_keys')
 
@@ -108,13 +104,13 @@ class Server(object):
         # external interfaces for communicating with drones
         server_secret_file = os.path.join(secret_keys_dir, 'beeswarm_server.pri')
         server_public, server_secret = load_certificate(server_secret_file)
-        drone_data_inbound = ctx.socket(zmq.PULL)
+        drone_data_inbound = beeswarm.zmq_context.socket(zmq.PULL)
         drone_data_inbound.curve_secretkey = server_secret
         drone_data_inbound.curve_publickey = server_public
         drone_data_inbound.curve_server = True
         drone_data_inbound.bind('tcp://*:{0}'.format(self.config['network']['zmq_port']))
 
-        drone_data_outbound = ctx.socket(zmq.PUB)
+        drone_data_outbound = beeswarm.zmq_context.socket(zmq.PUB)
         drone_data_outbound.curve_secretkey = server_secret
         drone_data_outbound.curve_publickey = server_public
         drone_data_outbound.curve_server = True
@@ -122,12 +118,12 @@ class Server(object):
 
         # internal interfaces
         # all inbound session data from drones will be replayed in this socket
-        sessionPublisher = ctx.socket(zmq.PUB)
-        sessionPublisher.bind('ipc://sessionPublisher')
+        sessionPublisher = beeswarm.zmq_context.socket(zmq.PUB)
+        sessionPublisher.bind('inproc://sessionPublisher')
 
         # all commands received on this will be published on the external interface
-        drone_command_receiver = ctx.socket(zmq.PULL)
-        drone_command_receiver.bind('ipc://droneCommandReceiver')
+        drone_command_receiver = beeswarm.zmq_context.socket(zmq.PULL)
+        drone_command_receiver.bind('inproc://droneCommandReceiver')
 
         poller = zmq.Poller()
         poller.register(drone_data_inbound, zmq.POLLIN)
@@ -184,7 +180,7 @@ class Server(object):
                     db_session.commit()
                 # drons want it's config transmitted
                 elif topic == Messages.DRONE_CONFIG:
-                    config_dict = send_zmq_request('ipc://configCommands', '{0} {1}'.format(Messages.DRONE_CONFIG,
+                    config_dict = send_zmq_request('inproc://configCommands', '{0} {1}'.format(Messages.DRONE_CONFIG,
                                                                                             drone_id))
                     drone_data_outbound.send('{0} {1} {2}'.format(drone_id, Messages.CONFIG, json.dumps(config_dict)))
                 else:
@@ -317,12 +313,12 @@ class Server(object):
                     zmq_command_port = int(zmq_port)
 
             # tmp actor while initializing
-            config_actor = ConfigActor('beeswarmcfg.json', work_dir)
+            config_actor = ConfigActor('beeswarmcfg.json', work_dir, True)
             config_actor.start()
-
-            context = zmq.Context()
+            context = beeswarm.zmq_context
             socket = context.socket(zmq.REQ)
-            socket.connect('ipc://configCommands')
+            gevent.sleep()
+            socket.connect('inproc://configCommands')
             socket.send('{0} {1}'.format(Messages.GEN_ZMQ_KEYS, 'beeswarm_server'))
             result = socket.recv()
             if result.split(' ', 1)[0] == Messages.OK:
@@ -352,6 +348,5 @@ class Server(object):
 
             }
             )))
-
             socket.recv()
             config_actor.close()

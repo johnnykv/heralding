@@ -24,6 +24,7 @@ from gevent import Greenlet
 import zmq.green as zmq
 from zmq.auth.certs import create_certificates
 
+import beeswarm
 from beeswarm.shared.message_enum import Messages
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, Honeypot, Drone, DroneEdge, BaitUser
@@ -33,38 +34,48 @@ logger = logging.getLogger(__name__)
 
 
 class ConfigActor(Greenlet):
-    def __init__(self, config_file, work_dir):
+    def __init__(self, config_file, work_dir, command_requests_only=False):
         Greenlet.__init__(self)
         self.config_file = os.path.join(work_dir, config_file)
+        self.commands_only = command_requests_only
         if not os.path.exists(self.config_file):
             self.config = {}
             self._save_config_file()
         self.config = json.load(open(self.config_file, 'r'))
         self.work_dir = work_dir
 
-        context = zmq.Context()
-        self.config_publisher = context.socket(zmq.PUB)
+        context = beeswarm.zmq_context
         self.config_commands = context.socket(zmq.REP)
-        self.drone_command_receiver = context.socket(zmq.PUSH)
+        self.config_publisher = None
+        self.drone_command_receiver = None
+
+        if not self.commands_only:
+            self.config_publisher = context.socket(zmq.PUB)
+            self.drone_command_receiver = context.socket(zmq.PUSH)
+
         self.enabled = True
 
     def close(self):
-        self.config_publisher.close()
-        self.config_commands.close()
+        if self.config_publisher:
+            self.config_publisher.close()
+        if self.config_commands:
+            self.config_commands.close()
         self.enabled = False
 
     def _run(self):
         # start accepting incomming messages
-        self.config_commands.bind('ipc://configCommands')
-        self.config_publisher.bind('ipc://configPublisher')
-        self.drone_command_receiver.connect('ipc://droneCommandReceiver')
 
-        # initial publish of config
-        self._publish_config()
+        self.config_commands.bind('inproc://configCommands')
+        if not self.commands_only:
+            self.config_publisher.bind('inproc://configPublisher')
+            self.drone_command_receiver.connect('inproc://droneCommandReceiver')
+            # initial publish of config
+            self._publish_config()
 
         poller = zmq.Poller()
         poller.register(self.config_commands, zmq.POLLIN)
-        poller.register(self.config_publisher, zmq.POLLIN)
+        if not self.commands_only:
+            poller.register(self.config_publisher, zmq.POLLIN)
         while self.enabled:
             socks = dict(poller.poll(500))
             if self.config_commands in socks and socks[self.config_commands] == zmq.POLLIN:
@@ -267,8 +278,9 @@ class ConfigActor(Greenlet):
         return drone_config
 
     def _publish_config(self):
-        logger.debug('Sending config to subscribers.')
-        self.config_publisher.send('{0} {1}'.format(Messages.CONFIG_FULL, json.dumps(self.config)))
+        if not self.commands_only:
+            logger.debug('Sending config to subscribers.')
+            self.config_publisher.send('{0} {1}'.format(Messages.CONFIG_FULL, json.dumps(self.config)))
 
     def _save_config_file(self):
         with open(self.config_file, 'w+') as config_file:

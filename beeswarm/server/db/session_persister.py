@@ -21,6 +21,7 @@ import zmq.green as zmq
 import gevent
 from gevent import Greenlet
 
+import beeswarm
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, BaitSession, Session, Honeypot, Authentication, Classification, \
     Transcript
@@ -34,19 +35,19 @@ logger = logging.getLogger(__name__)
 class SessionPersister(gevent.Greenlet):
     def __init__(self):
         Greenlet.__init__(self)
-        ctx = zmq.Context()
+        ctx = beeswarm.zmq_context
         self.subscriber_sessions = ctx.socket(zmq.SUB)
-        self.subscriber_sessions.connect('ipc://sessionPublisher')
+        self.subscriber_sessions.connect('inproc://sessionPublisher')
         self.subscriber_sessions.setsockopt(zmq.SUBSCRIBE, '')
         self.first_cfg_received = gevent.event.Event()
         self.config = None
 
     def config_subscriber(self):
-        ctx = zmq.Context()
+        ctx = beeswarm.zmq_context
         subscriber_config = ctx.socket(zmq.SUB)
-        subscriber_config.connect('ipc://configPublisher')
+        subscriber_config.connect('inproc://configPublisher')
         subscriber_config.setsockopt(zmq.SUBSCRIBE, '')
-        send_zmq_request('ipc://configCommands', Messages.PUBLISH_CONFIG)
+        send_zmq_request('inproc://configCommands', Messages.PUBLISH_CONFIG)
 
         while True:
             poller = zmq.Poller()

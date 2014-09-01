@@ -42,6 +42,7 @@ from beeswarm.server.db.entities import Client, BaitSession, Session, Honeypot, 
     Authentication
 from beeswarm.shared.helpers import send_zmq_request_socket
 from beeswarm.shared.message_enum import Messages
+import beeswarm
 
 
 def is_hidden_field_filter(field):
@@ -68,17 +69,17 @@ first_cfg_received = gevent.event.Event()
 # keys used for adding new drones to the system
 drone_keys = []
 
-context = zmq.Context()
+context = beeswarm.zmq_context
 config_actor_socket = context.socket(zmq.REQ)
-config_actor_socket.connect('ipc://configCommands')
+config_actor_socket.connect('inproc://configCommands')
 request_lock = gevent.lock.RLock()
 
 
 def config_subscriber():
     global config
-    ctx = zmq.Context()
+    ctx = beeswarm.zmq_context
     subscriber_socket = ctx.socket(zmq.SUB)
-    subscriber_socket.connect('ipc://configPublisher')
+    subscriber_socket.connect('inproc://configPublisher')
     subscriber_socket.setsockopt(zmq.SUBSCRIBE, Messages.CONFIG_FULL)
     while True:
         poller = zmq.Poller()
@@ -378,7 +379,9 @@ def drone_key(key):
         drone = Drone(id=drone_id)
         db_session.add(drone)
         db_session.commit()
+        print 'asking for config'
         config_json = send_config_request('{0} {1}'.format(Messages.DRONE_CONFIG, drone_id))
+        print 'got config'
         return json.dumps(config_json)
 
 
@@ -608,9 +611,9 @@ def settings():
 
 
 def update_config(options):
-    context = zmq.Context()
+    context = beeswarm.zmq_context
     socket = context.socket(zmq.REQ)
-    socket.connect('ipc://configCommands')
+    socket.connect('inproc://configCommands')
     socket.send('{0} {1}'.format(Messages.SET, json.dumps(options)))
     reply = socket.recv()
     if reply != Messages.OK:

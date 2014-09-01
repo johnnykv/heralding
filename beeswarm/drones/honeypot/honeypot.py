@@ -89,8 +89,8 @@ class Honeypot(object):
                 certfile.write(cert)
             with open(key_path, 'w') as keyfile:
                 keyfile.write(priv_key)
-            send_zmq_push('ipc://serverRelay', '{0} {1} {2}'.format(Messages.KEY, self.id, keyfile))
-            send_zmq_push('ipc://serverRelay', '{0} {1} {2}'.format(Messages.CERT, self.id, cert))
+            send_zmq_push('inproc://serverRelay', '{0} {1} {2}'.format(Messages.KEY, self.id, keyfile))
+            send_zmq_push('inproc://serverRelay', '{0} {1} {2}'.format(Messages.CERT, self.id, cert))
 
         if self.config['general']['fetch_ip']:
             try:
