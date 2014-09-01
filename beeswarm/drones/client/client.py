@@ -29,7 +29,7 @@ from beeswarm.drones.client.models.session import BaitSession
 from beeswarm.drones.client.models.dispatcher import BaitDispatcher
 from beeswarm.shared.asciify import asciify
 from beeswarm.shared.helpers import drop_privileges
-from beeswarm.shared.helpers import extract_keys
+from beeswarm.shared.helpers import extract_keys, get_most_likely_ip
 
 # Do not remove this import, it is used to autodetect the capabilities.
 
@@ -61,7 +61,7 @@ class Client(object):
             self.my_ip = urllib2.urlopen('http://api-sth01.exip.org/?call=ip').read()
             logger.info('Fetched {0} as my external ip.'.format(self.my_ip))
         else:
-            self.my_ip = '127.0.0.1'
+            self.my_ip = get_most_likely_ip()
 
         self.dispatcher_greenlets = []
 
