@@ -44,7 +44,7 @@ class ConfigActor(Greenlet):
         self.config = json.load(open(self.config_file, 'r'))
         self.work_dir = work_dir
 
-        context = beeswarm.zmq_context
+        context = beeswarm.shared.zmq_context
         self.config_commands = context.socket(zmq.REP)
         self.config_publisher = None
         self.drone_command_receiver = None

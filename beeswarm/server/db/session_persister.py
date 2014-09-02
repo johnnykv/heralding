@@ -22,6 +22,7 @@ import gevent
 from gevent import Greenlet
 
 import beeswarm
+import beeswarm.shared
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, BaitSession, Session, Honeypot, Authentication, Classification, \
     Transcript
@@ -45,7 +46,7 @@ class SessionPersister(gevent.Greenlet):
             count = db_session.query(Session).delete()
             logging.info('Deleting {0} sessions on startup.'.format(count))
             db_session.commit()
-        ctx = beeswarm.zmq_context
+        ctx = beeswarm.shared.zmq_context
         self.subscriber_sessions = ctx.socket(zmq.SUB)
         self.subscriber_sessions.connect('inproc://sessionPublisher')
         self.subscriber_sessions.setsockopt(zmq.SUBSCRIBE, '')
@@ -53,7 +54,7 @@ class SessionPersister(gevent.Greenlet):
         self.config = None
 
     def config_subscriber(self):
-        ctx = beeswarm.zmq_context
+        ctx = beeswarm.shared.zmq_context
         subscriber_config = ctx.socket(zmq.SUB)
         subscriber_config.connect('inproc://configPublisher')
         subscriber_config.setsockopt(zmq.SUBSCRIBE, '')

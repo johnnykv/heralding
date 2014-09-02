@@ -35,6 +35,7 @@ from wtforms import HiddenField
 
 from beeswarm.server.webapp.auth import Authenticator
 import beeswarm
+import beeswarm.shared
 from forms import HoneypotConfigurationForm, NewClientConfigForm, LoginForm, SettingsForm
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, BaitSession, Session, Honeypot, User, BaitUser, Transcript, Drone, \
@@ -68,7 +69,7 @@ first_cfg_received = gevent.event.Event()
 # keys used for adding new drones to the system
 drone_keys = []
 
-context = beeswarm.zmq_context
+context = beeswarm.shared.zmq_context
 config_actor_socket = context.socket(zmq.REQ)
 config_actor_socket.connect('inproc://configCommands')
 request_lock = gevent.lock.RLock()
@@ -76,7 +77,7 @@ request_lock = gevent.lock.RLock()
 
 def config_subscriber():
     global config
-    ctx = beeswarm.zmq_context
+    ctx = beeswarm.shared.zmq_context
     subscriber_socket = ctx.socket(zmq.SUB)
     subscriber_socket.connect('inproc://configPublisher')
     subscriber_socket.setsockopt(zmq.SUBSCRIBE, Messages.CONFIG_FULL)
@@ -613,7 +614,7 @@ def settings():
 
 
 def update_config(options):
-    context = beeswarm.zmq_context
+    context = beeswarm.shared.zmq_context
     socket = context.socket(zmq.REQ)
     socket.connect('inproc://configCommands')
     socket.send('{0} {1}'.format(Messages.SET, json.dumps(options)))
