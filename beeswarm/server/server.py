@@ -25,11 +25,10 @@ from zmq.auth.ioloop import IOLoopAuthenticator
 from zmq.auth.certs import load_certificate
 
 import beeswarm
-from beeswarm.server.webapp import app
 from beeswarm.server.webapp.auth import Authenticator
 from beeswarm.shared.helpers import drop_privileges, send_zmq_request
 from beeswarm.server.misc.scheduler import Scheduler
-from beeswarm.shared.helpers import find_offset, create_self_signed_cert, generate_cert_digest
+from beeswarm.shared.helpers import create_self_signed_cert, generate_cert_digest
 from beeswarm.shared.asciify import asciify
 from beeswarm.server.db.session_persister import SessionPersister
 from beeswarm.server.misc.config_actor import ConfigActor
@@ -51,6 +50,10 @@ class Server(object):
         :param config_arg: Beeswarm configuration dictionary, None if not configuration was supplied.
         """
         customize = kwargs['customize']
+        if 'clear_db' in kwargs:
+            clear_sessions = kwargs['clear_db']
+        else:
+            clear_sessions = True
 
         self.work_dir = work_dir
         self.config_file = 'beeswarmcfg.json'
@@ -69,7 +72,8 @@ class Server(object):
         config_actor.start()
         self.actors.append(config_actor)
 
-        persistanceActor = SessionPersister()
+        database_setup.setup_db(os.path.join(self.config['sql']['connection_string']))
+        persistanceActor = SessionPersister(clear_sessions)
         persistanceActor.start()
         self.actors.append(persistanceActor)
         gevent.sleep()
@@ -78,7 +82,7 @@ class Server(object):
         self.greenlets = []
         self.started = False
 
-        database_setup.setup_db(os.path.join(self.config['sql']['connection_string']))
+        from beeswarm.server.webapp import app
         self.app = app.app
         self.app.config['CERT_PATH'] = self.config['ssl']['certpath']
         self.authenticator = Authenticator()
@@ -175,10 +179,13 @@ class Server(object):
                     logging.debug('Drone {0} reported ip: {1}'.format(drone_id, ip_address))
                     db_session = database_setup.get_session()
                     drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
-                    drone.ip_address = ip_address
-                    db_session.add(drone)
-                    db_session.commit()
-                # drons want it's config transmitted
+                    if drone.ip_address != ip_address:
+                        drone.ip_address = ip_address
+                        db_session.add(drone)
+                        db_session.commit()
+                        send_zmq_request('inproc://configCommands', '{0} {1}'.format(Messages.DRONE_CONFIG_CHANGED,
+                                                                                     drone_id))
+                # drone want it's config transmitted
                 elif topic == Messages.DRONE_CONFIG:
                     config_dict = send_zmq_request('inproc://configCommands', '{0} {1}'.format(Messages.DRONE_CONFIG,
                                                                                             drone_id))

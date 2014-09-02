@@ -20,7 +20,6 @@ import os
 import random
 import shutil
 import string
-import tempfile
 import uuid
 from collections import namedtuple
 
@@ -97,6 +96,7 @@ def send_config_request(request):
     global config_actor_socket
     request_lock.acquire()
     try:
+        gevent.sleep()
         return send_zmq_request_socket(config_actor_socket, request)
     finally:
         request_lock.release()
@@ -193,6 +193,7 @@ def set_honeypot_mode(drone_id):
         db_session.delete(drone)
         db_session.commit()
         honeypot = Honeypot(id=drone_id)
+        honeypot.ip_address = drone.ip_address
         db_session.add(honeypot)
         db_session.commit()
         return ''
@@ -210,6 +211,7 @@ def set_client_mode(drone_id):
         db_session.delete(drone)
         db_session.commit()
         client = Client(id=drone_id)
+        client.ip_address = drone.ip_address
         db_session.add(client)
         db_session.commit()
         return ''
