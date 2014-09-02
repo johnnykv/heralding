@@ -21,6 +21,7 @@ class Messages(Enum):
     SESSION_HONEYPOT = 'SESSION_HONEYPOT'
     SESSION_CLIENT = 'SESSION_CLIENT'
     SET = 'SET'
+    GET = 'GET'
     GEN_ZMQ_KEYS = 'GEN_ZMQ_KEYS'
     PING = 'PING'
     PONG = 'PING'

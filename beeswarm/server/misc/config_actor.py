@@ -48,6 +48,7 @@ class ConfigActor(Greenlet):
         self.config_commands = context.socket(zmq.REP)
         self.config_publisher = None
         self.drone_command_receiver = None
+        self._config = {}
 
         if not self.commands_only:
             self.config_publisher = context.socket(zmq.PUB)
@@ -92,6 +93,8 @@ class ConfigActor(Greenlet):
 
         if cmd == Messages.SET:
             self._handle_command_set(data)
+        if cmd == Messages.GET:
+            self._handle_command_get(data)
         elif cmd == Messages.GEN_ZMQ_KEYS:
             self._handle_command_genkeys(data)
         elif cmd == Messages.PUBLISH_CONFIG:
@@ -123,6 +126,21 @@ class ConfigActor(Greenlet):
         self.config.update(new_config)
         self._save_config_file()
         self._publish_config()
+
+    def _handle_command_get(self, data):
+        # example: 'network,hosts' will lookup the hosts key in the network key
+        keys = data.split('')
+        return_value = self._retrieve_nested_config(keys)
+
+    def _retrieve_nested_config(self, keys):
+        if keys[0] in self._config:
+            if len(keys) == 1:
+                return self._config[keys[0]]
+            else:
+                return self._retrieve_nested_config(keys[0:])
+
+
+
 
     def _handle_command_genkeys(self, name):
         private_key, publickey = self._get_zmq_keys(name)
