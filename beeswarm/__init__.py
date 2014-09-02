@@ -4,5 +4,5 @@ try:
 except ImportError:
     pass
 
-version = '0.4.15'
+version = '0.4.16'
 

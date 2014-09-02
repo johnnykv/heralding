@@ -33,8 +33,18 @@ logger = logging.getLogger(__name__)
 
 
 class SessionPersister(gevent.Greenlet):
-    def __init__(self):
+    def __init__(self, clear_sessions=False):
         Greenlet.__init__(self)
+        db_session = database_setup.get_session()
+        # clear all pending sessions on startup, pending sessions on startup
+        pending_classification = db_session.query(Classification).filter(Classification.type == 'pending').one()
+        pending_deleted = db_session.query(Session).filter(Session.classification == pending_classification).delete()
+        db_session.commit()
+        logging.info('Cleaned {0} pending sessions on startup'.format(pending_deleted))
+        if clear_sessions:
+            count = db_session.query(Session).delete()
+            logging.info('Deleting {0} sessions on startup.'.format(count))
+            db_session.commit()
         ctx = beeswarm.zmq_context
         self.subscriber_sessions = ctx.socket(zmq.SUB)
         self.subscriber_sessions.connect('inproc://sessionPublisher')
