@@ -20,6 +20,7 @@ import sys
 
 import requests
 import beeswarm
+import beeswarm.shared
 from requests.exceptions import Timeout, ConnectionError
 import gevent
 from gevent import socket
@@ -65,7 +66,7 @@ class Drone(object):
         self.config_url_dropper_greenlet = None
 
         # messages from server relayed to internal listeners
-        ctx = beeswarm.zmq_context
+        ctx = beeswarm.shared.zmq_context
         self.internal_server_relay = ctx.socket(zmq.PUSH)
         self.internal_server_relay.bind('inproc://serverCommands')
         self.config_received = gevent.event.Event()
@@ -137,7 +138,7 @@ class Drone(object):
 
     # command from server
     def incoming_server_comms(self, server_public, client_public, client_secret):
-        context = beeswarm.zmq_context
+        context = beeswarm.shared.zmq_context
         # data (commands) received from server
         receiving_socket = context.socket(zmq.SUB)
 
@@ -190,7 +191,7 @@ class Drone(object):
         logger.warn('Command listener exiting.')
 
     def outgoing_server_comms(self, server_public, client_public, client_secret):
-        context = beeswarm.zmq_context
+        context = beeswarm.shared.zmq_context
         sending_socket = context.socket(zmq.PUSH)
 
         # setup sending tcp socket

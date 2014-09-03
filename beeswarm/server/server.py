@@ -108,13 +108,13 @@ class Server(object):
         # external interfaces for communicating with drones
         server_secret_file = os.path.join(secret_keys_dir, 'beeswarm_server.pri')
         server_public, server_secret = load_certificate(server_secret_file)
-        drone_data_inbound = beeswarm.zmq_context.socket(zmq.PULL)
+        drone_data_inbound = beeswarm.shared.zmq_context.socket(zmq.PULL)
         drone_data_inbound.curve_secretkey = server_secret
         drone_data_inbound.curve_publickey = server_public
         drone_data_inbound.curve_server = True
         drone_data_inbound.bind('tcp://*:{0}'.format(self.config['network']['zmq_port']))
 
-        drone_data_outbound = beeswarm.zmq_context.socket(zmq.PUB)
+        drone_data_outbound = beeswarm.shared.zmq_context.socket(zmq.PUB)
         drone_data_outbound.curve_secretkey = server_secret
         drone_data_outbound.curve_publickey = server_public
         drone_data_outbound.curve_server = True
@@ -122,11 +122,11 @@ class Server(object):
 
         # internal interfaces
         # all inbound session data from drones will be replayed in this socket
-        sessionPublisher = beeswarm.zmq_context.socket(zmq.PUB)
+        sessionPublisher = beeswarm.shared.zmq_context.socket(zmq.PUB)
         sessionPublisher.bind('inproc://sessionPublisher')
 
         # all commands received on this will be published on the external interface
-        drone_command_receiver = beeswarm.zmq_context.socket(zmq.PULL)
+        drone_command_receiver = beeswarm.shared.zmq_context.socket(zmq.PULL)
         drone_command_receiver.bind('inproc://droneCommandReceiver')
 
         poller = zmq.Poller()
@@ -322,7 +322,7 @@ class Server(object):
             # tmp actor while initializing
             config_actor = ConfigActor('beeswarmcfg.json', work_dir, True)
             config_actor.start()
-            context = beeswarm.zmq_context
+            context = beeswarm.shared.zmq_context
             socket = context.socket(zmq.REQ)
             gevent.sleep()
             socket.connect('inproc://configCommands')

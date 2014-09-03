@@ -31,6 +31,7 @@ import gevent
 import requests
 from beeswarm.shared.asciify import asciify
 import beeswarm
+import beeswarm.shared
 
 from beeswarm.shared.message_enum import Messages
 
@@ -178,7 +179,7 @@ def get_config_dict(configfile):
 
 # for occasional req/resp
 def send_zmq_request(actor_url, request):
-    context = beeswarm.zmq_context
+    context = beeswarm.shared.zmq_context
     socket = context.socket(zmq.REQ)
     socket.connect(actor_url)
     socket.send(request)
@@ -204,7 +205,7 @@ def send_zmq_request_socket(socket, request):
 
 # for occasional zmq pushes
 def send_zmq_push(actor_url, data):
-    context = beeswarm.zmq_context
+    context = beeswarm.shared.zmq_context
     socket = context.socket(zmq.PUSH)
     socket.connect(actor_url)
     socket.send(data)
