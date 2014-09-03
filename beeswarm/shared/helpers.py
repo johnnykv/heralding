@@ -197,10 +197,14 @@ def send_zmq_request(actor_url, request):
 def send_zmq_request_socket(socket, request):
     socket.send(request)
     result = socket.recv()
-    if result.split(' ', 1)[0] != Messages.OK:
+    status, data = result.split(' ', 1)
+    if status != Messages.OK:
         assert False
     else:
-        return json.loads(result.split(' ', 1)[1])
+        if data.startswith('{'):
+            return json.loads(result.split(' ', 1)[1])
+        else:
+            return data
 
 
 # for occasional zmq pushes

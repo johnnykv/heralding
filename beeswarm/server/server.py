@@ -334,7 +334,7 @@ class Server(object):
             else:
                 assert False
 
-            socket.send('{0} {1}'.format(Messages.SET, json.dumps({'network': {'zmq_server_public_key': zmq_public,
+            socket.send('{0} {1}'.format(Messages.SET_CONFIG_ITEM, json.dumps({'network': {'zmq_server_public_key': zmq_public,
                                                                                'web_port': web_port,
                                                                                'zmq_port': zmq_port,
                                                                                'zmq_command_port': zmq_command_port,

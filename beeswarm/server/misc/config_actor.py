@@ -46,37 +46,25 @@ class ConfigActor(Greenlet):
 
         context = beeswarm.shared.zmq_context
         self.config_commands = context.socket(zmq.REP)
-        self.config_publisher = None
         self.drone_command_receiver = None
-        self._config = {}
 
         if not self.commands_only:
-            self.config_publisher = context.socket(zmq.PUB)
             self.drone_command_receiver = context.socket(zmq.PUSH)
 
         self.enabled = True
 
     def close(self):
-        if self.config_publisher:
-            self.config_publisher.close()
         if self.config_commands:
             self.config_commands.close()
         self.enabled = False
 
     def _run(self):
-        # start accepting incomming messages
-
         self.config_commands.bind('inproc://configCommands')
         if not self.commands_only:
-            self.config_publisher.bind('inproc://configPublisher')
             self.drone_command_receiver.connect('inproc://droneCommandReceiver')
-            # initial publish of config
-            self._publish_config()
 
         poller = zmq.Poller()
         poller.register(self.config_commands, zmq.POLLIN)
-        if not self.commands_only:
-            poller.register(self.config_publisher, zmq.POLLIN)
         while self.enabled:
             socks = dict(poller.poll(500))
             if self.config_commands in socks and socks[self.config_commands] == zmq.POLLIN:
@@ -91,15 +79,14 @@ class ConfigActor(Greenlet):
             cmd = msg
         logger.debug('Received command: {0}'.format(cmd))
 
-        if cmd == Messages.SET:
+        if cmd == Messages.SET_CONFIG_ITEM:
             self._handle_command_set(data)
-        if cmd == Messages.GET:
-            self._handle_command_get(data)
+            self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
+        elif cmd == Messages.GET_CONFIG_ITEM:
+            value = self._handle_command_get(data)
+            self.config_commands.send('{0} {1}'.format(Messages.OK, value))
         elif cmd == Messages.GEN_ZMQ_KEYS:
             self._handle_command_genkeys(data)
-        elif cmd == Messages.PUBLISH_CONFIG:
-            self._publish_config()
-            self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
         elif cmd == Messages.DRONE_CONFIG:
             result = self._handle_command_get_droneconfig(data)
             self.config_commands.send('{0} {1}'.format(Messages.OK, json.dumps(result)))
@@ -122,25 +109,21 @@ class ConfigActor(Greenlet):
 
     def _handle_command_set(self, data):
         new_config = json.loads(data)
-        self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
         self.config.update(new_config)
         self._save_config_file()
-        self._publish_config()
 
     def _handle_command_get(self, data):
-        # example: 'network,hosts' will lookup the hosts key in the network key
-        keys = data.split('')
-        return_value = self._retrieve_nested_config(keys)
+        # example: 'network,host' will lookup self.config['network']['host']
+        keys = data.split(',')
+        value = self._retrieve_nested_config(keys, self.config)
+        return value
 
-    def _retrieve_nested_config(self, keys):
-        if keys[0] in self._config:
+    def _retrieve_nested_config(self, keys, dict):
+        if keys[0] in dict:
             if len(keys) == 1:
-                return self._config[keys[0]]
+                return dict[keys[0]]
             else:
-                return self._retrieve_nested_config(keys[0:])
-
-
-
+                return self._retrieve_nested_config(keys[1:], dict[keys[0]])
 
     def _handle_command_genkeys(self, name):
         private_key, publickey = self._get_zmq_keys(name)
@@ -294,11 +277,6 @@ class ConfigActor(Greenlet):
                 drone_config['baits'][bait.capability.honeypot_id][bait.capability.protocol] = _bait
 
         return drone_config
-
-    def _publish_config(self):
-        if not self.commands_only:
-            logger.debug('Sending config to subscribers.')
-            self.config_publisher.send('{0} {1}'.format(Messages.CONFIG_FULL, json.dumps(self.config)))
 
     def _save_config_file(self):
         with open(self.config_file, 'w+') as config_file:
