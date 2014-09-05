@@ -23,6 +23,7 @@ import socket
 import json
 import fcntl
 import shutil
+import sys
 
 from OpenSSL import crypto
 import netifaces
@@ -252,3 +253,16 @@ def extract_config_from_api(config_url):
         return True
     else:
         return False
+
+
+def stop_if_not_write_workdir(dir):
+    if not os.access(dir, os.W_OK | os.X_OK):
+        logger.error('Beeswarm needs write permisison to the work directory, '
+                     'could not write to {0}.'.format(dir))
+        sys.exit(1)
+    for _file in os.listdir(dir):
+        if not os.access(_file, os.W_OK):
+            logger.error('Beeswarm needs write permisison to all files in the the work directory, '
+                     'could not write to {0}.'.format(_file))
+            sys.exit(1)
+

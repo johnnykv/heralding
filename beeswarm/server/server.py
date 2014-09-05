@@ -28,7 +28,7 @@ import beeswarm
 from beeswarm.server.webapp.auth import Authenticator
 from beeswarm.shared.helpers import drop_privileges, send_zmq_request
 from beeswarm.server.misc.scheduler import Scheduler
-from beeswarm.shared.helpers import create_self_signed_cert, generate_cert_digest
+from beeswarm.shared.helpers import create_self_signed_cert, generate_cert_digest, stop_if_not_write_workdir
 from beeswarm.shared.asciify import asciify
 from beeswarm.server.db.session_persister import SessionPersister
 from beeswarm.server.misc.config_actor import ConfigActor
@@ -212,6 +212,7 @@ class Server(object):
             self.workers['maintenance'] = maintenance_greenlet
             self.greenlets.append(maintenance_greenlet)
 
+        stop_if_not_write_workdir(self.work_dir)
         logger.info('Server started.')
         gevent.joinall(self.greenlets)
 
