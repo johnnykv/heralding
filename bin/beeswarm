@@ -40,6 +40,10 @@ from beeswarm.shared.helpers import is_url, extract_config_from_api
 
 logger = logging.getLogger()
 
+def stopIfRoot():
+    if os.getuid() == 0:
+        logger.error('Beeswarm should not be started in this mode as root, please restart as a normal user.')
+        sys.exit(1)
 
 def setuplogging(logfile, verbose):
     """
@@ -122,8 +126,10 @@ if __name__ == '__main__':
     elif args.honeypot:
         mode = Honeypot
     elif args.client:
+        stopIfRoot()
         mode = Client
     elif args.server:
+        stopIfRoot()
         mode = Server
     else:
         parser.print_help()

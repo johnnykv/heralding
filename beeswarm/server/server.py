@@ -212,8 +212,7 @@ class Server(object):
             self.workers['maintenance'] = maintenance_greenlet
             self.greenlets.append(maintenance_greenlet)
 
-        drop_privileges()
-        logger.info('Server started and priviliges dropped.')
+        logger.info('Server started.')
         gevent.joinall(self.greenlets)
 
     def stop(self):

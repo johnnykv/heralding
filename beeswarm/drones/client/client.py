@@ -92,7 +92,6 @@ class Client(object):
                     logger.info('Adding {0} bait'.format(bait_name))
                     logger.debug('Bait added with options: {0}'.format(bait_options))
 
-        drop_privileges()
         gevent.joinall(self.dispatcher_greenlets)
 
     def stop(self):
