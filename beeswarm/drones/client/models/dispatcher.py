@@ -57,16 +57,14 @@ class BaitDispatcher(Greenlet):
             while not self.time_in_range():
                 gevent.sleep(5)
             while self.time_in_range():
-                random_value = random.random()
-                if self.activation_probability >= random_value:
-                    # TODO: sessions whould be moved from here, too many has knowledge of the sessions list
-                    bait = self.bait_type(self.sessions, self.options)
-                    gevent.spawn(bait.start)
-                else:
-                    logger.debug('{0} bait was within time range, but was not transmitted because bause we did not hit '
-                                 'the probability (scored value:{1}, probability: {2}).'.format(self.bait_type,
-                                                                                                random_value,
-                                                                                                self.activation_probability))
+                if self.activation_probability >= random.random():
+                    if not self.options['server']:
+                        logging.debug('Discarding bait session because the honeypot has not announced '
+                                      'the ip address yet')
+                    else:
+                        # TODO: sessions whould be moved from here, too many has knowledge of the sessions list
+                        bait = self.bait_type(self.sessions, self.options)
+                        gevent.spawn(bait.start)
                 gevent.sleep(self.sleep_interval)
 
     def time_in_range(self):

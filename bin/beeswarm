@@ -40,6 +40,10 @@ from beeswarm.shared.helpers import is_url, extract_config_from_api
 
 logger = logging.getLogger()
 
+def stopIfRoot():
+    if os.getuid() == 0:
+        logger.error('Beeswarm should not be started in this mode as root, please restart as a normal user.')
+        sys.exit(1)
 
 def setuplogging(logfile, verbose):
     """
@@ -91,6 +95,10 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Logs debug messages.')
     parser.add_argument('--customize', action='store_true', default=False,
                         help='Asks for specific network and certificate information on the first run.')
+    parser.add_argument('--clearsessions', action='store_true', default=False,
+                        help='Deletes all sessions on startup.')
+    parser.add_argument('--resetpw', action='store_true', default=False,
+                        help='Deletes all sessions on startup.')
     args = parser.parse_args()
 
     setuplogging(args.logfile, args.verbose)
@@ -120,15 +128,17 @@ if __name__ == '__main__':
     elif args.honeypot:
         mode = Honeypot
     elif args.client:
+        stopIfRoot()
         mode = Client
     elif args.server:
+        stopIfRoot()
         mode = Server
     else:
         parser.print_help()
         sys.exit(1)
 
     try:
-        m = mode(args.workdir, config, customize=args.customize)
+        m = mode(args.workdir, config, customize=args.customize, clear_db=args.clearsessions, reset_password=args.resetpw)
     except ConfigNotFound as ex:
         logger.error(ex)
         sys.exit(ex)

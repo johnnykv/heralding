@@ -21,10 +21,12 @@ import zmq.green as zmq
 import gevent
 from gevent import Greenlet
 
+import beeswarm
+import beeswarm.shared
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, BaitSession, Session, Honeypot, Authentication, Classification, \
     Transcript
-from beeswarm.shared.helpers import send_zmq_request
+from beeswarm.shared.helpers import send_zmq_request_socket
 from beeswarm.shared.message_enum import Messages
 
 
@@ -32,37 +34,27 @@ logger = logging.getLogger(__name__)
 
 
 class SessionPersister(gevent.Greenlet):
-    def __init__(self):
+    def __init__(self, clear_sessions=False):
         Greenlet.__init__(self)
-        ctx = zmq.Context()
-        self.subscriber_sessions = ctx.socket(zmq.SUB)
-        self.subscriber_sessions.connect('ipc://sessionPublisher')
+        db_session = database_setup.get_session()
+        # clear all pending sessions on startup, pending sessions on startup
+        pending_classification = db_session.query(Classification).filter(Classification.type == 'pending').one()
+        pending_deleted = db_session.query(Session).filter(Session.classification == pending_classification).delete()
+        db_session.commit()
+        logging.info('Cleaned {0} pending sessions on startup'.format(pending_deleted))
+        if clear_sessions:
+            count = db_session.query(Session).delete()
+            logging.info('Deleting {0} sessions on startup.'.format(count))
+            db_session.commit()
+        context = beeswarm.shared.zmq_context
+        self.subscriber_sessions = context.socket(zmq.SUB)
+        self.subscriber_sessions.connect('inproc://sessionPublisher')
         self.subscriber_sessions.setsockopt(zmq.SUBSCRIBE, '')
-        self.first_cfg_received = gevent.event.Event()
-        self.config = None
 
-    def config_subscriber(self):
-        ctx = zmq.Context()
-        subscriber_config = ctx.socket(zmq.SUB)
-        subscriber_config.connect('ipc://configPublisher')
-        subscriber_config.setsockopt(zmq.SUBSCRIBE, '')
-        send_zmq_request('ipc://configCommands', Messages.PUBLISH_CONFIG)
-
-        while True:
-            poller = zmq.Poller()
-            poller.register(subscriber_config, zmq.POLLIN)
-            while True:
-                socks = dict(poller.poll(100))
-                if subscriber_config in socks and socks[subscriber_config] == zmq.POLLIN:
-                    topic, msg = subscriber_config.recv().split(' ', 1)
-                    self.config = json.loads(msg)
-                    self.first_cfg_received.set()
-                    logger.debug('Config received')
+        self.config_actor_socket = context.socket(zmq.REQ)
+        self.config_actor_socket.connect('inproc://configCommands')
 
     def _run(self):
-        gevent.spawn(self.config_subscriber)
-        # we cannot proceede before we have received a initial configuration message
-        self.first_cfg_received.wait()
         poller = zmq.Poller()
         poller.register(self.subscriber_sessions, zmq.POLLIN)
         while True:
@@ -98,7 +90,9 @@ class SessionPersister(gevent.Greenlet):
                 session.authentication.append(authentication)
 
         elif session_type == Messages.SESSION_CLIENT:
-            if not data['did_complete'] and self.config['ignore_failed_bait_session']:
+            ignore_failed_bait_sessions = self.send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM,
+                                                                                    'ignore_failed_bait_session'))
+            if not data['did_complete'] and ignore_failed_bait_sessions:
                 return
             session = BaitSession()
             client = db_session.query(Client).filter(Client.id == data['client_id']).one()
@@ -135,5 +129,9 @@ class SessionPersister(gevent.Greenlet):
                                         successful=auth_data['successful'],
                                         timestamp=datetime.strptime(auth_data['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'))
         return authentication
+
+    def send_config_request(self, request):
+            return send_zmq_request_socket(self.config_actor_socket, request)
+
 
 

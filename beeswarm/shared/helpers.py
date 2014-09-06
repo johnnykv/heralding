@@ -23,6 +23,7 @@ import socket
 import json
 import fcntl
 import shutil
+import sys
 
 from OpenSSL import crypto
 import netifaces
@@ -30,6 +31,8 @@ import zmq.green as zmq
 import gevent
 import requests
 from beeswarm.shared.asciify import asciify
+import beeswarm
+import beeswarm.shared
 
 from beeswarm.shared.message_enum import Messages
 
@@ -148,9 +151,13 @@ def get_most_likely_ip():
         # TODO: continue if network interface is down
         addresses = netifaces.ifaddresses(interface_name)
         if netifaces.AF_INET in addresses:
-            if 'addr' in addresses:
-                logger.debug('Found likely IP {0} on IF {1}'.format(interface_name, addresses['addr']))
-                return addresses['addr']
+            for item in addresses[netifaces.AF_INET]:
+                if 'addr' in item:
+                    logger.debug('Found likely IP {0} on interface {1}'.format(item['addr'], interface_name))
+                    return item['addr']
+                    # well, actually the interface could have more IP's... But for now we assume that the IP
+                    # we want is the first in the list on the IF.
+                    break
 
     return '127.0.0.1'
 
@@ -173,7 +180,7 @@ def get_config_dict(configfile):
 
 # for occasional req/resp
 def send_zmq_request(actor_url, request):
-    context = zmq.Context()
+    context = beeswarm.shared.zmq_context
     socket = context.socket(zmq.REQ)
     socket.connect(actor_url)
     socket.send(request)
@@ -191,15 +198,19 @@ def send_zmq_request(actor_url, request):
 def send_zmq_request_socket(socket, request):
     socket.send(request)
     result = socket.recv()
-    if result.split(' ', 1)[0] != Messages.OK:
+    status, data = result.split(' ', 1)
+    if status != Messages.OK:
         assert False
     else:
-        return json.loads(result.split(' ', 1)[1])
+        if data.startswith('{'):
+            return json.loads(result.split(' ', 1)[1])
+        else:
+            return data
 
 
 # for occasional zmq pushes
 def send_zmq_push(actor_url, data):
-    context = zmq.Context()
+    context = beeswarm.shared.zmq_context
     socket = context.socket(zmq.PUSH)
     socket.connect(actor_url)
     socket.send(data)
@@ -242,3 +253,24 @@ def extract_config_from_api(config_url):
         return True
     else:
         return False
+
+
+def stop_if_not_write_workdir(dir):
+    if not os.access(dir, os.W_OK | os.X_OK):
+        logger.error('Beeswarm needs write permisison to the work directory, '
+                     'but did not have write permission to directory {0}.'.format(dir))
+        logger.debug('Current workdir: {0}, Asked dir: {1}'.format(os.getcwd(), dir))
+        logger.debug('Files in directory: {0}'.format(os.listdir(dir)))
+        sys.exit(1)
+    for item in os.listdir(dir):
+        error = False
+        if os.path.isfile(item):
+            if not os.access(item, os.W_OK):
+                error = True
+        elif os.path.isdir(item):
+            if not os.access(item, os.W_OK | os.X_OK):
+                error = True
+        if error:
+            logger.error('Beeswarm needs write permisison to all files in the the work directory, '
+                        'but did not have write permission to {0}.'.format(item))
+            sys.exit(1)

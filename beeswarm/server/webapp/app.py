@@ -16,18 +16,15 @@
 from datetime import datetime
 import json
 import logging
-import os
 import random
-import shutil
 import string
-import tempfile
 import uuid
 from collections import namedtuple
 
 import gevent
 import gevent.lock
 import zmq.green as zmq
-from flask import Flask, render_template, request, redirect, flash, Response, send_from_directory, abort
+from flask import Flask, render_template, request, redirect, flash, Response, abort
 from flask.ext.login import LoginManager, login_user, current_user, login_required, logout_user
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import desc
@@ -35,13 +32,13 @@ from werkzeug.security import check_password_hash
 from wtforms import HiddenField
 
 from beeswarm.server.webapp.auth import Authenticator
-import beeswarm
 from forms import HoneypotConfigurationForm, NewClientConfigForm, LoginForm, SettingsForm
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, BaitSession, Session, Honeypot, User, BaitUser, Transcript, Drone, \
     Authentication
 from beeswarm.shared.helpers import send_zmq_request_socket
 from beeswarm.shared.message_enum import Messages
+import beeswarm
 
 
 def is_hidden_field_filter(field):
@@ -58,8 +55,6 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-config = {}
-
 logger = logging.getLogger(__name__)
 
 authenticator = Authenticator()
@@ -68,28 +63,10 @@ first_cfg_received = gevent.event.Event()
 # keys used for adding new drones to the system
 drone_keys = []
 
-context = zmq.Context()
+context = beeswarm.shared.zmq_context
 config_actor_socket = context.socket(zmq.REQ)
-config_actor_socket.connect('ipc://configCommands')
+config_actor_socket.connect('inproc://configCommands')
 request_lock = gevent.lock.RLock()
-
-
-def config_subscriber():
-    global config
-    ctx = zmq.Context()
-    subscriber_socket = ctx.socket(zmq.SUB)
-    subscriber_socket.connect('ipc://configPublisher')
-    subscriber_socket.setsockopt(zmq.SUBSCRIBE, Messages.CONFIG_FULL)
-    while True:
-        poller = zmq.Poller()
-        poller.register(subscriber_socket, zmq.POLLIN)
-        while True:
-            socks = dict(poller.poll(100))
-            if subscriber_socket in socks and socks[subscriber_socket] == zmq.POLLIN:
-                topic, msg = subscriber_socket.recv().split(' ', 1)
-                config = json.loads(msg)
-                first_cfg_received.set()
-                logger.debug('Config received')
 
 
 def send_config_request(request):
@@ -99,9 +76,6 @@ def send_config_request(request):
         return send_zmq_request_socket(config_actor_socket, request)
     finally:
         request_lock.release()
-
-gevent.spawn(config_subscriber)
-gevent.spawn_later(1, send_config_request, Messages.PUBLISH_CONFIG)
 
 @login_manager.user_loader
 def user_loader(userid):
@@ -192,6 +166,7 @@ def set_honeypot_mode(drone_id):
         db_session.delete(drone)
         db_session.commit()
         honeypot = Honeypot(id=drone_id)
+        honeypot.ip_address = drone.ip_address
         db_session.add(honeypot)
         db_session.commit()
         return ''
@@ -209,6 +184,7 @@ def set_client_mode(drone_id):
         db_session.delete(drone)
         db_session.commit()
         client = Client(id=drone_id)
+        client.ip_address = drone.ip_address
         db_session.add(client)
         db_session.commit()
         return ''
@@ -241,11 +217,6 @@ def configure_honeypot(id):
         abort(404, 'Drone with id {0} not found or invalid.'.format(id))
     config_dict = send_config_request('{0} {1}'.format(Messages.DRONE_CONFIG, id))
     config_obj = DictWrapper(config_dict)
-    # if honeypot.configuration is not None:
-    # config_obj = DictWrapper(json.loads(honeypot.configuration))
-    # else:
-    # # virgin drone
-    # config_obj = None
     form = HoneypotConfigurationForm(obj=config_obj)
     if not form.validate_on_submit():
         return render_template('configure-honeypot.html', form=form, mode_name='Honeypot', user=current_user)
@@ -417,11 +388,11 @@ def add_drone():
     drone_keys.append(drone_key)
     gevent.spawn_later(120, reset_drone_key, drone_key)
 
-    server_https = 'https://{0}:{1}/'.format(config['network']['server_host'], config['network']['web_port'])
+    server_host = send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM, 'network,server_host'))
+    server_web_port = send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM, 'network,web_port'))
+    server_https = 'https://{0}:{1}/'.format(server_host, server_web_port)
     drone_link = '{0}ws/drone/add/{1}'.format(server_https, drone_key)
-    iso_link = '/NotWorkingYet'
-    return render_template('add_drone.html', user=current_user, drone_link=drone_link,
-                           iso_link=iso_link)
+    return render_template('add_drone.html', user=current_user, drone_link=drone_link)
 
 
 # TODO: throttle this
@@ -655,7 +626,8 @@ def settings():
     global config
     # we need getattr for WTF
     formdata = namedtuple('Struct', config.keys())(*config.values())
-    form = SettingsForm(obj=formdata, bait_session_retain=config['bait_session_retain'])
+    bait_session_retain = send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM, 'bait_session_retain'))
+    form = SettingsForm(obj=formdata, bait_session_retain=bait_session_retain)
 
     if form.validate_on_submit():
         # the potential updates that we want to save to config file.
@@ -667,47 +639,14 @@ def settings():
 
 
 def update_config(options):
-    context = zmq.Context()
+    context = beeswarm.shared.zmq_context
     socket = context.socket(zmq.REQ)
-    socket.connect('ipc://configCommands')
-    socket.send('{0} {1}'.format(Messages.SET, json.dumps(options)))
+    socket.connect('inproc://configCommands')
+    socket.send('{0} {1}'.format(Messages.SET_CONFIG_ITEM, json.dumps(options)))
     reply = socket.recv()
     if reply != Messages.OK:
         logger.warning('Error while requesting config change to actor.')
     socket.close()
-
-
-def write_to_iso(temporary_dir, mode):
-    iso_file_path = config['iso']['path']
-
-    if config['iso']['offset'] == -1:
-        logger.warning('Invalid offset in config file.')
-        return False
-
-    custom_config_dir = os.path.join(temporary_dir, 'custom_config')
-
-    try:
-        # Change directory to create the tar archive in the temp directory
-        save_cwd = os.getcwd()
-        os.chdir(temporary_dir)
-        config_archive = shutil.make_archive(str(mode.id), 'gztar', custom_config_dir, verbose=True)
-    finally:
-        os.chdir(save_cwd)
-
-    temp_iso_name = 'beeswarm-{}-{}.iso'.format(mode.__class__.__name__, mode.id)
-    temp_iso_path = os.path.join(temporary_dir, temp_iso_name)
-    try:
-        shutil.copyfile(iso_file_path, temp_iso_path)
-    except IOError:
-        logger.warning('Couldn\'t find the ISO specified in the config: {}'.format(iso_file_path))
-        return False
-
-    with open(temp_iso_path, 'r+b') as isofile:
-        isofile.seek(config['iso']['offset'])
-        with open(config_archive, 'rb') as tarfile:
-            isofile.write(tarfile.read())
-    return True
-
 
 if __name__ == '__main__':
     app.run()

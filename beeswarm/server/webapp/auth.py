@@ -28,19 +28,23 @@ logger = logging.getLogger(__name__)
 class Authenticator(object):
     """ Handles server authentications """
 
-    def ensure_default_user(self):
+    def ensure_default_user(self, reset):
         session = database_setup.get_session()
         userid = 'admin'
-        count = session.query(User).filter(User.id == userid).count()
-        if not count:
+        admin_account = session.query(User).filter(User.id == userid).first()
+        if not admin_account or reset:
             password = ''.join([random.choice(string.letters[:26]) for i in xrange(14)])
             pw_hash = generate_password_hash(password)
-            u = User(id=userid, nickname='admin', password=pw_hash)
-            session.add(u)
+            if not admin_account:
+                admin_account = User(id=userid, nickname='admin', password=pw_hash)
+            else:
+                admin_account.password = pw_hash
+            session.add(admin_account)
             session.commit()
-            logger.info('Created default admin account for the beeswarm server.')
+            logger.info('Created default admin account for the beeswarm server, password has been '
+                        'printed to the console.')
             print '****************************************************************************'
-            print 'Default password for the admin account is: {0}'.format(password)
+            print 'Password for the admin account is: {0}'.format(password)
             print '****************************************************************************'
 
     def add_user(self, username, password, user_type, nickname=''):

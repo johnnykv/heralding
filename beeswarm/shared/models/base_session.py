@@ -49,8 +49,11 @@ class BaseSession(object):
 
         log_string = ''
         for key, value in kwargs.iteritems():
-            entry[key] = value
-            log_string += '{0}:{1}, '.format(key, value)
+            if key == 'challenge' or key == 'response':
+                entry[key] = repr(value)
+            else:
+                entry[key] = value
+                log_string += '{0}:{1}, '.format(key, value)
 
         self.login_attempts.append(entry)
 

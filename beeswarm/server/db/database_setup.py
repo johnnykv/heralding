@@ -16,6 +16,7 @@
 import os
 import json
 import logging
+import sqlalchemy_utils
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -38,32 +39,36 @@ def setup_db(connection_string):
                               This is usually taken from the config file.
     """
     global DB_Session, engine
+    new_database = False
+    if connection_string == 'sqlite://' or not sqlalchemy_utils.functions.database_exists(connection_string):
+        new_database = True
     engine = create_engine(connection_string)
     entities.Base.metadata.create_all(engine)
     DB_Session = sessionmaker(bind=engine)
     db_path = os.path.dirname(__file__)
 
-    # bootstrapping the db with classifications types
-    json_file = open(os.path.join(db_path, 'bootstrap.json'))
-    data = json.load(json_file)
-    session = get_session()
-    for entry in data['classifications']:
-        c = session.query(Classification).filter(Classification.type == entry['type']).first()
-        if not c:
-            classification = Classification(type=entry['type'], description_short=entry['description_short'],
-                                            description_long=entry['description_long'])
-            session.add(classification)
-        else:
-            c.description_short = entry['description_short']
-            c.description_long = entry['description_long']
-    for username in data['bait_users']:
-        u = session.query(BaitUser).filter(BaitUser.username == username).first()
-        if not u:
-            logger.debug('Creating default BaitUser: {}'.format(username))
-            password = data['bait_users'][username]
-            huser = BaitUser(username=username, password=password)
-            session.add(huser)
-    session.commit()
+    if new_database:
+        # bootstrapping the db with classifications types
+        json_file = open(os.path.join(db_path, 'bootstrap.json'))
+        data = json.load(json_file)
+        session = get_session()
+        for entry in data['classifications']:
+            c = session.query(Classification).filter(Classification.type == entry['type']).first()
+            if not c:
+                classification = Classification(type=entry['type'], description_short=entry['description_short'],
+                                                description_long=entry['description_long'])
+                session.add(classification)
+            else:
+                c.description_short = entry['description_short']
+                c.description_long = entry['description_long']
+        for username in data['bait_users']:
+            u = session.query(BaitUser).filter(BaitUser.username == username).first()
+            if not u:
+                logger.debug('Creating default BaitUser: {}'.format(username))
+                password = data['bait_users'][username]
+                bait_user = BaitUser(username=username, password=password)
+                session.add(bait_user)
+        session.commit()
 
 
 def clear_db():

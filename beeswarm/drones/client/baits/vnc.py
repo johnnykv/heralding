@@ -18,6 +18,7 @@ import socket
 
 from beeswarm.drones.client.baits.clientbase import ClientBase
 from beeswarm.shared.vnc_constants import *
+from beeswarm.shared.misc.rfbes import RFBDes
 
 
 logger = logging.getLogger(__name__)
@@ -63,15 +64,20 @@ class vnc(ClientBase):
                 client_socket.send(VNC_AUTH)
             challenge = client_socket.recv(1024)
 
-            # Ideally, we should encrypt the challenge and send it across, but since the capability is
-            # going to reject the connection anyway, we don't do that yet.
-            client_socket.send('\x00' * 16)
+            # password limit for vnc in 8 chars
+            aligned_password = (password + '\0' * 8)[:8]
+            des = RFBDes(aligned_password)
+            response = des.encrypt(challenge)
+
+            client_socket.send(response)
             auth_status = client_socket.recv(1024)
             if auth_status == AUTH_SUCCESSFUL:
-                session.add_auth_attempt('cram_md5', True, password=password)
+                session.add_auth_attempt('des_challenge', True, password=aligned_password)
                 session.did_login = True
             else:
-                session.add_auth_attempt('cram_md5', True, password=password)
+                session.add_auth_attempt('des_challenge', False, password=aligned_password)
+                session.did_login = False
+            session.did_complete = True
 
         finally:
             session.alldone = True

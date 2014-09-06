@@ -32,7 +32,8 @@ import beeswarm
 from beeswarm.drones.honeypot.capabilities import handlerbase
 from beeswarm.drones.honeypot.models.session import Session
 from beeswarm.drones.honeypot.consumer.consumer import Consumer
-from beeswarm.shared.helpers import create_self_signed_cert, send_zmq_push, extract_keys, get_most_likely_ip
+from beeswarm.shared.helpers import create_self_signed_cert, send_zmq_push, extract_keys, get_most_likely_ip,\
+    stop_if_not_write_workdir
 from beeswarm.shared.asciify import asciify
 from beeswarm.shared.message_enum import Messages
 
@@ -89,8 +90,8 @@ class Honeypot(object):
                 certfile.write(cert)
             with open(key_path, 'w') as keyfile:
                 keyfile.write(priv_key)
-            send_zmq_push('ipc://serverRelay', '{0} {1} {2}'.format(Messages.KEY, self.id, keyfile))
-            send_zmq_push('ipc://serverRelay', '{0} {1} {2}'.format(Messages.CERT, self.id, cert))
+            send_zmq_push('inproc://serverRelay', '{0} {1} {2}'.format(Messages.KEY, self.id, keyfile))
+            send_zmq_push('inproc://serverRelay', '{0} {1} {2}'.format(Messages.CERT, self.id, cert))
 
         if self.config['general']['fetch_ip']:
             try:
@@ -163,6 +164,7 @@ class Honeypot(object):
                 else:
                     logger.info('Started {0} capability listening on port {1}'.format(c.__name__, port))
 
+        stop_if_not_write_workdir(self.work_dir)
         logger.info("Honeypot running.")
 
         gevent.joinall(self._server_greenlets)

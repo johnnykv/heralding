@@ -25,6 +25,8 @@ import zmq.green as zmq
 gevent.monkey.patch_all()
 
 import unittest
+import beeswarm
+import beeswarm.shared
 from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.shared.asciify import asciify
 
@@ -49,9 +51,9 @@ class HoneypotTests(unittest.TestCase):
         self.inbox = gevent.queue.Queue()
 
     def mock_server_relay(self):
-        context = zmq.Context()
+        context = beeswarm.shared.zmq_context
         internal_server_relay = context.socket(zmq.PULL)
-        internal_server_relay.bind('ipc://serverRelay')
+        internal_server_relay.bind('inproc://serverRelay')
 
         while True:
             self.inbox.put(internal_server_relay.recv())

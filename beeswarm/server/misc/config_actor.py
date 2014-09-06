@@ -24,6 +24,7 @@ from gevent import Greenlet
 import zmq.green as zmq
 from zmq.auth.certs import create_certificates
 
+import beeswarm
 from beeswarm.shared.message_enum import Messages
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, Honeypot, Drone, DroneEdge, BaitUser
@@ -33,38 +34,37 @@ logger = logging.getLogger(__name__)
 
 
 class ConfigActor(Greenlet):
-    def __init__(self, config_file, work_dir):
+    def __init__(self, config_file, work_dir, command_requests_only=False):
         Greenlet.__init__(self)
         self.config_file = os.path.join(work_dir, config_file)
+        self.commands_only = command_requests_only
         if not os.path.exists(self.config_file):
             self.config = {}
             self._save_config_file()
         self.config = json.load(open(self.config_file, 'r'))
         self.work_dir = work_dir
 
-        context = zmq.Context()
-        self.config_publisher = context.socket(zmq.PUB)
+        context = beeswarm.shared.zmq_context
         self.config_commands = context.socket(zmq.REP)
-        self.drone_command_receiver = context.socket(zmq.PUSH)
+        self.drone_command_receiver = None
+
+        if not self.commands_only:
+            self.drone_command_receiver = context.socket(zmq.PUSH)
+
         self.enabled = True
 
     def close(self):
-        self.config_publisher.close()
-        self.config_commands.close()
+        if self.config_commands:
+            self.config_commands.close()
         self.enabled = False
 
     def _run(self):
-        # start accepting incomming messages
-        self.config_commands.bind('ipc://configCommands')
-        self.config_publisher.bind('ipc://configPublisher')
-        self.drone_command_receiver.connect('ipc://droneCommandReceiver')
-
-        # initial publish of config
-        self._publish_config()
+        self.config_commands.bind('inproc://configCommands')
+        if not self.commands_only:
+            self.drone_command_receiver.connect('inproc://droneCommandReceiver')
 
         poller = zmq.Poller()
         poller.register(self.config_commands, zmq.POLLIN)
-        poller.register(self.config_publisher, zmq.POLLIN)
         while self.enabled:
             socks = dict(poller.poll(500))
             if self.config_commands in socks and socks[self.config_commands] == zmq.POLLIN:
@@ -79,13 +79,14 @@ class ConfigActor(Greenlet):
             cmd = msg
         logger.debug('Received command: {0}'.format(cmd))
 
-        if cmd == Messages.SET:
+        if cmd == Messages.SET_CONFIG_ITEM:
             self._handle_command_set(data)
+            self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
+        elif cmd == Messages.GET_CONFIG_ITEM:
+            value = self._handle_command_get(data)
+            self.config_commands.send('{0} {1}'.format(Messages.OK, value))
         elif cmd == Messages.GEN_ZMQ_KEYS:
             self._handle_command_genkeys(data)
-        elif cmd == Messages.PUBLISH_CONFIG:
-            self._publish_config()
-            self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
         elif cmd == Messages.DRONE_CONFIG:
             result = self._handle_command_get_droneconfig(data)
             self.config_commands.send('{0} {1}'.format(Messages.OK, json.dumps(result)))
@@ -108,10 +109,21 @@ class ConfigActor(Greenlet):
 
     def _handle_command_set(self, data):
         new_config = json.loads(data)
-        self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
         self.config.update(new_config)
         self._save_config_file()
-        self._publish_config()
+
+    def _handle_command_get(self, data):
+        # example: 'network,host' will lookup self.config['network']['host']
+        keys = data.split(',')
+        value = self._retrieve_nested_config(keys, self.config)
+        return value
+
+    def _retrieve_nested_config(self, keys, dict):
+        if keys[0] in dict:
+            if len(keys) == 1:
+                return dict[keys[0]]
+            else:
+                return self._retrieve_nested_config(keys[1:], dict[keys[0]])
 
     def _handle_command_genkeys(self, name):
         private_key, publickey = self._get_zmq_keys(name)
@@ -125,7 +137,7 @@ class ConfigActor(Greenlet):
     def _handle_command_bait_user_delete(self, data):
         bait_user_id = int(data)
         db_session = database_setup.get_session()
-        bait_user = db_session.query(BaitUser).filter(BaitUser.id == bait_user_id).one()
+        bait_user = db_session.query(BaitUser).filter(BaitUser.id == bait_user_id).first()
         if bait_user:
             db_session.delete(bait_user)
             db_session.commit()
@@ -277,10 +289,6 @@ class ConfigActor(Greenlet):
 
         return drone_config
 
-    def _publish_config(self):
-        logger.debug('Sending config to subscribers.')
-        self.config_publisher.send('{0} {1}'.format(Messages.CONFIG_FULL, json.dumps(self.config)))
-
     def _save_config_file(self):
         with open(self.config_file, 'w+') as config_file:
             config_file.write(json.dumps(self.config, indent=4))
@@ -325,7 +333,7 @@ class ConfigActor(Greenlet):
         drone_id = data
         logger.debug('Deleting drone: {0}'.format(drone_id))
         db_session = database_setup.get_session()
-        drone_to_delete = db_session.query(Drone).filter(Drone.id == drone_id).one()
+        drone_to_delete = db_session.query(Drone).filter(Drone.id == drone_id).first()
         if drone_to_delete:
             db_session.delete(drone_to_delete)
             db_session.commit()

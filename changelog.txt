@@ -3,6 +3,29 @@
  - Added possibility to configure bait session timings.
  - Better handling of NTP errors.
 
+0.4.19(dev):
+ - Added option to reset server admin password
+
+0.4.18:
+ - Server and client now refuses to startup if doing so with root privileges.
+ - Improved server stability
+
+0.4.17:
+ - Minor bugfixes and cleanups
+
+0.4.16:
+ - Clean pending sessions on server startup
+ - Option to clear all session on server startup
+ - Fixed bug that crashed server after dropping privs
+
+0.4.15:
+ - Fixed bug involving VNC bait sessions getting classified wrong.
+
+0.4.14
+ - Handling simultaneous deletion of drones and bait users.
+ - Fixed bug where default bait users was created on every startup.
+>>>>>>> master
+
 0.4.13
  - Error handling when requesting initial config from non-responding server.
 
@@ -22,4 +45,8 @@
 - Fixed missing requirements.
 
 0.4.7
+<<<<<<< HEAD
 - Fixed whitespace after shebang.
+=======
+- Fixed whitespace after shebang.
+>>>>>>> master
