@@ -97,6 +97,8 @@ if __name__ == '__main__':
                         help='Asks for specific network and certificate information on the first run.')
     parser.add_argument('--clearsessions', action='store_true', default=False,
                         help='Deletes all sessions on startup.')
+    parser.add_argument('--resetpw', action='store_true', default=False,
+                        help='Deletes all sessions on startup.')
     args = parser.parse_args()
 
     setuplogging(args.logfile, args.verbose)
@@ -136,7 +138,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     try:
-        m = mode(args.workdir, config, customize=args.customize, clear_db=args.clearsessions)
+        m = mode(args.workdir, config, customize=args.customize, clear_db=args.clearsessions, reset_password=args.resetpw)
     except ConfigNotFound as ex:
         logger.error(ex)
         sys.exit(ex)

@@ -50,6 +50,7 @@ class Server(object):
         :param config_arg: Beeswarm configuration dictionary, None if not configuration was supplied.
         """
         customize = kwargs['customize']
+        reset_password = kwargs['reset_password']
         if 'clear_db' in kwargs:
             clear_sessions = kwargs['clear_db']
         else:
@@ -86,7 +87,7 @@ class Server(object):
         self.app = app.app
         self.app.config['CERT_PATH'] = self.config['ssl']['certpath']
         self.authenticator = Authenticator()
-        self.authenticator.ensure_default_user()
+        self.authenticator.ensure_default_user(reset_password)
 
     # distributes messages between external and internal receivers and senders
     def message_proxy(self, work_dir):
