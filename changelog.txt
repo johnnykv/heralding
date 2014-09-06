@@ -1,9 +1,7 @@
-0.5.0
+0.5.0(dev):
  - Breaks backwards compatibility!
  - Added possibility to configure bait session timings.
  - Better handling of NTP errors.
-
-0.4.19(dev):
  - Added option to reset server admin password
 
 0.4.18:
