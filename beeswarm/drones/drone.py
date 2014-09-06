@@ -178,6 +178,7 @@ class Drone(object):
                 assert (drone_id == self.id)
                 # if we receive a configuration we restart the drone
                 if command == Messages.CONFIG:
+                    send_zmq_push('inproc://serverRelay', '{0}'.format(Messages.PING))
                     self.config_received.set()
                     config = json.loads(data)
                     with open('beeswarmcfg.json', 'w') as local_config:
