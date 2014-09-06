@@ -242,8 +242,9 @@ class Commands(OwnGreenTelnetHandler):
             self.writeline(self.WELCOME)
         self.session_start()
         while self.RUNSHELL:
-            read_line = self.readline(prompt=self.PROMPT).strip()
-            self.session.transcript_incoming(read_line + '\n')
+            read_line = self.readline(prompt=self.PROMPT).strip('\r\n')
+            if read_line:
+                self.session.transcript_incoming(read_line)
             self.input = self.input_reader(self, read_line)
             self.raw_input = self.input.raw
             if self.input.cmd:
