@@ -1,6 +1,6 @@
 from flask.ext.wtf import Form
 from wtforms import IntegerField, PasswordField, StringField, BooleanField, ValidationError, validators
-from wtforms.validators import Required, Length
+from wtforms.validators import DataRequired, Length
 
 
 def validate_time_range(form, field):
@@ -71,11 +71,11 @@ class HoneypotConfigurationForm(Form):
     certificate_info__common_name = StringField(default='', label='Common Name/Domain name',
                                                 description='Leave this field empty to force the drone to automatically use  it\'s own IP '
                                                             'address when creating the certificate')
-    certificate_info__country = StringField(validators=[Required(), Length(min=2, max=2)], label='Country')
-    certificate_info__state = StringField(validators=[Required(), Length(min=1, max=64)], label='State')
-    certificate_info__organization = StringField(validators=[Required(), Length(min=1, max=64)], label='Organization')
+    certificate_info__country = StringField(validators=[DataRequired(), Length(min=2, max=2)], label='Country')
+    certificate_info__state = StringField(validators=[DataRequired(), Length(min=1, max=64)], label='State')
+    certificate_info__organization = StringField(validators=[DataRequired(), Length(min=1, max=64)], label='Organization')
     certificate_info__organization_unit = StringField(default='', label='Organization Unit')
-    certificate_info__locality = StringField(validators=[Required(), Length(min=1, max=64)], label='Locality')
+    certificate_info__locality = StringField(validators=[DataRequired(), Length(min=1, max=64)], label='Locality')
 
 
 class NewClientConfigForm(Form):
