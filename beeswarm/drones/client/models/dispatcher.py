@@ -34,6 +34,7 @@ class BaitDispatcher(Greenlet):
         self.run_flag = True
         # my_ip and sessions should be moved from here
         self.sessions = sessions
+        self.bait_session_running = False
         try:
             self.set_active_interval()
         except (ValueError, AttributeError, KeyError, IndexError) as err:
@@ -57,15 +58,27 @@ class BaitDispatcher(Greenlet):
             while not self.time_in_range():
                 gevent.sleep(5)
             while self.time_in_range():
-                if self.activation_probability >= random.random():
+                if self.activation_probability >= random.random() and not self.bait_session_running:
                     if not self.options['server']:
                         logging.debug('Discarding bait session because the honeypot has not announced '
                                       'the ip address yet')
                     else:
+                        self.bait_session_running = True
                         # TODO: sessions whould be moved from here, too many has knowledge of the sessions list
                         bait = self.bait_type(self.sessions, self.options)
-                        gevent.spawn(bait.start)
+                        greenlet = gevent.spawn(bait.start)
+                        greenlet.link(self._on_bait_session_ended)
+                else:
+                    logging.debug('Not spawing {0} because a bait session of this type is '
+                                  'already running.'.format(self.bait_type))
                 gevent.sleep(self.sleep_interval)
+
+    def _on_bait_session_ended(self, greenlet):
+        self.bait_session_running = False
+        if greenlet.exception is not None:
+            logger.warning('Bait session of type {0} stopped with unhandled '
+                           'error: {1}'.format(self.bait_type, greenlet.exception))
+
 
     def time_in_range(self):
         """Return true if current time is in the active range"""
