@@ -16,11 +16,13 @@
 import os
 import json
 import logging
+import sys
 import sqlalchemy_utils
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+import beeswarm.server.db
 from entities import Classification
 from entities import BaitUser
 import entities
@@ -48,10 +50,11 @@ def setup_db(connection_string):
     db_path = os.path.dirname(__file__)
 
     if new_database:
-        # bootstrapping the db with classifications types
+        # bootstrapping the db with classifications types.
         json_file = open(os.path.join(db_path, 'bootstrap.json'))
         data = json.load(json_file)
         session = get_session()
+        session.execute('PRAGMA user_version = {0}'.format(beeswarm.server.db.DATABASE_VERSION))
         for entry in data['classifications']:
             c = session.query(Classification).filter(Classification.type == entry['type']).first()
             if not c:
@@ -69,6 +72,17 @@ def setup_db(connection_string):
                 bait_user = BaitUser(username=username, password=password)
                 session.add(bait_user)
         session.commit()
+    else:
+        result = engine.execute("PRAGMA user_version;")
+        version = result.fetchone()[0]
+        result.close()
+        logger.info('Database is at version {0}.'.format(version))
+        if version != beeswarm.server.db.DATABASE_VERSION:
+            logger.error('Incompatible database version detected. This version of Beeswarm is compatible with '
+                         'database version {0}, but {1} was found. Please delete the database, restart the Beeswarm '
+                         'server and reconnect the drones.'.format(beeswarm.server.db.DATABASE_VERSION,
+                                                                   version))
+            sys.exit(1)
 
 
 def clear_db():
