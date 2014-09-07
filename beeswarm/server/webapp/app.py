@@ -24,15 +24,16 @@ from collections import namedtuple
 import gevent
 import gevent.lock
 import zmq.green as zmq
-from flask import Flask, render_template, request, redirect, flash, Response, abort
+from flask import Flask, render_template, redirect, flash, Response, abort
 from flask.ext.login import LoginManager, login_user, current_user, login_required, logout_user
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy import desc
 from werkzeug.security import check_password_hash
 from wtforms import HiddenField
+from flask import request
 
 from beeswarm.server.webapp.auth import Authenticator
-from forms import HoneypotConfigurationForm, NewClientConfigForm, LoginForm, SettingsForm
+from forms import HoneypotConfigurationForm, ClientConfigurationForm, LoginForm, SettingsForm
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, BaitSession, Session, Honeypot, User, BaitUser, Transcript, Drone, \
     Authentication
@@ -299,7 +300,7 @@ def configure_client(id):
         abort(404, 'Drone with id {0} not found or invalid.'.format(id))
     config_dict = send_config_request('{0} {1}'.format(Messages.DRONE_CONFIG, id))
     config_obj = DictWrapper(config_dict)
-    form = NewClientConfigForm(obj=config_obj)
+    form = ClientConfigurationForm(obj=config_obj)
     if not form.validate_on_submit():
         return render_template('configure-client.html', form=form, mode_name='Client', user=current_user)
     else:
