@@ -84,9 +84,9 @@ class HoneypotConfigurationForm(Form):
 class ClientConfigurationForm(Form):
     active_range_description = '<small><em>hh:mm - hh:mm</br>The period of the day where this bait type will get ' \
                                'evaluated for transmission</em></small>'
-    interval_description = '<small><em>Seconds between each transmission decision evaluation</em></small>'
+    interval_description = '<small><em>Seconds to sleep between each transmission decision evaluation</em></small>'
     probability_description = '<small><em>0.0 - 0.1.</br> The probability that a given bait session will be transmitted ' \
-                              'after waking up. Set to 1 to a</em></small>'
+                              'after waking up.</br>Set to 1 to always transmit </em></small>'
 
     sleep_interval_validators = [validators.NumberRange(min=0, max=43000, message='Must be between 0 and 43000.')]
     probability_validators = [validators.NumberRange(min=0, max=1, message='Must be between 0.0 and 1.')]
@@ -94,90 +94,90 @@ class ClientConfigurationForm(Form):
     bait_timings__http__active_range = StringField(validators=[validate_time_range], default='00:00 - 23:59',
                                                    description=active_range_description,
                                                    label='Activity Time')
-    bait_timings__http__sleep_interval = IntegerField(default=720, label='Sleep Interval',
+    bait_timings__http__sleep_interval = IntegerField(default=120, label='Sleep Interval',
                                                       validators=sleep_interval_validators,
                                                       description=interval_description)
-    bait_timings__http__activation_probability = FloatField(default=0.4, label='Activation Probability',
+    bait_timings__http__activation_probability = FloatField(default=1, label='Activation Probability',
                                                             description=probability_description,
                                                             validators=probability_validators)
 
     bait_timings__https__active_range = StringField(validators=[validate_time_range], default='00:00 - 23:59',
                                                     description=active_range_description,
                                                     label='Activity Time')
-    bait_timings__https__sleep_interval = IntegerField(default=720, label='Sleep Interval',
+    bait_timings__https__sleep_interval = IntegerField(default=120, label='Sleep Interval',
                                                        validators=sleep_interval_validators,
                                                        description=interval_description)
-    bait_timings__https__activation_probability = FloatField(default=0.4, label='Activation Probability',
+    bait_timings__https__activation_probability = FloatField(default=1, label='Activation Probability',
                                                              description=probability_description,
                                                              validators=probability_validators)
 
     bait_timings__pop3__active_range = StringField(validators=[validate_time_range], default='00:00 - 23:59',
                                                    description=active_range_description,
                                                    label='Activity Time')
-    bait_timings__pop3__sleep_interval = IntegerField(default=720, label='Sleep Interval',
+    bait_timings__pop3__sleep_interval = IntegerField(default=120, label='Sleep Interval',
                                                       validators=sleep_interval_validators,
                                                       description=interval_description)
-    bait_timings__pop3__activation_probability = FloatField(default=0.4, label='Activation Probability',
+    bait_timings__pop3__activation_probability = FloatField(default=1, label='Activation Probability',
                                                             description=probability_description,
                                                             validators=probability_validators)
 
     bait_timings__pop3s__active_range = StringField(validators=[validate_time_range], default='00:00 - 23:59',
                                                     description=active_range_description,
                                                     label='Activity Time')
-    bait_timings__pop3s__sleep_interval = IntegerField(default=720, label='Sleep Interval',
+    bait_timings__pop3s__sleep_interval = IntegerField(default=120, label='Sleep Interval',
                                                        validators=sleep_interval_validators,
                                                        description=interval_description)
-    bait_timings__pop3s__activation_probability = FloatField(default=0.4, label='Activation Probability',
+    bait_timings__pop3s__activation_probability = FloatField(default=1, label='Activation Probability',
                                                              description=probability_description,
                                                              validators=probability_validators)
 
     bait_timings__smtp__active_range = StringField(validators=[validate_time_range], default='00:00 - 23:59',
                                                    description=active_range_description,
                                                    label='Activity Time')
-    bait_timings__smtp__sleep_interval = IntegerField(default=720, label='Sleep Interval',
+    bait_timings__smtp__sleep_interval = IntegerField(default=120, label='Sleep Interval',
                                                       validators=sleep_interval_validators,
                                                       description=interval_description)
-    bait_timings__smtp__activation_probability = FloatField(default=0.4, label='Activation Probability',
+    bait_timings__smtp__activation_probability = FloatField(default=1, label='Activation Probability',
                                                             description=probability_description,
                                                             validators=probability_validators)
 
     bait_timings__vnc__active_range = StringField(validators=[validate_time_range], default='00:00 - 23:59',
                                                   description=active_range_description,
                                                   label='Activity Time')
-    bait_timings__vnc__sleep_interval = IntegerField(default=720, label='Sleep Interval',
+    bait_timings__vnc__sleep_interval = IntegerField(default=120, label='Sleep Interval',
                                                      validators=sleep_interval_validators,
                                                      description=interval_description)
-    bait_timings__vnc__activation_probability = FloatField(default=0.4, label='Activation Probability',
+    bait_timings__vnc__activation_probability = FloatField(default=1, label='Activation Probability',
                                                            description=probability_description,
                                                            validators=probability_validators)
 
     bait_timings__telnet__active_range = StringField(validators=[validate_time_range], default='00:00 - 23:59',
                                                      description=active_range_description,
                                                      label='Activity Time')
-    bait_timings__telnet__sleep_interval = IntegerField(default=720, label='Sleep Interval',
+    bait_timings__telnet__sleep_interval = IntegerField(default=120, label='Sleep Interval',
                                                         validators=sleep_interval_validators,
                                                         description=interval_description)
-    bait_timings__telnet__activation_probability = FloatField(default=0.4, label='Activation Probability',
+    bait_timings__telnet__activation_probability = FloatField(default=1, label='Activation Probability',
                                                               description=probability_description,
                                                               validators=probability_validators)
 
     bait_timings__ssh__active_range = StringField(validators=[validate_time_range], default='00:00 - 23:59',
                                                   description=active_range_description,
                                                   label='Activity Time')
-    bait_timings__ssh__sleep_interval = IntegerField(default=720, label='Sleep Interval',
+    bait_timings__ssh__sleep_interval = IntegerField(default=120, label='Sleep Interval',
                                                      validators=sleep_interval_validators,
                                                      description=interval_description)
-    bait_timings__ssh__activation_probability = FloatField(default=0.4, label='Activation Probability',
+    bait_timings__ssh__activation_probability = FloatField(default=1, label='Activation Probability',
                                                            description=probability_description,
                                                            validators=probability_validators)
 
     bait_timings__ftp__active_range = StringField(validators=[validate_time_range], default='00:00 - 23:59',
                                                   description=active_range_description,
                                                   label='Activity Time')
-    bait_timings__ftp__sleep_interval = IntegerField(default=720, label='Sleep Interval',
+    bait_timings__ftp__sleep_interval = IntegerField(default=120, label='Sleep Interval',
                                                      validators=sleep_interval_validators,
                                                      description=interval_description)
-    bait_timings__ftp__activation_probability = FloatField(default=0.4, label='Activation Probability',
+    bait_timings__ftp__activation_probability = FloatField(default=1, label='Activation Probability',
                                                            description=probability_description,
                                                            validators=probability_validators)
 
