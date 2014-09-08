@@ -67,7 +67,8 @@ class smtp(ClientBase):
             self.login(username, password)
 
             # TODO: Handle failed login
-            session.add_auth_attempt('plaintext', True, username=username, password=password)
+            # TODO: password='' is sillly fix, this needs to be fixed server side...
+            session.add_auth_attempt('plaintext', True, username=username, password='')
             session.did_login = True
 
         except smtplib.SMTPException as error:
@@ -111,8 +112,9 @@ class smtp(ClientBase):
         """
             Connect to the SMTP server.
         """
+        # TODO: local_hostname should be configurable
         self.client = smtplib.SMTP(self.options['server'], self.options['port'],
-                                   local_hostname=self.options['local_hostname'], timeout=15)
+                                   local_hostname='local.domain', timeout=15)
 
     def login(self, username, password):
         """
