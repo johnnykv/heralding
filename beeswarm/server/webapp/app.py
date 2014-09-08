@@ -20,7 +20,7 @@ import random
 import string
 import uuid
 from collections import namedtuple
-
+import ast
 import gevent
 import gevent.lock
 import zmq.green as zmq
@@ -624,30 +624,20 @@ def logout():
 @app.route('/settings', methods=['GET', 'POST'])
 @login_required
 def settings():
-    global config
-    # we need getattr for WTF
-    formdata = namedtuple('Struct', config.keys())(*config.values())
     bait_session_retain = send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM, 'bait_session_retain'))
-    form = SettingsForm(obj=formdata, bait_session_retain=bait_session_retain)
+    ignore_failed_bait_session = ast.literal_eval(send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM, 'ignore_failed_bait_session')))
+    malicious_session_retain = send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM, 'malicious_session_retain'))
+    form = SettingsForm(bait_session_retain=bait_session_retain, malicious_session_retain=malicious_session_retain,
+                        ignore_failed_bait_session=ignore_failed_bait_session)
 
     if form.validate_on_submit():
         # the potential updates that we want to save to config file.
         options = {'bait_session_retain': form.bait_session_retain.data,
                    'malicious_session_retain': form.malicious_session_retain.data,
                    'ignore_failed_bait_session': form.ignore_failed_bait_session.data}
-        update_config(options)
+        send_config_request('{0} {1}'.format(Messages.SET_CONFIG_ITEM, json.dumps(options)))
     return render_template('settings.html', form=form, user=current_user)
 
-
-def update_config(options):
-    context = beeswarm.shared.zmq_context
-    socket = context.socket(zmq.REQ)
-    socket.connect('inproc://configCommands')
-    socket.send('{0} {1}'.format(Messages.SET_CONFIG_ITEM, json.dumps(options)))
-    reply = socket.recv()
-    if reply != Messages.OK:
-        logger.warning('Error while requesting config change to actor.')
-    socket.close()
 
 if __name__ == '__main__':
     app.run()
