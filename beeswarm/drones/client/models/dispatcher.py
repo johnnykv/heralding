@@ -54,6 +54,13 @@ class BaitDispatcher(Greenlet):
         self.end_time = datetime.time(int(end_hours), int(end_min))
 
     def _run(self):
+        # TODO: This could be done better and more clearly, something along the lines of :
+        # 1.  spawn_later(second_until_start_of_range, GOTO 2)
+        # 2.  Role the dice and check probability
+        # 2.1 Inside probability spawn bait session, after end of session GOTO 3
+        # 2.2 If not inside probability GOTO 3
+        # 3.  If sleep_interval + time_now IS INSIDE timerange: spawn_later(sleep_interval)
+        #       ELSE GOTO 1
         while self.run_flag:
             while not self.time_in_range():
                 gevent.sleep(5)
@@ -71,6 +78,8 @@ class BaitDispatcher(Greenlet):
                 else:
                     logging.debug('Not spawing {0} because a bait session of this type is '
                                   'already running.'.format(self.bait_type))
+                logging.debug('Scheduling next {0} bait session in {1} second.'
+                              .format(self.bait_type, self.sleep_interval))
                 gevent.sleep(self.sleep_interval)
 
     def _on_bait_session_ended(self, greenlet):
