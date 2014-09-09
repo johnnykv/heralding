@@ -1,8 +1,13 @@
-0.5.0(dev):
+0.5.0:
  - Breaks backwards compatibility!
- - Added possibility to configure bait session timings.
+ - Re-added possibility to configure bait session timings.
  - Better handling of NTP errors.
- - Added option to reset server admin password
+ - Added option to reset server admin password.
+ - Fixed decoding bug (#200).
+ - Fixed settings bug (#201).
+ - Fixed SMTP bait bug (#202).
+ - Potential fix for key issues (#204).
+ - Various minor bug fixes and improvements.
 
 0.4.18:
  - Server and client now refuses to startup if doing so with root privileges.
@@ -22,7 +27,6 @@
 0.4.14
  - Handling simultaneous deletion of drones and bait users.
  - Fixed bug where default bait users was created on every startup.
->>>>>>> master
 
 0.4.13
  - Error handling when requesting initial config from non-responding server.
@@ -43,8 +47,4 @@
 - Fixed missing requirements.
 
 0.4.7
-<<<<<<< HEAD
 - Fixed whitespace after shebang.
-=======
-- Fixed whitespace after shebang.
->>>>>>> master
