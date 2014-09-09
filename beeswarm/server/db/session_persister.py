@@ -68,7 +68,10 @@ class SessionPersister(gevent.Greenlet):
                 self.persist_session(session_json, topic)
 
     def persist_session(self, session_json, session_type):
-        data = json.loads(session_json)
+        try:
+            data = json.loads(session_json)
+        except UnicodeDecodeError:
+            data = json.loads(unicode(session_json, "ISO-8859-1"))
         logger.debug('Persisting {0} session: {1}'.format(session_type, data))
         db_session = database_setup.get_session()
         classification = db_session.query(Classification).filter(Classification.type == 'pending').one()
