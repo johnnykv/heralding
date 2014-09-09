@@ -76,13 +76,16 @@ class smtp(ClientBase):
         else:
             while self.sent_mails <= self.max_mails:
                 from_addr, to_addr, mail_body = self.get_one_mail()
-                self.sent_mails += 1
                 try:
-                    self.client.sendmail(from_addr, to_addr, mail_body)
+                    if from_addr and to_addr and isinstance(mail_body, str):
+                        self.client.sendmail(from_addr, to_addr, mail_body)
+                    else:
+                        continue
                 except TypeError as e:
                     logger.debug('Malformed email in mbox archive, skipping.')
                     continue
                 else:
+                    self.sent_mails += 1
                     logger.debug('Sent mail from ({0}) to ({1})'.format(from_addr, to_addr))
                 time.sleep(1)
             self.client.quit()
