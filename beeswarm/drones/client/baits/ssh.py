@@ -14,8 +14,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import logging
 import time
+import random
 
 from paramiko import SSHClient, AutoAddPolicy, SSHException
+import gevent
 
 from beeswarm.drones.client.baits.clientbase import ClientBase
 from beeswarm.drones.client.baits.shared.shell import Commands
@@ -58,16 +60,23 @@ class ssh(ClientBase, Commands):
             'Sending %s bait session to {0}:{1}. (bait id: %s)'.format('ssh', server_host, server_port, session.id))
         try:
             self.connect_login()
+            session.did_connect = True
             # TODO: Handle failed login
             session.add_auth_attempt('plaintext', True, username=username, password=password)
             session.did_login = True
         except (SSHException, AuthenticationFailed) as err:
             logger.debug('Caught exception: {0} ({1})'.format(err, str(type(err))))
         else:
-            self.sense()
-            comm, param = self.decide()
-            self.act(comm, param)
-            time.sleep(10)
+            command_count = 0
+            command_limit = random.randint(6, 11)
+            while command_count < command_limit:
+                command_count += 1
+                self.sense()
+                comm, param = self.decide()
+                self.act(comm, param)
+                gevent.sleep(random.uniform(0.4, 5.6))
+            self.logout()
+            session.did_complete = True
         finally:
             session.alldone = True
 

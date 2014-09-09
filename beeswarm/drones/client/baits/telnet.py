@@ -18,6 +18,8 @@ import random
 import telnetlib
 import time
 
+import gevent
+
 from beeswarm.drones.client.baits.clientbase import ClientBase
 from beeswarm.drones.client.baits.shared.shell import Commands
 
@@ -103,7 +105,7 @@ class telnet(ClientBase, Commands):
                 self.sense()
                 comm, param = self.decide()
                 self.act(comm, param)
-                time.sleep(10)
+                gevent.sleep(random.uniform(0.4, 5.6))
             self.act('logout')
             session.did_complete = True
         finally:
