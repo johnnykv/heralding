@@ -128,7 +128,7 @@ class ClassifierTests(unittest.TestCase):
         db_session.commit()
 
         c = Classifier()
-        c.classify_sessions(5)
+        c.classify_malicious_sessions(5)
 
         result = db_session.query(Session).filter(Session.classification_id == 'bruteforce').all()
         # we expect the resultset to contain session1 and session2
@@ -152,7 +152,7 @@ class ClassifierTests(unittest.TestCase):
         db_session.commit()
 
         c = Classifier()
-        c.classify_sessions(0, db_session)
+        c.classify_malicious_sessions(0, db_session)
 
         result = db_session.query(Session).filter(Session.classification_id == 'credentials_reuse').one()
         # we expect the resultset to contain session1010
@@ -174,7 +174,7 @@ class ClassifierTests(unittest.TestCase):
         db_session.commit()
 
         c = Classifier()
-        c.classify_sessions(0, db_session)
+        c.classify_malicious_sessions(0, db_session)
 
         result = db_session.query(Session).filter(Session.classification_id == 'probe').one()
         # we expect the resultset to contain session1010

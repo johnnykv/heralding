@@ -37,16 +37,18 @@ logger = logging.getLogger(__name__)
 class SessionPersister(gevent.Greenlet):
     def __init__(self, clear_sessions=False):
         Greenlet.__init__(self)
-        db_session = database_setup.get_session()
+        self.db_session = database_setup.get_session()
         # clear all pending sessions on startup, pending sessions on startup
-        pending_classification = db_session.query(Classification).filter(Classification.type == 'pending').one()
-        pending_deleted = db_session.query(Session).filter(Session.classification == pending_classification).delete()
-        db_session.commit()
+        pending_classification = self.db_session.query(Classification).filter(Classification.type == 'pending').one()
+        pending_deleted = self.db_session.query(Session).filter(Session.classification == pending_classification).delete()
+        self.db_session.commit()
         logging.info('Cleaned {0} pending sessions on startup'.format(pending_deleted))
-        if clear_sessions:
-            count = db_session.query(Session).delete()
+        self.do_classify = False
+        if self.db_session:
+            count = self.db_session.query(Session).delete()
             logging.info('Deleting {0} sessions on startup.'.format(count))
-            db_session.commit()
+            self.db_session.commit()
+
         context = beeswarm.shared.zmq_context
         self.subscriber_sessions = context.socket(zmq.SUB)
         self.subscriber_sessions.connect('inproc://sessionPublisher')
@@ -58,14 +60,22 @@ class SessionPersister(gevent.Greenlet):
     def _run(self):
         poller = zmq.Poller()
         poller.register(self.subscriber_sessions, zmq.POLLIN)
+        gevent.spawn(self._start_recurring_classify_set)
         while True:
             # .recv() gives no context switch - why not? using poller with timeout instead
             socks = dict(poller.poll(100))
             gevent.sleep()
-
-            if self.subscriber_sessions in socks and socks[self.subscriber_sessions] == zmq.POLLIN:
+            if self.do_classify:
+                self.classify_malicious_sessions()
+                self.do_classify = False
+            elif self.subscriber_sessions in socks and socks[self.subscriber_sessions] == zmq.POLLIN:
                 topic, session_json = self.subscriber_sessions.recv().split(' ', 1)
                 self.persist_session(session_json, topic)
+
+    def _start_recurring_classify_set(self):
+        while True:
+            gevent.sleep(20)
+            self.do_classify = True
 
     def persist_session(self, session_json, session_type):
         try:
@@ -74,7 +84,7 @@ class SessionPersister(gevent.Greenlet):
             data = json.loads(unicode(session_json, "ISO-8859-1"))
         logger.debug('Persisting {0} session: {1}'.format(session_type, data))
 
-        db_session = database_setup.get_session()
+        db_session = self.db_session
         classification = db_session.query(Classification).filter(Classification.type == 'pending').one()
 
         assert data['honeypot_id'] is not None
@@ -189,6 +199,59 @@ class SessionPersister(gevent.Greenlet):
         bait_session.session_data = honeypot_session.session_data
         db_session.add(bait_session)
         db_session.delete(honeypot_session)
+        db_session.commit()
+
+    def classify_malicious_sessions(self, delay_seconds=30):
+        """
+        Will classify all unclassified bait_sessions as either legit or malicious activity. A bait session can e.g. be classified
+        as involved in malicious activity if the bait session is subject to a MiTM attack.
+
+        :param delay_seconds: no sessions newer than (now - delay_seconds) will be processed.
+        """
+        logger.debug('Classifying malicious sessions')
+        min_datetime = datetime.utcnow() - timedelta(seconds=delay_seconds)
+
+        db_session = self.db_session
+
+        # find and process bait sessions that did not get classified during persistence.
+        bait_sessions = db_session.query(BaitSession).options(joinedload(BaitSession.authentication)) \
+            .filter(BaitSession.classification_id == 'pending') \
+            .filter(BaitSession.did_complete == True) \
+            .filter(BaitSession.received < min_datetime).all()
+
+        for bait_session in bait_sessions:
+            logger.debug('Classifying bait session with id {0} as MITM'.format(bait_session.id))
+            bait_session.classification = db_session.query(Classification).filter(Classification.type == 'mitm').one()
+
+        # find and process honeypot sessions that did not get classified during persistence.
+        sessions = db_session.query(Session).filter(Session.discriminator == None) \
+            .filter(Session.timestamp <= min_datetime) \
+            .filter(Session.classification_id == 'pending') \
+            .all()
+
+        for session in sessions:
+            # Check if the attack used credentials leaked by beeswarm drones
+            bait_match = None
+            for a in session.authentication:
+                bait_match = db_session.query(BaitSession)\
+                    .filter(BaitSession.authentication.any(username=a.username, password=a.password)).first()
+                if bait_match:
+                    break
+
+            if bait_match:
+                logger.debug('Classifying session with id {0} as attack which involved the reuse '
+                             'of previously transmitted credentials.'.format(session.id))
+                session.classification = db_session.query(Classification).filter(
+                    Classification.type == 'credentials_reuse').one()
+            elif len(session.authentication) == 0:
+                logger.debug('Classifying session with id {0} as probe.'.format(session.id))
+                session.classification = db_session.query(Classification).filter(Classification.type == 'probe').one()
+            else:
+                # we have never transmitted this username/password combo
+                logger.debug('Classifying session with id {0} as bruteforce attempt.'.format(session.id))
+                session.classification = db_session.query(Classification).filter(
+                    Classification.type == 'bruteforce').one()
+
         db_session.commit()
 
     def send_config_request(self, request):

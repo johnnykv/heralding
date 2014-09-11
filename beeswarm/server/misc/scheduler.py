@@ -21,7 +21,6 @@ from gevent import Greenlet
 
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Session
-from beeswarm.server.misc.classifier import Classifier
 
 
 logger = logging.getLogger(__name__)
@@ -37,8 +36,7 @@ class Scheduler(object):
 
         # key: method name.
         # value: parameter for spawn_later (seconds).
-        schedules = {'do_db_maintenance': 3600,
-                     'do_classification': 10}
+        schedules = {'do_db_maintenance': 3600}
 
         # will contain running and stopped (ready()) greenlets.
         greenlets = {}
@@ -69,11 +67,3 @@ class Scheduler(object):
 
         logger.debug('Database maintenance finished. Deleted {0} bait_sessions and {1} malicious sessions)' \
                      .format(bait_deleted_count, malicious_deleted_count))
-
-    def do_classification(self):
-        db_session = database_setup.get_session()
-        classifier = Classifier()
-        classifier.classify_sessions(db_session=db_session)
-        db_session.commit()
-
-
