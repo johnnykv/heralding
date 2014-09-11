@@ -73,7 +73,6 @@ class Scheduler(object):
     def do_classification(self):
         db_session = database_setup.get_session()
         classifier = Classifier()
-        classifier.classify_bait_session(db_session=db_session)
         classifier.classify_sessions(db_session=db_session)
         db_session.commit()
 

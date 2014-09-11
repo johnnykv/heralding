@@ -15,11 +15,12 @@
 
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
+from gevent import Greenlet
 
 import zmq.green as zmq
 import gevent
-from gevent import Greenlet
+from sqlalchemy.orm import joinedload
 
 import beeswarm
 import beeswarm.shared
@@ -64,7 +65,6 @@ class SessionPersister(gevent.Greenlet):
 
             if self.subscriber_sessions in socks and socks[self.subscriber_sessions] == zmq.POLLIN:
                 topic, session_json = self.subscriber_sessions.recv().split(' ', 1)
-                logger.debug('Received message from publisher')
                 self.persist_session(session_json, topic)
 
     def persist_session(self, session_json, session_type):
@@ -73,12 +73,12 @@ class SessionPersister(gevent.Greenlet):
         except UnicodeDecodeError:
             data = json.loads(unicode(session_json, "ISO-8859-1"))
         logger.debug('Persisting {0} session: {1}'.format(session_type, data))
+
         db_session = database_setup.get_session()
         classification = db_session.query(Classification).filter(Classification.type == 'pending').one()
-        if data['honeypot_id'] is not None:
-            _honeypot = db_session.query(Honeypot).filter(Honeypot.id == data['honeypot_id']).one()
-        else:
-            _honeypot = None
+
+        assert data['honeypot_id'] is not None
+        _honeypot = db_session.query(Honeypot).filter(Honeypot.id == data['honeypot_id']).one()
 
         if session_type == Messages.SESSION_HONEYPOT:
             session = Session()
@@ -91,11 +91,11 @@ class SessionPersister(gevent.Greenlet):
             for auth in data['login_attempts']:
                 authentication = self.extract_auth_entity(auth)
                 session.authentication.append(authentication)
-
         elif session_type == Messages.SESSION_CLIENT:
             ignore_failed_bait_sessions = self.send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM,
                                                                                     'ignore_failed_bait_session'))
             if not data['did_complete'] and ignore_failed_bait_sessions:
+                logger.debug('Ignore failed bait session.')
                 return
             session = BaitSession()
             client = db_session.query(Client).filter(Client.id == data['client_id']).one()
@@ -125,6 +125,15 @@ class SessionPersister(gevent.Greenlet):
         db_session.add(session)
         db_session.commit()
 
+        if session_type == Messages.SESSION_HONEYPOT:
+            matching_bait_session = self.get_matching_session(session, db_session)
+            if matching_bait_session:
+                self.merge_bait_and_session(session, matching_bait_session, db_session)
+        elif session_type == Messages.SESSION_CLIENT:
+            matching_honeypot_session = self.get_matching_session(session, db_session)
+            if matching_honeypot_session:
+                self.merge_bait_and_session(matching_honeypot_session, session, db_session)
+
     def extract_auth_entity(self, auth_data):
         username = auth_data.get('username', '')
         password = auth_data.get('password', '')
@@ -133,8 +142,57 @@ class SessionPersister(gevent.Greenlet):
                                         timestamp=datetime.strptime(auth_data['timestamp'], '%Y-%m-%dT%H:%M:%S.%f'))
         return authentication
 
+    def get_matching_session(self, session, db_session, timediff=5):
+        """
+        Tries to match a session with it's counterpart. For bait session it will try to match it with honeypot sessions
+        and the other way around.
+
+        :param session: session object which will be used as base for query.
+        :param timediff: +/- allowed time difference between a session and a potential matching session.
+        """
+        db_session = db_session
+        min_datetime = session.timestamp - timedelta(seconds=timediff)
+        max_datetime = session.timestamp + timedelta(seconds=timediff)
+
+        # default return value
+        match = None
+        # get all sessions that match basic properties.
+        sessions = db_session.query(Session).options(joinedload(Session.authentication)) \
+            .filter(Session.protocol == session.protocol) \
+            .filter(Session.honeypot == session.honeypot) \
+            .filter(Session.discriminator != session.discriminator) \
+            .filter(Session.timestamp >= min_datetime) \
+            .filter(Session.timestamp <= max_datetime) \
+            .filter(Session.id != session.id)
+
+        # identify the correct session by comparing authentication.
+        # this could properly also be done using some fancy ORM/SQL construct.
+        for potential_match in sessions:
+            assert potential_match.id != session.id
+            for honey_auth in session.authentication:
+                for session_auth in potential_match.authentication:
+                    if session_auth.username == honey_auth.username and \
+                                    session_auth.password == honey_auth.password and \
+                                    session_auth.successful == honey_auth.successful:
+                        assert potential_match.id != session.id
+                        match = potential_match
+                        break
+
+        return match
+
+    def merge_bait_and_session(self, honeypot_session, bait_session, db_session):
+        logger.debug('Classifying bait session with id {0} as legit bait and deleting '
+                     'matching honeypot_session with id {1}'.format(bait_session.id, honeypot_session.id))
+        bait_session.classification = db_session.query(Classification).filter(
+            Classification.type == 'bait_session').one()
+        bait_session.transcript = honeypot_session.transcript
+        bait_session.session_data = honeypot_session.session_data
+        db_session.add(bait_session)
+        db_session.delete(honeypot_session)
+        db_session.commit()
+
     def send_config_request(self, request):
-            return send_zmq_request_socket(self.config_actor_socket, request)
+        return send_zmq_request_socket(self.config_actor_socket, request)
 
 
 
