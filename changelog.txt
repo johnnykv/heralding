@@ -1,3 +1,6 @@
+0.5.1:
+ - Fixed classification issue (#205).
+
 0.5.0:
  - Breaks backwards compatibility!
  - Re-added possibility to configure bait session timings.
