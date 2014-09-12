@@ -135,14 +135,15 @@ class SessionPersister(gevent.Greenlet):
         db_session.add(session)
         db_session.commit()
 
+        matching_session = self.get_matching_session(session, db_session)
         if session_type == Messages.SESSION_HONEYPOT:
-            matching_bait_session = self.get_matching_session(session, db_session)
-            if matching_bait_session:
-                self.merge_bait_and_session(session, matching_bait_session, db_session)
+            if matching_session:
+                self.merge_bait_and_session(session, matching_session, db_session)
         elif session_type == Messages.SESSION_CLIENT:
-            matching_honeypot_session = self.get_matching_session(session, db_session)
-            if matching_honeypot_session:
-                self.merge_bait_and_session(matching_honeypot_session, session, db_session)
+            if matching_session:
+                self.merge_bait_and_session(matching_session, session, db_session)
+        else:
+            assert False
 
     def extract_auth_entity(self, auth_data):
         username = auth_data.get('username', '')
@@ -166,14 +167,15 @@ class SessionPersister(gevent.Greenlet):
 
         # default return value
         match = None
+        classification = db_session.query(Classification).filter(Classification.type == 'pending').one()
         # get all sessions that match basic properties.
         sessions = db_session.query(Session).options(joinedload(Session.authentication)) \
             .filter(Session.protocol == session.protocol) \
             .filter(Session.honeypot == session.honeypot) \
-            .filter(Session.discriminator != session.discriminator) \
             .filter(Session.timestamp >= min_datetime) \
             .filter(Session.timestamp <= max_datetime) \
-            .filter(Session.id != session.id)
+            .filter(Session.id != session.id) \
+            .filter(Session.classification == classification)
 
         # identify the correct session by comparing authentication.
         # this could properly also be done using some fancy ORM/SQL construct.
@@ -203,8 +205,7 @@ class SessionPersister(gevent.Greenlet):
 
     def classify_malicious_sessions(self, delay_seconds=30):
         """
-        Will classify all unclassified bait_sessions as either legit or malicious activity. A bait session can e.g. be classified
-        as involved in malicious activity if the bait session is subject to a MiTM attack.
+        Will classify all unclassified sessions malicious activity.
 
         :param delay_seconds: no sessions newer than (now - delay_seconds) will be processed.
         """
