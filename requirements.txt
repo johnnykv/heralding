@@ -2,7 +2,7 @@
 --allow-external pyDes
 pyzmq==14.3.0
 fs
-pycrypto
+pycrypto>=2.6.0
 Crypto
 ecdsa
 cssselect
