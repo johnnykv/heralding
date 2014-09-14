@@ -286,7 +286,7 @@ class smtp(HandlerBase):
         self._options = options
 
     def handle_session(self, gsocket, address):
-        session_ = self.create_session(address, gsocket)
+        session_ = self.create_session(address)
         local_map = {}
         server = DummySMTPServer(self.vfsystem.opendir('/var/mail'))
         SMTPChannel(server, gsocket, address, session=session_,

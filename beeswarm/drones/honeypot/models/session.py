@@ -28,7 +28,7 @@ class Session(BaseSession):
     default_timeout = 25
     honeypot_id = None
 
-    def __init__(self, source_ip, source_port, protocol, socket, users, destination_port=None, destination_ip=None):
+    def __init__(self, source_ip, source_port, protocol, users, destination_port=None, destination_ip=None):
 
         super(Session, self).__init__(protocol, source_ip, source_port, destination_ip, destination_port)
 
@@ -39,13 +39,10 @@ class Session(BaseSession):
 
         # for session specific volatile data (will not get logged)
         self.vdata = {}
-        self.socket = socket
+        self.last_activity = datetime.utcnow()
 
     def activity(self):
         self.last_activity = datetime.utcnow()
-
-    def last_activity(self):
-        return self.socket.last_update()
 
     def is_connected(self):
         return self.connected

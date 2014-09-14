@@ -95,7 +95,7 @@ class http(HandlerBase):
         self._options = options
 
     def handle_session(self, gsocket, address):
-        session = self.create_session(address, gsocket)
+        session = self.create_session(address)
         try:
             # The third argument ensures that the BeeHTTPHandler will access
             # only the data in vfs/var/www

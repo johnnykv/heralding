@@ -30,7 +30,7 @@ class Telnet(HandlerBase):
 
     def handle_session(self, gsocket, address):
         TelnetWrapper.max_tries = int(self.options['protocol_specific_data']['max_attempts'])
-        session = self.create_session(address, gsocket)
+        session = self.create_session(address)
         try:
             TelnetWrapper(address, None, gsocket, session, self.vfsystem)
         except socket.error as err:

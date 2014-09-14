@@ -71,7 +71,7 @@ class vnc(HandlerBase):
         self._options = options
 
     def handle_session(self, gsocket, address):
-        session = self.create_session(address, gsocket)
+        session = self.create_session(address)
         try:
             handler = BeeVNCHandler(gsocket, address, None, session)
         except socket.error as err:

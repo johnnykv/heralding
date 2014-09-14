@@ -223,5 +223,5 @@ class ftp(HandlerBase):
         self._options = options
 
     def handle_session(self, gsocket, address):
-        session = self.create_session(address, gsocket)
+        session = self.create_session(address)
         BeeFTPHandler(gsocket, session, self.vfsystem.opendir('/pub/ftp'), self._options)

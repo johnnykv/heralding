@@ -34,7 +34,7 @@ class SSH(HandlerBase):
         super(SSH, self).__init__(sessions, options, work_dir)
 
     def handle_session(self, gsocket, address):
-        session = self.create_session(address, gsocket)
+        session = self.create_session(address)
         try:
             SshWrapper(address, None, gsocket, session, self.options, self.vfsystem, self.key)
         except (SSHException, EOFError) as ex:

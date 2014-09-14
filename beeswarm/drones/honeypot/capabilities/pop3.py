@@ -31,7 +31,7 @@ class Pop3(HandlerBase):
         Pop3.max_tries = int(self.options['protocol_specific_data']['max_attempts'])
 
     def handle_session(self, gsocket, address):
-        session = self.create_session(address, gsocket)
+        session = self.create_session(address)
 
         session.vdata['MAILSPOOL'] = {}
         session.vdata['deleted_index'] = []
