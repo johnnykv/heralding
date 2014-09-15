@@ -1,4 +1,4 @@
-0.5.2: (dev)
+0.5.2:
  - Fixed datagrid sorting (#207)
 
 0.5.1:
