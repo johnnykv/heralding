@@ -37,6 +37,10 @@ FlexibleUrlDatasource.prototype = {
             // TODO: slice and dice server side
             data = data.slice(startIndex, endIndex);
             if (self._formatter) self._formatter(data);
+            if (options.sortProperty) {
+                data = _.sortBy(data, options.sortProperty);
+                if (options.sortDirection === 'desc') data.reverse();
+            }
             callback({ data: data, start: start, end: end, count: count, pages: pages, page: page });
         });
     }
