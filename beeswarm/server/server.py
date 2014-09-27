@@ -123,8 +123,8 @@ class Server(object):
 
         # internal interfaces
         # all inbound session data from drones will be replayed in this socket
-        sessionPublisher = beeswarm.shared.zmq_context.socket(zmq.PUB)
-        sessionPublisher.bind('inproc://sessionPublisher')
+        rawSessionPublisher = beeswarm.shared.zmq_context.socket(zmq.PUB)
+        rawSessionPublisher.bind('inproc://rawSessionPublisher')
 
         # all commands received on this will be published on the external interface
         drone_command_receiver = beeswarm.shared.zmq_context.socket(zmq.PULL)
@@ -159,7 +159,7 @@ class Server(object):
                 db_session.commit()
 
                 if topic == Messages.SESSION_HONEYPOT or topic == Messages.SESSION_CLIENT:
-                    sessionPublisher.send('{0} {1}'.format(topic, data))
+                    rawSessionPublisher.send('{0} {1}'.format(topic, data))
                 elif topic == Messages.KEY or topic == Messages.CERT:
                     # for now we just store the fingerprint
                     # in the future it might be relevant to store the entire public key and private key

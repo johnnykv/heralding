@@ -51,7 +51,7 @@ class SessionPersister(gevent.Greenlet):
 
         context = beeswarm.shared.zmq_context
         self.subscriber_sessions = context.socket(zmq.SUB)
-        self.subscriber_sessions.connect('inproc://sessionPublisher')
+        self.subscriber_sessions.connect('inproc://rawSessionPublisher')
         self.subscriber_sessions.setsockopt(zmq.SUBSCRIBE, '')
 
         self.config_actor_socket = context.socket(zmq.REQ)
