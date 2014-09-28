@@ -22,6 +22,7 @@ import zmq.green as zmq
 import zmq.auth
 import beeswarm
 import beeswarm.shared
+from beeswarm.shared.socket_enum import SocketNames
 
 
 logger = logging.getLogger(__name__)
@@ -31,7 +32,7 @@ class ServerLogger(object):
     def __init__(self, message_type):
         context = beeswarm.shared.zmq_context
         self.socket = context.socket(zmq.PUSH)
-        self.socket.connect('inproc://serverRelay')
+        self.socket.connect(SocketNames.SERVER_RELAY)
         self.message_type = message_type
 
     def log(self, session):

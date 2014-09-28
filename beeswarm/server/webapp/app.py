@@ -39,6 +39,7 @@ from beeswarm.server.db.entities import Client, BaitSession, Session, Honeypot, 
     Authentication
 from beeswarm.shared.helpers import send_zmq_request_socket
 from beeswarm.shared.message_enum import Messages
+from beeswarm.shared.socket_enum import SocketNames
 import beeswarm
 
 
@@ -66,7 +67,7 @@ drone_keys = []
 
 context = beeswarm.shared.zmq_context
 config_actor_socket = context.socket(zmq.REQ)
-config_actor_socket.connect('inproc://configCommands')
+config_actor_socket.connect(SocketNames.CONFIG_COMMANDS)
 request_lock = gevent.lock.RLock()
 
 

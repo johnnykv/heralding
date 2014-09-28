@@ -36,6 +36,8 @@ from beeswarm.shared.helpers import create_self_signed_cert, send_zmq_push, extr
     stop_if_not_write_workdir
 from beeswarm.shared.asciify import asciify
 from beeswarm.shared.message_enum import Messages
+from beeswarm.shared.socket_enum import SocketNames
+
 
 
 logger = logging.getLogger(__name__)
@@ -90,8 +92,8 @@ class Honeypot(object):
                 certfile.write(cert)
             with open(key_path, 'w') as keyfile:
                 keyfile.write(priv_key)
-            send_zmq_push('inproc://serverRelay', '{0} {1} {2}'.format(Messages.KEY, self.id, keyfile))
-            send_zmq_push('inproc://serverRelay', '{0} {1} {2}'.format(Messages.CERT, self.id, cert))
+            send_zmq_push(SocketNames.SERVER_RELAY, '{0} {1} {2}'.format(Messages.KEY, self.id, keyfile))
+            send_zmq_push(SocketNames.SERVER_RELAY, '{0} {1} {2}'.format(Messages.CERT, self.id, cert))
 
         if self.config['general']['fetch_ip']:
             try:

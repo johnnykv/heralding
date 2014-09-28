@@ -32,6 +32,7 @@ from beeswarm.shared.message_enum import Messages
 from beeswarm.shared.helpers import extract_keys, send_zmq_push, extract_config_from_api, asciify
 from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.drones.client.client import Client
+from beeswarm.shared.socket_enum import SocketNames
 
 
 logger = logging.getLogger(__name__)
@@ -68,7 +69,7 @@ class Drone(object):
         # messages from server relayed to internal listeners
         ctx = beeswarm.shared.zmq_context
         self.internal_server_relay = ctx.socket(zmq.PUSH)
-        self.internal_server_relay.bind('inproc://serverCommands')
+        self.internal_server_relay.bind(SocketNames.SERVER_COMMANDS)
         self.config_received = gevent.event.Event()
 
         if self.config['general']['fetch_ip']:
@@ -178,7 +179,7 @@ class Drone(object):
                 assert (drone_id == self.id)
                 # if we receive a configuration we restart the drone
                 if command == Messages.CONFIG:
-                    send_zmq_push('inproc://serverRelay', '{0}'.format(Messages.PING))
+                    send_zmq_push(SocketNames.SERVER_RELAY, '{0}'.format(Messages.PING))
                     self.config_received.set()
                     config = json.loads(data)
                     with open('beeswarmcfg.json', 'w') as local_config:
@@ -208,7 +209,7 @@ class Drone(object):
 
         # retransmits everything received to beeswarm server using sending_socket
         internal_server_relay = context.socket(zmq.PULL)
-        internal_server_relay.bind('inproc://serverRelay')
+        internal_server_relay.bind(SocketNames.SERVER_RELAY)
 
         poller = zmq.Poller()
         poller.register(internal_server_relay, zmq.POLLIN)
@@ -247,11 +248,11 @@ class Drone(object):
                 if event == zmq.EVENT_CONNECTED:
                     logger.info('Connected to {0}'.format(log_name))
                     if 'outgoing' in log_name:
-                        send_zmq_push('inproc://serverRelay', '{0}'.format(Messages.PING))
+                        send_zmq_push(SocketNames.SERVER_RELAY, '{0}'.format(Messages.PING))
                         own_ip = gevent.socket.gethostbyname(socket.gethostname())
-                        send_zmq_push('inproc://serverRelay', '{0} {1}'.format(Messages.IP,
+                        send_zmq_push(SocketNames.SERVER_RELAY, '{0} {1}'.format(Messages.IP,
                                                                             own_ip))
-                        send_zmq_push('inproc://serverRelay', '{0}'.format(Messages.DRONE_CONFIG))
+                        send_zmq_push(SocketNames.SERVER_RELAY, '{0}'.format(Messages.DRONE_CONFIG))
                     elif 'incomming':
                         pass
                     else:

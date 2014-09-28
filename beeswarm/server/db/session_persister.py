@@ -29,7 +29,7 @@ from beeswarm.server.db.entities import Client, BaitSession, Session, Honeypot, 
     Transcript
 from beeswarm.shared.helpers import send_zmq_request_socket
 from beeswarm.shared.message_enum import Messages
-
+from beeswarm.shared.socket_enum import SocketNames
 
 logger = logging.getLogger(__name__)
 
@@ -51,11 +51,11 @@ class SessionPersister(gevent.Greenlet):
 
         context = beeswarm.shared.zmq_context
         self.subscriber_sessions = context.socket(zmq.SUB)
-        self.subscriber_sessions.connect('inproc://rawSessionPublisher')
+        self.subscriber_sessions.connect(SocketNames.RAW_PUBLISHER)
         self.subscriber_sessions.setsockopt(zmq.SUBSCRIBE, '')
 
         self.config_actor_socket = context.socket(zmq.REQ)
-        self.config_actor_socket.connect('inproc://configCommands')
+        self.config_actor_socket.connect(SocketNames.CONFIG_COMMANDS)
 
     def _run(self):
         poller = zmq.Poller()

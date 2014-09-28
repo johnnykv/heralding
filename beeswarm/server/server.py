@@ -35,6 +35,7 @@ from beeswarm.server.misc.config_actor import ConfigActor
 from beeswarm.shared.message_enum import Messages
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Drone
+from beeswarm.shared.socket_enum import SocketNames
 
 
 logger = logging.getLogger(__name__)
@@ -124,11 +125,11 @@ class Server(object):
         # internal interfaces
         # all inbound session data from drones will be replayed in this socket
         rawSessionPublisher = beeswarm.shared.zmq_context.socket(zmq.PUB)
-        rawSessionPublisher.bind('inproc://rawSessionPublisher')
+        rawSessionPublisher.bind(SocketNames.RAW_PUBLISHER)
 
         # all commands received on this will be published on the external interface
         drone_command_receiver = beeswarm.shared.zmq_context.socket(zmq.PULL)
-        drone_command_receiver.bind('inproc://droneCommandReceiver')
+        drone_command_receiver.bind(SocketNames.DRONE_COMMANDS)
 
         poller = zmq.Poller()
         poller.register(drone_data_inbound, zmq.POLLIN)
@@ -184,7 +185,7 @@ class Server(object):
                         drone.ip_address = ip_address
                         db_session.add(drone)
                         db_session.commit()
-                        send_zmq_request('inproc://configCommands', '{0} {1}'.format(Messages.DRONE_CONFIG_CHANGED,
+                        send_zmq_request(SocketNames.CONFIG_COMMANDS, '{0} {1}'.format(Messages.DRONE_CONFIG_CHANGED,
                                                                                      drone_id))
                 # drone want it's config transmitted
                 elif topic == Messages.DRONE_CONFIG:
@@ -326,7 +327,7 @@ class Server(object):
             context = beeswarm.shared.zmq_context
             socket = context.socket(zmq.REQ)
             gevent.sleep()
-            socket.connect('inproc://configCommands')
+            socket.connect(SocketNames.CONFIG_COMMANDS)
             socket.send('{0} {1}'.format(Messages.GEN_ZMQ_KEYS, 'beeswarm_server'))
             result = socket.recv()
             if result.split(' ', 1)[0] == Messages.OK:

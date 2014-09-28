@@ -28,6 +28,8 @@ import beeswarm
 from beeswarm.shared.message_enum import Messages
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import Client, Honeypot, Drone, DroneEdge, BaitUser
+from beeswarm.shared.socket_enum import SocketNames
+
 
 
 logger = logging.getLogger(__name__)
@@ -59,9 +61,9 @@ class ConfigActor(Greenlet):
         self.enabled = False
 
     def _run(self):
-        self.config_commands.bind('inproc://configCommands')
+        self.config_commands.bind(SocketNames.CONFIG_COMMANDS)
         if not self.commands_only:
-            self.drone_command_receiver.connect('inproc://droneCommandReceiver')
+            self.drone_command_receiver.connect(SocketNames.DRONE_COMMANDS)
 
         poller = zmq.Poller()
         poller.register(self.config_commands, zmq.POLLIN)

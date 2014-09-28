@@ -29,6 +29,8 @@ import beeswarm
 import beeswarm.shared
 from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.shared.asciify import asciify
+from beeswarm.shared.socket_enum import SocketNames
+
 
 
 class HoneypotTests(unittest.TestCase):
@@ -53,7 +55,7 @@ class HoneypotTests(unittest.TestCase):
     def mock_server_relay(self):
         context = beeswarm.shared.zmq_context
         internal_server_relay = context.socket(zmq.PULL)
-        internal_server_relay.bind('inproc://serverRelay')
+        internal_server_relay.bind(SocketNames.SERVER_RELAY)
 
         while True:
             self.inbox.put(internal_server_relay.recv())

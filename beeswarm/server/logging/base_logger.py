@@ -15,6 +15,9 @@
 
 import logging
 import gevent.Greenlet as Greenlet
+from beeswarm.shared.message_enum import Messages
+from beeswarm.shared.socket_enum import SocketNames
+
 import zmq.green as zmq
 
 import beeswarm
@@ -34,7 +37,7 @@ class BaseLogger(Greenlet):
         self.running = True
         context = beeswarm.shared.zmq_context
         receiving_socket = context.socket(zmq.SUB)
-        receiving_socket.connect('inproc://processedSessionPublisher')
+        receiving_socket.connect(SocketNames.PROCESSES_SESSIONS)
 
         poller = zmq.Poller()
         poller.register(self.receiving_socket, zmq.POLLIN)
