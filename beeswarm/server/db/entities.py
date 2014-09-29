@@ -95,6 +95,25 @@ class Session(Base):
     classification_id = Column(String, ForeignKey('classification.type'), nullable=False, default='pending')
     classification = relationship('Classification')
 
+    # for display purposes
+    def to_dict(self):
+        auth_attempts = []
+        for attempt in self.authentication:
+            auth_attempts.append(
+                {'username': attempt.username,
+                 'password': attempt.password,
+                 'successful': attempt.successful})
+        classification = self.classification_id.replace('_', ' ').capitalize()
+        result = {'time': self.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+                  'protocol': self.protocol,
+                  'ip_address': self.source_ip,
+                  'classification': classification,
+                  'id': self.id,
+                  'auth_attempts': auth_attempts}
+
+        return result
+
+
 
 class Authentication(Base):
     __tablename__ = 'authentication'

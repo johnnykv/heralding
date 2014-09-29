@@ -488,17 +488,8 @@ def data_sessions_attacks(_type):
     entries = query_iterators[_type].order_by(desc(Session.timestamp))
 
     rows = []
-    for a in entries:
-        auth_attempts = []
-        for attempt in a.authentication:
-            auth_attempts.append(
-                {'username': attempt.username,
-                 'password': attempt.password,
-                 'successful': attempt.successful})
-        classification = a.classification_id.replace('_', ' ').capitalize()
-        row = {'time': a.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': a.protocol, 'ip_address': a.source_ip,
-               'classification': classification, 'id': a.id, 'auth_attempts': auth_attempts}
-        rows.append(row)
+    for session in entries:
+        rows.append(session.to_dict())
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp
 
