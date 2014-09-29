@@ -27,7 +27,6 @@ logger = logging.getLogger(__name__)
 
 
 class BaseLogger(Greenlet):
-
     def __init__(self, options):
         Greenlet.__init__(self)
         self.running = False
@@ -37,7 +36,7 @@ class BaseLogger(Greenlet):
         self.running = True
         context = beeswarm.shared.zmq_context
         receiving_socket = context.socket(zmq.SUB)
-        receiving_socket.connect(SocketNames.PROCESSES_SESSIONS)
+        receiving_socket.connect(SocketNames.PROCESSED_SESSIONS)
 
         poller = zmq.Poller()
         poller.register(self.receiving_socket, zmq.POLLIN)
@@ -56,4 +55,4 @@ class BaseLogger(Greenlet):
 
     def handle_data(self, topic, data):
         # should be handled in child class
-        raise NotImplementedError("Please Implement this method")
+        raise NotImplementedError("Please implement this method")

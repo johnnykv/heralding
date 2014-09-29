@@ -125,7 +125,7 @@ class Server(object):
         # internal interfaces
         # all inbound session data from drones will be replayed in this socket
         rawSessionPublisher = beeswarm.shared.zmq_context.socket(zmq.PUB)
-        rawSessionPublisher.bind(SocketNames.RAW_PUBLISHER)
+        rawSessionPublisher.bind(SocketNames.RAW_SESSIONS)
 
         # all commands received on this will be published on the external interface
         drone_command_receiver = beeswarm.shared.zmq_context.socket(zmq.PULL)
