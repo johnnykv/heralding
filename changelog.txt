@@ -1,3 +1,6 @@
+0.5.3:
+ - Fixed IP detection on linux (#210)
+
 0.5.2:
  - Fixed datagrid sorting (#207)
 

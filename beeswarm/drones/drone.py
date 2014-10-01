@@ -29,7 +29,7 @@ import zmq.auth
 from zmq.utils.monitor import recv_monitor_message
 
 from beeswarm.shared.message_enum import Messages
-from beeswarm.shared.helpers import extract_keys, send_zmq_push, extract_config_from_api, asciify
+from beeswarm.shared.helpers import extract_keys, send_zmq_push, extract_config_from_api, asciify, get_most_likely_ip
 from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.drones.client.client import Client
 
@@ -248,7 +248,7 @@ class Drone(object):
                     logger.info('Connected to {0}'.format(log_name))
                     if 'outgoing' in log_name:
                         send_zmq_push('inproc://serverRelay', '{0}'.format(Messages.PING))
-                        own_ip = gevent.socket.gethostbyname(socket.gethostname())
+                        own_ip = get_most_likely_ip()
                         send_zmq_push('inproc://serverRelay', '{0} {1}'.format(Messages.IP,
                                                                             own_ip))
                         send_zmq_push('inproc://serverRelay', '{0}'.format(Messages.DRONE_CONFIG))
