@@ -38,6 +38,21 @@ class Drone(Base):
     configuration = Column(String)
     last_activity = Column(DateTime, default=datetime.datetime.min)
 
+    # for display purposes
+    def to_dict(self):
+        if self.last_activity == datetime.datetime.min:
+            timestamp = 'Never'
+        else:
+            timestamp = self.last_activity.strftime('%Y-%m-%d %H:%M:%S')
+        if self.discriminator is None:
+            _type = ''
+        else:
+            _type = self.discriminator.capitalize()
+
+        result = {'id': self.id, 'name': self.name, 'type': _type, 'last_activity': timestamp, 'ip': self.ip_address}
+
+        return result
+
 
 # edge between honeypot and client
 class DroneEdge(Base):

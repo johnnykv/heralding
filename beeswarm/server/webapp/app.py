@@ -565,17 +565,9 @@ def data_drones(dronetype):
         drones = db_session.query(Drone).filter(Drone.discriminator == dronetype)
 
     rows = []
-    for d in drones:
-        if d.last_activity == datetime.min:
-            timestamp = 'Never'
-        else:
-            timestamp = d.last_activity.strftime('%Y-%m-%d %H:%M:%S')
-        if d.discriminator is None:
-            _type = ''
-        else:
-            _type = d.discriminator.capitalize()
-        row = {'id': d.id, 'name': d.name, 'type': _type, 'last_activity': timestamp}
-        rows.append(row)
+    for drone in drones:
+        print drone.to_dict()
+        rows.append(drone.to_dict())
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp
 
