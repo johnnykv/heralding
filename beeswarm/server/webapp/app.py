@@ -404,12 +404,11 @@ def drone_key(key):
         logger.warn('Attempt to add new drone, but using wrong key from: {0}'.format(request.remote_addr))
         abort(401)
     else:
-        drone_id = str(uuid.uuid4())
         db_session = database_setup.get_session()
-        drone = Drone(id=drone_id)
+        drone = Drone()
         db_session.add(drone)
         db_session.commit()
-        config_json = send_config_request('{0} {1}'.format(Messages.DRONE_CONFIG, drone_id))
+        config_json = send_config_request('{0} {1}'.format(Messages.DRONE_CONFIG, drone.id))
         return json.dumps(config_json)
 
 

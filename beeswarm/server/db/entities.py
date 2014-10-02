@@ -30,12 +30,11 @@ class Drone(Base):
     discriminator = Column('type', String(50))
     __mapper_args__ = {'polymorphic_on': discriminator}
 
-    id = Column(String, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, default='')
     ip_address = Column(String, default='')
     zmq_public_key = Column(String)
     zmq_private_key = Column(String)
-    configuration = Column(String)
     last_activity = Column(DateTime, default=datetime.datetime.min)
 
     # for display purposes
@@ -45,7 +44,7 @@ class Drone(Base):
         else:
             timestamp = self.last_activity.strftime('%Y-%m-%d %H:%M:%S')
         if self.discriminator is None:
-            _type = ''
+            _type = 'None'
         else:
             _type = self.discriminator.capitalize()
 
