@@ -37,6 +37,7 @@ class BaseLogger(Greenlet):
         context = beeswarm.shared.zmq_context
         receiving_socket = context.socket(zmq.SUB)
         receiving_socket.connect(SocketNames.PROCESSED_SESSIONS)
+        receiving_socket.setsockopt(zmq.SUBSCRIBE, '')
 
         poller = zmq.Poller()
         poller.register(receiving_socket, zmq.POLLIN)
@@ -46,7 +47,6 @@ class BaseLogger(Greenlet):
             if receiving_socket in socks and socks[receiving_socket] == zmq.POLLIN:
                 topic, data = receiving_socket.recv().split(' ', 1)
                 self.handle_data(topic, data)
-
         receiving_socket.close()
 
     def stop(self):
