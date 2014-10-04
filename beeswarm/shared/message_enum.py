@@ -31,3 +31,13 @@ class Messages(Enum):
     BAIT_USER_ADD = 'BAIT_USER_ADD'
     BAIT_USER_DELETE = 'BAIT_USER_DELETE'
     DRONE_DELETE = 'DRONE_DELETE'
+
+    # Session was deleted because it was matched with an existing sesisons
+    # This happens when a bait session is matched with a honeypot session.
+    # ID_OF_DELETED_SESSION ID_OF_THE_MERGED_SESSION
+    DELETED_DUE_TO_MERGE = "DELETED_DUE_TO_MERGE"
+
+    # A classified session is transmitted
+    # Parameters is data in json.
+    SESSION = "SESSION"
+    

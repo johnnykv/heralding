@@ -54,6 +54,9 @@ class SessionPersister(gevent.Greenlet):
         self.subscriber_sessions.connect(SocketNames.RAW_SESSIONS)
         self.subscriber_sessions.setsockopt(zmq.SUBSCRIBE, '')
 
+        self.processedSessionsPublisher = context.socket(zmq.PUB)
+        self.processedSessionsPublisher.bind(SocketNames.PROCESSED_SESSIONS)
+
         self.config_actor_socket = context.socket(zmq.REQ)
         self.config_actor_socket.connect(SocketNames.CONFIG_COMMANDS)
 
@@ -202,10 +205,14 @@ class SessionPersister(gevent.Greenlet):
         db_session.add(bait_session)
         db_session.delete(honeypot_session)
         db_session.commit()
+        self.processedSessionsPublisher('{0} {1} {2}'.format(Messages.DELETED_DUE_TO_MERGE, honeypot_session.id,
+                                                             bait_session.id))
+        self.processedSessionsPublisher('{0} {1}'.format(Messages.SESSION,
+                                                         json.dumps(bait_session.to_dict())))
 
     def classify_malicious_sessions(self, delay_seconds=30):
         """
-        Will classify all unclassified sessions malicious activity.
+        Will classify all unclassified sessions as malicious activity.
 
         :param delay_seconds: no sessions newer than (now - delay_seconds) will be processed.
         """
@@ -254,6 +261,8 @@ class SessionPersister(gevent.Greenlet):
                     Classification.type == 'bruteforce').one()
 
         db_session.commit()
+        self.processedSessionsPublisher('{0} {1}'.format(Messages.SESSION,
+                                                         json.dumps(session.to_dict())))
 
     def send_config_request(self, request):
         return send_zmq_request_socket(self.config_actor_socket, request)
