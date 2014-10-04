@@ -502,9 +502,7 @@ def data_session_credentials(_id):
     credentials = db_session.query(Authentication).filter(Authentication.session_id == _id)
     return_rows = []
     for c in credentials:
-        return_rows.append({'username': c.username,
-                            'password': c.password,
-                            'successful': c.successful})
+        return_rows.append(c.to_dict())
     rsp = Response(response=json.dumps(return_rows, indent=4), status=200, mimetype='application/json')
     return rsp
 

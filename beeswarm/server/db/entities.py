@@ -114,17 +114,12 @@ class Session(Base):
         transcript = []
         if include_transcript:
             for _transcript in self.transcript:
-                row = {'time': _transcript.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-                       'direction': _transcript.direction,
-                       'data': _transcript.data}
+                row = _transcript.to_dict()
                 transcript.append(row)
 
         auth_attempts = []
         for attempt in self.authentication:
-            auth_attempts.append(
-                {'username': attempt.username,
-                 'password': attempt.password,
-                 'successful': attempt.successful})
+            auth_attempts.append(attempt.to_dict())
         classification = self.classification_id.replace('_', ' ').capitalize()
         result = {'time': self.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
                   'protocol': self.protocol,
@@ -149,6 +144,11 @@ class Authentication(Base):
     session_id = Column(String, ForeignKey('session.id'))
     session = relationship('Session')
 
+    def to_dict(self):
+        return {'username': self.username,
+                'password': self.password,
+                'successful': self.successful}
+
 
 class SessionData(Base):
     __tablename__ = 'sessiondata'
@@ -168,6 +168,11 @@ class Transcript(Base):
     direction = Column(String)
     timestamp = Column(DateTime)
     session_id = Column(String, ForeignKey('session.id'))
+
+    def to_dict(self):
+        return {'time': self.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+                'direction': self.direction,
+                'data': self.data}
 
 
 class BaitSession(Session):
