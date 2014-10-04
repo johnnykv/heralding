@@ -110,7 +110,15 @@ class Session(Base):
     classification = relationship('Classification')
 
     # for display purposes
-    def to_dict(self):
+    def to_dict(self, include_transcript=False):
+        transcript = []
+        if include_transcript:
+            for _transcript in self.transcript:
+                row = {'time': _transcript.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+                       'direction': _transcript.direction,
+                       'data': _transcript.data}
+                transcript.append(row)
+
         auth_attempts = []
         for attempt in self.authentication:
             auth_attempts.append(
@@ -123,7 +131,8 @@ class Session(Base):
                   'ip_address': self.source_ip,
                   'classification': classification,
                   'id': self.id,
-                  'auth_attempts': auth_attempts}
+                  'auth_attempts': auth_attempts,
+                  'transcript': transcript}
 
         return result
 
