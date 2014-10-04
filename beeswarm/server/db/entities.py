@@ -30,13 +30,27 @@ class Drone(Base):
     discriminator = Column('type', String(50))
     __mapper_args__ = {'polymorphic_on': discriminator}
 
-    id = Column(String, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, default='')
     ip_address = Column(String, default='')
     zmq_public_key = Column(String)
     zmq_private_key = Column(String)
-    configuration = Column(String)
     last_activity = Column(DateTime, default=datetime.datetime.min)
+
+    # for display purposes
+    def to_dict(self):
+        if self.last_activity == datetime.datetime.min:
+            timestamp = 'Never'
+        else:
+            timestamp = self.last_activity.strftime('%Y-%m-%d %H:%M:%S')
+        if self.discriminator is None:
+            _type = 'None'
+        else:
+            _type = self.discriminator.capitalize()
+
+        result = {'id': self.id, 'name': self.name, 'type': _type, 'last_activity': timestamp, 'ip': self.ip_address}
+
+        return result
 
 
 # edge between honeypot and client
@@ -94,6 +108,25 @@ class Session(Base):
     honeypot_id = Column(String, ForeignKey('honeypot.id'))
     classification_id = Column(String, ForeignKey('classification.type'), nullable=False, default='pending')
     classification = relationship('Classification')
+
+    # for display purposes
+    def to_dict(self):
+        auth_attempts = []
+        for attempt in self.authentication:
+            auth_attempts.append(
+                {'username': attempt.username,
+                 'password': attempt.password,
+                 'successful': attempt.successful})
+        classification = self.classification_id.replace('_', ' ').capitalize()
+        result = {'time': self.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+                  'protocol': self.protocol,
+                  'ip_address': self.source_ip,
+                  'classification': classification,
+                  'id': self.id,
+                  'auth_attempts': auth_attempts}
+
+        return result
+
 
 
 class Authentication(Base):

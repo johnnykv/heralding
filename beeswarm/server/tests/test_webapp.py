@@ -21,24 +21,13 @@ class WebappTests(unittest.TestCase):
         self.config_actor = ConfigActor(os.path.join(os.path.dirname(__file__), 'beeswarmcfg.json.test'), self.work_dir)
         self.config_actor.start()
         self.app = app.app.test_client()
-        self.authenticator = Authenticator()
-
         database.setup_db('sqlite://')
-        session = database.get_session()
-
-        # dummy entities
+        self.authenticator = Authenticator()
         self.authenticator.add_user('test', 'test', 0)
 
-        self.client_id = str(uuid.uuid4())
-        self.client_password = str(uuid.uuid4())
-        self.authenticator.add_user(self.client_id, self.client_password, 2)
+        session = database.get_session()
 
-        self.honeypot_id = str(uuid.uuid4())
-        self.honeypot_password = str(uuid.uuid4())
-        self.authenticator.add_user(self.honeypot_id, self.honeypot_password, 1)
-
-        session.add_all([Client(id=self.client_id, configuration='test_client_config'),
-                         Honeypot(id=self.honeypot_id, configuration='test_honeypot_config')])
+        session.add_all([Client(), Honeypot()])
 
         session.commit()
 
@@ -435,10 +424,8 @@ class WebappTests(unittest.TestCase):
         db_session = database.get_session()
         self.clients = []
         for i in xrange(4):  # We add 4 here, but one is added in the setup method
-            curr_id = str(uuid.uuid4())
-            curr_id = curr_id.encode('utf-8')
-            self.clients.append(curr_id)
-            f = Client(id=curr_id)
+            f = Client()
+            self.clients.append(f.id)
             db_session.add(f)
         db_session.commit()
 
@@ -448,10 +435,8 @@ class WebappTests(unittest.TestCase):
         db_session = database.get_session()
         self.honeypots = []
         for i in xrange(4):  # We add 4 here, but one is added in the setup method
-            curr_id = str(uuid.uuid4())
-            curr_id = curr_id.encode('utf-8')
-            self.honeypots.append(curr_id)
-            h = Honeypot(id=curr_id)
+            h = Honeypot()
+            self.honeypots.append(h.id)
             db_session.add(h)
         db_session.commit()
 

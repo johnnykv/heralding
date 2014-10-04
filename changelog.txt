@@ -1,3 +1,12 @@
+0.6.0:
+ - Breaks backwards compatibility!
+ - Display drone ip address in web ui.
+ - Use incrementing integer as drone id.
+ - Various minor bug fixes and improvements.
+
+0.5.4:
+ - Fixed IP detection on linux (#210)
+
 0.5.2:
  - Fixed datagrid sorting (#207)
 

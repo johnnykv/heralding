@@ -405,12 +405,11 @@ def drone_key(key):
         logger.warn('Attempt to add new drone, but using wrong key from: {0}'.format(request.remote_addr))
         abort(401)
     else:
-        drone_id = str(uuid.uuid4())
         db_session = database_setup.get_session()
-        drone = Drone(id=drone_id)
+        drone = Drone()
         db_session.add(drone)
         db_session.commit()
-        config_json = send_config_request('{0} {1}'.format(Messages.DRONE_CONFIG, drone_id))
+        config_json = send_config_request('{0} {1}'.format(Messages.DRONE_CONFIG, drone.id))
         return json.dumps(config_json)
 
 
@@ -489,17 +488,8 @@ def data_sessions_attacks(_type):
     entries = query_iterators[_type].order_by(desc(Session.timestamp))
 
     rows = []
-    for a in entries:
-        auth_attempts = []
-        for attempt in a.authentication:
-            auth_attempts.append(
-                {'username': attempt.username,
-                 'password': attempt.password,
-                 'successful': attempt.successful})
-        classification = a.classification_id.replace('_', ' ').capitalize()
-        row = {'time': a.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'protocol': a.protocol, 'ip_address': a.source_ip,
-               'classification': classification, 'id': a.id, 'auth_attempts': auth_attempts}
-        rows.append(row)
+    for session in entries:
+        rows.append(session.to_dict())
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp
 
@@ -575,17 +565,9 @@ def data_drones(dronetype):
         drones = db_session.query(Drone).filter(Drone.discriminator == dronetype)
 
     rows = []
-    for d in drones:
-        if d.last_activity == datetime.min:
-            timestamp = 'Never'
-        else:
-            timestamp = d.last_activity.strftime('%Y-%m-%d %H:%M:%S')
-        if d.discriminator is None:
-            _type = ''
-        else:
-            _type = d.discriminator.capitalize()
-        row = {'id': d.id, 'name': d.name, 'type': _type, 'last_activity': timestamp}
-        rows.append(row)
+    for drone in drones:
+        print drone.to_dict()
+        rows.append(drone.to_dict())
     rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
     return rsp
 
