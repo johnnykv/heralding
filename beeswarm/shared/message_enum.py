@@ -40,4 +40,3 @@ class Messages(Enum):
     # A classified session is transmitted
     # Parameters is data in json.
     SESSION = "SESSION"
-    
