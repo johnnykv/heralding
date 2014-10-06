@@ -17,7 +17,7 @@ honeypot_client_mtm = Table('association', Base.metadata,
 class Capability(Base):
     __tablename__ = 'capability'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    honeypot_id = Column(String, ForeignKey('honeypot.id'))
+    honeypot_id = Column(Integer, ForeignKey('honeypot.id'))
     protocol = Column(String)
     port = Column(Integer)
     # jsonified python dict
@@ -56,7 +56,7 @@ class Drone(Base):
 # edge between honeypot and client
 class DroneEdge(Base):
     __tablename__ = 'droneedge'
-    client_id = Column(String, ForeignKey('drone.id'), primary_key=True)
+    client_id = Column(Integer, ForeignKey('drone.id'), primary_key=True)
     capability_id = Column(Integer, ForeignKey('capability.id'), primary_key=True)
     activation_range = Column(String)
     sleep_interval = Column(Integer)
