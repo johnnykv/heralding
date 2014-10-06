@@ -1,3 +1,9 @@
+0.7.0:
+ - Breaks backwards compatibility!
+ - Fixed wrong db types for relations.
+ - Implemented logging hook.
+ - Various minor bug fixes and improvements.
+
 0.6.0:
  - Breaks backwards compatibility!
  - Display drone ip address in web ui.
