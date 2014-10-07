@@ -149,7 +149,7 @@ class Drone(object):
         receiving_socket.curve_serverkey = server_public
         receiving_socket.setsockopt(zmq.RECONNECT_IVL, 2000)
         # messages to this specific drone
-        receiving_socket.setsockopt(zmq.SUBSCRIBE, self.id)
+        receiving_socket.setsockopt(zmq.SUBSCRIBE, str(self.id))
         # broadcasts to all drones
         receiving_socket.setsockopt(zmq.SUBSCRIBE, Messages.IP)
 
@@ -176,7 +176,7 @@ class Drone(object):
                 # DRONE_ID and COMMAND must not contain spaces
                 drone_id, command, data = message.split(' ', 2)
                 logger.debug('Received {0} command.'.format(command))
-                assert (drone_id == self.id)
+                assert (drone_id == str(self.id))
                 # if we receive a configuration we restart the drone
                 if command == Messages.CONFIG:
                     send_zmq_push(SocketNames.SERVER_RELAY, '{0}'.format(Messages.PING))
