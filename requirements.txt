@@ -23,4 +23,3 @@ flask-wtf>=0.9.0
 mock
 enum
 netifaces
-SQLAlchemy-Utils

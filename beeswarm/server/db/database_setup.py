@@ -17,8 +17,7 @@ import os
 import json
 import logging
 import sys
-import sqlalchemy_utils
-
+from beeswarm.shared.helpers import database_exists
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -42,7 +41,7 @@ def setup_db(connection_string):
     """
     global DB_Session, engine
     new_database = False
-    if connection_string == 'sqlite://' or not sqlalchemy_utils.functions.database_exists(connection_string):
+    if connection_string == 'sqlite://' or not database_exists(connection_string):
         new_database = True
     engine = create_engine(connection_string)
     entities.Base.metadata.create_all(engine)
