@@ -44,7 +44,7 @@ class SessionPersister(gevent.Greenlet):
         self.db_session.commit()
         logging.info('Cleaned {0} pending sessions on startup'.format(pending_deleted))
         self.do_classify = False
-        if self.db_session:
+        if clear_sessions:
             count = self.db_session.query(Session).delete()
             logging.info('Deleting {0} sessions on startup.'.format(count))
             self.db_session.commit()
@@ -205,9 +205,9 @@ class SessionPersister(gevent.Greenlet):
         db_session.add(bait_session)
         db_session.delete(honeypot_session)
         db_session.commit()
-        self.processedSessionsPublisher('{0} {1} {2}'.format(Messages.DELETED_DUE_TO_MERGE, honeypot_session.id,
+        self.processedSessionsPublisher.send('{0} {1} {2}'.format(Messages.DELETED_DUE_TO_MERGE, honeypot_session.id,
                                                              bait_session.id))
-        self.processedSessionsPublisher('{0} {1}'.format(Messages.SESSION,
+        self.processedSessionsPublisher.send('{0} {1}'.format(Messages.SESSION,
                                                          json.dumps(bait_session.to_dict())))
 
     def classify_malicious_sessions(self, delay_seconds=30):
