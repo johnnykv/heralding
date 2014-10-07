@@ -1,3 +1,8 @@
+0.7.1:
+ - Fixed using wrong type for ZMQ subscriptions.
+ - Fixed session was deleted on startup.
+ - Fixed processed session publisher crashing the system.
+
 0.7.0:
  - Breaks backwards compatibility!
  - Fixed wrong db types for relations.
