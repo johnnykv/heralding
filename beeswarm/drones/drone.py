@@ -19,15 +19,14 @@ import json
 import sys
 
 import requests
-import beeswarm
-import beeswarm.shared
 from requests.exceptions import Timeout, ConnectionError
 import gevent
-from gevent import socket
 import zmq.green as zmq
 import zmq.auth
 from zmq.utils.monitor import recv_monitor_message
 
+import beeswarm
+import beeswarm.shared
 from beeswarm.shared.message_enum import Messages
 from beeswarm.shared.helpers import extract_keys, send_zmq_push, extract_config_from_api, asciify, get_most_likely_ip
 from beeswarm.drones.honeypot.honeypot import Honeypot
@@ -148,17 +147,16 @@ class Drone(object):
         receiving_socket.curve_publickey = client_public
         receiving_socket.curve_serverkey = server_public
         receiving_socket.setsockopt(zmq.RECONNECT_IVL, 2000)
-        # messages to this specific drone
+        # only subscribe to messages to this specific drone
         receiving_socket.setsockopt(zmq.SUBSCRIBE, str(self.id))
-        # broadcasts to all drones
-        receiving_socket.setsockopt(zmq.SUBSCRIBE, Messages.IP)
 
         logger.debug(
-            'Trying to connect receiving socket to server on {0}'.format(self.config['beeswarm_server']['zmq_command_url']))
+            'Trying to connect receiving socket to server on {0}'.format(
+                self.config['beeswarm_server']['zmq_command_url']))
 
         receiving_socket.connect(self.config['beeswarm_server']['zmq_command_url'])
         gevent.spawn(self.monitor_worker, receiving_socket.get_monitor_socket(), 'incomming socket ({0}).'
-                     .format(self.config['beeswarm_server']['zmq_url']))
+                     .format(self.config['beeswarm_server']['zmq_command_url']))
 
         poller = zmq.Poller()
         poller.register(receiving_socket, zmq.POLLIN)
@@ -272,7 +270,7 @@ class Drone(object):
             gevent.sleep(1)
             dropped_config_url_file = os.path.join(self.work_dir, 'API_CONFIG_URL')
             if os.path.isfile(dropped_config_url_file):
-                with open(dropped_config_url_file,'r') as _file:
+                with open(dropped_config_url_file, 'r') as _file:
                     config_url = open(_file).read()
                 logger.info('Found dropped api config url in {0}, with content: {1}.'.format(self.work_dir, config_url))
                 os.remove(dropped_config_url_file)

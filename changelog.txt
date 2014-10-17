@@ -1,5 +1,5 @@
 0.7.3:
- - Reapplied fix for ip drone ip detection.
+ - Reapplied fix for drone ip detection.
    The previous fix was overwritten by a bad merge.
 
 0.7.2:
