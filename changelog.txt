@@ -1,3 +1,7 @@
+0.7.3:
+ - Reapplied fix for ip drone ip detection.
+   The previous fix was overwritten by a bad merge.
+
 0.7.2:
  - Removed sqlalchemy-utils
 

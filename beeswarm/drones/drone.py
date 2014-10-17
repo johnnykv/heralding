@@ -249,7 +249,7 @@ class Drone(object):
                     logger.info('Connected to {0}'.format(log_name))
                     if 'outgoing' in log_name:
                         send_zmq_push(SocketNames.SERVER_RELAY, '{0}'.format(Messages.PING))
-                        own_ip = gevent.socket.gethostbyname(socket.gethostname())
+                        own_ip = get_most_likely_ip()
                         send_zmq_push(SocketNames.SERVER_RELAY, '{0} {1}'.format(Messages.IP, own_ip))
                         send_zmq_push(SocketNames.SERVER_RELAY, '{0}'.format(Messages.DRONE_CONFIG))
                     elif 'incomming':
