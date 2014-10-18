@@ -21,6 +21,7 @@ from gevent import Greenlet
 import zmq.green as zmq
 import gevent
 from sqlalchemy.orm import joinedload
+from sqlalchemy.sql.expression import func
 
 import beeswarm
 import beeswarm.shared
@@ -35,19 +36,24 @@ logger = logging.getLogger(__name__)
 
 
 class SessionPersister(gevent.Greenlet):
-    def __init__(self, clear_sessions=False):
+    def __init__(self, max_sessions, clear_sessions=False):
         Greenlet.__init__(self)
         self.db_session = database_setup.get_session()
         # clear all pending sessions on startup, pending sessions on startup
         pending_classification = self.db_session.query(Classification).filter(Classification.type == 'pending').one()
-        pending_deleted = self.db_session.query(Session).filter(Session.classification == pending_classification).delete()
+        pending_deleted = self.db_session.query(Session).filter(
+            Session.classification == pending_classification).delete()
         self.db_session.commit()
         logging.info('Cleaned {0} pending sessions on startup'.format(pending_deleted))
         self.do_classify = False
-        if clear_sessions:
+        if clear_sessions or max_sessions == 0:
             count = self.db_session.query(Session).delete()
             logging.info('Deleting {0} sessions on startup.'.format(count))
             self.db_session.commit()
+
+        self.max_session_count = max_sessions
+        if max_sessions:
+            logger.info('Database has been limited to contain {0} sessions.'.format(max_sessions))
 
         context = beeswarm.shared.zmq_context
         self.subscriber_sessions = context.socket(zmq.SUB)
@@ -81,6 +87,14 @@ class SessionPersister(gevent.Greenlet):
             self.do_classify = True
 
     def persist_session(self, session_json, session_type):
+        db_session = self.db_session
+
+        if self.max_session_count == 0:
+            return
+        elif db_session.query(Session).count() == self.max_session_count:
+            session_to_delete = db_session.query(Session, func.min(Session.timestamp)).first()[0]
+            db_session.delete(session_to_delete)
+
         try:
             data = json.loads(session_json)
         except UnicodeDecodeError:
@@ -206,9 +220,9 @@ class SessionPersister(gevent.Greenlet):
         db_session.delete(honeypot_session)
         db_session.commit()
         self.processedSessionsPublisher.send('{0} {1} {2}'.format(Messages.DELETED_DUE_TO_MERGE, honeypot_session.id,
-                                                             bait_session.id))
+                                                                  bait_session.id))
         self.processedSessionsPublisher.send('{0} {1}'.format(Messages.SESSION,
-                                                         json.dumps(bait_session.to_dict())))
+                                                              json.dumps(bait_session.to_dict())))
 
     def classify_malicious_sessions(self, delay_seconds=30):
         """
@@ -241,7 +255,7 @@ class SessionPersister(gevent.Greenlet):
             # Check if the attack used credentials leaked by beeswarm drones
             bait_match = None
             for a in session.authentication:
-                bait_match = db_session.query(BaitSession)\
+                bait_match = db_session.query(BaitSession) \
                     .filter(BaitSession.authentication.any(username=a.username, password=a.password)).first()
                 if bait_match:
                     break

@@ -56,6 +56,7 @@ class Server(object):
             clear_sessions = kwargs['clear_db']
         else:
             clear_sessions = True
+        max_sessions = kwargs['max_sessions']
 
         self.work_dir = work_dir
         self.config_file = 'beeswarmcfg.json'
@@ -75,7 +76,7 @@ class Server(object):
         self.actors.append(config_actor)
 
         database_setup.setup_db(os.path.join(self.config['sql']['connection_string']))
-        persistanceActor = SessionPersister(clear_sessions)
+        persistanceActor = SessionPersister(max_sessions, clear_sessions)
         persistanceActor.start()
         self.actors.append(persistanceActor)
         gevent.sleep()

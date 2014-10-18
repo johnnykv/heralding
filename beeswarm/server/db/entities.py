@@ -96,7 +96,7 @@ class Session(Base):
 
     id = Column(String, primary_key=True)
     received = Column(DateTime)
-    timestamp = Column(DateTime)
+    timestamp = Column(DateTime, index=True)
     protocol = Column(String)
     authentication = relationship('Authentication', cascade="all, delete-orphan")
     source_ip = Column(String)

@@ -92,6 +92,8 @@ if __name__ == '__main__':
     parser.add_argument('--config', dest='configurl', default='', help='Configuration URL to the server service.')
     parser.add_argument('--workdir', dest='workdir', default=os.getcwd())
     parser.add_argument('--logfile', dest='logfile', default='beeswarm.log')
+    parser.add_argument('--max_sessions', dest='max_sessions', type=int,  default=None,
+                        help ='Maximum number of sessions to store.')
     parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Logs debug messages.')
     parser.add_argument('--customize', action='store_true', default=False,
                         help='Asks for specific network and certificate information on the first run.')
@@ -138,7 +140,8 @@ if __name__ == '__main__':
         sys.exit(1)
 
     try:
-        m = mode(args.workdir, config, customize=args.customize, clear_db=args.clearsessions, reset_password=args.resetpw)
+        m = mode(args.workdir, config, customize=args.customize, clear_db=args.clearsessions, reset_password=args.resetpw,
+                 max_sessions=args.max_sessions)
     except ConfigNotFound as ex:
         logger.error(ex)
         sys.exit(ex)
