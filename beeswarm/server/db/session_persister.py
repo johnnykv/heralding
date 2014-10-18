@@ -260,8 +260,7 @@ class SessionPersister(gevent.Greenlet):
                 session.classification = db_session.query(Classification).filter(
                     Classification.type == 'bruteforce').one()
             db_session.commit()
-            self.processedSessionsPublisher('{0} {1}'.format(Messages.SESSION,
-                                                             json.dumps(session.to_dict())))
+            self.processedSessionsPublisher.send('{0} {1}'.format(Messages.SESSION, json.dumps(session.to_dict())))
 
     def send_config_request(self, request):
         return send_zmq_request_socket(self.config_actor_socket, request)
