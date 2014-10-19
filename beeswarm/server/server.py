@@ -56,12 +56,19 @@ class Server(object):
             clear_sessions = kwargs['clear_db']
         else:
             clear_sessions = True
+
+        if 'server_hostname' in kwargs:
+            server_hostname = kwargs['server_hostname']
+        else:
+            server_hostname = None
+
         max_sessions = kwargs['max_sessions']
+        start_webui = kwargs['start_webui']
 
         self.work_dir = work_dir
         self.config_file = 'beeswarmcfg.json'
         if config is None:
-            Server.prepare_environment(work_dir, customize)
+            Server.prepare_environment(work_dir, customize, server_hostname=server_hostname)
             with open(os.path.join(work_dir, self.config_file), 'r') as config_file:
                 self.config = json.load(config_file, object_hook=asciify)
         else:
@@ -81,7 +88,6 @@ class Server(object):
         self.actors.append(persistanceActor)
         gevent.sleep()
 
-        self.workers = {}
         self.greenlets = []
         self.started = False
 
@@ -191,11 +197,11 @@ class Server(object):
                         db_session.add(drone)
                         db_session.commit()
                         send_zmq_request(SocketNames.CONFIG_COMMANDS, '{0} {1}'.format(Messages.DRONE_CONFIG_CHANGED,
-                                                                                     drone_id))
+                                                                                       drone_id))
                 # drone want it's config transmitted
                 elif topic == Messages.DRONE_CONFIG:
                     config_dict = send_zmq_request('inproc://configCommands', '{0} {1}'.format(Messages.DRONE_CONFIG,
-                                                                                            drone_id))
+                                                                                               drone_id))
                     drone_data_outbound.send('{0} {1} {2}'.format(drone_id, Messages.CONFIG, json.dumps(config_dict)))
                 else:
                     logger.warn('Message with unknown topic received: {0}'.format(topic))
@@ -214,7 +220,6 @@ class Server(object):
 
         if maintenance:
             maintenance_greenlet = gevent.spawn(self.start_maintenance_tasks)
-            self.workers['maintenance'] = maintenance_greenlet
             self.greenlets.append(maintenance_greenlet)
 
         stop_if_not_write_workdir(self.work_dir)
@@ -224,7 +229,8 @@ class Server(object):
     def stop(self):
         self.started = False
         logging.info('Stopping server.')
-        self.workers['http'].stop(5)
+        for g in self.greenlets:
+            g.stop()
 
     def get_config(self, configfile):
         """
@@ -260,10 +266,9 @@ class Server(object):
             gevent.sleep(5)
 
     @staticmethod
-    def prepare_environment(work_dir, customize):
-        package_directory = os.path.dirname(os.path.abspath(beeswarm.__file__))
-        config_file = os.path.join(work_dir, 'beeswarmcfg.json')
+    def prepare_environment(work_dir, customize, server_hostname=None):
 
+        config_file = os.path.join(work_dir, 'beeswarmcfg.json')
         if not os.path.isfile(config_file):
             print '*** Please answer a few configuration options ***'
             if customize:
@@ -307,14 +312,15 @@ class Server(object):
             with open(key_path, 'w') as keyfile:
                 keyfile.write(priv_key)
 
-            print ''
-            print '* Communication between drones (honeypots and clients) and server *'
-            print '* Please make sure that drones can always contact the Beeswarm server using the information that' \
-                  ' you are about to enter. *'
+            if not server_hostname:
+                print ''
+                print '* Communication between drones (honeypots and clients) and server *'
+                print '* Please make sure that drones can always contact the Beeswarm server using the information that' \
+                      ' you are about to enter. *'
+                server_hostname = raw_input('IP or hostname of server: ')
 
             zmq_port = 5712
             zmq_command_port = 5713
-            server_hostname = raw_input('IP or hostname of server: ')
             if customize:
                 zmq_port_input = raw_input('TCP port for session data (default: 5712) : ')
                 if zmq_port_input != '':
@@ -339,26 +345,23 @@ class Server(object):
             else:
                 assert False
 
-            socket.send('{0} {1}'.format(Messages.SET_CONFIG_ITEM, json.dumps({'network': {'zmq_server_public_key': zmq_public,
-                                                                               'web_port': web_port,
-                                                                               'zmq_port': zmq_port,
-                                                                               'zmq_command_port': zmq_command_port,
-                                                                               'server_host': server_hostname},
-                                                                   'sql': {
-                                                                       'connection_string': 'sqlite:///beeswarm_sqlite.db'},
-                                                                   'ssl': {
-                                                                       'certpath': 'server.crt',
-                                                                       'keypath': 'server.key'
-                                                                   },
-                                                                   'general': {
-                                                                       'mode': 'server'
-                                                                   },
-                                                                   'bait_session_retain': 2,
-                                                                   'malicious_session_retain': 100,
-                                                                   'ignore_failed_bait_session': False
-
-
-            }
-            )))
+            message_dict = {'network': {'zmq_server_public_key': zmq_public,
+                                        'web_port': web_port,
+                                        'zmq_port': zmq_port,
+                                        'zmq_command_port': zmq_command_port,
+                                        'server_host': server_hostname},
+                            'sql': {
+                                'connection_string': 'sqlite:///beeswarm_sqlite.db'},
+                            'ssl': {
+                                'certpath': 'server.crt',
+                                'keypath': 'server.key'
+                            },
+                            'general': {
+                                'mode': 'server'
+                            },
+                            'bait_session_retain': 2,
+                            'malicious_session_retain': 100,
+                            'ignore_failed_bait_session': False}
+            socket.send('{0} {1}'.format(Messages.SET_CONFIG_ITEM, json.dumps(message_dict)))
             socket.recv()
             config_actor.close()

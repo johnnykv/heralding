@@ -230,7 +230,6 @@ class SessionPersister(gevent.Greenlet):
 
         :param delay_seconds: no sessions newer than (now - delay_seconds) will be processed.
         """
-        logger.debug('Classifying malicious sessions')
         min_datetime = datetime.utcnow() - timedelta(seconds=delay_seconds)
 
         db_session = self.db_session
