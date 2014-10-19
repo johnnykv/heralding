@@ -31,6 +31,7 @@ class Messages(Enum):
     BAIT_USER_ADD = 'BAIT_USER_ADD'
     BAIT_USER_DELETE = 'BAIT_USER_DELETE'
     DRONE_DELETE = 'DRONE_DELETE'
+    DRONE_ADD = 'DRONE_ADD'
 
     # Session was deleted because it was matched with an existing sesisons
     # This happens when a bait session is matched with a honeypot session.

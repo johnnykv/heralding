@@ -82,7 +82,7 @@ class Server(object):
         config_actor.start()
         self.actors.append(config_actor)
 
-        database_setup.setup_db(os.path.join(self.config['sql']['connection_string']))
+        database_setup.setup_db(self.config['sql']['connection_string'])
         persistanceActor = SessionPersister(max_sessions, clear_sessions)
         persistanceActor.start()
         self.actors.append(persistanceActor)
@@ -230,7 +230,7 @@ class Server(object):
         self.started = False
         logging.info('Stopping server.')
         for g in self.greenlets:
-            g.stop()
+            g.kill()
 
     def get_config(self, configfile):
         """

@@ -105,6 +105,8 @@ class ConfigActor(Greenlet):
         elif cmd == Messages.DRONE_DELETE:
             self._handle_command_delete_drone(data)
             self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
+        elif cmd == Messages.DRONE_ADD:
+            self._handle_command_add_drone()
         else:
             logger.warning('Unknown command received: {0}'.format(cmd))
             self.config_commands.send(Messages.FAIL)
@@ -343,3 +345,15 @@ class ConfigActor(Greenlet):
             self.drone_command_receiver.send('{0} {1} '.format(drone_id, Messages.DRONE_DELETE))
             self._remove_zmq_keys(drone_id)
             self._reconfigure_all_clients()
+
+    def _handle_command_add_drone(self):
+        db_session = database_setup.get_session()
+        drone = Drone()
+        db_session.add(drone)
+        db_session.commit()
+        logger.debug('New drone has been added with id: {0}'.format(drone.id))
+
+        drone_config = self._get_drone_config(drone.id)
+        self.config_commands.send('{0} {1}'.format(Messages.OK, json.dumps(drone_config)))
+
+

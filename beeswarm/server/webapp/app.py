@@ -405,11 +405,7 @@ def drone_key(key):
         logger.warn('Attempt to add new drone, but using wrong key from: {0}'.format(request.remote_addr))
         abort(401)
     else:
-        db_session = database_setup.get_session()
-        drone = Drone()
-        db_session.add(drone)
-        db_session.commit()
-        config_json = send_config_request('{0} {1}'.format(Messages.DRONE_CONFIG, drone.id))
+        config_json = send_config_request('{0}'.format(Messages.DRONE_ADD))
         return json.dumps(config_json)
 
 
