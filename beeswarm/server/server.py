@@ -85,11 +85,15 @@ class Server(object):
         self.greenlets = []
         self.started = False
 
-        from beeswarm.server.webapp import app
-        self.app = app.app
-        self.app.config['CERT_PATH'] = self.config['ssl']['certpath']
-        self.authenticator = Authenticator()
-        self.authenticator.ensure_default_user(reset_password)
+        if start_webui:
+            from beeswarm.server.webapp import app
+
+            self.app = app.app
+            self.app.config['CERT_PATH'] = self.config['ssl']['certpath']
+            self.authenticator = Authenticator()
+            self.authenticator.ensure_default_user(reset_password)
+        else:
+            self.app = None
 
     # distributes messages between external and internal receivers and senders
     def message_proxy(self, work_dir):
@@ -199,16 +203,14 @@ class Server(object):
     def start(self, maintenance=True):
         """
             Starts the BeeSwarm server.
-
-        :param port: The port on which the web-app is to run.
         """
         self.started = True
-        web_port = self.config['network']['web_port']
-        logger.info('Starting server listening on port {0}'.format(web_port))
-        http_server = WSGIServer(('', web_port), self.app, keyfile='server.key', certfile='server.crt')
-        http_server_greenlet = gevent.spawn(http_server.serve_forever)
-        self.workers['http'] = http_server
-        self.greenlets.append(http_server_greenlet)
+        if self.app:
+            web_port = self.config['network']['web_port']
+            logger.info('Starting server listening on port {0}'.format(web_port))
+            http_server = WSGIServer(('', web_port), self.app, keyfile='server.key', certfile='server.crt')
+            http_server_greenlet = gevent.spawn(http_server.serve_forever)
+            self.greenlets.append(http_server_greenlet)
 
         if maintenance:
             maintenance_greenlet = gevent.spawn(self.start_maintenance_tasks)

@@ -101,6 +101,8 @@ if __name__ == '__main__':
                         help='Deletes all sessions on startup.')
     parser.add_argument('--resetpw', action='store_true', default=False,
                         help='Deletes all sessions on startup.')
+    parser.add_argument('--no_webui', action='store_true', default=False,
+                        help='Do not start the web ui.')
     args = parser.parse_args()
 
     setuplogging(args.logfile, args.verbose)
@@ -141,7 +143,7 @@ if __name__ == '__main__':
 
     try:
         m = mode(args.workdir, config, customize=args.customize, clear_db=args.clearsessions, reset_password=args.resetpw,
-                 max_sessions=args.max_sessions)
+                 max_sessions=args.max_sessions, start_webui=not args.no_webui)
     except ConfigNotFound as ex:
         logger.error(ex)
         sys.exit(ex)
