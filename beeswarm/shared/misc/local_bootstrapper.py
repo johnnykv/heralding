@@ -52,20 +52,22 @@ def bootstrap(server_workdir, drone_workdir):
     console_log.setFormatter(formatter)
     root_logger.addHandler(console_log)
 
-    server = Server(server_workdir, None, start_webui=False, customize=False, reset_password=False,
+    server_workdir_absolute = os.path.abspath(server_workdir)
+    old_cwd = os.getcwd()
+    os.chdir(server_workdir)
+    server = Server(server_workdir_absolute, None, start_webui=False, customize=False, reset_password=False,
                     max_sessions=0, server_hostname='127.0.0.1')
     logger.info('Server config has been written to {0}'.format(os.path.join(server_workdir, 'beeswarmcfg.json')))
     gevent.spawn(server.start, False)
     # waiting game to ensure actors has started.
-    gevent.sleep(4)
+    gevent.sleep(2)
+    os.chdir(old_cwd)
 
     # setting up socket to communicate with ZMQ actor.
     context = beeswarm.shared.zmq_context
     config_actor_socket = context.socket(zmq.REQ)
     config_actor_socket.connect(SocketNames.CONFIG_COMMANDS)
 
-    # add a new drone to the db.
-    # TODO: This should be done by the config actor
     db_session = database_setup.get_session()
     drone = Honeypot()
 
@@ -99,6 +101,13 @@ def bootstrap(server_workdir, drone_workdir):
 
     for protocol, port, protocol_specific_data in protocol_config:
         drone.add_capability(protocol, port, protocol_specific_data)
+
+    drone.cert_common_name = '*'
+    drone.cert_country = 'US'
+    drone.cert_state = 'None'
+    drone.cert_locality = 'None'
+    drone.cert_organization = 'None'
+    drone.cert_organization_unit = ''
 
     db_session.add(drone)
     db_session.commit()
