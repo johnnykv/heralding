@@ -3,7 +3,6 @@
 pyzmq==14.3.0
 fs
 pycrypto>=2.6.0
-Crypto
 ecdsa
 cssselect
 nose
