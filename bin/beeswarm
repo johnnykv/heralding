@@ -30,9 +30,7 @@ from gevent import Greenlet
 
 import beeswarm
 from beeswarm.drones.drone import Drone
-from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.server.server import Server
-from beeswarm.drones.client.client import Client
 from beeswarm.errors import ConfigNotFound
 from beeswarm.shared.asciify import asciify
 from beeswarm.shared.helpers import is_url, extract_config_from_api
@@ -40,10 +38,12 @@ from beeswarm.shared.helpers import is_url, extract_config_from_api
 
 logger = logging.getLogger()
 
+
 def stopIfRoot():
     if os.getuid() == 0:
         logger.error('Beeswarm should not be started in this mode as root, please restart as a normal user.')
         sys.exit(1)
+
 
 def setuplogging(logfile, verbose):
     """
@@ -85,15 +85,12 @@ if __name__ == '__main__':
     parser = ArgumentParser(description='Beeswarm')
 
     group = parser.add_argument_group()
-    group.add_argument('-ho', '--honeypot', action='store_true', help='Starts beeswarm in honeypot mode.')
-    group.add_argument('-fe', '--client', action='store_true', help='Starts beeswarm in client mode.')
     group.add_argument('-se', '--server', action='store_true', help='Starts beeswarm in server mode.')
 
     parser.add_argument('--config', dest='configurl', default='', help='Configuration URL to the server service.')
     parser.add_argument('--workdir', dest='workdir', default=os.getcwd())
-    parser.add_argument('--logfile', dest='logfile', default='beeswarm.log')
-    parser.add_argument('--max_sessions', dest='max_sessions', type=int,  default=None,
-                        help ='Maximum number of sessions to store.')
+    parser.add_argument('--max_sessions', dest='max_sessions', type=int, default=None,
+                        help='Maximum number of sessions to store.')
     parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Logs debug messages.')
     parser.add_argument('--customize', action='store_true', default=False,
                         help='Asks for specific network and certificate information on the first run.')
@@ -105,35 +102,35 @@ if __name__ == '__main__':
                         help='Do not start the web ui.')
     args = parser.parse_args()
 
-    setuplogging(args.logfile, args.verbose)
+    if not os.path.isabs(args.workdir):
+        error_text = 'Work directory must be as a absolute path: {0}'.format(args.workdir)
+        sys.exit(error_text)
+
+    setuplogging(os.path.join(args.workdir, 'beeswarm.log'), args.verbose)
     mode = None
     config = None
-    config_file = None
     logger.info('Initializing BeeSwarm version {0}'.format(beeswarm.version))
+
+    config_file = os.path.join(args.workdir, 'beeswarmcfg.json')
 
     if is_url(args.configurl):
         # meh, MiTM problem here... Acceptable? Workaround?
         # maybe print fingerprint on the web ui and let user verify manually?
-        config_extracted = extract_config_from_api(args.configurl)
+        config_extracted = extract_config_from_api(args.configurl, config_file)
         if not config_extracted:
             logger.error('Error while extracting configuration from {0}, please make sure that the correct url was '
                          'provided.'.format(args.configurl))
             sys.exit(1)
 
-    if os.path.isfile('beeswarmcfg.json'):
-        with open('beeswarmcfg.json', 'r') as config_file:
-            config = json.load(config_file, object_hook=asciify)
+    if os.path.isfile(config_file):
+        with open(config_file, 'r') as _file:
+            config = json.load(_file, object_hook=asciify)
             if 'general' in config:
                 _mode = config['general']['mode']
                 if _mode == 'server':
                     mode = Server
                 else:
                     mode = Drone
-    elif args.honeypot:
-        mode = Honeypot
-    elif args.client:
-        stopIfRoot()
-        mode = Client
     elif args.server:
         stopIfRoot()
         mode = Server
@@ -142,8 +139,8 @@ if __name__ == '__main__':
         sys.exit(1)
 
     try:
-        m = mode(args.workdir, config, customize=args.customize, clear_db=args.clearsessions, reset_password=args.resetpw,
-                 max_sessions=args.max_sessions, start_webui=not args.no_webui)
+        m = mode(args.workdir, config, customize=args.customize, clear_db=args.clearsessions,
+                 reset_password=args.resetpw, max_sessions=args.max_sessions, start_webui=not args.no_webui)
     except ConfigNotFound as ex:
         logger.error(ex)
         sys.exit(ex)
@@ -157,4 +154,3 @@ if __name__ == '__main__':
         m.stop()
     finally:
         gevent.joinall([mode_greenlet], 5)
-        # Restore previous terminal state

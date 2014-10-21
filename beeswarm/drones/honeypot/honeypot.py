@@ -57,12 +57,11 @@ class Honeypot(object):
         """
         if config is None or not os.path.isdir(os.path.join(work_dir, 'data')):
             Honeypot.prepare_environment(work_dir)
-            with open('beeswarmcfg.json', 'r') as config_file:
-                config = json.load(config_file, object_hook=asciify)
+
         self.work_dir = work_dir
         self.config = config
-        self.key = key
-        self.cert = cert
+        self.key = os.path.join(work_dir, key)
+        self.cert = os.path.join(work_dir, cert)
         self._servers = []
         self._server_greenlets = []
         # will contain Session objects

@@ -48,9 +48,7 @@ class Client(object):
         self.run_flag = True
         # maps honeypot id to IP
         self.honeypot_map = {}
-
-        with open('beeswarmcfg.json', 'r') as config_file:
-            self.config = json.load(config_file, object_hook=asciify)
+        self.config = config
 
         # write ZMQ keys to files - as expected by pyzmq
         extract_keys(work_dir, config)

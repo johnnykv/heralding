@@ -66,9 +66,10 @@ class Server(object):
         start_webui = kwargs['start_webui']
 
         self.work_dir = work_dir
-        self.config_file = 'beeswarmcfg.json'
+        self.config_file = os.path.join(work_dir, 'beeswarmcfg.json')
+
         if config is None:
-            Server.prepare_environment(work_dir, customize, server_hostname=server_hostname)
+            self.prepare_environment(work_dir, customize, server_hostname=server_hostname)
             with open(os.path.join(work_dir, self.config_file), 'r') as config_file:
                 self.config = json.load(config_file, object_hook=asciify)
         else:
@@ -82,10 +83,15 @@ class Server(object):
         config_actor.start()
         self.actors.append(config_actor)
 
-        database_setup.setup_db(self.config['sql']['connection_string'])
-        persistanceActor = SessionPersister(max_sessions, clear_sessions)
-        persistanceActor.start()
-        self.actors.append(persistanceActor)
+        # make path in sqlite connection string absolute
+        connection_string = self.config['sql']['connection_string']
+        if connection_string.startswith('sqlite:///'):
+            _, relative_path = os.path.split(connection_string)
+            connection_string = 'sqlite:///{0}'.format(os.path.join(self.work_dir, relative_path))
+        database_setup.setup_db(connection_string)
+        persistence_actor = SessionPersister(max_sessions, clear_sessions)
+        persistence_actor.start()
+        self.actors.append(persistence_actor)
         gevent.sleep()
 
         self.greenlets = []
@@ -214,7 +220,9 @@ class Server(object):
         if self.app:
             web_port = self.config['network']['web_port']
             logger.info('Starting server listening on port {0}'.format(web_port))
-            http_server = WSGIServer(('', web_port), self.app, keyfile='server.key', certfile='server.crt')
+            key_file = os.path.join(self.work_dir, 'server.key')
+            cert_file = os.path.join(self.work_dir, 'server.crt')
+            http_server = WSGIServer(('', web_port), self.app, keyfile=key_file, certfile=cert_file)
             http_server_greenlet = gevent.spawn(http_server.serve_forever)
             self.greenlets.append(http_server_greenlet)
 
@@ -265,10 +273,9 @@ class Server(object):
             # check config file for changes every 5 second
             gevent.sleep(5)
 
-    @staticmethod
-    def prepare_environment(work_dir, customize, server_hostname=None):
+    def prepare_environment(self, work_dir, customize, server_hostname=None):
 
-        config_file = os.path.join(work_dir, 'beeswarmcfg.json')
+        config_file = self.config_file
         if not os.path.isfile(config_file):
             print '*** Please answer a few configuration options ***'
             if customize:
@@ -331,7 +338,7 @@ class Server(object):
                     zmq_command_port = int(zmq_port)
 
             # tmp actor while initializing
-            config_actor = ConfigActor('beeswarmcfg.json', work_dir, True)
+            config_actor = ConfigActor(self.config_file, work_dir, True)
             config_actor.start()
             context = beeswarm.shared.zmq_context
             socket = context.socket(zmq.REQ)
@@ -345,13 +352,14 @@ class Server(object):
             else:
                 assert False
 
+            sqlite_db = os.path.join(work_dir, 'beeswarm_sqlite.db')
             message_dict = {'network': {'zmq_server_public_key': zmq_public,
                                         'web_port': web_port,
                                         'zmq_port': zmq_port,
                                         'zmq_command_port': zmq_command_port,
                                         'server_host': server_hostname},
                             'sql': {
-                                'connection_string': 'sqlite:///beeswarm_sqlite.db'},
+                                'connection_string': 'sqlite:///{0}'.format(sqlite_db)},
                             'ssl': {
                                 'certpath': 'server.crt',
                                 'keypath': 'server.key'

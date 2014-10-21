@@ -43,7 +43,7 @@ def setup_db(connection_string):
     new_database = False
     if connection_string == 'sqlite://' or not database_exists(connection_string):
         new_database = True
-    engine = create_engine(connection_string)
+    engine = create_engine(connection_string, connect_args={'timeout': 20})
     entities.Base.metadata.create_all(engine)
     DB_Session = sessionmaker(bind=engine)
     db_path = os.path.dirname(__file__)

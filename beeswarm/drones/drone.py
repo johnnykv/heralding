@@ -53,6 +53,7 @@ class Drone(object):
         extract_keys(work_dir, config)
         self.work_dir = work_dir
         self.config = config
+        self.config_file = os.path.join(work_dir, 'beeswarmcfg.json')
         self.key = key
         self.cert = cert
         self.id = self.config['general']['id']
@@ -109,7 +110,7 @@ class Drone(object):
         Restarts the drone
         """
 
-        with open('beeswarmcfg.json', 'r') as config_file:
+        with open(self.config_file, 'r') as config_file:
             self.config = json.load(config_file, object_hook=asciify)
 
         mode = None
@@ -180,7 +181,7 @@ class Drone(object):
                     send_zmq_push(SocketNames.SERVER_RELAY, '{0}'.format(Messages.PING))
                     self.config_received.set()
                     config = json.loads(data)
-                    with open('beeswarmcfg.json', 'w') as local_config:
+                    with open(self.config_file, 'w') as local_config:
                         local_config.write(json.dumps(config, indent=4))
                     self.stop()
                     self._start_drone()
@@ -274,7 +275,7 @@ class Drone(object):
                     config_url = open(_file).read()
                 logger.info('Found dropped api config url in {0}, with content: {1}.'.format(self.work_dir, config_url))
                 os.remove(dropped_config_url_file)
-                extract_config_from_api(config_url)
+                extract_config_from_api(config_url, self.config_file)
                 self.stop()
                 self._start_drone()
 

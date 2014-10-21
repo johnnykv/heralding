@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+import os
 
 from telnetsrv.paramiko_ssh import SSHHandler, TelnetToPtyHandler
 from paramiko import RSAKey
@@ -30,7 +31,7 @@ class SSH(HandlerBase):
     def __init__(self, sessions, options, work_dir, key='server.key'):
         logging.getLogger("telnetsrv.paramiko_ssh ").setLevel(logging.WARNING)
         logging.getLogger("paramiko").setLevel(logging.WARNING)
-        self.key = key
+        self.key = os.path.join(work_dir, key)
         super(SSH, self).__init__(sessions, options, work_dir)
 
     def handle_session(self, gsocket, address):

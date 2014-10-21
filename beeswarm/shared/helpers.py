@@ -241,7 +241,7 @@ def extract_keys(work_dir, config):
         key_file.writelines(config['beeswarm_server']['zmq_own_private'])
 
 
-def extract_config_from_api(config_url):
+def extract_config_from_api(config_url, config_file):
     # meh, MiTM problem here... Acceptable? Workaround?
     # maybe print fingerprint on the web ui and let user verify manually?
     try:
@@ -251,7 +251,7 @@ def extract_config_from_api(config_url):
         return False
     if req.status_code == 200:
         config = json.loads(req.text, object_hook=asciify)
-        with open('beeswarmcfg.json', 'w') as local_config:
+        with open(config_file, 'w') as local_config:
             local_config.write(json.dumps(config, indent=4))
         return True
     else:
