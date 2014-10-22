@@ -82,6 +82,7 @@ class Drone(object):
                 logger.warning('Could not fetch public ip: {0}'.format(e))
         else:
             self.ip = ''
+        self.greenlets = []
 
     def start(self):
         """ Starts services. """
@@ -97,8 +98,10 @@ class Drone(object):
 
         self.outgoing_msg_greenlet = gevent.spawn(self.outgoing_server_comms, server_public,
                                                   client_public, client_secret)
+        self.outgoing_msg_greenlet.link_exception(self.on_exception)
         self.incoming_msg_greenlet = gevent.spawn(self.incoming_server_comms, server_public,
                                                   client_public, client_secret)
+        self.incoming_msg_greenlet.link_exception(self.on_exception)
 
         self.config_url_dropper_greenlet = gevent.spawn(self.config_url_drop_poller)
 
@@ -124,18 +127,26 @@ class Drone(object):
         if mode:
             self.drone = mode(self.work_dir, self.config)
             self.drone_greenlet = gevent.spawn(self.drone.start)
+            self.drone_greenlet.link_exception(self.on_exception)
             logger.info('Drone configured and running'.format(self.id))
 
     def stop(self):
         """Stops services"""
         logging.debug('Stopping drone, hang on.')
         if self.drone is not None:
+            self.drone_greenlet.unlink(self.on_exception)
             self.drone.stop()
+            self.drone_greenlet.kill()
             self.drone = None
         # just some time for the drone to powerdown to be nice.
         gevent.sleep(2)
         if self.drone_greenlet is not None:
             self.drone_greenlet.kill(timeout=5)
+
+    def on_exception(self, dead_greenlet):
+        logger.error('Stopping because {0} died: {1}'.format(dead_greenlet, dead_greenlet.exception))
+        self.stop()
+        sys.exit(1)
 
     # command from server
     def incoming_server_comms(self, server_public, client_public, client_secret):

@@ -1,3 +1,6 @@
+0.7.6:
+ - Various minor fixes.
+
 0.7.5:
  - Added cmdline options to run headless.
  - Various minor fixes.

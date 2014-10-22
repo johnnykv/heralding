@@ -15,6 +15,7 @@
 
 import json
 import logging
+import sys
 import os
 from datetime import datetime
 
@@ -77,11 +78,14 @@ class Server(object):
         # list of all self-running (actor) objects that receive or send
         # messages on one or more zmq queues
         self.actors = []
+        self.greenlets = []
 
-        gevent.spawn(self.message_proxy, work_dir)
+        proxy_greenlet = gevent.spawn(self.message_proxy, work_dir)
+        self.greenlets.append(proxy_greenlet)
         config_actor = ConfigActor(self.config_file, work_dir)
         config_actor.start()
         self.actors.append(config_actor)
+        self.greenlets.append(config_actor)
 
         # make path in sqlite connection string absolute
         connection_string = self.config['sql']['connection_string']
@@ -92,9 +96,13 @@ class Server(object):
         persistence_actor = SessionPersister(max_sessions, clear_sessions)
         persistence_actor.start()
         self.actors.append(persistence_actor)
+        self.greenlets.append(persistence_actor)
+
+        for g in self.greenlets:
+            g.link_exception(self.on_exception)
+
         gevent.sleep()
 
-        self.greenlets = []
         self.started = False
 
         if start_webui:
@@ -239,6 +247,11 @@ class Server(object):
         logging.info('Stopping server.')
         for g in self.greenlets:
             g.kill()
+
+    def on_exception(self, dead_greenlet):
+        logger.error('Stopping because {0} died: {1}'.format(dead_greenlet, dead_greenlet.exception))
+        self.stop()
+        sys.exit(1)
 
     def get_config(self, configfile):
         """
