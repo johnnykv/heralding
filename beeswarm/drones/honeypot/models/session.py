@@ -15,10 +15,12 @@
 
 import hmac
 import logging
+import json
 from datetime import datetime
 
 from beeswarm.shared.models.base_session import BaseSession
 from beeswarm.shared.misc.rfbes import RFBDes
+from beeswarm.shared.asciify import asciify
 
 logger = logging.getLogger(__name__)
 
@@ -88,5 +90,9 @@ class Session(BaseSession):
         else:
             self.add_auth_attempt(_type, False, **kwargs)
 
-        logger.debug('Authentication attempt {0}'.format('successfull' if authenticated else 'unsuccessfull'))
+        if _type == 'des_challenge':
+            kwargs['challenge'] = kwargs.get('challenge').encode('hex')
+            kwargs['response'] = kwargs.get('response').encode('hex')
+        logger.info('{0} authentication attempt. Credentials: {1}'.format(self.protocol, json.dumps(kwargs)))
+
         return authenticated

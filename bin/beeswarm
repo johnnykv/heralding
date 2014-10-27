@@ -21,6 +21,7 @@ import gevent.monkey
 gevent.monkey.patch_all()
 
 import logging
+import logging.handlers
 import json
 from argparse import ArgumentParser
 import sys
@@ -67,8 +68,11 @@ def setuplogging(logfile, verbose):
     console_log.setFormatter(formatter)
     root_logger.addHandler(console_log)
 
-    file_log = logging.FileHandler(logfile)
-    file_log.setLevel(logging.DEBUG)
+    if logfile in ('/dev/log', '/dev/syslog', '/var/run/syslog', '/var/run/log'):
+        file_log = logging.handlers.SysLogHandler(address=logfile, facility='local1')
+    else:
+        file_log = logging.FileHandler(logfile)
+    file_log.setLevel(loglevel)
     file_log.setFormatter(formatter)
     root_logger.addHandler(file_log)
 
@@ -100,13 +104,16 @@ if __name__ == '__main__':
                         help='Deletes all sessions on startup.')
     parser.add_argument('--no_webui', action='store_true', default=False,
                         help='Do not start the web ui.')
+    parser.add_argument('-l', '--logfile', dest='logfile', default='beeswarm.log', help='Beeswarm log file..')
     args = parser.parse_args()
 
     if not os.path.isabs(args.workdir):
         error_text = 'Work directory must be as a absolute path: {0}'.format(args.workdir)
         sys.exit(error_text)
 
-    setuplogging(os.path.join(args.workdir, 'beeswarm.log'), args.verbose)
+    if not os.path.isabs(args.logfile):
+        args.logfile = os.path.join(args.workdir, args.logfile)
+    setuplogging(args.logfile, args.verbose)
     mode = None
     config = None
     logger.info('Initializing BeeSwarm version {0}'.format(beeswarm.version))
