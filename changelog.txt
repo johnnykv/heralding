@@ -1,5 +1,8 @@
+0.7.8:
+ - Extended logging.
+
 0.7.7:
- - Enabled logging to syslog using -l parameter
+ - Enabled logging to syslog using -l parameter.
 
 0.7.6:
  - Various minor fixes.

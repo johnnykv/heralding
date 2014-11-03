@@ -93,6 +93,7 @@ class Session(BaseSession):
         if _type == 'des_challenge':
             kwargs['challenge'] = kwargs.get('challenge').encode('hex')
             kwargs['response'] = kwargs.get('response').encode('hex')
-        logger.info('{0} authentication attempt. Credentials: {1}'.format(self.protocol, json.dumps(kwargs)))
+        logger.info('{0} authentication attempt from {1}:{2}. Credentials: {3}'.format(self.protocol, self.source_ip,
+                                                                                self.source_port, json.dumps(kwargs)))
 
         return authenticated
