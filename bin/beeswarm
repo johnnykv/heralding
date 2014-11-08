@@ -53,29 +53,30 @@ def setuplogging(logfile, verbose):
     :param verbose: If True, enables verbose logging.
     """
     root_logger = logging.getLogger()
-    root_logger.setLevel(logging.DEBUG)
 
-    formatter = logging.Formatter('%(asctime)-15s (%(name)s) %(message)s')
+    defaultFormatter = logging.Formatter('%(asctime)-15s (%(name)s) %(message)s')
 
     if verbose:
         loglevel = logging.DEBUG
     else:
         loglevel = logging.INFO
+    root_logger.setLevel(loglevel)
 
     console_log = logging.StreamHandler()
     console_log.addFilter(LogFilter())
     console_log.setLevel(loglevel)
-    console_log.setFormatter(formatter)
+    console_log.setFormatter(defaultFormatter)
     root_logger.addHandler(console_log)
 
     if logfile in ('/dev/log', '/dev/syslog', '/var/run/syslog', '/var/run/log'):
         file_log = logging.handlers.SysLogHandler(address=logfile, facility='local1')
+        syslog_formatter = logging.Formatter('beeswarm[%(process)d]: %(message)s')
+        file_log.setFormatter(syslog_formatter)
     else:
         file_log = logging.FileHandler(logfile)
+        file_log.setFormatter(defaultFormatter)
     file_log.setLevel(loglevel)
-    file_log.setFormatter(formatter)
     root_logger.addHandler(file_log)
-
 
 class LogFilter(logging.Filter):
     def filter(self, rec):
