@@ -86,7 +86,7 @@ def bootstrap(server_workdir, drone_workdir):
         ('pop3s', 993, {
             'max_attempts': 3
         }),
-        ('ssh', 21, {}),
+        ('ssh', 22, {}),
         ('http', 80, {
             'banner': 'Microsoft-IIS/5.0'
         }),
