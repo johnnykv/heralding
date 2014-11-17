@@ -234,7 +234,7 @@ class ConfigActor(Greenlet):
         drone_config = {
             'general': {
                 'mode': drone.discriminator,
-                'id': drone_id,
+                'id': int(drone.id),
                 'fetch_ip': False,
                 'name': drone.name
             },

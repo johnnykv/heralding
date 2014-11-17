@@ -33,7 +33,6 @@ from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.drones.client.client import Client
 from beeswarm.shared.socket_enum import SocketNames
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -70,7 +69,6 @@ class Drone(object):
         ctx = beeswarm.shared.zmq_context
         self.internal_server_relay = ctx.socket(zmq.PUSH)
         self.internal_server_relay.bind(SocketNames.SERVER_COMMANDS)
-        self.config_received = gevent.event.Event()
 
         if self.config['general']['fetch_ip']:
             try:
@@ -83,6 +81,7 @@ class Drone(object):
         else:
             self.ip = ''
         self.greenlets = []
+        self.config_received = gevent.event.Event()
 
     def start(self):
         """ Starts services. """
@@ -190,12 +189,15 @@ class Drone(object):
                 # if we receive a configuration we restart the drone
                 if command == Messages.CONFIG:
                     send_zmq_push(SocketNames.SERVER_RELAY, '{0}'.format(Messages.PING))
-                    self.config_received.set()
-                    config = json.loads(data)
-                    with open(self.config_file, 'w') as local_config:
-                        local_config.write(json.dumps(config, indent=4))
-                    self.stop()
-                    self._start_drone()
+                    config = json.loads(data, object_hook=asciify)
+                    if self.config != config or not self.config_received.isSet():
+                        logger.debug('Setting config.')
+                        self.config = config
+                        with open(self.config_file, 'w') as local_config:
+                            local_config.write(json.dumps(config, indent=4))
+                        self.stop()
+                        self._start_drone()
+                        self.config_received.set()
                 elif command == Messages.DRONE_DELETE:
                     self._handle_delete()
                 else:
@@ -257,11 +259,12 @@ class Drone(object):
                 value = data['value']
                 if event == zmq.EVENT_CONNECTED:
                     logger.info('Connected to {0}'.format(log_name))
+                    # always ask for config to avoid race condition.
+                    send_zmq_push(SocketNames.SERVER_RELAY, '{0}'.format(Messages.DRONE_CONFIG))
                     if 'outgoing' in log_name:
                         send_zmq_push(SocketNames.SERVER_RELAY, '{0}'.format(Messages.PING))
                         own_ip = get_most_likely_ip()
                         send_zmq_push(SocketNames.SERVER_RELAY, '{0} {1}'.format(Messages.IP, own_ip))
-                        send_zmq_push(SocketNames.SERVER_RELAY, '{0}'.format(Messages.DRONE_CONFIG))
                     elif 'incomming':
                         pass
                     else:
