@@ -37,7 +37,6 @@ class BeeFTPHandler(object):
         self.banner = options['protocol_specific_data']['banner']
         self.max_logins = int(options['protocol_specific_data']['max_attempts'])
         self.syst_type = options['protocol_specific_data']['syst_type']
-        self.curr_logins = 0
         self.authenticated = False
         self.conn = conn
         self.serve_flag = True
@@ -108,7 +107,7 @@ class BeeFTPHandler(object):
         else:
             self.authenticated = False
             self.respond('530 Authentication Failed.')
-            if self.curr_logins >= self.max_logins:
+            if self.session.get_number_of_login_attempts() >= self.max_logins:
                 self.stop()
 
     def do_PORT(self, arg):

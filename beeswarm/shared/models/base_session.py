@@ -57,6 +57,9 @@ class BaseSession(object):
 
         self.login_attempts.append(entry)
 
+    def get_number_of_login_attempts(self):
+        return len(self.login_attempts)
+
     def _add_transcript(self, direction, data):
         self.transcript.append({'timestamp': datetime.utcnow(), 'direction': direction, 'data': data})
 
