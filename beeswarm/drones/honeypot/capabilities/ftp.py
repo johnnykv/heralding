@@ -55,6 +55,9 @@ class BeeFTPHandler(object):
         self.client_addr = None  # data connection
         self.client_port = None  #
         self.working_dir = None
+        self.user = None
+        self.cli_ip = None
+        self.cli_port = None
         self.serve()
 
     def serve(self):
@@ -98,9 +101,8 @@ class BeeFTPHandler(object):
         if self.state != 'USER':
             self.respond('503 Login with USER first.')
             return
-        self.curr_logins += 1
-        self.passwd = arg
-        if self.session.try_auth('plaintext', username=self.user, password=self.passwd):
+        passwd = arg
+        if self.session.try_auth('plaintext', username=self.user, password=passwd):
             self.authenticated = True
             self.working_dir = '/'
             self.respond('230 Login Successful.')
