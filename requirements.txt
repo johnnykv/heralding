@@ -1,6 +1,6 @@
 --allow-unverified pyDes
 --allow-external pyDes
-pyzmq==14.3.0
+pyzmq>=14.3.0
 fs
 pycrypto>=2.6.0
 ecdsa
