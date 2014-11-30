@@ -16,11 +16,16 @@
 import hmac
 import logging
 import json
+import uuid
 from datetime import datetime
+import zmq.green as zmq
 
+
+import beeswarm
 from beeswarm.shared.models.base_session import BaseSession
 from beeswarm.shared.misc.rfbes import RFBDes
-from beeswarm.shared.asciify import asciify
+from beeswarm.shared.socket_enum import SocketNames
+from beeswarm.shared.message_enum import Messages
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +47,11 @@ class Session(BaseSession):
         # for session specific volatile data (will not get logged)
         self.vdata = {}
         self.last_activity = datetime.utcnow()
+
+        context = beeswarm.shared.zmq_context
+        self.socket = context.socket(zmq.PUSH)
+        self.socket.connect(SocketNames.SERVER_RELAY)
+        self.send_log(Messages.SESSION_PART_HONEYPOT_SESSION_START, self.to_dict())
 
     def activity(self):
         self.last_activity = datetime.utcnow()
@@ -93,7 +103,26 @@ class Session(BaseSession):
         if _type == 'des_challenge':
             kwargs['challenge'] = kwargs.get('challenge').encode('hex')
             kwargs['response'] = kwargs.get('response').encode('hex')
+
+        self.send_log(Messages.SESSION_PART_HONEYPOT_AUTH, self.login_attempts[-1])
         logger.info('{0} authentication attempt from {1}:{2}. Credentials: {3}'.format(self.protocol, self.source_ip,
                                                                                 self.source_port, json.dumps(kwargs)))
 
         return authenticated
+
+    def end_session(self):
+        self.send_log(Messages.SESSION_HONEYPOT, self.to_dict())
+        self.socket.close()
+
+    def send_log(self, type, in_data):
+        data = json.dumps(in_data, default=json_default, ensure_ascii=False)
+        self.socket.send('{0} {1}'.format(type, self.honeypot_id, data))
+
+
+def json_default(obj):
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    elif isinstance(obj, uuid.UUID):
+        return str(obj)
+    else:
+        return None

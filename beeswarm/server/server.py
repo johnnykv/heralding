@@ -184,7 +184,9 @@ class Server(object):
                 db_session.add(drone)
                 db_session.commit()
 
-                if topic == Messages.SESSION_HONEYPOT or topic == Messages.SESSION_CLIENT:
+                if topic == Messages.SESSION_HONEYPOT or topic == Messages.SESSION_CLIENT or \
+                    topic == Messages.SESSION_PART_HONEYPOT_SESSION_START or \
+                    topic == Messages.SESSION_PART_HONEYPOT_AUTH:
                     rawSessionPublisher.send('{0} {1}'.format(topic, data))
                 elif topic == Messages.KEY or topic == Messages.CERT:
                     # for now we just store the fingerprint

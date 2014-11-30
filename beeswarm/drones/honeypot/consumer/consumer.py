@@ -46,7 +46,7 @@ class Consumer:
             for session_id in self.sessions.keys():
                 session = self.sessions[session_id]
                 if not session.is_connected():
-                    self.logger.log(session)
+                    #self.logger.log(session)
                     del self.sessions[session_id]
                     logger.debug('Removed {0} connection from {1}. ({2})'.format(session.protocol,
                                                                                  session.source_ip,
