@@ -41,7 +41,7 @@ class SSH(HandlerBase):
         except (SSHException, EOFError) as ex:
             logger.debug('Unexpected end of ssh session: {0}. ({1})'.format(ex, session.id))
 
-        session.connected = False
+        session.end_session()
 
 
 class BeeTelnetHandler(Commands):
@@ -93,7 +93,7 @@ class SshWrapper(SSHHandler):
         raise
 
     def finish(self):
-        self.session.connected = False
+        self.session.end_session()
 
     def setup(self):
 

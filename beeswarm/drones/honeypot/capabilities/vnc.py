@@ -77,7 +77,7 @@ class vnc(HandlerBase):
         except socket.error as err:
             logger.debug('Unexpected end of VNC session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
 
-        session.connected = False
+        session.end_session()
 
 
 def get_random_challenge():

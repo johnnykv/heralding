@@ -297,4 +297,4 @@ class smtp(HandlerBase):
             # im sooooo evil!
             pass
         finally:
-            session_.connected = False
+            session.end_session()

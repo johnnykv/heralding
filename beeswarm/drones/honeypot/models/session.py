@@ -52,6 +52,7 @@ class Session(BaseSession):
         self.socket = context.socket(zmq.PUSH)
         self.socket.connect(SocketNames.SERVER_RELAY)
         self.send_log(Messages.SESSION_PART_HONEYPOT_SESSION_START, self.to_dict())
+        self.session_ended = False
 
     def activity(self):
         self.last_activity = datetime.utcnow()
@@ -111,12 +112,14 @@ class Session(BaseSession):
         return authenticated
 
     def end_session(self):
-        self.send_log(Messages.SESSION_HONEYPOT, self.to_dict())
-        self.socket.close()
+        if not self.session_ended:
+            self.session_ended = True
+            self.send_log(Messages.SESSION_HONEYPOT, self.to_dict())
+            self.connected = False
 
     def send_log(self, type, in_data):
         data = json.dumps(in_data, default=json_default, ensure_ascii=False)
-        self.socket.send('{0} {1}'.format(type, self.honeypot_id, data))
+        self.socket.send('{0} {1} {2}'.format(type, self.honeypot_id, data))
 
 
 def json_default(obj):

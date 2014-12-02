@@ -36,7 +36,7 @@ class Telnet(HandlerBase):
         except socket.error as err:
             logger.debug('Unexpected end of telnet session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
 
-        session.connected = False
+        session.end_session()
 
 
 class TelnetWrapper(Commands):
@@ -81,7 +81,7 @@ class TelnetWrapper(Commands):
         return False
 
     def session_end(self):
-        self.session.connected = False
+        self.session.end_session()
 
     def setterm(self, term):
 
