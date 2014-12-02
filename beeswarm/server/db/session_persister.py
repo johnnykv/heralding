@@ -58,7 +58,8 @@ class SessionPersister(gevent.Greenlet):
         context = beeswarm.shared.zmq_context
         self.subscriber_sessions = context.socket(zmq.SUB)
         self.subscriber_sessions.connect(SocketNames.RAW_SESSIONS)
-        self.subscriber_sessions.setsockopt(zmq.SUBSCRIBE, '')
+        self.subscriber_sessions.setsockopt(zmq.SUBSCRIBE, Messages.SESSION_CLIENT)
+        self.subscriber_sessions.setsockopt(zmq.SUBSCRIBE, Messages.SESSION_HONEYPOT)
 
         self.processedSessionsPublisher = context.socket(zmq.PUB)
         self.processedSessionsPublisher.bind(SocketNames.PROCESSED_SESSIONS)
@@ -78,7 +79,8 @@ class SessionPersister(gevent.Greenlet):
                 self.classify_malicious_sessions()
                 self.do_classify = False
             elif self.subscriber_sessions in socks and socks[self.subscriber_sessions] == zmq.POLLIN:
-                topic, session_json = self.subscriber_sessions.recv().split(' ', 1)
+                data = self.subscriber_sessions.recv()
+                topic, honeypot_id, session_json = data.split(' ', 2)
                 self.persist_session(session_json, topic)
 
     def _start_recurring_classify_set(self):
