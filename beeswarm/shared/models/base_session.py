@@ -15,7 +15,13 @@
 
 import uuid
 import logging
+import json
 from datetime import datetime
+
+import zmq.green as zmq
+import beeswarm
+from beeswarm.shared.socket_enum import SocketNames
+from beeswarm.shared.message_enum import Messages
 
 
 logger = logging.getLogger(__name__)
@@ -32,6 +38,12 @@ class BaseSession(object):
         self.timestamp = datetime.utcnow()
         self.login_attempts = []
         self.transcript = []
+        self.session_ended = False
+
+
+        context = beeswarm.shared.zmq_context
+        self.socket = context.socket(zmq.PUSH)
+        self.socket.connect(SocketNames.SERVER_RELAY)
 
     def add_auth_attempt(self, auth_type, successful, **kwargs):
         """
@@ -69,5 +81,25 @@ class BaseSession(object):
     def transcript_outgoing(self, data):
         self._add_transcript('outgoing', data)
 
+    def send_log(self, type, in_data):
+        data = json.dumps(in_data, default=json_default, ensure_ascii=False)
+        self.socket.send('{0} {1} {2}'.format(type, self.honeypot_id, data))
+
     def to_dict(self):
         return vars(self)
+
+    def end_session(self, session_type):
+        if not self.session_ended:
+            self.session_ended = True
+            self.send_log(session_type, self.to_dict())
+            self.connected = False
+
+
+
+def json_default(obj):
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    elif isinstance(obj, uuid.UUID):
+        return str(obj)
+    else:
+        return None

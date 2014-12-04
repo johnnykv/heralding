@@ -81,3 +81,4 @@ class vnc(ClientBase):
 
         finally:
             session.alldone = True
+            session.end_session()

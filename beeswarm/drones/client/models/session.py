@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from beeswarm.shared.models.base_session import BaseSession
+from beeswarm.shared.message_enum import Messages
 
 
 class BaitSession(BaseSession):
@@ -36,3 +37,6 @@ class BaitSession(BaseSession):
 
     def to_dict(self):
         return vars(self)
+
+    def end_session(self):
+        super(BaitSession, self).end_session(Messages.SESSION_CLIENT)

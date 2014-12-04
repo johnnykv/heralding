@@ -105,6 +105,7 @@ class ftp(ClientBase):
             if self.client.sock is not None:
                 self.client.quit()
             session.alldone = True
+        session.end_session()
 
     def sense(self):
         """

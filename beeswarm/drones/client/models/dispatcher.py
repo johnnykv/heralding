@@ -56,7 +56,7 @@ class BaitDispatcher(Greenlet):
     def _run(self):
         # TODO: This could be done better and more clearly, something along the lines of :
         # 1.  spawn_later(second_until_start_of_range, GOTO 2)
-        # 2.  Role the dice and check probability
+        # 2.  Role the die and check probability
         # 2.1 Inside probability spawn bait session, after end of session GOTO 3
         # 2.2 If not inside probability GOTO 3
         # 3.  If sleep_interval + time_now IS INSIDE timerange: spawn_later(sleep_interval)

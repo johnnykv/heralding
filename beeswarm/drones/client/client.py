@@ -23,16 +23,12 @@ import gevent.monkey
 
 gevent.monkey.patch_all()
 
-from beeswarm.drones.client.consumer.consumer import Consumer
 from beeswarm.drones.client.baits import clientbase
 from beeswarm.drones.client.models.session import BaitSession
 from beeswarm.drones.client.models.dispatcher import BaitDispatcher
-from beeswarm.shared.asciify import asciify
-from beeswarm.shared.helpers import drop_privileges
 from beeswarm.shared.helpers import extract_keys, get_most_likely_ip
 
 # Do not remove this import, it is used to autodetect the capabilities.
-
 logger = logging.getLogger(__name__)
 
 
@@ -71,10 +67,6 @@ class Client(object):
 
         sessions = {}
 
-        # greenlet to consume and maintain data in sessions list
-        self.sessions_consumer = Consumer(sessions, self.config, self.my_ip)
-        gevent.spawn(self.sessions_consumer.start_handling)
-
         self.dispatcher_greenlets = []
 
         for honeypot_id, entry in self.config['baits'].items():
@@ -83,7 +75,6 @@ class Client(object):
                 # if the bait has a entry in the config we consider the bait enabled
                 if bait_name in entry:
                     bait_options = entry[bait_name]
-                    #bait_session = b(sessions, bait_options)
                     dispatcher = BaitDispatcher(sessions, b, bait_options)
                     dispatcher.start()
                     self.dispatcher_greenlets.append(dispatcher)
@@ -98,5 +89,4 @@ class Client(object):
         """
         for g in self.dispatcher_greenlets:
             g.kill()
-        self.sessions_consumer.stop_handling()
         logger.info('All clients stopped')

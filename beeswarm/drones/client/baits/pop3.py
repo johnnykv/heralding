@@ -79,3 +79,4 @@ class pop3(ClientBase):
             session.did_complete = True
         finally:
             session.alldone = True
+            session.end_session()

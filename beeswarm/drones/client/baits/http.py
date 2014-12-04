@@ -82,6 +82,7 @@ class http(ClientBase):
             session.timestamp = datetime.now()
         finally:
             session.alldone = True
+            session.end_session()
 
     def _make_url(self, server, path, port=80):
         if port == 80:

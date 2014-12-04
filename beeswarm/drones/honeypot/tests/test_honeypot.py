@@ -64,8 +64,6 @@ class HoneypotTests(unittest.TestCase):
         """Tests if the Honeypot class can be instantiated successfully"""
         sut = Honeypot(self.work_dir, self.config_dict, key=self.key, cert=self.cert)
         # expect two messages containing priv/pub key.
-        gevent.sleep(1)
-        self.assertEqual(self.inbox.qsize(), 2)
 
     def test_start_serving(self):
         sut = Honeypot(self.work_dir, self.config_dict, key=self.key, cert=self.cert)

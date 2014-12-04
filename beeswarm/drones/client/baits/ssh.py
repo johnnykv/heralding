@@ -79,6 +79,7 @@ class ssh(ClientBase, Commands):
             session.did_complete = True
         finally:
             session.alldone = True
+            session.end_session()
 
     def send_command(self, cmd):
         """

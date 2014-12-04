@@ -18,7 +18,6 @@ import os
 import sys
 import shutil
 import _socket
-import json
 
 import ntplib
 
@@ -31,20 +30,17 @@ from requests.exceptions import Timeout, ConnectionError
 import beeswarm
 from beeswarm.drones.honeypot.capabilities import handlerbase
 from beeswarm.drones.honeypot.models.session import Session
-from beeswarm.drones.honeypot.consumer.consumer import Consumer
 from beeswarm.shared.helpers import create_self_signed_cert, send_zmq_push, extract_keys, get_most_likely_ip,\
     stop_if_not_write_workdir
-from beeswarm.shared.asciify import asciify
 from beeswarm.shared.message_enum import Messages
 from beeswarm.shared.socket_enum import SocketNames
-
 
 
 logger = logging.getLogger(__name__)
 
 
 class Honeypot(object):
-    """ This is the main class, which starts up all the capabilities. """
+    """ This is the main class, which starts up all capabilities. """
 
     def __init__(self, work_dir, config, key='server.key', cert='server.crt', **kwargs):
         """
@@ -64,9 +60,10 @@ class Honeypot(object):
         self.cert = os.path.join(work_dir, cert)
         self._servers = []
         self._server_greenlets = []
-        # will contain Session objects
+        # TODO: New and better way to keep track of sessions.
+        # It might be best to let the Handlerbase take care of their own sessions.
+        # Example: the HanderBase for Telnet keeps track of all telnet sessions
         self._sessions = {}
-        self._session_consumer = None
 
         # TODO: pass honeypot otherwise
         Session.honeypot_id = self.config['general']['id']
@@ -132,9 +129,6 @@ class Honeypot(object):
 
     def start(self):
         """ Starts services. """
-        # greenlet to consume the provided sessions
-        self._session_consumer = Consumer(self._sessions, self.honeypot_ip, self.config)
-        Greenlet.spawn(self._session_consumer.start)
 
         # protocol handlers
         for c in handlerbase.HandlerBase.__subclasses__():
@@ -145,6 +139,7 @@ class Honeypot(object):
                 port = self.config['capabilities'][cap_name]['port']
                 # carve out the options for this specific service
                 options = self.config['capabilities'][cap_name]
+                # capabilities are only allowed to append to the session list
                 cap = c(self._sessions, options, self.work_dir)
 
                 try:
@@ -172,13 +167,17 @@ class Honeypot(object):
 
     def stop(self):
         """Stops services"""
+
+        for session in self._sessions:
+            session.end_session()
+            del self._sessions[session]
+
         for s in self._servers:
             s.stop()
 
         for g in self._server_greenlets:
             g.kill()
-        if self._session_consumer:
-            self._session_consumer.stop()
+
         logger.info('All workers stopped.')
 
     @staticmethod

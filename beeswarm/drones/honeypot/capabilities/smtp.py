@@ -298,4 +298,4 @@ class smtp(HandlerBase):
             # im sooooo evil!
             pass
         finally:
-            session.end_session()
+            session_.end_session()
