@@ -19,13 +19,12 @@ from beeswarm.drones.client.models.session import BaitSession
 class ClientBase(object):
     """ Base class for Bees. This should only be used after sub-classing. """
 
-    def __init__(self, sessions, options):
+    def __init__(self, options):
         """
             Initializes common values.
         :param sessions: A dict which is updated every time a new session is created.
         :param options: A dict containing the options entry for this bait
         """
-        self.sessions = sessions
         self.options = options
 
     def start(self, my_ip):

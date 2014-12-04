@@ -1,4 +1,4 @@
-# Copyright (C) 2013 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2014 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 class HandlerBase(object):
-    def __init__(self, sessions, options, workdir):
+    def __init__(self, options, workdir):
         """
         Base class that all capabilities must inherit from.
 
@@ -34,7 +34,6 @@ class HandlerBase(object):
         :param workdir: the directory which contains files for this
                         particular instance of Beeswarm
         """
-        self.sessions = sessions
         self.options = options
         if 'users' in options:
             self.users = options['users']
@@ -42,17 +41,16 @@ class HandlerBase(object):
             self.users = {}
         # virtual file system shared by all capabilities
         self.vfsystem = OSFS(os.path.join(workdir, 'data/vfs'))
-        # serviceport
+        # service port
         self.port = int(options['port'])
 
     def create_session(self, address):
         protocol = self.__class__.__name__.lower()
         session = Session(address[0], address[1], protocol, self.users)
         session.destination_port = self.port
-        self.sessions[session.id] = session
         logger.debug(
             'Accepted {0} session on port {1} from {2}:{3}. ({4})'.format(protocol, self.port, address[0],
-                                                                                  address[1], str(session.id)))
+                                                                          address[1], str(session.id)))
         return session
 
     def handle_session(self, socket, address):

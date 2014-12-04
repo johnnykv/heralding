@@ -32,7 +32,6 @@ from beeswarm.shared.asciify import asciify
 from beeswarm.shared.socket_enum import SocketNames
 
 
-
 class HoneypotTests(unittest.TestCase):
     def setUp(self):
         self.work_dir = tempfile.mkdtemp()

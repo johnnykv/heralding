@@ -65,8 +65,6 @@ class Client(object):
         """
         logger.info('Starting client.')
 
-        sessions = {}
-
         self.dispatcher_greenlets = []
 
         for honeypot_id, entry in self.config['baits'].items():
@@ -75,7 +73,7 @@ class Client(object):
                 # if the bait has a entry in the config we consider the bait enabled
                 if bait_name in entry:
                     bait_options = entry[bait_name]
-                    dispatcher = BaitDispatcher(sessions, b, bait_options)
+                    dispatcher = BaitDispatcher(b, bait_options)
                     dispatcher.start()
                     self.dispatcher_greenlets.append(dispatcher)
                     logger.info('Adding {0} bait'.format(bait_name))
