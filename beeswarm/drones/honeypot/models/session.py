@@ -107,8 +107,7 @@ class Session(BaseSession):
 
         self.send_log(Messages.SESSION_PART_HONEYPOT_AUTH, self.login_attempts[-1])
         logger.debug('{0} authentication attempt from {1}:{2}. Credentials: {3}'.format(self.protocol, self.source_ip,
-                                                                                self.source_port, json.dumps(kwargs)))
-
+                                                                                        self.source_port, json.dumps(kwargs)))
         return authenticated
 
     def end_session(self):
