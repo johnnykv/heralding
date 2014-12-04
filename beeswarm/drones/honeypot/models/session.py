@@ -106,7 +106,7 @@ class Session(BaseSession):
             kwargs['response'] = kwargs.get('response').encode('hex')
 
         self.send_log(Messages.SESSION_PART_HONEYPOT_AUTH, self.login_attempts[-1])
-        logger.info('{0} authentication attempt from {1}:{2}. Credentials: {3}'.format(self.protocol, self.source_ip,
+        logger.debug('{0} authentication attempt from {1}:{2}. Credentials: {3}'.format(self.protocol, self.source_ip,
                                                                                 self.source_port, json.dumps(kwargs)))
 
         return authenticated
