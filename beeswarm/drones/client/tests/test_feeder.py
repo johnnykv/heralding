@@ -30,7 +30,7 @@ gevent.monkey.patch_all()
 import unittest
 
 
-class Client_Tests(unittest.TestCase):
+class DispatcherTests(unittest.TestCase):
     def setUp(self):
         self.work_dir = tempfile.mkdtemp()
         self.test_config_file = os.path.join(os.path.dirname(__file__), 'clientcfg.json.test')
@@ -40,17 +40,17 @@ class Client_Tests(unittest.TestCase):
             shutil.rmtree(self.work_dir)
 
     def test_dispatcher(self):
-        options =  {
-                    'enabled': True,
-                    'server': '127.0.0.1',
-                    'active_range': '00:00 - 23:59',
-                    'sleep_interval': '1',
-                    'activation_probability': '1',
-                    'username': 'test',
-                    'password': 'test',
-                    'port': 8080 }
+        options = {
+            'enabled': True,
+            'server': '127.0.0.1',
+            'active_range': '00:00 - 23:59',
+            'sleep_interval': '1',
+            'activation_probability': '1',
+            'username': 'test',
+            'password': 'test',
+            'port': 8080}
 
-        dispatcher = BaitDispatcher({}, None, options)
+        dispatcher = BaitDispatcher(None, options)
 
         dispatcher.bait_type = Mock()
         dispatcher_greenlet = Greenlet(dispatcher.start)
