@@ -128,7 +128,7 @@ class Drone(object):
             self.drone = mode(self.work_dir, self.config)
             self.drone_greenlet = gevent.spawn(self.drone.start)
             self.drone_greenlet.link_exception(self.on_exception)
-            logger.info('Drone configured and running'.format(self.id))
+            logger.info('Drone configured and running. ({0})'.format(self.id))
 
     def stop(self):
         """Stops services"""
