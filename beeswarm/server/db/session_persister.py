@@ -218,6 +218,9 @@ class SessionPersister(gevent.Greenlet):
             Classification.type == 'bait_session').one()
         bait_session.transcript = honeypot_session.transcript
         bait_session.session_data = honeypot_session.session_data
+        # the client ip own detection can be flawed, but we are sure the the honeypot tcp source ip
+        # is the same as the clients source ip.
+        bait_session.source_ip = honeypot_session.source_ip
         db_session.add(bait_session)
         db_session.delete(honeypot_session)
         db_session.commit()
