@@ -48,12 +48,12 @@ class Pop3Tests(unittest.TestCase):
             # because socket is not set
             pass
 
-        # TODO: Bind to SERVER_RELAY and assert that we get messages as expected
-        #self.assertEqual(0, len(sut.sessions))
-        #session = sut.sessions.values()[0]
-        #self.assertEqual('pop3', session.protocol)
-        #self.assertEquals('192.168.1.200', session.source_ip)
-        #self.assertEqual(12000, session.source_port)
+            # TODO: Bind to SERVER_RELAY and assert that we get messages as expected
+            # self.assertEqual(0, len(sut.sessions))
+            #session = sut.sessions.values()[0]
+            #self.assertEqual('pop3', session.protocol)
+            #self.assertEquals('192.168.1.200', session.source_ip)
+            #self.assertEqual(12000, session.source_port)
 
     def test_login(self):
         """Testing different login combinations"""
@@ -66,7 +66,7 @@ class Pop3Tests(unittest.TestCase):
              ('RETR', '-ERR Unknown command')),
             # invalid login, invalid password
             (('USER wakkwakk', '+OK User accepted'), ('PASS wakkwakk', '-ERR Authentication failed.')),
-            #PASS without user
+            # PASS without user
             (('PASS bond', '-ERR No username given.'),),
             #Try to run a TRANSACITON state command in AUTHORIZATION state
             (('RETR', '-ERR Unknown command'),),
@@ -98,7 +98,7 @@ class Pop3Tests(unittest.TestCase):
         #
         # sequences = [
         # #[mailspool_initialstate], ((cmd, response), (cmd, response))
-        #         #Delete message
+        # #Delete message
         #         (['mail1', 'mail2'], (('DELE 1', '+OK message 1 deleted'), ('STAT', '+OK 1 5'))),
         #         #Delete message twice
         #         (['mail1', 'mail2'], (('DELE 1', '+OK message 1 deleted'), ('STAT', '+OK 1 5'))),

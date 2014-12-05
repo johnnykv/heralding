@@ -165,10 +165,10 @@ class SmtpTests(unittest.TestCase):
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
-        smtp_ = smtplib.SMTP('127.0.0.1', srv.server_port, local_hostname='localhost', timeout=15)
-        smtp_.docmd('AUTH', 'LOGIN')
-        smtp_.docmd(base64.b64encode('test'))
-        code, resp = smtp_.docmd(base64.b64encode('test'))
+        smtp_client = smtplib.SMTP('127.0.0.1', srv.server_port, local_hostname='localhost', timeout=15)
+        smtp_client.docmd('AUTH', 'LOGIN')
+        smtp_client.docmd(base64.b64encode('test'))
+        code, resp = smtp_client.docmd(base64.b64encode('test'))
         self.assertEqual(code, 235)
         srv.stop()
 

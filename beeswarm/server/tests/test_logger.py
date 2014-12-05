@@ -27,24 +27,24 @@ from beeswarm.shared.socket_enum import SocketNames
 class LoggerTests(unittest.TestCase):
     def test_base_logger(self):
         context = beeswarm.shared.zmq_context
-        processedSessionsPublisher = context.socket(zmq.PUB)
-        processedSessionsPublisher.bind(SocketNames.PROCESSED_SESSIONS)
+        processed_sessions_publisher = context.socket(zmq.PUB)
+        processed_sessions_publisher.bind(SocketNames.PROCESSED_SESSIONS)
 
         test_list = []
-        mockLogger = TestLogger({}, test_list)
-        mockLogger.start()
+        mock_logger = TestLogger({}, test_list)
+        mock_logger.start()
         # force context switch to allow greenlet to start
         gevent.sleep()
 
         for _ in range(15):
-            processedSessionsPublisher.send('TOPIC DATA')
+            processed_sessions_publisher.send('TOPIC DATA')
 
         gevent.sleep(2)
-        self.assertEqual(len(mockLogger.test_queue), 15)
+        self.assertEqual(len(mock_logger.test_queue), 15)
 
-        mockLogger.stop()
+        mock_logger.stop()
         # will except if the logger hangs.
-        mockLogger.get(block=True, timeout=2)
+        mock_logger.get(block=True, timeout=2)
 
 
 class TestLogger(BaseLogger):

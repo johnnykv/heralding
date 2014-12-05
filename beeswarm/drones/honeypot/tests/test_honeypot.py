@@ -19,7 +19,6 @@ import os
 
 import gevent
 import gevent.monkey
-import zmq.green as zmq
 
 
 gevent.monkey.patch_all()

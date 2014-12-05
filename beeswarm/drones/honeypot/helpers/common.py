@@ -15,10 +15,10 @@ def list2dict(list_of_options):
     return d
 
 
-def send_whole_file(sockfd, filefd):
+def send_whole_file(sock_fd, file_fd):
     offset = 0
     while True:
-        sent = sendfile(sockfd, filefd, offset, 65536)
+        sent = sendfile(sock_fd, file_fd, offset, 65536)
         if sent == 0:
             break
         offset += sent
@@ -28,15 +28,15 @@ def path_to_ls(fn):
     """ Converts an absolute path to an entry resembling the output of
         the ls command on most UNIX systems."""
     st = os.stat(fn)
-    fullmode = 'rwxrwxrwx'
+    full_mode = 'rwxrwxrwx'
     mode = ''
-    ftime = ''
+    file_time = ''
     d = ''
     for i in range(9):
         # Incrementally builds up the 9 character string, using characters from the
         # fullmode (defined above) and mode bits from the stat() system call.
-        mode += ((st.st_mode >> (8 - i)) & 1) and fullmode[i] or '-'
+        mode += ((st.st_mode >> (8 - i)) & 1) and full_mode[i] or '-'
         d = (os.path.isdir(fn)) and 'd' or '-'
-        ftime = time.strftime(' %b %d %H:%M ', time.gmtime(st.st_mtime))
-    listformat = '{0}{1} 1 ftp ftp {2}\t{3}{4}'.format(d, mode, str(st.st_size), ftime, os.path.basename(fn))
-    return listformat
+        file_time = time.strftime(' %b %d %H:%M ', time.gmtime(st.st_mtime))
+    list_format = '{0}{1} 1 ftp ftp {2}\t{3}{4}'.format(d, mode, str(st.st_size), file_time, os.path.basename(fn))
+    return list_format

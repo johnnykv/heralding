@@ -132,7 +132,6 @@ class Session(Base):
         return result
 
 
-
 class Authentication(Base):
     __tablename__ = 'authentication'
 
@@ -200,7 +199,7 @@ class Honeypot(Drone):
 
     # The following certificate attribute are temporarily
     # generation of certificate should be done on the server, hence no need for
-    #  this informaiton here
+    # this informaiton here
     cert_common_name = Column(String)
     cert_country = Column(String)
     cert_state = Column(String)

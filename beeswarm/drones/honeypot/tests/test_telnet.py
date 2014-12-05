@@ -59,7 +59,7 @@ class TelnetTests(unittest.TestCase):
         # set this to 1 if having problems with this test
         client.set_debuglevel(0)
 
-        #this disables all command negotiation.
+        # this disables all command negotiation.
         client.set_option_negotiation_callback(self.cb)
 
         #Expect username as first output
@@ -94,7 +94,7 @@ class TelnetTests(unittest.TestCase):
         # set this to 1 if having problems with this test
         client.set_debuglevel(0)
 
-        #this disables all command negotiation.
+        # this disables all command negotiation.
         client.set_option_negotiation_callback(self.cb)
 
         #Expect username as first output
@@ -128,7 +128,7 @@ class TelnetTests(unittest.TestCase):
         # set this to 1 if having problems with this test
         client.set_debuglevel(0)
 
-        #this disables all command negotiation.
+        # this disables all command negotiation.
         client.set_option_negotiation_callback(self.cb)
 
         #Expect username as first output

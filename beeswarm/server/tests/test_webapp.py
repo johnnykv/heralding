@@ -9,12 +9,11 @@ from datetime import datetime
 from beeswarm.server.webapp.auth import Authenticator
 from beeswarm.server.misc.config_actor import ConfigActor
 import beeswarm.server.db.database_setup as database
-from beeswarm.server.db.entities import Client, Honeypot, Session, BaitSession, User, \
-    Authentication, Transcript, BaitUser
+from beeswarm.server.db.entities import Client, Honeypot, Session, BaitSession, Authentication, Transcript, BaitUser
 from beeswarm.server.webapp import app
 
 
-class WebappTests(unittest.TestCase):
+class WebAppTests(unittest.TestCase):
     def setUp(self):
         app.app.config['WTF_CSRF_ENABLED'] = False
         self.work_dir = tempfile.mkdtemp()
@@ -41,7 +40,7 @@ class WebappTests(unittest.TestCase):
     # """
     # Tests if a bait_session dict can be posted without exceptions.
     # """
-    #     self.login(self.client_id, self.client_password)
+    # self.login(self.client_id, self.client_password)
     #     data_dict = {
     #         'id': str(uuid.uuid4()),
     #         'client_id': self.client_id,

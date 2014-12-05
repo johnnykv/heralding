@@ -41,8 +41,6 @@ class FtpTests(unittest.TestCase):
     def test_login(self):
         """Testing different login combinations"""
 
-        sessions = {}
-
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test Banner', 'users': {'test': 'test'},
                    'protocol_specific_data': {'max_attempts': 3, 'banner': 'test banner', 'syst_type': 'Test Type'}}
         cap = ftp.ftp(options, self.work_dir)
