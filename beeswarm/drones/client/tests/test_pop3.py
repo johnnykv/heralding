@@ -30,7 +30,7 @@ from beeswarm.drones.client.models.session import BaitSession
 from beeswarm.drones.client.baits import pop3 as client_pop3
 
 
-class POP3_Test(unittest.TestCase):
+class Pop3Test(unittest.TestCase):
     def setUp(self):
         self.work_dir = tempfile.mkdtemp()
         Honeypot.prepare_environment(self.work_dir)
@@ -42,11 +42,10 @@ class POP3_Test(unittest.TestCase):
     def test_login(self):
         """Tests if the POP3 bait can login to the POP3 capability"""
 
-        sessions = {}
         options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
                    'users': {'test': 'test'}}
 
-        cap = honeypot_pop3.Pop3(sessions, options, self.work_dir)
+        cap = honeypot_pop3.Pop3(options, self.work_dir)
 
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
@@ -63,7 +62,7 @@ class POP3_Test(unittest.TestCase):
 
         BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
 
-        current_bait = client_pop3.pop3(baitsessions, bait_info)
+        current_bait = client_pop3.Pop3(bait_info)
         current_bait.start()
         srv.stop()
 

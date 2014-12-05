@@ -60,10 +60,6 @@ class Honeypot(object):
         self.cert = os.path.join(work_dir, cert)
         self._servers = []
         self._server_greenlets = []
-        # TODO: New and better way to keep track of sessions.
-        # It might be best to let the Handlerbase take care of their own sessions.
-        # Example: the HanderBase for Telnet keeps track of all telnet sessions
-        self._sessions = {}
 
         # TODO: pass honeypot otherwise
         Session.honeypot_id = self.config['general']['id']
@@ -140,7 +136,7 @@ class Honeypot(object):
                 # carve out the options for this specific service
                 options = self.config['capabilities'][cap_name]
                 # capabilities are only allowed to append to the session list
-                cap = c(self._sessions, options, self.work_dir)
+                cap = c(options, self.work_dir)
 
                 try:
                     # Convention: All capability names which end in 's' will be wrapped in ssl.
@@ -167,10 +163,6 @@ class Honeypot(object):
 
     def stop(self):
         """Stops services"""
-
-        for session in self._sessions:
-            session.end_session()
-            del self._sessions[session]
 
         for s in self._servers:
             s.stop()

@@ -16,7 +16,7 @@
 
 import logging
 
-from beeswarm.drones.honeypot.capabilities.http import http, BeeHTTPHandler
+from beeswarm.drones.honeypot.capabilities.http import Http, BeeHTTPHandler
 from beeswarm.drones.honeypot.capabilities.handlerbase import HandlerBase
 
 
@@ -38,7 +38,7 @@ class BeeHTTPSHandler(BeeHTTPHandler):
                 self.request.send(chunk)
 
 
-class https(http, HandlerBase):
+class https(Http, HandlerBase):
     """
     This class will get wrapped in SSL. This is possible because we by convention wrap
     all capabilities that ends with the letter 's' in SSL."""

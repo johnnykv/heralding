@@ -42,7 +42,7 @@ class SshTests(unittest.TestCase):
 
     def test_basic_login(self):
         options = {'port': 0, 'users': {'test': 'test'}}
-        sut = ssh.SSH({}, options, self.work_dir, self.key)
+        sut = ssh.SSH(options, self.work_dir, self.key)
         server = StreamServer(('127.0.0.1', 0), sut.handle_session)
         server.start()
 

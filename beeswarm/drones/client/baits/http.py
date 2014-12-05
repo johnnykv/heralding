@@ -27,15 +27,15 @@ from beeswarm.drones.client.baits.clientbase import ClientBase
 logger = logging.getLogger(__name__)
 
 
-class http(ClientBase):
-    def __init__(self, sessions, options):
+class Http(ClientBase):
+    def __init__(self, options):
         """
             Initializes common values.
 
         :param sessions: A dict which is updated every time a new session is created.
         :param options: A dict containing all options
         """
-        super(http, self).__init__(sessions, options)
+        super(Http, self).__init__(options)
         self.client = requests.Session()
         self.max_requests = random.randint(3, 4)
         self.sent_requests = 0

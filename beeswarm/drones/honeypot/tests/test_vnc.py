@@ -42,10 +42,8 @@ class VncTests(unittest.TestCase):
     def test_connection(self):
         """ Tests if the VNC capability is up, and tries login.
         """
-        sessions = {}
-
         options = {'enabled': 'True', 'port': 0, 'users': {'test': 'test'}}
-        cap = vnc.vnc(sessions, options, self.work_dir)
+        cap = vnc.Vnc(options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 

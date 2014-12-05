@@ -17,9 +17,10 @@ import ftplib
 import random
 import logging
 from datetime import datetime
+from ftplib import FTP
+
 import gevent
 from gevent import socket
-from ftplib import FTP
 
 from beeswarm.drones.client.baits.clientbase import ClientBase
 
@@ -27,7 +28,7 @@ from beeswarm.drones.client.baits.clientbase import ClientBase
 logger = logging.getLogger(__name__)
 
 
-class ftp(ClientBase):
+class Ftp(ClientBase):
     COMMAND_MAP = {
         'pwd': ['list'],
         'list': ['retrieve', 'cwd'],
@@ -35,14 +36,14 @@ class ftp(ClientBase):
         'retrieve': ['list', 'quit']
     }
 
-    def __init__(self, sessions, options):
+    def __init__(self, options):
         """
             Initializes common values.
 
         :param sessions: A dict which is updated every time a new session is created.
         :param options: A dict containing all options
         """
-        super(ftp, self).__init__(sessions, options)
+        super(Ftp, self).__init__(options)
 
         self.state = {
             'current_dir': '/',

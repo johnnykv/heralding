@@ -23,9 +23,9 @@ from beeswarm.drones.client.baits.clientbase import ClientBase
 logger = logging.getLogger(__name__)
 
 
-class pop3s(ClientBase):
-    def __init__(self, sessions, options):
-        super(pop3s, self).__init__(sessions, options)
+class Pop3s(ClientBase):
+    def __init__(self, options):
+        super(Pop3s, self).__init__(options)
 
     def start(self):
         """

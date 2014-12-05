@@ -24,9 +24,9 @@ from beeswarm.shared.misc.rfbes import RFBDes
 logger = logging.getLogger(__name__)
 
 
-class vnc(ClientBase):
-    def __init__(self, sessions, options):
-        super(vnc, self).__init__(sessions, options)
+class Vnc(ClientBase):
+    def __init__(self, options):
+        super(Vnc, self).__init__(options)
 
     def start(self):
         """

@@ -17,7 +17,7 @@ from beeswarm.drones.client.baits import http
 from beeswarm.drones.client.baits.clientbase import ClientBase
 
 
-class https(http.http, ClientBase):
+class Https(http.Http, ClientBase):
     def _make_url(self, server, path, port=443):
         if port == 443:
             url = 'https://{}/{}'.format(server, path)

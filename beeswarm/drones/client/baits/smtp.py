@@ -27,14 +27,14 @@ from beeswarm.drones.client.baits.clientbase import ClientBase
 logger = logging.getLogger(__name__)
 
 
-class smtp(ClientBase):
-    def __init__(self, sessions, options):
+class Smtp(ClientBase):
+    def __init__(self, options):
         """
             Initializes common values.
         :param sessions: A dict which is updated every time a new session is created.
         :param options: A dict containing all options
         """
-        super(smtp, self).__init__(sessions, options)
+        super(Smtp, self).__init__(options)
         self.client = None
         self.sent_mails = 0
         self.max_mails = random.randint(1, 4)

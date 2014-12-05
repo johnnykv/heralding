@@ -27,7 +27,7 @@ from beeswarm.drones.client.baits.shared.shell import Commands
 logger = logging.getLogger(__name__)
 
 
-class BeeTelnetClient(telnetlib.Telnet):
+class BaitTelnetClient(telnetlib.Telnet):
     IAC = chr(255)
 
     def write_human(self, buffer_):
@@ -42,7 +42,7 @@ class BeeTelnetClient(telnetlib.Telnet):
             time.sleep(delta / 1000.0)  # Convert milliseconds to seconds
 
 
-class telnet(ClientBase, Commands):
+class Telnet(ClientBase, Commands):
     COMMAND_MAP = {
         'pwd': ['ls', 'uname', 'uptime'],
         'cd': ['ls'],
@@ -54,14 +54,14 @@ class telnet(ClientBase, Commands):
         'sudo': ['logout']
     }
 
-    def __init__(self, sessions, options):
+    def __init__(self, options):
         """
             Initialize the SSH Bee, and the Base classes.
 
         :param sessions: A dict which is updated every time a new session is created.
         :param options: A dict containing all options
         """
-        ClientBase.__init__(self, sessions, options)
+        ClientBase.__init__(self, options)
         Commands.__init__(self)
         self.client = None
 
@@ -116,7 +116,7 @@ class telnet(ClientBase, Commands):
         """
             Open a new telnet session on the remote server.
         """
-        self.client = BeeTelnetClient(self.options['server'], self.options['port'])
+        self.client = BaitTelnetClient(self.options['server'], self.options['port'])
         self.client.set_option_negotiation_callback(self.process_options)
 
     def login(self, login, password):

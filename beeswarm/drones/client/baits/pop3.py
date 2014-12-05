@@ -23,15 +23,15 @@ from beeswarm.drones.client.baits.clientbase import ClientBase
 logger = logging.getLogger(__name__)
 
 
-class pop3(ClientBase):
-    def __init__(self, sessions, options):
+class Pop3(ClientBase):
+    def __init__(self, options):
         """
             Initializes common values.
 
         :param sessions: A dict which is updated every time a new session is created.
         :param options: A dict containing all options
         """
-        super(pop3, self).__init__(sessions, options)
+        super(Pop3, self).__init__(options)
 
     def start(self):
         """

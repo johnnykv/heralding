@@ -43,12 +43,10 @@ class HttpTests(unittest.TestCase):
             HTTP 401 (Unauthorized) headers.
         """
 
-        sessions = {}
-
         # Use uncommon port so that you can run the test even if the Honeypot
         # is running.
         options = {'enabled': 'True', 'port': 0, 'users': {'test': 'test'}}
-        cap = http.http(sessions, options, self.work_dir)
+        cap = http.Http(options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -62,9 +60,8 @@ class HttpTests(unittest.TestCase):
         """ Tries to login using the username/password as test/test.
         """
 
-        sessions = {}
         options = {'enabled': 'True', 'port': 0, 'users': {'test': 'test'}}
-        cap = http.http(sessions, options, self.work_dir)
+        cap = http.Http(options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 

@@ -218,10 +218,13 @@ class BeeFTPHandler(object):
 
 
 class ftp(HandlerBase):
-    def __init__(self, sessions, options, work_dir):
-        super(ftp, self).__init__(sessions, options, work_dir)
+    def __init__(self, options, work_dir):
+        super(ftp, self).__init__(options, work_dir)
         self._options = options
 
     def handle_session(self, gsocket, address):
         session = self.create_session(address)
-        BeeFTPHandler(gsocket, session, self.vfsystem.opendir('/pub/ftp'), self._options)
+        try:
+            BeeFTPHandler(gsocket, session, self.vfsystem.opendir('/pub/ftp'), self._options)
+        finally:
+            self.close_session(session)

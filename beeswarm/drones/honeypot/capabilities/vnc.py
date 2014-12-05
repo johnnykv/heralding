@@ -26,7 +26,7 @@ from beeswarm.shared.vnc_constants import *
 logger = logging.getLogger(__name__)
 
 
-class BeeVNCHandler(SocketServer.StreamRequestHandler):
+class BaitVncHandler(SocketServer.StreamRequestHandler):
     """
         Handler of VNC Connections. This is a rather primitive state machine.
     """
@@ -65,19 +65,19 @@ class BeeVNCHandler(SocketServer.StreamRequestHandler):
         self.finish()
 
 
-class vnc(HandlerBase):
-    def __init__(self, sessions, options, work_dir):
-        super(vnc, self).__init__(sessions, options, work_dir)
+class Vnc(HandlerBase):
+    def __init__(self, options, work_dir):
+        super(Vnc, self).__init__(options, work_dir)
         self._options = options
 
     def handle_session(self, gsocket, address):
         session = self.create_session(address)
         try:
-            handler = BeeVNCHandler(gsocket, address, None, session)
+            BaitVncHandler(gsocket, address, None, session)
         except socket.error as err:
             logger.debug('Unexpected end of VNC session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
-
-        session.end_session()
+        finally:
+            self.close_session(session)
 
 
 def get_random_challenge():

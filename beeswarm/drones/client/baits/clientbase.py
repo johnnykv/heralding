@@ -26,19 +26,27 @@ class ClientBase(object):
         :param options: A dict containing the options entry for this bait
         """
         self.options = options
+        self.sessions = {}
 
     def start(self, my_ip):
         raise Exception('Do not call base class!')
 
     def create_session(self, server_host, server_port, honeypot_id):
         """
-            Creates a new session and adds it to the sessions directory.
+            Creates a new session.
 
         :param server_host: IP address of the server
         :param server_port: Server port
-        :return: A new `BeeSession` object.
+        :return: A new `BaitSession` object.
         """
         protocol = self.__class__.__name__.lower()
         session = BaitSession(protocol, server_host, server_port, honeypot_id)
         self.sessions[session.id] = session
         return session
+
+    def close_session(self, session):
+        session.end_session()
+        if session.id in self.sessions:
+            del self.sessions[session]
+        else:
+            assert False

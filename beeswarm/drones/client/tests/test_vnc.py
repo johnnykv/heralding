@@ -42,11 +42,10 @@ class VNC_Test(unittest.TestCase):
     def test_login(self):
         """Tests if the VNC bait can connect to the VNC capability"""
 
-        sessions = {}
         options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
                    'users': {'test': 'test'}}
 
-        cap = hive_vnc.vnc(sessions, options, self.work_dir)
+        cap = hive_vnc.Vnc(options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -58,10 +57,9 @@ class VNC_Test(unittest.TestCase):
             'server': '127.0.0.1',
             'honeypot_id': '1234'
         }
-        beesessions = {}
 
         BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bait = bee_vnc.vnc(beesessions, bee_info)
+        current_bait = bee_vnc.Vnc(bee_info)
         current_bait.start()
         srv.stop()
 

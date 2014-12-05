@@ -45,11 +45,10 @@ class SmtpTests(unittest.TestCase):
         """ Tries to connect and run a EHLO command. Very basic test.
         """
 
-        sessions = {}
         # Use uncommon port so that we can run test even if the Honeypot is running.
         options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'test'},
                    'users': {'test': 'test'}, }
-        cap = smtp.smtp(sessions, options, self.work_dir)
+        cap = smtp.smtp(options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -63,11 +62,9 @@ class SmtpTests(unittest.TestCase):
             CRAM-MD5 Authentication method.
         """
 
-        sessions = {}
-
         options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'Test'},
                    'users': {'someguy': 'test'}}
-        cap = smtp.smtp(sessions, options, self.work_dir)
+        cap = smtp.smtp(options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -86,11 +83,10 @@ class SmtpTests(unittest.TestCase):
     def test_AUTH_PLAIN_reject(self):
         """ Makes sure the server rejects all invalid login attempts that use the PLAIN Authentication method.
         """
-        sessions = {}
         options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'Test'},
                    'users': {'someguy': 'test'}}
 
-        cap = smtp.smtp(sessions, options, self.work_dir)
+        cap = smtp.smtp(options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -104,11 +100,10 @@ class SmtpTests(unittest.TestCase):
         """ Makes sure the server rejects all invalid login attempts that use the LOGIN Authentication method.
         """
 
-        sessions = {}
         options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'Test'},
                    'users': {'someguy': 'test'}}
 
-        cap = smtp.smtp(sessions, options, self.work_dir)
+        cap = smtp.smtp(options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -123,12 +118,10 @@ class SmtpTests(unittest.TestCase):
         """ Makes sure the server accepts valid login attempts that use the CRAM-MD5 Authentication method.
         """
 
-        sessions = {}
-
         options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'Test'},
                    'users': {'test': 'test'}}
 
-        cap = smtp.smtp(sessions, options, self.work_dir)
+        cap = smtp.smtp(options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -148,11 +141,10 @@ class SmtpTests(unittest.TestCase):
         """ Makes sure the server accepts valid login attempts that use the PLAIN Authentication method.
         """
 
-        sessions = {}
         options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'Test'},
                    'users': {'test': 'test'}}
 
-        cap = smtp.smtp(sessions, options, self.work_dir)
+        cap = smtp.smtp(options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -166,11 +158,10 @@ class SmtpTests(unittest.TestCase):
         """ Makes sure the server accepts valid login attempts that use the LOGIN Authentication method.
         """
 
-        sessions = {}
         options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'Test'},
                    'users': {'test': 'test'}}
 
-        cap = smtp.smtp(sessions, options, self.work_dir)
+        cap = smtp.smtp(options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 

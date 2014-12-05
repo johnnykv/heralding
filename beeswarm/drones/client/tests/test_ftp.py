@@ -26,12 +26,12 @@ import tempfile
 
 from gevent.server import StreamServer
 from beeswarm.drones.honeypot.honeypot import Honeypot
-from beeswarm.drones.honeypot.capabilities import ftp as hive_ftp
+from beeswarm.drones.honeypot.capabilities import ftp as honeypot_ftp
 
 from beeswarm.drones.client.models.session import BaitSession
 
 
-class FTP_Test(unittest.TestCase):
+class FtpTest(unittest.TestCase):
     def setUp(self):
         self.work_dir = tempfile.mkdtemp()
         Honeypot.prepare_environment(self.work_dir)
@@ -57,13 +57,11 @@ class FTP_Test(unittest.TestCase):
     def test_login(self):
         """FTP: Testing different login combinations"""
 
-        sessions = {}
-
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test Banner',
                    'protocol_specific_data': {'max_attempts': 3, 'banner': 'test banner', 'syst_type': 'Test Type'},
                    'users': {'test': 'test'}}
 
-        cap = hive_ftp.ftp(sessions, options, self.work_dir)
+        cap = honeypot_ftp.ftp(options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -78,7 +76,7 @@ class FTP_Test(unittest.TestCase):
         beesessions = {}
 
         BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bait = bee_ftp.ftp(beesessions, bee_info)
+        current_bait = bee_ftp.Ftp(bee_info)
 
         current_bait.connect()
         current_bait.login(bee_info['username'], bee_info['password'])
@@ -87,13 +85,11 @@ class FTP_Test(unittest.TestCase):
     def test_list(self):
         """Tests the FTP LIST command"""
 
-        sessions = {}
-
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test Banner',
                    'protocol_specific_data': {'max_attempts': 3, 'banner': 'test banner', 'syst_type': 'Test Type'},
                    'users': {'test': 'test'}}
 
-        cap = hive_ftp.ftp(sessions, options, self.work_dir)
+        cap = honeypot_ftp.ftp(options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -108,7 +104,7 @@ class FTP_Test(unittest.TestCase):
         beesessions = {}
 
         BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bee = bee_ftp.ftp(beesessions, bee_info)
+        current_bee = bee_ftp.Ftp(bee_info)
 
         current_bee.connect()
         current_bee.login(bee_info['username'], bee_info['password'])
@@ -122,13 +118,11 @@ class FTP_Test(unittest.TestCase):
     def test_cwd(self):
         """Tests the FTP CWD command"""
 
-        sessions = {}
-
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test Banner',
                    'protocol_specific_data': {'max_attempts': 3, 'banner': 'test banner', 'syst_type': 'Test Type'},
                    'users': {'test': 'test'}}
 
-        cap = hive_ftp.ftp(sessions, options, self.work_dir)
+        cap = honeypot_ftp.ftp(options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -143,7 +137,7 @@ class FTP_Test(unittest.TestCase):
         beesessions = {}
 
         BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bee = bee_ftp.ftp(beesessions, bee_info)
+        current_bee = bee_ftp.Ftp(bee_info)
 
         current_bee.connect()
         current_bee.login(bee_info['username'], bee_info['password'])
@@ -158,13 +152,11 @@ class FTP_Test(unittest.TestCase):
     def test_retr(self):
         """Tests the FTP RETR command"""
 
-        sessions = {}
-
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test Banner',
                    'protocol_specific_data': {'max_attempts': 3, 'banner': 'test banner', 'syst_type': 'Test Type'},
                    'users': {'test': 'test'}}
 
-        cap = hive_ftp.ftp(sessions, options, self.work_dir)
+        cap = honeypot_ftp.ftp(options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -179,7 +171,7 @@ class FTP_Test(unittest.TestCase):
         beesessions = {}
 
         BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bee = bee_ftp.ftp(beesessions, bee_info)
+        current_bee = bee_ftp.Ftp(bee_info)
 
         current_bee.connect()
         current_bee.login(bee_info['username'], bee_info['password'])

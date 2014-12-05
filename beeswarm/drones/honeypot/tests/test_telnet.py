@@ -48,12 +48,10 @@ class TelnetTests(unittest.TestCase):
         sys.stdout = tempfile.TemporaryFile()
 
         # initialize capability and start tcp server
-        sessions = {}
-
         options = {'enabled': 'True', 'port': 2503, 'protocol_specific_data': {'max_attempts': 3},
                    'users': {'test': 'test'}}
 
-        cap = telnet.Telnet(sessions, options, self.work_dir)
+        cap = telnet.Telnet(options, self.work_dir)
         server = StreamServer(('0.0.0.0', 2503), cap.handle_session)
         server.start()
 
@@ -85,12 +83,10 @@ class TelnetTests(unittest.TestCase):
         sys.stdout = tempfile.TemporaryFile()
 
         # initialize capability and start tcp server
-        sessions = {}
-
         options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
                    'users': {'test': 'test'}}
 
-        cap = telnet.Telnet(sessions, options, self.work_dir)
+        cap = telnet.Telnet(options, self.work_dir)
         server = StreamServer(('0.0.0.0', 0), cap.handle_session)
         server.start()
 
@@ -122,11 +118,9 @@ class TelnetTests(unittest.TestCase):
         sys.stdout = tempfile.TemporaryFile()
 
         # initialize capability and start tcp server
-        sessions = {}
-
         options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'Test', 'max_attempts': 3},
                    'users': {'test': 'test'}}
-        cap = telnet.Telnet(sessions, options, self.work_dir)
+        cap = telnet.Telnet(options, self.work_dir)
         server = StreamServer(('0.0.0.0', 0), cap.handle_session)
         server.start()
 

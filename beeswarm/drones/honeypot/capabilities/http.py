@@ -88,11 +88,11 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
         pass
 
 
-class http(HandlerBase):
+class Http(HandlerBase):
     HandlerClass = BeeHTTPHandler
 
-    def __init__(self, sessions, options, workdir):
-        super(http, self).__init__(sessions, options, workdir)
+    def __init__(self, options, workdir):
+        super(Http, self).__init__(options, workdir)
         self._options = options
 
     def handle_session(self, gsocket, address):
@@ -104,3 +104,5 @@ class http(HandlerBase):
                               options=self._options, users=self.users)
         except socket.error as err:
             logger.debug('Unexpected end of http session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
+        finally:
+            self.close_session(session)

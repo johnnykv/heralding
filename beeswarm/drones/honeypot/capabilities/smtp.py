@@ -282,20 +282,20 @@ class DummySMTPServer(object):
 
 
 class smtp(HandlerBase):
-    def __init__(self, sessions, options, work_dir):
-        super(smtp, self).__init__(sessions, options, work_dir)
+    def __init__(self, options, work_dir):
+        super(smtp, self).__init__(options, work_dir)
         self._options = options
 
     def handle_session(self, gsocket, address):
-        session_ = self.create_session(address)
-        local_map = {}
-        server = DummySMTPServer(self.vfsystem.opendir('/var/mail'))
-        SMTPChannel(server, gsocket, address, session=session_,
-                    smtp_map=local_map, opts=self._options)
+        session = self.create_session(address)
         try:
+            local_map = {}
+            server = DummySMTPServer(self.vfsystem.opendir('/var/mail'))
+            SMTPChannel(server, gsocket, address, session=session,
+                        smtp_map=local_map, opts=self._options)
             asyncore.loop(map=local_map)
         except Exception:
             # im sooooo evil!
             pass
         finally:
-            session_.end_session()
+            self.close_session(session)

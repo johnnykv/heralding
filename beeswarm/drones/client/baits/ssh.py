@@ -27,15 +27,15 @@ from beeswarm.errors import AuthenticationFailed
 logger = logging.getLogger(__name__)
 
 
-class ssh(ClientBase, Commands):
-    def __init__(self, sessions, options):
+class Ssh(ClientBase, Commands):
+    def __init__(self, options):
         """
             Initialize the SSH Bee, and the Base classes.
 
         :param sessions: A dict which is updated every time a new session is created.
         :param options: A dict containing all options
         """
-        ClientBase.__init__(self, sessions, options)
+        ClientBase.__init__(self, options)
         Commands.__init__(self)
         self.client = SSHClient()
         self.client.set_missing_host_key_policy(AutoAddPolicy())

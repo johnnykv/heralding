@@ -28,11 +28,11 @@ logger = logging.getLogger(__name__)
 
 
 class SSH(HandlerBase):
-    def __init__(self, sessions, options, work_dir, key='server.key'):
+    def __init__(self, options, work_dir, key='server.key'):
         logging.getLogger("telnetsrv.paramiko_ssh ").setLevel(logging.WARNING)
         logging.getLogger("paramiko").setLevel(logging.WARNING)
         self.key = os.path.join(work_dir, key)
-        super(SSH, self).__init__(sessions, options, work_dir)
+        super(SSH, self).__init__(options, work_dir)
 
     def handle_session(self, gsocket, address):
         session = self.create_session(address)
@@ -40,8 +40,8 @@ class SSH(HandlerBase):
             SshWrapper(address, None, gsocket, session, self.options, self.vfsystem, self.key)
         except (SSHException, EOFError) as ex:
             logger.debug('Unexpected end of ssh session: {0}. ({1})'.format(ex, session.id))
-
-        session.end_session()
+        finally:
+            self.close_session(session)
 
 
 class BeeTelnetHandler(Commands):

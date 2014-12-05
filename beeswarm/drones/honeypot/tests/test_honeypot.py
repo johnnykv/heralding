@@ -27,6 +27,8 @@ gevent.monkey.patch_all()
 import unittest
 import beeswarm
 import beeswarm.shared
+import zmq.green as zmq
+
 from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.shared.asciify import asciify
 from beeswarm.shared.socket_enum import SocketNames
@@ -34,6 +36,7 @@ from beeswarm.shared.socket_enum import SocketNames
 
 class HoneypotTests(unittest.TestCase):
     def setUp(self):
+        beeswarm.shared.zmq_context = zmq.Context()
         self.work_dir = tempfile.mkdtemp()
         Honeypot.prepare_environment(self.work_dir)
 

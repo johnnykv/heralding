@@ -95,7 +95,6 @@ class BaseSession(object):
             self.connected = False
 
 
-
 def json_default(obj):
     if isinstance(obj, datetime):
         return obj.isoformat()

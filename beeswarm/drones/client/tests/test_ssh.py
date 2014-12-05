@@ -44,104 +44,99 @@ class SSH_Test(unittest.TestCase):
     def test_login(self):
         """Tests if the SSH bait can Login to the SSH capability"""
 
-        sessions = {}
-
         options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
                    'users': {'test': 'test'}}
 
-        cap = honeypot_ssh.SSH(sessions, options, self.work_dir, self.key)
+        cap = honeypot_ssh.SSH(options, self.work_dir, self.key)
 
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
-        bee_info = {
+        bait_info = {
             'timing': 'regular',
             'username': 'test',
             'password': 'test',
             'port': srv.server_port,
             'server': '127.0.0.1'
         }
-        beesessions = {}
+
 
         BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bee = client_ssh.ssh(beesessions, bee_info)
+        current_bee = client_ssh.Ssh(bait_info)
         current_bee.connect_login()
         srv.stop()
 
     def test_logout(self):
         """Tests if the SSH bait can Logout from the SSH capability"""
 
-        sessions = {}
         options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
                    'users': {'test': 'test'}}
 
-        cap = honeypot_ssh.SSH(sessions, options, self.work_dir, self.key)
+        cap = honeypot_ssh.SSH(options, self.work_dir, self.key)
 
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
-        bee_info = {
+        bait_info = {
             'timing': 'regular',
             'username': 'test',
             'password': 'test',
             'port': srv.server_port,
             'server': '127.0.0.1'
         }
-        beesessions = {}
+
 
         BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bee = client_ssh.ssh(beesessions, bee_info)
+        current_bee = client_ssh.Ssh(bait_info)
         current_bee.connect_login()
         current_bee.logout()
         srv.stop()
 
     def test_validate_senses(self):
-        sessions = {}
 
         options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
                    'users': {'test': 'test'}}
-        cap = honeypot_ssh.SSH(sessions, options, self.work_dir, self.key)
+        cap = honeypot_ssh.SSH(options, self.work_dir, self.key)
 
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
-        bee_info = {
+        bait_info = {
             'timing': 'regular',
             'username': 'test',
             'password': 'test',
             'port': srv.server_port,
             'server': '127.0.0.1'
         }
-        beesessions = {}
+
 
         BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bait = client_ssh.ssh(beesessions, bee_info)
+        current_bait = client_ssh.Ssh(bait_info)
         for s in current_bait.senses:
             sense = getattr(current_bait, s)
             self.assertTrue(callable(sense))
 
     def test_command_cd(self):
 
-        sessions = {}
         options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
                    'users': {'test': 'test'}}
 
-        cap = honeypot_ssh.SSH(sessions, options, self.work_dir, self.key)
+        cap = honeypot_ssh.SSH(options, self.work_dir, self.key)
 
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
-        bee_info = {
+        bait_info = {
             'timing': 'regular',
             'username': 'test',
             'password': 'test',
             'port': srv.server_port,
             'server': '127.0.0.1'
         }
-        beesessions = {}
+
 
         BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bee = client_ssh.ssh(beesessions, bee_info)
+        current_bee = client_ssh.Ssh(bait_info)
         current_bee.connect_login()
 
         # Command: cd
@@ -151,26 +146,25 @@ class SSH_Test(unittest.TestCase):
 
     def test_command_pwd(self):
 
-        sessions = {}
         options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
                    'users': {'test': 'test'}}
 
-        cap = honeypot_ssh.SSH(sessions, options, self.work_dir, self.key)
+        cap = honeypot_ssh.SSH(options, self.work_dir, self.key)
 
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
-        bee_info = {
+        bait_info = {
             'timing': 'regular',
             'username': 'test',
             'password': 'test',
             'port': srv.server_port,
             'server': '127.0.0.1'
         }
-        beesessions = {}
+
 
         BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bee = client_ssh.ssh(beesessions, bee_info)
+        current_bee = client_ssh.Ssh(bait_info)
         current_bee.connect_login()
 
         current_bee.cd('/var')
@@ -179,26 +173,25 @@ class SSH_Test(unittest.TestCase):
 
     def test_command_uname(self):
 
-        sessions = {}
         options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
                    'users': {'test': 'test'}}
 
-        cap = honeypot_ssh.SSH(sessions, options, self.work_dir, self.key)
+        cap = honeypot_ssh.SSH(options, self.work_dir, self.key)
 
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
-        bee_info = {
+        bait_info = {
             'timing': 'regular',
             'username': 'test',
             'password': 'test',
             'port': srv.server_port,
             'server': '127.0.0.1'
         }
-        beesessions = {}
+
 
         BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bee = client_ssh.ssh(beesessions, bee_info)
+        current_bee = client_ssh.Ssh(bait_info)
         current_bee.connect_login()
 
         resp1 = current_bee.uname('-o')
@@ -206,26 +199,25 @@ class SSH_Test(unittest.TestCase):
 
     def test_command_cat(self):
 
-        sessions = {}
         options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
                    'users': {'test': 'test'}}
 
-        cap = honeypot_ssh.SSH(sessions, options, self.work_dir, self.key)
+        cap = honeypot_ssh.SSH(options, self.work_dir, self.key)
 
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
-        bee_info = {
+        bait_info = {
             'timing': 'regular',
             'username': 'test',
             'password': 'test',
             'port': srv.server_port,
             'server': '127.0.0.1'
         }
-        beesessions = {}
+
 
         BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bee = client_ssh.ssh(beesessions, bee_info)
+        current_bee = client_ssh.Ssh(bait_info)
         current_bee.connect_login()
 
         # TODO: What is this? html here?
@@ -234,25 +226,24 @@ class SSH_Test(unittest.TestCase):
 
     def test_command_uptime(self):
 
-        sessions = {}
         options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
                    'users': {'test': 'test'}}
 
-        cap = honeypot_ssh.SSH(sessions, options, self.work_dir, self.key)
+        cap = honeypot_ssh.SSH(options, self.work_dir, self.key)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
-        bee_info = {
+        bait_info = {
             'timing': 'regular',
             'username': 'test',
             'password': 'test',
             'port': srv.server_port,
             'server': '127.0.0.1'
         }
-        beesessions = {}
+
 
         BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bee = client_ssh.ssh(beesessions, bee_info)
+        current_bee = client_ssh.Ssh(bait_info)
         current_bee.connect_login()
 
         resp = current_bee.uptime('-V')
@@ -260,41 +251,40 @@ class SSH_Test(unittest.TestCase):
 
     def test_command_echo(self):
 
-        sessions = {}
         options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
                    'users': {'test': 'test'}}
 
-        cap = honeypot_ssh.SSH(sessions, options, self.work_dir, self.key)
+        cap = honeypot_ssh.SSH(options, self.work_dir, self.key)
 
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
-        bee_info = {
+        bait_info = {
             'timing': 'regular',
             'username': 'test',
             'password': 'test',
             'port': srv.server_port,
             'server': '127.0.0.1'
         }
-        beesessions = {}
+
 
         BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bee = client_ssh.ssh(beesessions, bee_info)
+        current_bee = client_ssh.Ssh(bait_info)
         current_bee.connect_login()
 
         resp = current_bee.echo('just testing!')
         self.assertTrue('just testing!' in resp)
 
     def test_command_list(self):
-        sessions = {}
+
         options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'max_attempts': 3},
                    'users': {'test': 'test'}}
-        cap = honeypot_ssh.SSH(sessions, options, self.work_dir, self.key)
+        cap = honeypot_ssh.SSH(options, self.work_dir, self.key)
 
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
-        bee_info = {
+        bait_info = {
             'timing': 'regular',
             'username': 'test',
             'password': 'test',
@@ -302,10 +292,10 @@ class SSH_Test(unittest.TestCase):
             'server': '127.0.0.1',
             'honeypot_id': '1234'
         }
-        beesessions = {}
+
 
         BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
-        current_bee = client_ssh.ssh(beesessions, bee_info)
+        current_bee = client_ssh.Ssh(bait_info)
         current_bee.connect_login()
 
         resp = current_bee.ls()

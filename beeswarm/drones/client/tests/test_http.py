@@ -25,11 +25,11 @@ import tempfile
 
 from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.drones.client.models.session import BaitSession
-from beeswarm.drones.client.baits.http import http
-from beeswarm.drones.honeypot.capabilities import http as hive_http
+from beeswarm.drones.client.baits.http import Http
+from beeswarm.drones.honeypot.capabilities import http as honeypot_http
 
 
-class HTTP_Test(unittest.TestCase):
+class HttpTest(unittest.TestCase):
     def setUp(self):
         self.work_dir = tempfile.mkdtemp()
         Honeypot.prepare_environment(self.work_dir)
@@ -41,10 +41,9 @@ class HTTP_Test(unittest.TestCase):
     def test_login(self):
         """ Tests if HTTP bait can login to the http capability.
         """
-        sessions = {}
 
         options = {'enabled': 'True', 'port': 0, 'users': {'test': 'test'}}
-        cap = hive_http.http(sessions, options, self.work_dir)
+        cap = honeypot_http.Http(options, self.work_dir)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
@@ -56,11 +55,10 @@ class HTTP_Test(unittest.TestCase):
             'server': '127.0.0.1',
             'honeypot_id': '1234'
         }
-        baitsessions = {}
 
         BaitSession.client_id = 'f51171df-c8f6-4af4-86c0-f4e163cf69e8'
 
-        current_bait = http(baitsessions, bait_info)
+        current_bait = Http(bait_info)
         current_bait.start()
         srv.stop()
 

@@ -25,8 +25,8 @@ logger = logging.getLogger(__name__)
 
 
 class Telnet(HandlerBase):
-    def __init__(self, sessions, options, work_dir):
-        super(Telnet, self).__init__(sessions, options, work_dir)
+    def __init__(self, options, work_dir):
+        super(Telnet, self).__init__(options, work_dir)
 
     def handle_session(self, gsocket, address):
         TelnetWrapper.max_tries = int(self.options['protocol_specific_data']['max_attempts'])
@@ -35,8 +35,8 @@ class Telnet(HandlerBase):
             TelnetWrapper(address, None, gsocket, session, self.vfsystem)
         except socket.error as err:
             logger.debug('Unexpected end of telnet session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
-
-        session.end_session()
+        finally:
+            self.close_session(session)
 
 
 class TelnetWrapper(Commands):
