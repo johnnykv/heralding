@@ -18,7 +18,6 @@ import logging
 import json
 from datetime import datetime
 
-import beeswarm
 from beeswarm.shared.models.base_session import BaseSession
 from beeswarm.shared.misc.rfbes import RFBDes
 from beeswarm.shared.message_enum import Messages

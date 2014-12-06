@@ -160,7 +160,6 @@ def get_most_likely_ip():
                     return item['addr']
                     # well, actually the interface could have more IP's... But for now we assume that the IP
                     # we want is the first in the list on the IF.
-                    break
 
     return '127.0.0.1'
 
@@ -258,14 +257,14 @@ def extract_config_from_api(config_url, config_file):
         return False
 
 
-def stop_if_not_write_workdir(dir):
-    if not os.access(dir, os.W_OK | os.X_OK):
+def stop_if_not_write_workdir(_dir):
+    if not os.access(_dir, os.W_OK | os.X_OK):
         logger.error('Beeswarm needs write permisison to the work directory, '
-                     'but did not have write permission to directory {0}.'.format(dir))
-        logger.debug('Current workdir: {0}, Asked dir: {1}'.format(os.getcwd(), dir))
-        logger.debug('Files in directory: {0}'.format(os.listdir(dir)))
+                     'but did not have write permission to directory {0}.'.format(_dir))
+        logger.debug('Current workdir: {0}, Asked dir: {1}'.format(os.getcwd(), _dir))
+        logger.debug('Files in directory: {0}'.format(os.listdir(_dir)))
         sys.exit(1)
-    for item in os.listdir(dir):
+    for item in os.listdir(_dir):
         error = False
         if os.path.isfile(item):
             if not os.access(item, os.W_OK):

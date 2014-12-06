@@ -28,9 +28,6 @@ class ClientBase(object):
         self.options = options
         self.sessions = {}
 
-    def start(self, my_ip):
-        raise Exception('Do not call base class!')
-
     def create_session(self, server_host, server_port, honeypot_id):
         """
             Creates a new session.

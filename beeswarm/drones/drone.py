@@ -117,7 +117,7 @@ class Drone(object):
             self.config = json.load(config_file, object_hook=asciify)
 
         mode = None
-        if self.config['general']['mode'] == '' or self.config['general']['mode'] == None:
+        if self.config['general']['mode'] == '' or self.config['general']['mode'] is None:
             logger.info('Drone has not been configured, awaiting configuration from Beeswarm server.')
         elif self.config['general']['mode'] == 'honeypot':
             mode = Honeypot
@@ -257,7 +257,6 @@ class Drone(object):
             if len(socks) > 0:
                 data = recv_monitor_message(monitor_socket)
                 event = data['event']
-                value = data['value']
                 if event == zmq.EVENT_CONNECTED:
                     logger.info('Connected to {0}'.format(log_name))
                     # always ask for config to avoid race condition.

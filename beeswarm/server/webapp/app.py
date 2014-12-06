@@ -13,13 +13,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import datetime
 import json
 import logging
 import random
 import string
-import uuid
-from collections import namedtuple
 import ast
 import gevent
 import gevent.lock
@@ -445,7 +442,6 @@ def get_bait_users():
 @app.route('/ws/bait_users/add', methods=['POST'])
 @login_required
 def add_bait_users():
-    db_session = database_setup.get_session()
     bait_users = json.loads(request.data)
     for bait_user in bait_users:
         # TODO: Also validate client side

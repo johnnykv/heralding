@@ -12,12 +12,10 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import json
 import logging
 import urllib2
 
 import gevent
-from gevent.greenlet import Greenlet
 import gevent.monkey
 
 
@@ -67,7 +65,7 @@ class Client(object):
 
         self.dispatcher_greenlets = []
 
-        for honeypot_id, entry in self.config['baits'].items():
+        for _, entry in self.config['baits'].items():
             for b in clientbase.ClientBase.__subclasses__():
                 bait_name = b.__name__.lower()
                 # if the bait has a entry in the config we consider the bait enabled

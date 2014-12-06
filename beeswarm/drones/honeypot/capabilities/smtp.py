@@ -202,7 +202,7 @@ class SMTPChannel(smtpd.SMTPChannel):
     # support for AUTH is added.
     def found_terminator(self):
         line = EMPTYSTRING.join(self.__line)
-        logger.debug('found_terminator(): data: %s' % repr(line))
+        logger.debug('found_terminator(): data: {0}'.format(repr(line)))
 
         self.__line = []
         if self.__state == self.COMMAND:

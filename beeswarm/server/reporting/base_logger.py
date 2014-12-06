@@ -14,9 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import gevent
 from gevent import Greenlet
-from beeswarm.shared.message_enum import Messages
 from beeswarm.shared.socket_enum import SocketNames
 
 import zmq.green as zmq
