@@ -92,13 +92,10 @@ class SessionPersister(gevent.Greenlet):
     def _start_recurring_classify_set(self):
         while True:
             sleep_time = self.delay_seconds / 2
-            logger.debug('Recuring sleep {0}'.format(sleep_time))
-            gevent.sleep(self.delay_seconds / 2)
-            logger.debug('Recuring wake')
+            gevent.sleep(sleep_time)
             self.do_classify = True
 
     def persist_session(self, session_json, session_type):
-        logger.debug('Got one')
         db_session = self.db_session
 
         if self.max_session_count == 0:
