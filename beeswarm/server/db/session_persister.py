@@ -36,9 +36,13 @@ logger = logging.getLogger(__name__)
 
 
 class SessionPersister(gevent.Greenlet):
-    def __init__(self, max_sessions, clear_sessions=False):
+    def __init__(self, max_sessions, clear_sessions=False, delay_seconds=30):
+        assert delay_seconds > 1
         Greenlet.__init__(self)
         self.db_session = database_setup.get_session()
+        # pending session will be converted to attacks if we cannot match with bait traffic
+        # with this period
+        self.delay_seconds = delay_seconds
         # clear all pending sessions on startup, pending sessions on startup
         pending_classification = self.db_session.query(Classification).filter(Classification.type == 'pending').one()
         pending_deleted = self.db_session.query(Session).filter(
@@ -56,6 +60,7 @@ class SessionPersister(gevent.Greenlet):
             logger.info('Database has been limited to contain {0} sessions.'.format(max_sessions))
 
         context = beeswarm.shared.zmq_context
+
         self.subscriber_sessions = context.socket(zmq.SUB)
         self.subscriber_sessions.connect(SocketNames.RAW_SESSIONS)
         self.subscriber_sessions.setsockopt(zmq.SUBSCRIBE, Messages.SESSION_CLIENT)
@@ -76,6 +81,7 @@ class SessionPersister(gevent.Greenlet):
             socks = dict(poller.poll(100))
             gevent.sleep()
             if self.do_classify:
+                logger.debug('Doing classify')
                 self.classify_malicious_sessions()
                 self.do_classify = False
             elif self.subscriber_sessions in socks and socks[self.subscriber_sessions] == zmq.POLLIN:
@@ -85,10 +91,14 @@ class SessionPersister(gevent.Greenlet):
 
     def _start_recurring_classify_set(self):
         while True:
-            gevent.sleep(20)
+            sleep_time = self.delay_seconds / 2
+            logger.debug('Recuring sleep {0}'.format(sleep_time))
+            gevent.sleep(self.delay_seconds / 2)
+            logger.debug('Recuring wake')
             self.do_classify = True
 
     def persist_session(self, session_json, session_type):
+        logger.debug('Got one')
         db_session = self.db_session
 
         if self.max_session_count == 0:
@@ -194,7 +204,8 @@ class SessionPersister(gevent.Greenlet):
             .filter(Session.timestamp >= min_datetime) \
             .filter(Session.timestamp <= max_datetime) \
             .filter(Session.id != session.id) \
-            .filter(Session.classification == classification)
+            .filter(Session.classification == classification) \
+            .filter(Session.discriminator != session.discriminator)
 
         # identify the correct session by comparing authentication.
         # this could properly also be done using some fancy ORM/SQL construct.
@@ -229,13 +240,13 @@ class SessionPersister(gevent.Greenlet):
         self.processedSessionsPublisher.send('{0} {1}'.format(Messages.SESSION,
                                                               json.dumps(bait_session.to_dict())))
 
-    def classify_malicious_sessions(self, delay_seconds=30):
+    def classify_malicious_sessions(self):
         """
         Will classify all unclassified sessions as malicious activity.
 
         :param delay_seconds: no sessions newer than (now - delay_seconds) will be processed.
         """
-        min_datetime = datetime.utcnow() - timedelta(seconds=delay_seconds)
+        min_datetime = datetime.utcnow() - timedelta(seconds=self.delay_seconds)
 
         db_session = self.db_session
 

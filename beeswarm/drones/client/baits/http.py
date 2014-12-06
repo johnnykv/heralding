@@ -75,7 +75,7 @@ class Http(ClientBase):
                 url = random.choice(links)
                 response = self.client.get(url, auth=HTTPBasicAuth(username, password), verify=False)
                 links = self._get_links(response)
-
+            session.did_complete = True
         except Exception as err:
             logger.debug('Caught exception: {0} ({1})'.format(err, str(type(err))))
         else:
