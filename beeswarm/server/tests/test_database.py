@@ -17,6 +17,8 @@ import unittest
 import uuid
 from datetime import datetime
 import json
+import tempfile
+import os
 
 import zmq.green as zmq
 import gevent
@@ -34,17 +36,20 @@ from beeswarm.server.db.session_persister import SessionPersister
 class ClassifierTests(unittest.TestCase):
     def setUp(self):
         beeswarm.shared.zmq_context = zmq.Context()
+        self.db_file = tempfile.mkstemp()[1]
+        connection_string = 'sqlite:///{0}'.format(self.db_file)
+        os.remove(self.db_file)
+        database_setup.setup_db(connection_string)
 
     def tearDown(self):
-        database_setup.clear_db()
+        if os.path.isfile(self.db_file):
+            os.remove(self.db_file)
 
     def test_matching(self):
         """
-        Tests that attack sessions coming in quick succession are classified as probes.
+        Tests that attack sessions coming in quick succession are classified correctly.
         This test relates to issue #218
         """
-
-        database_setup.setup_db('sqlite://')
 
         honeypot_id = 1
         honeypot = Honeypot(id=honeypot_id)

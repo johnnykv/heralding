@@ -26,6 +26,7 @@ from beeswarm.shared.socket_enum import SocketNames
 
 class LoggerTests(unittest.TestCase):
     def test_base_logger(self):
+        beeswarm.shared.zmq_context = zmq.Context()
         context = beeswarm.shared.zmq_context
         processed_sessions_publisher = context.socket(zmq.PUB)
         processed_sessions_publisher.bind(SocketNames.PROCESSED_SESSIONS)
