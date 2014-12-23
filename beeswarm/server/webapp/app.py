@@ -64,7 +64,7 @@ drone_keys = []
 
 context = beeswarm.shared.zmq_context
 config_actor_socket = context.socket(zmq.REQ)
-config_actor_socket.connect(SocketNames.CONFIG_COMMANDS)
+config_actor_socket.connect(SocketNames.CONFIG_COMMANDS.value)
 request_lock = gevent.lock.RLock()
 
 
@@ -214,7 +214,7 @@ def configure_honeypot(id):
     honeypot = db_session.query(Honeypot).filter(Drone.id == id).one()
     if honeypot.discriminator != 'honeypot' or honeypot is None:
         abort(404, 'Drone with id {0} not found or invalid.'.format(id))
-    config_dict = send_config_request('{0} {1}'.format(Messages.DRONE_CONFIG, id))
+    config_dict = send_config_request('{0} {1}'.format(Messages.DRONE_CONFIG.value, id))
     config_obj = DictWrapper(config_dict)
     form = HoneypotConfigurationForm(obj=config_obj)
     if not form.validate_on_submit():
@@ -285,7 +285,7 @@ def configure_honeypot(id):
         # advise config actor that we have change something on a given drone id
         # TODO: make entity itself know if it has changed and then poke the config actor.
 
-        send_config_request('{0} {1}'.format(Messages.DRONE_CONFIG_CHANGED, honeypot.id))
+        send_config_request('{0} {1}'.format(Messages.DRONE_CONFIG_CHANGED.value, honeypot.id))
         return render_template('finish-config-honeypot.html', drone_id=honeypot.id, user=current_user)
 
 
@@ -296,7 +296,7 @@ def configure_client(id):
     drone = db_session.query(Drone).filter(Drone.id == id).one()
     if drone.discriminator != 'client' or drone is None:
         abort(404, 'Drone with id {0} not found or invalid.'.format(id))
-    config_dict = send_config_request('{0} {1}'.format(Messages.DRONE_CONFIG, id))
+    config_dict = send_config_request('{0} {1}'.format(Messages.DRONE_CONFIG.value, id))
     config_obj = DictWrapper(config_dict)
     form = ClientConfigurationForm(obj=config_obj)
     if not form.validate_on_submit():
@@ -354,7 +354,7 @@ def configure_client(id):
         db_session.add(drone)
         db_session.commit()
 
-        send_config_request('{0} {1}'.format(Messages.DRONE_CONFIG_CHANGED, drone.id))
+        send_config_request('{0} {1}'.format(Messages.DRONE_CONFIG_CHANGED.value, drone.id))
         return render_template('finish-config-client.html', drone_id=drone.id, user=current_user)
 
 
@@ -387,8 +387,8 @@ def add_drone():
     drone_keys.append(drone_key)
     gevent.spawn_later(120, reset_drone_key, drone_key)
 
-    server_host = send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM, 'network,server_host'))
-    server_web_port = send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM, 'network,web_port'))
+    server_host = send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM.value, 'network,server_host'))
+    server_web_port = send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM.value, 'network,web_port'))
     server_https = 'https://{0}:{1}/'.format(server_host, server_web_port)
     drone_link = '{0}ws/drone/add/{1}'.format(server_https, drone_key)
     return render_template('add_drone.html', user=current_user, drone_link=drone_link)
@@ -402,7 +402,7 @@ def drone_key(key):
         logger.warn('Attempt to add new drone, but using wrong key from: {0}'.format(request.remote_addr))
         abort(401)
     else:
-        config_json = send_config_request('{0}'.format(Messages.DRONE_ADD))
+        config_json = send_config_request('{0}'.format(Messages.DRONE_ADD.value))
         return json.dumps(config_json)
 
 
@@ -412,7 +412,7 @@ def delete_drones():
     # list of drone id's'
     drone_ids = json.loads(request.data)
     for drone_id in drone_ids:
-        send_config_request('{0} {1}'.format(Messages.DRONE_DELETE, drone_id))
+        send_config_request('{0} {1}'.format(Messages.DRONE_DELETE.value, drone_id))
     return ''
 
 # requesting all bait users - or replacing all bait users
@@ -447,7 +447,7 @@ def add_bait_users():
         # TODO: Also validate client side
         if bait_user['username'] == '':
             continue
-        send_config_request('{0} {1} {2}'.format(Messages.BAIT_USER_ADD, bait_user['username'], bait_user['password']))
+        send_config_request('{0} {1} {2}'.format(Messages.BAIT_USER_ADD.value, bait_user['username'], bait_user['password']))
     return ''
 
 
@@ -458,7 +458,7 @@ def delete_bait_user():
     # list of bait user id's
     bait_users = json.loads(request.data)
     for id in bait_users:
-        send_config_request('{0} {1}'.format(Messages.BAIT_USER_DELETE, id))
+        send_config_request('{0} {1}'.format(Messages.BAIT_USER_DELETE.value, id))
     return ''
 
 
@@ -597,9 +597,9 @@ def logout():
 @app.route('/settings', methods=['GET', 'POST'])
 @login_required
 def settings():
-    bait_session_retain = send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM, 'bait_session_retain'))
-    ignore_failed_bait_session = ast.literal_eval(send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM, 'ignore_failed_bait_session')))
-    malicious_session_retain = send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM, 'malicious_session_retain'))
+    bait_session_retain = send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM.value, 'bait_session_retain'))
+    ignore_failed_bait_session = ast.literal_eval(send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM.value, 'ignore_failed_bait_session')))
+    malicious_session_retain = send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM.value, 'malicious_session_retain'))
     form = SettingsForm(bait_session_retain=bait_session_retain, malicious_session_retain=malicious_session_retain,
                         ignore_failed_bait_session=ignore_failed_bait_session)
 

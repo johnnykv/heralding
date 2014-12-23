@@ -56,7 +56,7 @@ class HoneypotTests(unittest.TestCase):
     def mock_server_relay(self):
         context = beeswarm.shared.zmq_context
         internal_server_relay = context.socket(zmq.PULL)
-        internal_server_relay.bind(SocketNames.SERVER_RELAY)
+        internal_server_relay.bind(SocketNames.SERVER_RELAY.value)
 
         while True:
             self.inbox.put(internal_server_relay.recv())

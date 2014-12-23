@@ -29,7 +29,7 @@ class LoggerTests(unittest.TestCase):
         beeswarm.shared.zmq_context = zmq.Context()
         context = beeswarm.shared.zmq_context
         processed_sessions_publisher = context.socket(zmq.PUB)
-        processed_sessions_publisher.bind(SocketNames.PROCESSED_SESSIONS)
+        processed_sessions_publisher.bind(SocketNames.PROCESSED_SESSIONS.value)
 
         test_list = []
         mock_logger = TestLogger({}, test_list)

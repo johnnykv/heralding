@@ -39,11 +39,13 @@ class ClassifierTests(unittest.TestCase):
         self.db_file = tempfile.mkstemp()[1]
         connection_string = 'sqlite:///{0}'.format(self.db_file)
         os.remove(self.db_file)
+        print connection_string
         database_setup.setup_db(connection_string)
 
     def tearDown(self):
         if os.path.isfile(self.db_file):
-            os.remove(self.db_file)
+            pass
+            #os.remove(self.db_file)
 
     def test_matching(self):
         """
@@ -59,7 +61,7 @@ class ClassifierTests(unittest.TestCase):
         db_session.commit()
 
         raw_session_publisher = beeswarm.shared.zmq_context.socket(zmq.PUB)
-        raw_session_publisher.bind(SocketNames.RAW_SESSIONS)
+        raw_session_publisher.bind(SocketNames.RAW_SESSIONS.value)
 
         # startup session database
         persistence_actor = SessionPersister(999, delay_seconds=2)
@@ -71,12 +73,13 @@ class ClassifierTests(unittest.TestCase):
                                                destination_port=110)
             honeypot_session.try_auth('plaintext', username='james', password='bond')
             honeypot_session.honeypot_id = honeypot_id
-            raw_session_publisher.send('{0} {1} {2}'.format(Messages.SESSION_HONEYPOT, honeypot_id,
+            raw_session_publisher.send('{0} {1} {2}'.format(Messages.SESSION_HONEYPOT.value, honeypot_id,
                                                             json.dumps(honeypot_session.to_dict(), default=json_default,
                                                             ensure_ascii=False)))
         gevent.sleep(5)
 
         sessions = db_session.query(Session).all()
+        print len(sessions)
 
         for session in sessions:
             self.assertEqual(session.classification_id, 'bruteforce')

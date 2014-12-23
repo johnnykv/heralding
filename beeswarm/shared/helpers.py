@@ -188,7 +188,7 @@ def send_zmq_request(actor_url, request):
     socket.send(request)
     gevent.sleep()
     result = socket.recv()
-    if result.split(' ', 1)[0] != Messages.OK:
+    if result.split(' ', 1)[0] != Messages.OK.value:
         socket.close()
         assert False
     else:
@@ -201,7 +201,7 @@ def send_zmq_request_socket(socket, request):
     socket.send(request)
     result = socket.recv()
     status, data = result.split(' ', 1)
-    if status != Messages.OK:
+    if status != Messages.OK.value:
         assert False
     else:
         if data.startswith('{'):

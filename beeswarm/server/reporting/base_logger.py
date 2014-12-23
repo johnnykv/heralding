@@ -34,7 +34,7 @@ class BaseLogger(Greenlet):
     def _run(self):
         context = beeswarm.shared.zmq_context
         receiving_socket = context.socket(zmq.SUB)
-        receiving_socket.connect(SocketNames.PROCESSED_SESSIONS)
+        receiving_socket.connect(SocketNames.PROCESSED_SESSIONS.value)
         receiving_socket.setsockopt(zmq.SUBSCRIBE, '')
 
         poller = zmq.Poller()

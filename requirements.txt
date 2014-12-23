@@ -20,5 +20,5 @@ pyOpenSSL
 lxml
 flask-wtf>=0.9.0
 mock
-enum
+Enum34
 netifaces

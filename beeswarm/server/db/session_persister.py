@@ -62,15 +62,15 @@ class SessionPersister(gevent.Greenlet):
         context = beeswarm.shared.zmq_context
 
         self.subscriber_sessions = context.socket(zmq.SUB)
-        self.subscriber_sessions.connect(SocketNames.RAW_SESSIONS)
-        self.subscriber_sessions.setsockopt(zmq.SUBSCRIBE, Messages.SESSION_CLIENT)
-        self.subscriber_sessions.setsockopt(zmq.SUBSCRIBE, Messages.SESSION_HONEYPOT)
+        self.subscriber_sessions.connect(SocketNames.RAW_SESSIONS.value)
+        self.subscriber_sessions.setsockopt(zmq.SUBSCRIBE, Messages.SESSION_CLIENT.value)
+        self.subscriber_sessions.setsockopt(zmq.SUBSCRIBE, Messages.SESSION_HONEYPOT.value)
 
         self.processedSessionsPublisher = context.socket(zmq.PUB)
-        self.processedSessionsPublisher.bind(SocketNames.PROCESSED_SESSIONS)
+        self.processedSessionsPublisher.bind(SocketNames.PROCESSED_SESSIONS.value)
 
         self.config_actor_socket = context.socket(zmq.REQ)
-        self.config_actor_socket.connect(SocketNames.CONFIG_COMMANDS)
+        self.config_actor_socket.connect(SocketNames.CONFIG_COMMANDS.value)
 
     def _run(self):
         poller = zmq.Poller()
@@ -116,7 +116,7 @@ class SessionPersister(gevent.Greenlet):
         assert data['honeypot_id'] is not None
         _honeypot = db_session.query(Honeypot).filter(Honeypot.id == data['honeypot_id']).one()
 
-        if session_type == Messages.SESSION_HONEYPOT:
+        if session_type == Messages.SESSION_HONEYPOT.value:
             session = Session()
             for entry in data['transcript']:
                 transcript_timestamp = datetime.strptime(entry['timestamp'], '%Y-%m-%dT%H:%M:%S.%f')
@@ -127,8 +127,8 @@ class SessionPersister(gevent.Greenlet):
             for auth in data['login_attempts']:
                 authentication = self.extract_auth_entity(auth)
                 session.authentication.append(authentication)
-        elif session_type == Messages.SESSION_CLIENT:
-            ignore_failed_bait_sessions = self.send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM,
+        elif session_type == Messages.SESSION_CLIENT.value:
+            ignore_failed_bait_sessions = self.send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM.value,
                                                                                     'ignore_failed_bait_session'))
             if not data['did_complete'] and ignore_failed_bait_sessions:
                 logger.debug('Ignore failed bait session.')
@@ -162,10 +162,10 @@ class SessionPersister(gevent.Greenlet):
         db_session.commit()
 
         matching_session = self.get_matching_session(session, db_session)
-        if session_type == Messages.SESSION_HONEYPOT:
+        if session_type == Messages.SESSION_HONEYPOT.value:
             if matching_session:
                 self.merge_bait_and_session(session, matching_session, db_session)
-        elif session_type == Messages.SESSION_CLIENT:
+        elif session_type == Messages.SESSION_CLIENT.value:
             if matching_session:
                 self.merge_bait_and_session(matching_session, session, db_session)
         else:
@@ -232,9 +232,9 @@ class SessionPersister(gevent.Greenlet):
         db_session.add(bait_session)
         db_session.delete(honeypot_session)
         db_session.commit()
-        self.processedSessionsPublisher.send('{0} {1} {2}'.format(Messages.DELETED_DUE_TO_MERGE, honeypot_session.id,
+        self.processedSessionsPublisher.send('{0} {1} {2}'.format(Messages.DELETED_DUE_TO_MERGE.value, honeypot_session.id,
                                                                   bait_session.id))
-        self.processedSessionsPublisher.send('{0} {1}'.format(Messages.SESSION,
+        self.processedSessionsPublisher.send('{0} {1}'.format(Messages.SESSION.value,
                                                               json.dumps(bait_session.to_dict())))
 
     def classify_malicious_sessions(self):
@@ -286,7 +286,7 @@ class SessionPersister(gevent.Greenlet):
                 session.classification = db_session.query(Classification).filter(
                     Classification.type == 'bruteforce').one()
             db_session.commit()
-            self.processedSessionsPublisher.send('{0} {1}'.format(Messages.SESSION, json.dumps(session.to_dict())))
+            self.processedSessionsPublisher.send('{0} {1}'.format(Messages.SESSION.value, json.dumps(session.to_dict())))
 
     def send_config_request(self, request):
         return send_zmq_request_socket(self.config_actor_socket, request)

@@ -39,4 +39,4 @@ class BaitSession(BaseSession):
         return vars(self)
 
     def end_session(self):
-        super(BaitSession, self).end_session(Messages.SESSION_CLIENT)
+        super(BaitSession, self).end_session(Messages.SESSION_CLIENT.value)

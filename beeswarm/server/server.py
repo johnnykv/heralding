@@ -150,11 +150,11 @@ class Server(object):
         # internal interfaces
         # all inbound session data from drones will be replayed in this socket
         rawSessionPublisher = beeswarm.shared.zmq_context.socket(zmq.PUB)
-        rawSessionPublisher.bind(SocketNames.RAW_SESSIONS)
+        rawSessionPublisher.bind(SocketNames.RAW_SESSIONS.value)
 
         # all commands received on this will be published on the external interface
         drone_command_receiver = beeswarm.shared.zmq_context.socket(zmq.PULL)
-        drone_command_receiver.bind(SocketNames.DRONE_COMMANDS)
+        drone_command_receiver.bind(SocketNames.DRONE_COMMANDS.value)
 
         poller = zmq.Poller()
         poller.register(drone_data_inbound, zmq.POLLIN)
@@ -184,15 +184,15 @@ class Server(object):
                 db_session.add(drone)
                 db_session.commit()
 
-                if topic == Messages.SESSION_HONEYPOT or topic == Messages.SESSION_CLIENT or \
-                    topic == Messages.SESSION_PART_HONEYPOT_SESSION_START or \
-                    topic == Messages.SESSION_PART_HONEYPOT_AUTH:
+                if topic == Messages.SESSION_HONEYPOT.value or topic == Messages.SESSION_CLIENT.value or \
+                    topic == Messages.SESSION_PART_HONEYPOT_SESSION_START.value or \
+                    topic == Messages.SESSION_PART_HONEYPOT_AUTH.value:
                     rawSessionPublisher.send('{0} {1}'.format(topic, data))
-                elif topic == Messages.KEY or topic == Messages.CERT:
+                elif topic == Messages.KEY.value or topic == Messages.CERT.value:
                     # for now we just store the fingerprint
                     # in the future it might be relevant to store the entire public key and private key
                     # for forensic purposes
-                    if topic == Messages.CERT:
+                    if topic == Messages.CERT.value:
                         cert = data.split(' ', 1)[1]
                         digest = generate_cert_digest(cert)
                         logging.debug('Storing public key digest: {0} for drone {1}.'.format(digest, drone_id))
@@ -201,9 +201,9 @@ class Server(object):
                         drone.cert_digest = digest
                         db_session.add(drone)
                         db_session.commit()
-                elif topic == Messages.PING:
+                elif topic == Messages.PING.value:
                     pass
-                elif topic == Messages.IP:
+                elif topic == Messages.IP.value:
                     ip_address = data
                     logging.debug('Drone {0} reported ip: {1}'.format(drone_id, ip_address))
                     db_session = database_setup.get_session()
@@ -212,13 +212,13 @@ class Server(object):
                         drone.ip_address = ip_address
                         db_session.add(drone)
                         db_session.commit()
-                        send_zmq_request(SocketNames.CONFIG_COMMANDS, '{0} {1}'.format(Messages.DRONE_CONFIG_CHANGED,
+                        send_zmq_request(SocketNames.CONFIG_COMMANDS.value, '{0} {1}'.format(Messages.DRONE_CONFIG_CHANGED.value,
                                                                                        drone_id))
                 # drone want it's config transmitted
-                elif topic == Messages.DRONE_CONFIG:
-                    config_dict = send_zmq_request('inproc://configCommands', '{0} {1}'.format(Messages.DRONE_CONFIG,
+                elif topic == Messages.DRONE_CONFIG.value:
+                    config_dict = send_zmq_request('inproc://configCommands', '{0} {1}'.format(Messages.DRONE_CONFIG.value,
                                                                                                drone_id))
-                    drone_data_outbound.send('{0} {1} {2}'.format(drone_id, Messages.CONFIG, json.dumps(config_dict)))
+                    drone_data_outbound.send('{0} {1} {2}'.format(drone_id, Messages.CONFIG.value, json.dumps(config_dict)))
                 else:
                     logger.warn('Message with unknown topic received: {0}'.format(topic))
 
@@ -358,10 +358,10 @@ class Server(object):
             context = beeswarm.shared.zmq_context
             socket = context.socket(zmq.REQ)
             gevent.sleep()
-            socket.connect(SocketNames.CONFIG_COMMANDS)
-            socket.send('{0} {1}'.format(Messages.GEN_ZMQ_KEYS, 'beeswarm_server'))
+            socket.connect(SocketNames.CONFIG_COMMANDS.value)
+            socket.send('{0} {1}'.format(Messages.GEN_ZMQ_KEYS.value, 'beeswarm_server'))
             result = socket.recv()
-            if result.split(' ', 1)[0] == Messages.OK:
+            if result.split(' ', 1)[0] == Messages.OK.value:
                 result = json.loads(result.split(' ', 1)[1])
                 zmq_public, zmq_private = (result['public_key'], result['private_key'])
             else:
@@ -385,6 +385,6 @@ class Server(object):
                             'bait_session_retain': 2,
                             'malicious_session_retain': 100,
                             'ignore_failed_bait_session': False}
-            socket.send('{0} {1}'.format(Messages.SET_CONFIG_ITEM, json.dumps(message_dict)))
+            socket.send('{0} {1}'.format(Messages.SET_CONFIG_ITEM.value, json.dumps(message_dict)))
             socket.recv()
             config_actor.close()

@@ -43,7 +43,7 @@ class Session(BaseSession):
         self.vdata = {}
         self.last_activity = datetime.utcnow()
 
-        self.send_log(Messages.SESSION_PART_HONEYPOT_SESSION_START, self.to_dict())
+        self.send_log(Messages.SESSION_PART_HONEYPOT_SESSION_START.value, self.to_dict())
 
     def activity(self):
         self.last_activity = datetime.utcnow()
@@ -96,7 +96,7 @@ class Session(BaseSession):
             kwargs['challenge'] = kwargs.get('challenge').encode('hex')
             kwargs['response'] = kwargs.get('response').encode('hex')
 
-        self.send_log(Messages.SESSION_PART_HONEYPOT_AUTH, self.login_attempts[-1])
+        self.send_log(Messages.SESSION_PART_HONEYPOT_AUTH.value, self.login_attempts[-1])
         logger.debug('{0} authentication attempt from {1}:{2}. Credentials: {3}'.format(self.protocol, self.source_ip,
                                                                                         self.source_port,
                                                                                         json.dumps(kwargs)))

@@ -61,9 +61,9 @@ class ConfigActor(Greenlet):
         self.enabled = False
 
     def _run(self):
-        self.config_commands.bind(SocketNames.CONFIG_COMMANDS)
+        self.config_commands.bind(SocketNames.CONFIG_COMMANDS.value)
         if not self.commands_only:
-            self.drone_command_receiver.connect(SocketNames.DRONE_COMMANDS)
+            self.drone_command_receiver.connect(SocketNames.DRONE_COMMANDS.value)
 
         poller = zmq.Poller()
         poller.register(self.config_commands, zmq.POLLIN)
@@ -81,35 +81,35 @@ class ConfigActor(Greenlet):
             cmd = msg
         logger.debug('Received command: {0}'.format(cmd))
 
-        if cmd == Messages.SET_CONFIG_ITEM:
+        if cmd == Messages.SET_CONFIG_ITEM.value:
             self._handle_command_set(data)
             self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
-        elif cmd == Messages.GET_CONFIG_ITEM:
+        elif cmd == Messages.GET_CONFIG_ITEM.value:
             value = self._handle_command_get(data)
             self.config_commands.send('{0} {1}'.format(Messages.OK, value))
         elif cmd == Messages.GEN_ZMQ_KEYS:
             self._handle_command_genkeys(data)
-        elif cmd == Messages.DRONE_CONFIG:
+        elif cmd == Messages.DRONE_CONFIG.value:
             result = self._handle_command_get_droneconfig(data)
             self.config_commands.send('{0} {1}'.format(Messages.OK, json.dumps(result)))
-        elif cmd == Messages.DRONE_CONFIG_CHANGED:
+        elif cmd == Messages.DRONE_CONFIG_CHANGED.value:
             # send OK straight away - we don't want the sender to wait
             self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
             self._handle_command_drone_config_changed(data)
-        elif cmd == Messages.BAIT_USER_ADD:
+        elif cmd == Messages.BAIT_USER_ADD.value:
             self._handle_command_bait_user_add(data)
             self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
-        elif cmd == Messages.BAIT_USER_DELETE:
+        elif cmd == Messages.BAIT_USER_DELETE.value:
             self._handle_command_bait_user_delete(data)
             self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
-        elif cmd == Messages.DRONE_DELETE:
+        elif cmd == Messages.DRONE_DELETE.value:
             self._handle_command_delete_drone(data)
             self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
-        elif cmd == Messages.DRONE_ADD:
+        elif cmd == Messages.DRONE_ADD.value:
             self._handle_command_add_drone()
         else:
             logger.warning('Unknown command received: {0}'.format(cmd))
-            self.config_commands.send(Messages.FAIL)
+            self.config_commands.send(Messages.FAIL.value)
 
     def _handle_command_set(self, data):
         new_config = json.loads(data)
@@ -131,7 +131,7 @@ class ConfigActor(Greenlet):
 
     def _handle_command_genkeys(self, name):
         private_key, publickey = self._get_zmq_keys(name)
-        self.config_commands.send(Messages.OK + ' ' + json.dumps({'public_key': publickey,
+        self.config_commands.send(Messages.OK.value + ' ' + json.dumps({'public_key': publickey,
                                                                   'private_key': private_key}))
 
     def _handle_command_drone_config_changed(self, drone_id):
@@ -172,7 +172,7 @@ class ConfigActor(Greenlet):
     def _send_config_to_drone(self, drone_id):
         config = self._get_drone_config(drone_id)
         logger.debug('Sending config to {0}: {1}'.format(drone_id, config))
-        self.drone_command_receiver.send('{0} {1} {2}'.format(drone_id, Messages.CONFIG, json.dumps(config)))
+        self.drone_command_receiver.send('{0} {1} {2}'.format(drone_id, Messages.CONFIG.value, json.dumps(config)))
 
     def _handle_command_get_droneconfig(self, drone_id):
         return self._get_drone_config(drone_id)
@@ -221,7 +221,7 @@ class ConfigActor(Greenlet):
         if not drone:
             drone = db_session.query(Drone).filter(Drone.id == drone_id).first()
         if not drone:
-            self.config_commands.send(Messages.FAIL)
+            self.config_commands.send(Messages.FAIL.value)
 
         server_zmq_url = 'tcp://{0}:{1}'.format(self.config['network']['server_host'],
                                                 self.config['network']['zmq_port'])
@@ -342,7 +342,7 @@ class ConfigActor(Greenlet):
             db_session.delete(drone_to_delete)
             db_session.commit()
             # tell the drone to kill itself
-            self.drone_command_receiver.send('{0} {1} '.format(drone_id, Messages.DRONE_DELETE))
+            self.drone_command_receiver.send('{0} {1} '.format(drone_id, Messages.DRONE_DELETE.value))
             self._remove_zmq_keys(drone_id)
             self._reconfigure_all_clients()
 
@@ -354,6 +354,6 @@ class ConfigActor(Greenlet):
         logger.debug('New drone has been added with id: {0}'.format(drone.id))
 
         drone_config = self._get_drone_config(drone.id)
-        self.config_commands.send('{0} {1}'.format(Messages.OK, json.dumps(drone_config)))
+        self.config_commands.send('{0} {1}'.format(Messages.OK.value, json.dumps(drone_config)))
 
 

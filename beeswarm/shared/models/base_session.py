@@ -43,7 +43,7 @@ class BaseSession(object):
 
         context = beeswarm.shared.zmq_context
         self.socket = context.socket(zmq.PUSH)
-        self.socket.connect(SocketNames.SERVER_RELAY)
+        self.socket.connect(SocketNames.SERVER_RELAY.value)
 
     def add_auth_attempt(self, auth_type, successful, **kwargs):
         """
