@@ -83,28 +83,28 @@ class ConfigActor(Greenlet):
 
         if cmd == Messages.SET_CONFIG_ITEM.value:
             self._handle_command_set(data)
-            self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
+            self.config_commands.send('{0} {1}'.format(Messages.OK.value, '{}'))
         elif cmd == Messages.GET_CONFIG_ITEM.value:
             value = self._handle_command_get(data)
-            self.config_commands.send('{0} {1}'.format(Messages.OK, value))
-        elif cmd == Messages.GEN_ZMQ_KEYS:
+            self.config_commands.send('{0} {1}'.format(Messages.OK.value, value))
+        elif cmd == Messages.GEN_ZMQ_KEYS.value:
             self._handle_command_genkeys(data)
         elif cmd == Messages.DRONE_CONFIG.value:
             result = self._handle_command_get_droneconfig(data)
-            self.config_commands.send('{0} {1}'.format(Messages.OK, json.dumps(result)))
+            self.config_commands.send('{0} {1}'.format(Messages.OK.value, json.dumps(result)))
         elif cmd == Messages.DRONE_CONFIG_CHANGED.value:
             # send OK straight away - we don't want the sender to wait
-            self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
+            self.config_commands.send('{0} {1}'.format(Messages.OK.value, '{}'))
             self._handle_command_drone_config_changed(data)
         elif cmd == Messages.BAIT_USER_ADD.value:
             self._handle_command_bait_user_add(data)
-            self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
+            self.config_commands.send('{0} {1}'.format(Messages.OK.value, '{}'))
         elif cmd == Messages.BAIT_USER_DELETE.value:
             self._handle_command_bait_user_delete(data)
-            self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
+            self.config_commands.send('{0} {1}'.format(Messages.OK.value, '{}'))
         elif cmd == Messages.DRONE_DELETE.value:
             self._handle_command_delete_drone(data)
-            self.config_commands.send('{0} {1}'.format(Messages.OK, '{}'))
+            self.config_commands.send('{0} {1}'.format(Messages.OK.value, '{}'))
         elif cmd == Messages.DRONE_ADD.value:
             self._handle_command_add_drone()
         else:

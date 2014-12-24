@@ -103,5 +103,5 @@ class Session(BaseSession):
         return authenticated
 
     def end_session(self):
-        super(Session, self).end_session(Messages.SESSION_HONEYPOT)
+        super(Session, self).end_session(Messages.SESSION_HONEYPOT.value)
 

@@ -608,7 +608,7 @@ def settings():
         options = {'bait_session_retain': form.bait_session_retain.data,
                    'malicious_session_retain': form.malicious_session_retain.data,
                    'ignore_failed_bait_session': form.ignore_failed_bait_session.data}
-        send_config_request('{0} {1}'.format(Messages.SET_CONFIG_ITEM, json.dumps(options)))
+        send_config_request('{0} {1}'.format(Messages.SET_CONFIG_ITEM.value, json.dumps(options)))
     return render_template('settings.html', form=form, user=current_user)
 
 
