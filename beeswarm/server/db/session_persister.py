@@ -39,21 +39,22 @@ class SessionPersister(gevent.Greenlet):
     def __init__(self, max_sessions, clear_sessions=False, delay_seconds=30):
         assert delay_seconds > 1
         Greenlet.__init__(self)
-        self.db_session = database_setup.get_session()
+        db_session = database_setup.get_session()
         # pending session will be converted to attacks if we cannot match with bait traffic
         # with this period
         self.delay_seconds = delay_seconds
         # clear all pending sessions on startup, pending sessions on startup
-        pending_classification = self.db_session.query(Classification).filter(Classification.type == 'pending').one()
-        pending_deleted = self.db_session.query(Session).filter(
+        pending_classification = db_session.query(Classification).filter(Classification.type == 'pending').one()
+        pending_deleted = db_session.query(Session).filter(
             Session.classification == pending_classification).delete()
-        self.db_session.commit()
+        db_session.commit()
         logging.info('Cleaned {0} pending sessions on startup'.format(pending_deleted))
         self.do_classify = False
         if clear_sessions or max_sessions == 0:
-            count = self.db_session.query(Session).delete()
+            db_session = database_setup.get_session()
+            count = db_session.query(Session).delete()
             logging.info('Deleting {0} sessions on startup.'.format(count))
-            self.db_session.commit()
+            db_session.commit()
 
         self.max_session_count = max_sessions
         if max_sessions:
@@ -96,7 +97,7 @@ class SessionPersister(gevent.Greenlet):
             self.do_classify = True
 
     def persist_session(self, session_json, session_type):
-        db_session = self.db_session
+        db_session = database_setup.get_session()
 
         if self.max_session_count == 0:
             return
@@ -110,7 +111,6 @@ class SessionPersister(gevent.Greenlet):
             data = json.loads(unicode(session_json, "ISO-8859-1"))
         logger.debug('Persisting {0} session: {1}'.format(session_type, data))
 
-        db_session = self.db_session
         classification = db_session.query(Classification).filter(Classification.type == 'pending').one()
 
         assert data['honeypot_id'] is not None
@@ -245,7 +245,7 @@ class SessionPersister(gevent.Greenlet):
         """
         min_datetime = datetime.utcnow() - timedelta(seconds=self.delay_seconds)
 
-        db_session = self.db_session
+        db_session = database_setup.get_session()
 
         # find and process bait sessions that did not get classified during persistence.
         bait_sessions = db_session.query(BaitSession).options(joinedload(BaitSession.authentication)) \
@@ -256,6 +256,7 @@ class SessionPersister(gevent.Greenlet):
         for bait_session in bait_sessions:
             logger.debug('Classifying bait session with id {0} as MITM'.format(bait_session.id))
             bait_session.classification = db_session.query(Classification).filter(Classification.type == 'mitm').one()
+            db_session.commit()
 
         # find and process honeypot sessions that did not get classified during persistence.
         sessions = db_session.query(Session).filter(Session.discriminator == None) \
