@@ -127,9 +127,8 @@ class SessionPersister(gevent.Greenlet):
                 authentication = self.extract_auth_entity(auth)
                 session.authentication.append(authentication)
         elif session_type == Messages.SESSION_CLIENT.value:
-            #ignore_failed_bait_sessions = self.send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM.value,
-            #                                                                        'ignore_failed_bait_session'))
-            ignore_failed_bait_sessions = True
+            ignore_failed_bait_sessions = self.send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM.value,
+                                                                                    'ignore_failed_bait_session'))
             if not data['did_complete'] and ignore_failed_bait_sessions:
                 logger.debug('Ignore failed bait session.')
                 return

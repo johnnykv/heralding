@@ -32,6 +32,7 @@ from beeswarm.shared.socket_enum import SocketNames
 from beeswarm.shared.message_enum import Messages
 from beeswarm.server.db.session_persister import SessionPersister
 from beeswarm.drones.client.models.session import BaitSession
+from beeswarm.server.misc.config_actor import ConfigActor
 
 
 class ClassifierTests(unittest.TestCase):
@@ -44,10 +45,9 @@ class ClassifierTests(unittest.TestCase):
 
     def tearDown(self):
         if os.path.isfile(self.db_file):
-            pass
-            #os.remove(self.db_file)
+            os.remove(self.db_file)
 
-    def test_matching(self):
+    def test_matching_quick_succession(self):
         """
         Tests that attack sessions coming in quick succession are classified correctly.
         This test relates to issue #218
@@ -127,6 +127,12 @@ class ClassifierTests(unittest.TestCase):
         raw_session_publisher = beeswarm.shared.zmq_context.socket(zmq.PUB)
         raw_session_publisher.bind(SocketNames.RAW_SESSIONS.value)
 
+        config_file = tempfile.mkstemp()[1]
+        os.remove(config_file)
+        # persistence actor needs to communicate with on config REQ/REP socket
+        config_actor = ConfigActor(config_file, '', True)
+        config_actor.start()
+
         # startup session database
         persistence_actor = SessionPersister(999, delay_seconds=2)
         persistence_actor.start()
@@ -162,6 +168,9 @@ class ClassifierTests(unittest.TestCase):
 
         # some time for the session actor to work
         gevent.sleep(2)
+        config_actor.close()
+        if os.path.isfile(config_file):
+            os.remove(config_file)
 
 def json_default(obj):
     if isinstance(obj, datetime):
