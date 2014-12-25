@@ -1,3 +1,10 @@
+0.7.14:
+ - Fixed bug that made it impossible to start Beeswarm under certain circumstances (#221).
+ - Fixed bug that classified bait traffic wrongly when client message arrived before
+   honeypot message.
+ - Workaround for db locked issue (#222).
+ - Various minor fixes and improvements.
+
 0.7.13:
  - Removed .pyc files from package.
 
