@@ -115,7 +115,6 @@ class SessionPersister(gevent.Greenlet):
 
         assert data['honeypot_id'] is not None
         _honeypot = db_session.query(Honeypot).filter(Honeypot.id == data['honeypot_id']).one()
-
         if session_type == Messages.SESSION_HONEYPOT.value:
             session = Session()
             for entry in data['transcript']:
@@ -128,8 +127,9 @@ class SessionPersister(gevent.Greenlet):
                 authentication = self.extract_auth_entity(auth)
                 session.authentication.append(authentication)
         elif session_type == Messages.SESSION_CLIENT.value:
-            ignore_failed_bait_sessions = self.send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM.value,
-                                                                                    'ignore_failed_bait_session'))
+            #ignore_failed_bait_sessions = self.send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM.value,
+            #                                                                        'ignore_failed_bait_session'))
+            ignore_failed_bait_sessions = True
             if not data['did_complete'] and ignore_failed_bait_sessions:
                 logger.debug('Ignore failed bait session.')
                 return
@@ -146,7 +146,6 @@ class SessionPersister(gevent.Greenlet):
         else:
             logger.warn('Unknown message type: {0}'.format(session_type))
             return
-
         session.id = data['id']
         session.classification = classification
         session.timestamp = datetime.strptime(data['timestamp'], '%Y-%m-%dT%H:%M:%S.%f')
@@ -160,7 +159,6 @@ class SessionPersister(gevent.Greenlet):
 
         db_session.add(session)
         db_session.commit()
-
         matching_session = self.get_matching_session(session, db_session)
         if session_type == Messages.SESSION_HONEYPOT.value:
             if matching_session:
@@ -190,7 +188,7 @@ class SessionPersister(gevent.Greenlet):
         db_session = db_session
         min_datetime = session.timestamp - timedelta(seconds=timediff)
         max_datetime = session.timestamp + timedelta(seconds=timediff)
-
+        logger.debug('Session dist: {0}'.format(session.discriminator))
         # default return value
         match = None
         classification = db_session.query(Classification).filter(Classification.type == 'pending').one()
@@ -201,12 +199,13 @@ class SessionPersister(gevent.Greenlet):
             .filter(Session.timestamp >= min_datetime) \
             .filter(Session.timestamp <= max_datetime) \
             .filter(Session.id != session.id) \
-            .filter(Session.classification == classification) \
-            .filter(Session.discriminator != session.discriminator)
+            .filter(Session.classification == classification)
 
         # identify the correct session by comparing authentication.
         # this could properly also be done using some fancy ORM/SQL construct.
         for potential_match in sessions:
+            if potential_match.discriminator == session.discriminator:
+                continue
             assert potential_match.id != session.id
             for honey_auth in session.authentication:
                 for session_auth in potential_match.authentication:
