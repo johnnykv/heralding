@@ -18,7 +18,7 @@
 # Aniket Panse <contact@aniketpanse.in> grants Johnny Vestergaard <jkv@unixcluster.dk>
 # a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable
 # copyright license to reproduce, prepare derivative works of, publicly
-# display, publicly perform, sublicense, and distribute [the] Contributions
+# display, publicly perform, sublicense, relicense, and distribute [the] Contributions
 # and such derivative works.
 
 
