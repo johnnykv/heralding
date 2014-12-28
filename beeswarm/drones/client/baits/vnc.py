@@ -13,6 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# Aniket Panse <contact@aniketpanse.in> grants Johnny Vestergaard <jkv@unixcluster.dk>
+# a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+# copyright license to reproduce, prepare derivative works of, publicly
+# display, publicly perform, sublicense, and distribute [the] Contributions
+# and such derivative works.
+
 import logging
 import socket
 
