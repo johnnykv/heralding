@@ -27,6 +27,7 @@ from entities import BaitUser
 import entities
 
 
+# these will go when database actor is finished
 DB_Session = None
 engine = None
 

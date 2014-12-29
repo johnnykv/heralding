@@ -65,8 +65,8 @@ def bootstrap(server_workdir, drone_workdir):
 
     # setting up socket to communicate with ZMQ actor.
     context = beeswarm.shared.zmq_context
-    config_actor_socket = context.socket(zmq.REQ)
-    config_actor_socket.connect(SocketNames.CONFIG_COMMANDS.value)
+    database_actor = context.socket(zmq.REQ)
+    database_actor.connect(SocketNames.DATABASE_REQUESTS.value)
 
     db_session = database_setup.get_session()
     drone = Honeypot()
@@ -111,7 +111,7 @@ def bootstrap(server_workdir, drone_workdir):
 
     db_session.add(drone)
     db_session.commit()
-    drone_config = send_zmq_request_socket(config_actor_socket, '{0} {1}'.format(Messages.DRONE_CONFIG.value, drone.id))
+    drone_config = send_zmq_request_socket(database_actor, '{0} {1}'.format(Messages.DRONE_CONFIG.value, drone.id))
 
     with open(os.path.join(drone_workdir, 'beeswarmcfg.json'), 'w') as drone_config_file:
         drone_config_file.write(json.dumps(drone_config, indent=4))

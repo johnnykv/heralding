@@ -31,7 +31,7 @@ from beeswarm.shared.helpers import drop_privileges, send_zmq_request
 from beeswarm.server.misc.scheduler import Scheduler
 from beeswarm.shared.helpers import create_self_signed_cert, generate_cert_digest, stop_if_not_write_workdir
 from beeswarm.shared.asciify import asciify
-from beeswarm.server.db.session_persister import SessionPersister
+from beeswarm.server.db.database_actor import DatabaseActor
 from beeswarm.server.misc.config_actor import ConfigActor
 from beeswarm.shared.message_enum import Messages
 from beeswarm.server.db import database_setup
@@ -93,10 +93,10 @@ class Server(object):
             _, relative_path = os.path.split(connection_string)
             connection_string = 'sqlite:///{0}'.format(os.path.join(self.work_dir, relative_path))
         database_setup.setup_db(connection_string)
-        persistence_actor = SessionPersister(max_sessions, clear_sessions)
-        persistence_actor.start()
-        self.actors.append(persistence_actor)
-        self.greenlets.append(persistence_actor)
+        database_actor = DatabaseActor(max_sessions, clear_sessions)
+        database_actor.start()
+        self.actors.append(database_actor)
+        self.greenlets.append(database_actor)
 
         for g in self.greenlets:
             g.link_exception(self.on_exception)
@@ -212,7 +212,7 @@ class Server(object):
                         drone.ip_address = ip_address
                         db_session.add(drone)
                         db_session.commit()
-                        send_zmq_request(SocketNames.CONFIG_COMMANDS.value, '{0} {1}'.format(Messages.DRONE_CONFIG_CHANGED.value,
+                        send_zmq_request(SocketNames.DATABASE_REQUESTS.value, '{0} {1}'.format(Messages.DRONE_CONFIG_CHANGED.value,
                                                                                        drone_id))
                 # drone want it's config transmitted
                 elif topic == Messages.DRONE_CONFIG.value:

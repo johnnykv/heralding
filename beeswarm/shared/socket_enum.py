@@ -14,6 +14,10 @@ class SocketNames(Enum):
     # the id of the drone.
     DRONE_COMMANDS = 'inproc://droneCommands'
 
+
+    # Requests to and from the databsae
+    DATABASE_REQUESTS = 'inproc://databaseRequests'
+
     #### Sockets used on drones ####
     # Drone commands received from the server will be retransmitted  on this socket.
     SERVER_COMMANDS = 'inproc://serverCommands'

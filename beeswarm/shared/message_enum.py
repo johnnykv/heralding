@@ -25,6 +25,7 @@ class Messages(Enum):
     # Authentication attempt, format is as in self.login_attempts list SESSION_HONEYPOT
     SESSION_PART_HONEYPOT_AUTH = 'SESSION_PART_HONEYPOT_AUTH'
     SESSION_CLIENT = 'SESSION_CLIENT'
+
     SET_CONFIG_ITEM = 'SET'
     GET_CONFIG_ITEM = 'GET'
     GEN_ZMQ_KEYS = 'GEN_ZMQ_KEYS'
