@@ -202,6 +202,8 @@ def send_zmq_request_socket(socket, request):
     result = socket.recv()
     status, data = result.split(' ', 1)
     if status != Messages.OK.value:
+        logger.error('Receiving actor on socket {0} failed to respond properly. The request was: {1}'.format(socket,
+                                                                                                             request))
         assert False
     else:
         if data.startswith('{'):

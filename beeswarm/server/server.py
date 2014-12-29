@@ -359,7 +359,7 @@ class Server(object):
             socket = context.socket(zmq.REQ)
             gevent.sleep()
             socket.connect(SocketNames.CONFIG_COMMANDS.value)
-            socket.send('{0} {1}'.format(Messages.GEN_ZMQ_KEYS.value, 'beeswarm_server'))
+            socket.send('{0} {1}'.format(Messages.GET_ZMQ_KEYS.value, 'beeswarm_server'))
             result = socket.recv()
             if result.split(' ', 1)[0] == Messages.OK.value:
                 result = json.loads(result.split(' ', 1)[1])

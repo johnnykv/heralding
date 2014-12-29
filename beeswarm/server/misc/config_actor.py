@@ -83,8 +83,8 @@ class ConfigActor(Greenlet):
         elif cmd == Messages.GET_CONFIG_ITEM.value:
             value = self._handle_command_get(data)
             self.config_commands.send('{0} {1}'.format(Messages.OK.value, value))
-        elif cmd == Messages.GEN_ZMQ_KEYS.value:
-            self._handle_command_genkeys(data)
+        elif cmd == Messages.GET_ZMQ_KEYS.value:
+            self._handle_command_getkeys(data)
         else:
             logger.error('Unknown command received: {0}'.format(cmd))
             self.config_commands.send(Messages.FAIL.value)
@@ -107,10 +107,10 @@ class ConfigActor(Greenlet):
             else:
                 return self._retrieve_nested_config(keys[1:], dict[keys[0]])
 
-    def _handle_command_genkeys(self, name):
+    def _handle_command_getkeys(self, name):
         private_key, publickey = self._get_zmq_keys(name)
         self.config_commands.send(Messages.OK.value + ' ' + json.dumps({'public_key': publickey,
-                                                                  'private_key': private_key}))
+                                                                        'private_key': private_key}))
 
     def _save_config_file(self):
         with open(self.config_file, 'w+') as config_file:

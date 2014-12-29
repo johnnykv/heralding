@@ -440,14 +440,18 @@ class DatabaseActor(gevent.Greenlet):
         if not drone:
             self.databaseRequests.send(Messages.FAIL.value)
 
-        # TODO: Get these from config actor
-        server_zmq_url = 'tcp://{0}:{1}'.format(self.config['network']['server_host'],
-                                                self.config['network']['zmq_port'])
-        server_zmq_command_url = 'tcp://{0}:{1}'.format(self.config['network']['server_host'],
-                                                        self.config['network']['zmq_command_port'])
+        host = self.send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM.value, 'network,server_host'))
+        zmq_port = self.send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM.value, 'network,zmq_port'))
+        zmq_command_port = self.send_config_request(
+            '{0} {1}'.format(Messages.GET_CONFIG_ITEM.value, 'network,zmq_command_port'))
 
-        private_key, public_key = self._get_zmq_keys(str(drone.id))
+        server_zmq_url = 'tcp://{0}:{1}'.format(host, zmq_port)
+        server_zmq_command_url = 'tcp://{0}:{1}'.format(host, zmq_command_port)
 
+        zmq_keys = self.send_config_request('{0} {1}'.format(Messages.GET_ZMQ_KEYS.value, drone_id))
+        zmq_server_key = self.send_config_request('{0} {1}'.format(Messages.GET_ZMQ_KEYS.value,
+                                                                   'network,zmq_server_public_key'))
+        zmq_server_key = zmq_server_key['public_key']
         # common section that goes for all types of drones
         drone_config = {
             'general': {
@@ -459,9 +463,9 @@ class DatabaseActor(gevent.Greenlet):
             'beeswarm_server': {
                 'zmq_url': server_zmq_url,
                 'zmq_command_url': server_zmq_command_url,
-                'zmq_server_public': self.config['network']['zmq_server_public_key'],
-                'zmq_own_public': public_key,
-                'zmq_own_private': private_key,
+                'zmq_server_public': zmq_server_key,
+                'zmq_own_public': zmq_keys['public_key'],
+                'zmq_own_private': zmq_keys['private_key'],
             },
             'timecheck': {
                 'enabled': True,
@@ -510,5 +514,3 @@ class DatabaseActor(gevent.Greenlet):
                 drone_config['bait_timings'] = {}
 
         return drone_config
-
-
