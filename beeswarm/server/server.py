@@ -216,9 +216,10 @@ class Server(object):
                                                                                        drone_id))
                 # drone want it's config transmitted
                 elif topic == Messages.DRONE_CONFIG.value:
-                    config_dict = send_zmq_request('inproc://configCommands', '{0} {1}'.format(Messages.DRONE_CONFIG.value,
-                                                                                               drone_id))
-                    drone_data_outbound.send('{0} {1} {2}'.format(drone_id, Messages.CONFIG.value, json.dumps(config_dict)))
+                    config_dict = send_zmq_request(SocketNames.DATABASE_REQUESTS.value, '{0} {1}'
+                                                   .format(Messages.DRONE_CONFIG.value, drone_id))
+                    drone_data_outbound.send('{0} {1} {2}'.format(drone_id, Messages.CONFIG.value,
+                                                                  json.dumps(config_dict)))
                 else:
                     logger.warn('Message with unknown topic received: {0}'.format(topic))
 

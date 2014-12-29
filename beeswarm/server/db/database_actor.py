@@ -449,8 +449,7 @@ class DatabaseActor(gevent.Greenlet):
         server_zmq_command_url = 'tcp://{0}:{1}'.format(host, zmq_command_port)
 
         zmq_keys = self.send_config_request('{0} {1}'.format(Messages.GET_ZMQ_KEYS.value, drone_id))
-        zmq_server_key = self.send_config_request('{0} {1}'.format(Messages.GET_ZMQ_KEYS.value,
-                                                                   'network,zmq_server_public_key'))
+        zmq_server_key = self.send_config_request('{0} {1}'.format(Messages.GET_ZMQ_KEYS.value, 'beeswarm_server'))
         zmq_server_key = zmq_server_key['public_key']
         # common section that goes for all types of drones
         drone_config = {
