@@ -3,8 +3,8 @@ from enum import Enum
 
 class SocketNames(Enum):
     #### Sockets used on server ####
-    # As soon as sessions are received from the remote drone the data will get retransmitted unaltered on this socket
-    RAW_SESSIONS = 'inproc://rawSessionPublisher'
+    # All data received from drones will be published on this socket
+    DRONE_DATA = 'inproc://droneData'
     # After sessions has been classified they will get retransmitted on this socket.
     # TODO: Does not actually happen yet
     PROCESSED_SESSIONS = 'inproc://processedSessionPublisher'

@@ -148,29 +148,31 @@ class Server(object):
         drone_data_outbound.bind('tcp://*:{0}'.format(self.config['network']['zmq_command_port']))
 
         # internal interfaces
-        # all inbound session data from drones will be replayed in this socket
-        rawSessionPublisher = beeswarm.shared.zmq_context.socket(zmq.PUB)
-        rawSessionPublisher.bind(SocketNames.RAW_SESSIONS.value)
+        # all inbound session data from drones will be replayed on this socket
+        drone_data_socket = beeswarm.shared.zmq_context.socket(zmq.PUB)
+        drone_data_socket.bind(SocketNames.DRONE_DATA.value)
 
         # all commands received on this will be published on the external interface
-        drone_command_receiver = beeswarm.shared.zmq_context.socket(zmq.PULL)
-        drone_command_receiver.bind(SocketNames.DRONE_COMMANDS.value)
+        drone_command_socket = beeswarm.shared.zmq_context.socket(zmq.PULL)
+        drone_command_socket.bind(SocketNames.DRONE_COMMANDS.value)
 
         poller = zmq.Poller()
         poller.register(drone_data_inbound, zmq.POLLIN)
-        poller.register(drone_command_receiver, zmq.POLLIN)
+        poller.register(drone_command_socket, zmq.POLLIN)
         while True:
             # .recv() gives no context switch - why not? using poller with timeout instead
             socks = dict(poller.poll(100))
             gevent.sleep()
 
-            if drone_command_receiver in socks and socks[drone_command_receiver] == zmq.POLLIN:
-                data = drone_command_receiver.recv()
+            if drone_command_socket in socks and socks[drone_command_socket] == zmq.POLLIN:
+                data = drone_command_socket.recv()
                 drone_id, _ = data.split(' ', 1)
                 logger.debug("Sending drone command to: {0}".format(drone_id))
                 # pub socket takes care of filtering
                 drone_data_outbound.send(data)
             elif drone_data_inbound in socks and socks[drone_data_inbound] == zmq.POLLIN:
+                drone_data_socket.send('{0} {1}'.format(topic, data))
+                # TODO: All below here needs to be moved to database actor
                 split_data = drone_data_inbound.recv().split(' ', 2)
                 if len(split_data) == 3:
                     topic, drone_id, data = split_data
@@ -187,7 +189,7 @@ class Server(object):
                 if topic == Messages.SESSION_HONEYPOT.value or topic == Messages.SESSION_CLIENT.value or \
                     topic == Messages.SESSION_PART_HONEYPOT_SESSION_START.value or \
                     topic == Messages.SESSION_PART_HONEYPOT_AUTH.value:
-                    rawSessionPublisher.send('{0} {1}'.format(topic, data))
+                    drone_data_socket.send('{0} {1}'.format(topic, data))
                 elif topic == Messages.KEY.value or topic == Messages.CERT.value:
                     # for now we just store the fingerprint
                     # in the future it might be relevant to store the entire public key and private key

@@ -65,7 +65,7 @@ class DatabaseActor(gevent.Greenlet):
         context = beeswarm.shared.zmq_context
 
         self.subscriber_sessions = context.socket(zmq.SUB)
-        self.subscriber_sessions.connect(SocketNames.RAW_SESSIONS.value)
+        self.subscriber_sessions.connect(SocketNames.DRONE_DATA.value)
         self.subscriber_sessions.setsockopt(zmq.SUBSCRIBE, Messages.SESSION_CLIENT.value)
         self.subscriber_sessions.setsockopt(zmq.SUBSCRIBE, Messages.SESSION_HONEYPOT.value)
 
@@ -77,6 +77,10 @@ class DatabaseActor(gevent.Greenlet):
 
         self.config_actor_socket = context.socket(zmq.REQ)
         self.config_actor_socket.connect(SocketNames.CONFIG_COMMANDS.value)
+
+        self.drone_command_receiver = None
+        self.drone_command_receiver = context.socket(zmq.PUSH)
+        self.drone_command_receiver.connect(SocketNames.DRONE_COMMANDS.value)
 
     def _run(self):
         poller = zmq.Poller()
