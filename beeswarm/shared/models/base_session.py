@@ -83,7 +83,8 @@ class BaseSession(object):
 
     def send_log(self, type, in_data):
         data = json.dumps(in_data, default=json_default, ensure_ascii=False)
-        self.socket.send('{0} {1} {2}'.format(type, self.honeypot_id, data))
+        message = '{0} {1}'.format(type, data)
+        self.socket.send(message)
 
     def to_dict(self):
         return vars(self)

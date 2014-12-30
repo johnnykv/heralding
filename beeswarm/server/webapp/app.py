@@ -76,7 +76,6 @@ def send_database_request(request):
     global database_actor_socket
     database_request_lock.acquire()
     try:
-        print database_actor_socket
         return send_zmq_request_socket(database_actor_socket, request)
     finally:
         database_request_lock.release()

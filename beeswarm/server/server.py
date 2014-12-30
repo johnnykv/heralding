@@ -17,7 +17,6 @@ import json
 import logging
 import sys
 import os
-from datetime import datetime
 
 import gevent
 from gevent.pywsgi import WSGIServer
@@ -27,15 +26,13 @@ from zmq.auth.certs import load_certificate
 
 import beeswarm
 from beeswarm.server.webapp.auth import Authenticator
-from beeswarm.shared.helpers import drop_privileges, send_zmq_request
 from beeswarm.server.misc.scheduler import Scheduler
-from beeswarm.shared.helpers import create_self_signed_cert, generate_cert_digest, stop_if_not_write_workdir
+from beeswarm.shared.helpers import create_self_signed_cert, stop_if_not_write_workdir
 from beeswarm.shared.asciify import asciify
 from beeswarm.server.db.database_actor import DatabaseActor
 from beeswarm.server.misc.config_actor import ConfigActor
 from beeswarm.shared.message_enum import Messages
 from beeswarm.server.db import database_setup
-from beeswarm.server.db.entities import Drone
 from beeswarm.shared.socket_enum import SocketNames
 
 
@@ -171,8 +168,8 @@ class Server(object):
                 # pub socket takes care of filtering
                 drone_data_outbound.send(data)
             elif drone_data_inbound in socks and socks[drone_data_inbound] == zmq.POLLIN:
-                # TODO: All below here needs to be moved to database actor
-                split_data = drone_data_inbound.recv().split(' ', 2)
+                raw_msg = drone_data_inbound.recv()
+                split_data = raw_msg.split(' ', 2)
                 if len(split_data) == 3:
                     topic, drone_id, data = split_data
                 else:
@@ -180,7 +177,7 @@ class Server(object):
                     topic, drone_id, = split_data
                 logger.debug("Received {0} message from {1}.".format(topic, drone_id))
                 # relay message on internal socket
-                drone_data_socket.send('{0} {1}'.format(topic, data))
+                drone_data_socket.send(raw_msg)
 
     def start(self, maintenance=True):
         """

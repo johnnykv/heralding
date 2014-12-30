@@ -241,6 +241,7 @@ class Drone(object):
                     new_message = '{0} {1}'.format(topic, self.id)
                 else:
                     topic, data = data_split
+                    # inject drone id into the message
                     new_message = '{0} {1} {2}'.format(topic, self.id, data)
                 logger.debug('Relaying {0} message to server.'.format(topic))
                 sending_socket.send(new_message)

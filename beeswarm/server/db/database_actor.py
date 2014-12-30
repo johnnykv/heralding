@@ -66,8 +66,9 @@ class DatabaseActor(gevent.Greenlet):
 
         self.drone_data_socket = context.socket(zmq.SUB)
         self.drone_data_socket.connect(SocketNames.DRONE_DATA.value)
-        self.drone_data_socket.setsockopt(zmq.SUBSCRIBE, Messages.SESSION_CLIENT.value)
-        self.drone_data_socket.setsockopt(zmq.SUBSCRIBE, Messages.SESSION_HONEYPOT.value)
+        self.drone_data_socket.setsockopt(zmq.SUBSCRIBE, '')
+        #self.drone_data_socket.setsockopt(zmq.SUBSCRIBE, Messages.SESSION_CLIENT.value)
+        #self.drone_data_socket.setsockopt(zmq.SUBSCRIBE, Messages.SESSION_HONEYPOT.value)
 
         self.processedSessionsPublisher = context.socket(zmq.PUB)
         self.processedSessionsPublisher.bind(SocketNames.PROCESSED_SESSIONS.value)
@@ -92,7 +93,6 @@ class DatabaseActor(gevent.Greenlet):
             socks = dict(poller.poll(100))
             gevent.sleep()
             if self.do_classify:
-                logger.debug('Doing classify')
                 self.classify_malicious_sessions()
                 self.do_classify = False
             elif self.drone_data_socket in socks and socks[self.drone_data_socket] == zmq.POLLIN:
@@ -103,17 +103,22 @@ class DatabaseActor(gevent.Greenlet):
                     data = None
                     topic, drone_id, = split_data
                 self._update_drone_last_activity(drone_id)
-                if topic is Messages.SESSION_HONEYPOT.value or topic is Messages.SESSION_CLIENT.value:
-                    self.persist_session(data, topic)
-                elif topic is Messages.CERT.value:
+                if topic == Messages.SESSION_HONEYPOT.value or topic == Messages.SESSION_CLIENT.value:
+                    self.persist_session(topic, data)
+                elif topic == Messages.CERT.value:
                     self._handle_cert_message(topic, drone_id, data)
-                elif topic is Messages.KEY.value:
+                elif topic == Messages.KEY.value:
                     pass
-                elif topic is Messages.IP.value:
-                    self._handle_message_ip(topic, drone_id. data)
+                elif topic == Messages.IP.value:
+                    self._handle_message_ip(topic, drone_id, data)
+                elif topic == Messages.DRONE_WANT_CONFIG.value:
+                    config_dict = self._handle_command_get_droneconfig(drone_id)
+                    self.drone_command_receiver.send('{0} {1} {2}'.format(drone_id, Messages.CONFIG.value,
+                                                                          json.dumps(config_dict)))
+                elif topic == Messages.PING.value:
+                    logger.debug('Received ping from {0}'.format(drone_id))
                 else:
-                    logger.debug('Cannot process this message: {0}'.format(topic))
-                    assert False
+                    logger.debug('This actor cannot process this message: {0}'.format(topic))
             elif self.databaseRequests in socks and socks[self.databaseRequests] == zmq.POLLIN:
                 data = self.databaseRequests.recv()
                 if ' ' in data:
@@ -124,10 +129,6 @@ class DatabaseActor(gevent.Greenlet):
                 if cmd == Messages.DRONE_CONFIG.value:
                     result = self._handle_command_get_droneconfig(data)
                     self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, json.dumps(result)))
-                elif cmd == Messages.DRONE_WANT_CONFIG.value:
-                    config_dict = self._handle_command_get_droneconfig(data)
-                    self.drone_command_receiver.send('{0} {1} {2}'.format(drone_id, Messages.CONFIG.value,
-                                                                          json.dumps(config_dict)))
                 elif cmd == Messages.DRONE_CONFIG_CHANGED.value:
                     # TODO: this should be removed when all db activity are contained within this actor
                     # send OK straight away - we don't want the sender to wait
@@ -184,7 +185,7 @@ class DatabaseActor(gevent.Greenlet):
         db_session.add(drone)
         db_session.commit()
 
-    def persist_session(self, session_json, session_type):
+    def persist_session(self, session_type, session_json):
         db_session = database_setup.get_session()
 
         if self.max_session_count == 0:
@@ -192,7 +193,6 @@ class DatabaseActor(gevent.Greenlet):
         elif db_session.query(Session).count() == self.max_session_count:
             session_to_delete = db_session.query(Session, func.min(Session.timestamp)).first()[0]
             db_session.delete(session_to_delete)
-
         try:
             data = json.loads(session_json)
         except UnicodeDecodeError:
@@ -275,7 +275,6 @@ class DatabaseActor(gevent.Greenlet):
         db_session = db_session
         min_datetime = session.timestamp - timedelta(seconds=timediff)
         max_datetime = session.timestamp + timedelta(seconds=timediff)
-        logger.debug('Session dist: {0}'.format(session.discriminator))
         # default return value
         match = None
         classification = db_session.query(Classification).filter(Classification.type == 'pending').one()
