@@ -260,7 +260,7 @@ class Drone(object):
                 if event == zmq.EVENT_CONNECTED:
                     logger.info('Connected to {0}'.format(log_name))
                     # always ask for config to avoid race condition.
-                    send_zmq_push(SocketNames.SERVER_RELAY.value, '{0}'.format(Messages.DRONE_CONFIG.value))
+                    send_zmq_push(SocketNames.SERVER_RELAY.value, '{0}'.format(Messages.DRONE_WANT_CONFIG.value))
                     if 'outgoing' in log_name:
                         send_zmq_push(SocketNames.SERVER_RELAY.value, '{0}'.format(Messages.PING.value))
                         own_ip = get_most_likely_ip()

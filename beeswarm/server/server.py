@@ -171,7 +171,6 @@ class Server(object):
                 # pub socket takes care of filtering
                 drone_data_outbound.send(data)
             elif drone_data_inbound in socks and socks[drone_data_inbound] == zmq.POLLIN:
-                drone_data_socket.send('{0} {1}'.format(topic, data))
                 # TODO: All below here needs to be moved to database actor
                 split_data = drone_data_inbound.recv().split(' ', 2)
                 if len(split_data) == 3:
@@ -180,50 +179,8 @@ class Server(object):
                     data = None
                     topic, drone_id, = split_data
                 logger.debug("Received {0} message from {1}.".format(topic, drone_id))
-                db_session = database_setup.get_session()
-                drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
-                drone.last_activity = datetime.now()
-                db_session.add(drone)
-                db_session.commit()
-
-                if topic == Messages.SESSION_HONEYPOT.value or topic == Messages.SESSION_CLIENT.value or \
-                    topic == Messages.SESSION_PART_HONEYPOT_SESSION_START.value or \
-                    topic == Messages.SESSION_PART_HONEYPOT_AUTH.value:
-                    drone_data_socket.send('{0} {1}'.format(topic, data))
-                elif topic == Messages.KEY.value or topic == Messages.CERT.value:
-                    # for now we just store the fingerprint
-                    # in the future it might be relevant to store the entire public key and private key
-                    # for forensic purposes
-                    if topic == Messages.CERT.value:
-                        cert = data.split(' ', 1)[1]
-                        digest = generate_cert_digest(cert)
-                        logging.debug('Storing public key digest: {0} for drone {1}.'.format(digest, drone_id))
-                        db_session = database_setup.get_session()
-                        drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
-                        drone.cert_digest = digest
-                        db_session.add(drone)
-                        db_session.commit()
-                elif topic == Messages.PING.value:
-                    pass
-                elif topic == Messages.IP.value:
-                    ip_address = data
-                    logging.debug('Drone {0} reported ip: {1}'.format(drone_id, ip_address))
-                    db_session = database_setup.get_session()
-                    drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
-                    if drone.ip_address != ip_address:
-                        drone.ip_address = ip_address
-                        db_session.add(drone)
-                        db_session.commit()
-                        send_zmq_request(SocketNames.DATABASE_REQUESTS.value, '{0} {1}'.format(Messages.DRONE_CONFIG_CHANGED.value,
-                                                                                       drone_id))
-                # drone want it's config transmitted
-                elif topic == Messages.DRONE_CONFIG.value:
-                    config_dict = send_zmq_request(SocketNames.DATABASE_REQUESTS.value, '{0} {1}'
-                                                   .format(Messages.DRONE_CONFIG.value, drone_id))
-                    drone_data_outbound.send('{0} {1} {2}'.format(drone_id, Messages.CONFIG.value,
-                                                                  json.dumps(config_dict)))
-                else:
-                    logger.warn('Message with unknown topic received: {0}'.format(topic))
+                # relay message on internal socket
+                drone_data_socket.send('{0} {1}'.format(topic, data))
 
     def start(self, maintenance=True):
         """

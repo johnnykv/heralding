@@ -29,7 +29,7 @@ import beeswarm.shared
 from beeswarm.server.db import database_setup
 from beeswarm.server.db.entities import BaitSession, Session, Client, Authentication, Classification, \
     Transcript, Honeypot, Drone, DroneEdge, BaitUser
-from beeswarm.shared.helpers import send_zmq_request_socket
+from beeswarm.shared.helpers import send_zmq_request_socket, generate_cert_digest
 from beeswarm.shared.message_enum import Messages
 from beeswarm.shared.socket_enum import SocketNames
 
@@ -64,10 +64,10 @@ class DatabaseActor(gevent.Greenlet):
 
         context = beeswarm.shared.zmq_context
 
-        self.subscriber_sessions = context.socket(zmq.SUB)
-        self.subscriber_sessions.connect(SocketNames.DRONE_DATA.value)
-        self.subscriber_sessions.setsockopt(zmq.SUBSCRIBE, Messages.SESSION_CLIENT.value)
-        self.subscriber_sessions.setsockopt(zmq.SUBSCRIBE, Messages.SESSION_HONEYPOT.value)
+        self.drone_data_socket = context.socket(zmq.SUB)
+        self.drone_data_socket.connect(SocketNames.DRONE_DATA.value)
+        self.drone_data_socket.setsockopt(zmq.SUBSCRIBE, Messages.SESSION_CLIENT.value)
+        self.drone_data_socket.setsockopt(zmq.SUBSCRIBE, Messages.SESSION_HONEYPOT.value)
 
         self.processedSessionsPublisher = context.socket(zmq.PUB)
         self.processedSessionsPublisher.bind(SocketNames.PROCESSED_SESSIONS.value)
@@ -84,7 +84,7 @@ class DatabaseActor(gevent.Greenlet):
 
     def _run(self):
         poller = zmq.Poller()
-        poller.register(self.subscriber_sessions, zmq.POLLIN)
+        poller.register(self.drone_data_socket, zmq.POLLIN)
         poller.register(self.databaseRequests, zmq.POLLIN)
         gevent.spawn(self._start_recurring_classify_set)
         while True:
@@ -95,10 +95,25 @@ class DatabaseActor(gevent.Greenlet):
                 logger.debug('Doing classify')
                 self.classify_malicious_sessions()
                 self.do_classify = False
-            elif self.subscriber_sessions in socks and socks[self.subscriber_sessions] == zmq.POLLIN:
-                data = self.subscriber_sessions.recv()
-                topic, honeypot_id, session_json = data.split(' ', 2)
-                self.persist_session(session_json, topic)
+            elif self.drone_data_socket in socks and socks[self.drone_data_socket] == zmq.POLLIN:
+                split_data = self.drone_data_socket.recv().split(' ', 2)
+                if len(split_data) == 3:
+                    topic, drone_id, data = split_data
+                else:
+                    data = None
+                    topic, drone_id, = split_data
+                self._update_drone_last_activity(drone_id)
+                if topic is Messages.SESSION_HONEYPOT.value or topic is Messages.SESSION_CLIENT.value:
+                    self.persist_session(data, topic)
+                elif topic is Messages.CERT.value:
+                    self._handle_cert_message(topic, drone_id, data)
+                elif topic is Messages.KEY.value:
+                    pass
+                elif topic is Messages.IP.value:
+                    self._handle_message_ip(topic, drone_id. data)
+                else:
+                    logger.debug('Cannot process this message: {0}'.format(topic))
+                    assert False
             elif self.databaseRequests in socks and socks[self.databaseRequests] == zmq.POLLIN:
                 data = self.databaseRequests.recv()
                 if ' ' in data:
@@ -109,6 +124,10 @@ class DatabaseActor(gevent.Greenlet):
                 if cmd == Messages.DRONE_CONFIG.value:
                     result = self._handle_command_get_droneconfig(data)
                     self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, json.dumps(result)))
+                elif cmd == Messages.DRONE_WANT_CONFIG.value:
+                    config_dict = self._handle_command_get_droneconfig(data)
+                    self.drone_command_receiver.send('{0} {1} {2}'.format(drone_id, Messages.CONFIG.value,
+                                                                          json.dumps(config_dict)))
                 elif cmd == Messages.DRONE_CONFIG_CHANGED.value:
                     # TODO: this should be removed when all db activity are contained within this actor
                     # send OK straight away - we don't want the sender to wait
@@ -124,17 +143,46 @@ class DatabaseActor(gevent.Greenlet):
                     self._handle_command_delete_drone(data)
                     self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, '{}'))
                 elif cmd == Messages.DRONE_ADD.value:
-                    print 'add'
                     self._handle_command_add_drone()
                 else:
                     logger.error('Unknown message received: {0}'.format(data))
                     assert False
+
+    def _update_drone_last_activity(self, drone_id):
+        db_session = database_setup.get_session()
+        drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
+        drone.last_activity = datetime.now()
+        db_session.add(drone)
+        db_session.commit()
 
     def _start_recurring_classify_set(self):
         while True:
             sleep_time = self.delay_seconds / 2
             gevent.sleep(sleep_time)
             self.do_classify = True
+
+    def _handle_message_ip(self, topic, drone_id, data):
+        ip_address = data
+        logging.debug('Drone {0} reported ip: {1}'.format(drone_id, ip_address))
+        db_session = database_setup.get_session()
+        drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
+        if drone.ip_address != ip_address:
+            drone.ip_address = ip_address
+            db_session.add(drone)
+            db_session.commit()
+
+    def _handle_cert_message(self, topic, drone_id, data):
+        # for now we just store the fingerprint
+        # in the future it might be relevant to store the entire public key and private key
+        # for forensic purposes
+        cert = data.split(' ', 1)[1]
+        digest = generate_cert_digest(cert)
+        logging.debug('Storing public key digest: {0} for drone {1}.'.format(digest, drone_id))
+        db_session = database_setup.get_session()
+        drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
+        drone.cert_digest = digest
+        db_session.add(drone)
+        db_session.commit()
 
     def persist_session(self, session_json, session_type):
         db_session = database_setup.get_session()
@@ -398,8 +446,11 @@ class DatabaseActor(gevent.Greenlet):
     def send_config_request(self, request):
         return send_zmq_request_socket(self.config_actor_socket, request)
 
+    # TODO: This message needs to go, when db actor is done it will have full knowledge of drone changes
+    #       no need for outside actors to communicate this.
     def _handle_command_drone_config_changed(self, drone_id):
         self._send_config_to_drone(drone_id)
+        # TODO: Only Clients that communicate with this drone_id needs to get reconfigured.
         self._reconfigure_all_clients()
 
     def _handle_command_bait_user_delete(self, data):
