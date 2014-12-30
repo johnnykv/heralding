@@ -30,7 +30,7 @@ from beeswarm.server.db.entities import Session
 from beeswarm.drones.honeypot.models.session import Session as HoneypotSession
 from beeswarm.shared.socket_enum import SocketNames
 from beeswarm.shared.message_enum import Messages
-from beeswarm.server.db.session_persister import SessionPersister
+from beeswarm.server.db.database_actor import DatabaseActor
 from beeswarm.drones.client.models.session import BaitSession
 from beeswarm.server.misc.config_actor import ConfigActor
 
@@ -64,8 +64,8 @@ class ClassifierTests(unittest.TestCase):
         raw_session_publisher.bind(SocketNames.RAW_SESSIONS.value)
 
         # startup session database
-        persistence_actor = SessionPersister(999, delay_seconds=2)
-        persistence_actor.start()
+        database_actor = DatabaseActor(999, delay_seconds=2)
+        database_actor.start()
         gevent.sleep(1)
 
         for x in xrange(0, 100):
@@ -134,8 +134,8 @@ class ClassifierTests(unittest.TestCase):
         config_actor.start()
 
         # startup session database
-        persistence_actor = SessionPersister(999, delay_seconds=2)
-        persistence_actor.start()
+        database_actor = DatabaseActor(999, delay_seconds=2)
+        database_actor.start()
         gevent.sleep(1)
 
         BaitSession.client_id = client_id
@@ -171,6 +171,7 @@ class ClassifierTests(unittest.TestCase):
         config_actor.close()
         if os.path.isfile(config_file):
             os.remove(config_file)
+
 
 def json_default(obj):
     if isinstance(obj, datetime):
