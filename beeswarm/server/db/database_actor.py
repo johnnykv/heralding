@@ -42,6 +42,7 @@ class DatabaseActor(gevent.Greenlet):
         assert delay_seconds > 1
         Greenlet.__init__(self)
         db_session = database_setup.get_session()
+        self.enabled = True
         # pending session will be converted to attacks if we cannot match with bait traffic
         # with this period
         self.delay_seconds = delay_seconds
@@ -88,11 +89,11 @@ class DatabaseActor(gevent.Greenlet):
         poller.register(self.drone_data_socket, zmq.POLLIN)
         poller.register(self.databaseRequests, zmq.POLLIN)
         gevent.spawn(self._start_recurring_classify_set)
-        while True:
+        while self.enabled:
             # .recv() gives no context switch - why not? using poller with timeout instead
             socks = dict(poller.poll(100))
             gevent.sleep()
-            if self.do_classify:
+            if self.do_classify and self.enabled:
                 self.classify_malicious_sessions()
                 self.do_classify = False
             elif self.drone_data_socket in socks and socks[self.drone_data_socket] == zmq.POLLIN:
@@ -148,6 +149,14 @@ class DatabaseActor(gevent.Greenlet):
                 else:
                     logger.error('Unknown message received: {0}'.format(data))
                     assert False
+
+    def stop(self):
+        self.enabled = False
+        self.drone_data_socket.close()
+        self.processedSessionsPublisher.close()
+        self.databaseRequests.close()
+        self.config_actor_socket.close()
+        self.drone_command_receiver.close()
 
     def _update_drone_last_activity(self, drone_id):
         db_session = database_setup.get_session()

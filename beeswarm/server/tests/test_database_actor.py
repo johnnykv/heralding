@@ -60,8 +60,8 @@ class ClassifierTests(unittest.TestCase):
         db_session.add(honeypot)
         db_session.commit()
 
-        raw_session_publisher = beeswarm.shared.zmq_context.socket(zmq.PUB)
-        raw_session_publisher.bind(SocketNames.RAW_SESSIONS.value)
+        drone_data_socket = beeswarm.shared.zmq_context.socket(zmq.PUB)
+        drone_data_socket.bind(SocketNames.DRONE_DATA.value)
 
         # startup session database
         database_actor = DatabaseActor(999, delay_seconds=2)
@@ -73,12 +73,13 @@ class ClassifierTests(unittest.TestCase):
                                                destination_port=110)
             honeypot_session.add_auth_attempt('plaintext', True, username='james', password='bond')
             honeypot_session.honeypot_id = honeypot_id
-            raw_session_publisher.send('{0} {1} {2}'.format(Messages.SESSION_HONEYPOT.value, honeypot_id,
+            drone_data_socket.send('{0} {1} {2}'.format(Messages.SESSION_HONEYPOT.value, honeypot_id,
                                                             json.dumps(honeypot_session.to_dict(), default=json_default,
                                                             ensure_ascii=False)))
         gevent.sleep(5)
 
         sessions = db_session.query(Session).all()
+        database_actor.stop()
 
         for session in sessions:
             self.assertEqual(session.classification_id, 'bruteforce')
@@ -124,8 +125,8 @@ class ClassifierTests(unittest.TestCase):
         db_session.add(client)
         db_session.commit()
 
-        raw_session_publisher = beeswarm.shared.zmq_context.socket(zmq.PUB)
-        raw_session_publisher.bind(SocketNames.RAW_SESSIONS.value)
+        drone_data_socket = beeswarm.shared.zmq_context.socket(zmq.PUB)
+        drone_data_socket.bind(SocketNames.DRONE_DATA.value)
 
         config_file = tempfile.mkstemp()[1]
         os.remove(config_file)
@@ -151,17 +152,17 @@ class ClassifierTests(unittest.TestCase):
         bait_session.did_connect = bait_session.did_login = bait_session.alldone = bait_session.did_complete = True
 
         if honeypot_first:
-            raw_session_publisher.send('{0} {1} {2}'.format(Messages.SESSION_HONEYPOT.value, honeypot_id,
+            drone_data_socket.send('{0} {1} {2}'.format(Messages.SESSION_HONEYPOT.value, honeypot_id,
                                                         json.dumps(honeypot_session.to_dict(), default=json_default,
                                                         ensure_ascii=False)))
-            raw_session_publisher.send('{0} {1} {2}'.format(Messages.SESSION_CLIENT.value, client_id,
+            drone_data_socket.send('{0} {1} {2}'.format(Messages.SESSION_CLIENT.value, client_id,
                                                         json.dumps(bait_session.to_dict(), default=json_default,
                                                         ensure_ascii=False)))
         else:
-            raw_session_publisher.send('{0} {1} {2}'.format(Messages.SESSION_CLIENT.value, client_id,
+            drone_data_socket.send('{0} {1} {2}'.format(Messages.SESSION_CLIENT.value, client_id,
                                                         json.dumps(bait_session.to_dict(), default=json_default,
                                                         ensure_ascii=False)))
-            raw_session_publisher.send('{0} {1} {2}'.format(Messages.SESSION_HONEYPOT.value, honeypot_id,
+            drone_data_socket.send('{0} {1} {2}'.format(Messages.SESSION_HONEYPOT.value, honeypot_id,
                                                         json.dumps(honeypot_session.to_dict(), default=json_default,
                                                         ensure_ascii=False)))
 
@@ -169,6 +170,7 @@ class ClassifierTests(unittest.TestCase):
         # some time for the session actor to work
         gevent.sleep(2)
         config_actor.close()
+        database_actor.stop()
         if os.path.isfile(config_file):
             os.remove(config_file)
 
