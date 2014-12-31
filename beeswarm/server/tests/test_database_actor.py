@@ -76,7 +76,8 @@ class ClassifierTests(unittest.TestCase):
             drone_data_socket.send('{0} {1} {2}'.format(Messages.SESSION_HONEYPOT.value, honeypot_id,
                                                             json.dumps(honeypot_session.to_dict(), default=json_default,
                                                             ensure_ascii=False)))
-        gevent.sleep(5)
+        # TODO: figure out other way, we do not want slow tests
+        gevent.sleep(10)
 
         sessions = db_session.query(Session).all()
         database_actor.stop()
