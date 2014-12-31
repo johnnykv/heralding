@@ -32,10 +32,9 @@ logger = logging.getLogger(__name__)
 
 
 class ConfigActor(Greenlet):
-    def __init__(self, config_file, work_dir, command_requests_only=False):
+    def __init__(self, config_file, work_dir):
         Greenlet.__init__(self)
         self.config_file = os.path.join(work_dir, config_file)
-        self.commands_only = command_requests_only
         if not os.path.exists(self.config_file):
             self.config = {}
             self._save_config_file()
@@ -44,22 +43,16 @@ class ConfigActor(Greenlet):
 
         context = beeswarm.shared.zmq_context
         self.config_commands = context.socket(zmq.REP)
-        self.drone_command_receiver = None
-
-        if not self.commands_only:
-            self.drone_command_receiver = context.socket(zmq.PUSH)
-
         self.enabled = True
 
     def close(self):
+        self.enabled = False
+
         if self.config_commands:
             self.config_commands.close()
-        self.enabled = False
 
     def _run(self):
         self.config_commands.bind(SocketNames.CONFIG_COMMANDS.value)
-        if not self.commands_only:
-            self.drone_command_receiver.connect(SocketNames.DRONE_COMMANDS.value)
 
         poller = zmq.Poller()
         poller.register(self.config_commands, zmq.POLLIN)

@@ -132,7 +132,7 @@ class ClassifierTests(unittest.TestCase):
         config_file = tempfile.mkstemp()[1]
         os.remove(config_file)
         # persistence actor needs to communicate with on config REQ/REP socket
-        config_actor = ConfigActor(config_file, '', True)
+        config_actor = ConfigActor(config_file, '')
         config_actor.start()
 
         # startup session database

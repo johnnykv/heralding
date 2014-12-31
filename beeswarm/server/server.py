@@ -310,7 +310,7 @@ class Server(object):
                     zmq_command_port = int(zmq_port)
 
             # tmp actor while initializing
-            config_actor = ConfigActor(self.config_file, work_dir, True)
+            config_actor = ConfigActor(self.config_file, work_dir)
             config_actor.start()
             context = beeswarm.shared.zmq_context
             socket = context.socket(zmq.REQ)
