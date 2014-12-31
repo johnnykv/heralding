@@ -30,7 +30,7 @@ from requests.exceptions import Timeout, ConnectionError
 import beeswarm
 from beeswarm.drones.honeypot.capabilities import handlerbase
 from beeswarm.drones.honeypot.models.session import Session
-from beeswarm.shared.helpers import create_self_signed_cert, send_zmq_push, extract_keys, get_most_likely_ip,\
+from beeswarm.shared.helpers import create_self_signed_cert, send_zmq_push, extract_keys, get_most_likely_ip, \
     stop_if_not_write_workdir
 from beeswarm.shared.message_enum import Messages
 from beeswarm.shared.socket_enum import SocketNames
@@ -41,7 +41,6 @@ logger = logging.getLogger(__name__)
 
 class Honeypot(object):
     """ This is the main class, which starts up all capabilities. """
-
     def __init__(self, work_dir, config, key='server.key', cert='server.crt', **kwargs):
         """
             Main class which runs Beeswarm in Honeypot mode.
@@ -61,9 +60,8 @@ class Honeypot(object):
         self._servers = []
         self._server_greenlets = []
 
-        # TODO: pass honeypot otherwise
-        Session.honeypot_id = self.config['general']['id']
-        self.id = self.config['general']['id']
+        self.honeypot_id = self.config['general']['id']
+        Session.honeypot_id = self.honeypot_id
 
         # write ZMQ keys to files - as expected by pyzmq
         extract_keys(work_dir, config)
@@ -84,8 +82,10 @@ class Honeypot(object):
                 certfile.write(cert)
             with open(key_path, 'w') as keyfile:
                 keyfile.write(priv_key)
-            send_zmq_push(SocketNames.SERVER_RELAY.value, '{0} {1} {2}'.format(Messages.KEY.value, self.id, keyfile))
-            send_zmq_push(SocketNames.SERVER_RELAY.value, '{0} {1} {2}'.format(Messages.CERT.value, self.id, cert))
+            send_zmq_push(SocketNames.SERVER_RELAY.value,
+                          '{0} {1} {2}'.format(Messages.KEY.value, self.honeypot_id, keyfile))
+            send_zmq_push(SocketNames.SERVER_RELAY.value,
+                          '{0} {1} {2}'.format(Messages.CERT.value, self.honeypot_id, cert))
 
         if self.config['general']['fetch_ip']:
             try:

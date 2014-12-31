@@ -40,13 +40,13 @@ from beeswarm.shared.helpers import is_url, extract_config_from_api
 logger = logging.getLogger()
 
 
-def stopIfRoot():
+def stop_if_root():
     if os.getuid() == 0:
         logger.error('Beeswarm should not be started in this mode as root, please restart as a normal user.')
         sys.exit(1)
 
 
-def setuplogging(logfile, verbose):
+def setup_logging(logfile, verbose):
     """
         Sets up logging to the logfiles/console.
     :param logfile: Path of the file to write logs to.
@@ -54,7 +54,7 @@ def setuplogging(logfile, verbose):
     """
     root_logger = logging.getLogger()
 
-    defaultFormatter = logging.Formatter('%(asctime)-15s (%(name)s) %(message)s')
+    default_formatter = logging.Formatter('%(asctime)-15s (%(name)s) %(message)s')
 
     if verbose:
         loglevel = logging.DEBUG
@@ -65,7 +65,7 @@ def setuplogging(logfile, verbose):
     console_log = logging.StreamHandler()
     console_log.addFilter(LogFilter())
     console_log.setLevel(loglevel)
-    console_log.setFormatter(defaultFormatter)
+    console_log.setFormatter(default_formatter)
     root_logger.addHandler(console_log)
 
     if logfile in ('/dev/log', '/dev/syslog', '/var/run/syslog', '/var/run/log'):
@@ -74,9 +74,10 @@ def setuplogging(logfile, verbose):
         file_log.setFormatter(syslog_formatter)
     else:
         file_log = logging.FileHandler(logfile)
-        file_log.setFormatter(defaultFormatter)
+        file_log.setFormatter(default_formatter)
     file_log.setLevel(loglevel)
     root_logger.addHandler(file_log)
+
 
 class LogFilter(logging.Filter):
     def filter(self, rec):
@@ -114,7 +115,7 @@ if __name__ == '__main__':
 
     if not os.path.isabs(args.logfile):
         args.logfile = os.path.join(args.workdir, args.logfile)
-    setuplogging(args.logfile, args.verbose)
+    setup_logging(args.logfile, args.verbose)
     mode = None
     config = None
     logger.info('Initializing BeeSwarm version {0}'.format(beeswarm.version))
@@ -140,7 +141,7 @@ if __name__ == '__main__':
                 else:
                     mode = Drone
     elif args.server:
-        stopIfRoot()
+        stop_if_root()
         mode = Server
     else:
         parser.print_help()
