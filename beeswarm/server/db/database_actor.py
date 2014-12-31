@@ -65,26 +65,28 @@ class DatabaseActor(gevent.Greenlet):
 
         context = beeswarm.shared.zmq_context
 
+        # prepare sockets
         self.drone_data_socket = context.socket(zmq.SUB)
-        self.drone_data_socket.connect(SocketNames.DRONE_DATA.value)
-        self.drone_data_socket.setsockopt(zmq.SUBSCRIBE, '')
-        #self.drone_data_socket.setsockopt(zmq.SUBSCRIBE, Messages.SESSION_CLIENT.value)
-        #self.drone_data_socket.setsockopt(zmq.SUBSCRIBE, Messages.SESSION_HONEYPOT.value)
-
         self.processedSessionsPublisher = context.socket(zmq.PUB)
-        self.processedSessionsPublisher.bind(SocketNames.PROCESSED_SESSIONS.value)
-
         self.databaseRequests = context.socket(zmq.REP)
-        self.databaseRequests.bind(SocketNames.DATABASE_REQUESTS.value)
-
         self.config_actor_socket = context.socket(zmq.REQ)
-        self.config_actor_socket.connect(SocketNames.CONFIG_COMMANDS.value)
-
-        self.drone_command_receiver = None
         self.drone_command_receiver = context.socket(zmq.PUSH)
-        self.drone_command_receiver.connect(SocketNames.DRONE_COMMANDS.value)
 
     def _run(self):
+        # connect and bind to all relevant sockets
+        # raw data from drones
+        self.drone_data_socket.connect(SocketNames.DRONE_DATA.value)
+        self.drone_data_socket.setsockopt(zmq.SUBSCRIBE, '')
+        # requests that this actor needs to respond to
+        self.databaseRequests.bind(SocketNames.DATABASE_REQUESTS.value)
+        # will publish session after they have been processed on this socket
+        self.processedSessionsPublisher.bind(SocketNames.PROCESSED_SESSIONS.value)
+        # needed to be able to probe for options and get zmq keys
+        self.config_actor_socket.connect(SocketNames.CONFIG_COMMANDS.value)
+        # needed to send data directly to drones
+        self.drone_command_receiver.connect(SocketNames.DRONE_COMMANDS.value)
+
+
         poller = zmq.Poller()
         poller.register(self.drone_data_socket, zmq.POLLIN)
         poller.register(self.databaseRequests, zmq.POLLIN)
