@@ -72,32 +72,32 @@ database_actor_socket.connect(SocketNames.DATABASE_REQUESTS.value)
 database_request_lock = gevent.lock.RLock()
 
 
-def send_database_request(request):
+def send_database_request(database_request):
     global database_actor_socket
     database_request_lock.acquire()
     try:
-        return send_zmq_request_socket(database_actor_socket, request)
+        return send_zmq_request_socket(database_actor_socket, database_request)
     finally:
         database_request_lock.release()
 
 
-def send_config_request(request):
+def send_config_request(config_request):
     global config_actor_socket
     config_request_lock.acquire()
     try:
-        return send_zmq_request_socket(config_actor_socket, request)
+        return send_zmq_request_socket(config_actor_socket, config_request)
     finally:
         config_request_lock.release()
 
 @login_manager.user_loader
-def user_loader(userid):
-    userid = userid.encode('utf-8')
+def user_loader(user_id):
+    user_id = user_id.encode('utf-8')
     db_session = database_setup.get_session()
     user = None
     try:
-        user = db_session.query(User).filter(User.id == userid).one()
+        user = db_session.query(User).filter(User.id == user_id).one()
     except NoResultFound:
-        logger.info('Attempt to load non-existent user: {0}'.format(userid))
+        logger.info('Attempt to load non-existent user: {0}'.format(user_id))
     return user
 
 
