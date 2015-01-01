@@ -104,45 +104,8 @@ def user_loader(user_id):
 @app.route('/')
 @login_required
 def home():
-    db_session = database_setup.get_session()
-    status = {
-        'nhoneypots': db_session.query(Honeypot).count(),
-        'nclients': db_session.query(Client).count(),
-        'nsessions': db_session.query(Session).count(),
-        'nbees': db_session.query(BaitSession).count(),
-        'nattacks': db_session.query(Session).filter(Session.classification_id != 'bait_session')\
-                                             .filter(Session.classification_id is not None).count(),
-        'attacks': {
-            'http': get_num_attacks('http'),
-            'vnc': get_num_attacks('vnc'),
-            'ssh': get_num_attacks('ssh'),
-            'ftp': get_num_attacks('ftp'),
-            'https': get_num_attacks('https'),
-            'pop3': get_num_attacks('pop3'),
-            'pop3s': get_num_attacks('pop3s'),
-            'smtp': get_num_attacks('smtp'),
-            'telnet': get_num_attacks('telnet'),
-        },
-        'bees': {
-            'successful': db_session.query(BaitSession).filter(BaitSession.did_login).count(),
-            'failed': db_session.query(BaitSession).filter(not BaitSession.did_login).count(),
-
-        }
-    }
-    urls = {
-        'honeypotdata': '/data/honeypots',
-        'clientdata': '/data/clients',
-        'delhoneypot': '/ws/honeypot/delete',
-        'delclient': '/ws/client/delete'
-    }
-    return render_template('index.html', user=current_user, status=status, urls=urls)
-
-
-def get_num_attacks(protocol):
-    db_session = database_setup.get_session()
-    return db_session.query(Session).filter(Session.classification_id != 'bait_session')\
-                                    .filter(Session.classification_id is not None)\
-                                    .filter(Session.protocol == protocol).count()
+    database_stats = send_database_request('{0}'.format(Messages.GET_DB_STATS.value))
+    return render_template('index.html', user=current_user, status=database_stats)
 
 @app.route('/bait_users')
 @login_required

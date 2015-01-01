@@ -4,13 +4,13 @@
     <ul class="thumbnails">
         <li class="thumbnail span6 text-center">
             <a class="btn-link" href="/ws/drones/honeypot">
-                <h1>{{ status.nhoneypots }}
+                <h1>{{ status.count_honeypots }}
                     <small>Honeypots</small>
                 </h1>
             </a>
             <hr>
             <div class="row-fluid">
-                <h2 class="alert alert-error">{{ status.nattacks }}
+                <h2 class="alert alert-error">{{ status.count_all_attacks }}
                     <small>Attacks Recorded</small>
                 </h2>
             </div>
@@ -22,36 +22,36 @@
                 </tr>
                 <tr>
                     <td>telnet</td>
-                    <td>{{ status.attacks.telnet }}</td>
-                    {% if status.nattacks > 0 %}
-                    <td>{{ '%0.2f' % (status.attacks.telnet/status.nattacks * 100) }}%</td>
+                    <td>{{ status.count_attack_type.telnet }}</td>
+                    {% if status.count_all_attacks > 0 %}
+                    <td>{{ '%0.2f' % (status.count_attack_type.telnet/status.count_all_attacks * 100) }}%</td>
                     {% else %}
                     <td>No Attacks</td>
                     {% endif %}
                 </tr>
                 <tr>
                     <td>ssh</td>
-                    <td>{{ status.attacks.ssh }}</td>
-                    {% if status.nattacks > 0 %}
-                    <td>{{ '%0.2f' % (status.attacks.ssh/status.nattacks * 100) }}%</td>
+                    <td>{{ status.count_attack_type.ssh }}</td>
+                    {% if status.count_all_attacks > 0 %}
+                    <td>{{ '%0.2f' % (status.count_attack_type.ssh/status.count_all_attacks * 100) }}%</td>
                     {% else %}
                     <td>No Attacks</td>
                     {% endif %}
                 </tr>
                 <tr>
                     <td>pop3</td>
-                    <td>{{ status.attacks.pop3 }}</td>
-                    {% if status.nattacks > 0 %}
-                    <td>{{ '%0.2f' % (status.attacks.pop3/status.nattacks * 100) }}%</td>
+                    <td>{{ status.count_attack_type.pop3 }}</td>
+                    {% if status.count_all_attacks > 0 %}
+                    <td>{{ '%0.2f' % (status.count_attack_type.pop3/status.count_all_attacks * 100) }}%</td>
                     {% else %}
                     <td>No Attacks</td>
                     {% endif %}
                 </tr>
                 <tr>
                     <td>vnc</td>
-                    <td>{{ status.attacks.vnc }}</td>
-                    {% if status.nattacks > 0 %}
-                    <td>{{ '%0.2f' % (status.attacks.vnc/status.nattacks * 100) }}%</td>
+                    <td>{{ status.count_attack_type.vnc }}</td>
+                    {% if status.count_all_attacks > 0 %}
+                    <td>{{ '%0.2f' % (status.count_attack_type.vnc/status.count_all_attacks * 100) }}%</td>
                     {% else %}
                     <td>No Attacks</td>
                     {% endif %}
@@ -59,36 +59,36 @@
                 </tr>
                 <tr>
                     <td>http</td>
-                    <td>{{ status.attacks.http }}</td>
-                    {% if status.nattacks > 0 %}
-                    <td>{{ '%0.2f' % (status.attacks.http/status.nattacks * 100) }}%</td>
+                    <td>{{ status.count_attack_type.http }}</td>
+                    {% if status.count_all_attacks > 0 %}
+                    <td>{{ '%0.2f' % (status.count_attack_type.http/status.count_all_attacks * 100) }}%</td>
                     {% else %}
                     <td>No Attacks</td>
                     {% endif %}
                 </tr>
                 <tr>
                     <td>ftp</td>
-                    <td>{{ status.attacks.ftp }}</td>
-                    {% if status.nattacks > 0 %}
-                    <td>{{ '%0.2f' % (status.attacks.ftp/status.nattacks * 100) }}%</td>
+                    <td>{{ status.count_attack_type.ftp }}</td>
+                    {% if status.count_all_attacks > 0 %}
+                    <td>{{ '%0.2f' % (status.count_attack_type.ftp/status.count_all_attacks * 100) }}%</td>
                     {% else %}
                     <td>No Attacks</td>
                     {% endif %}
                 </tr>
                 <tr>
                     <td>pop3s</td>
-                    <td>{{ status.attacks.pop3s }}</td>
-                    {% if status.nattacks > 0 %}
-                    <td>{{ '%0.2f' % (status.attacks.pop3s/status.nattacks * 100) }}%</td>
+                    <td>{{ status.count_attack_type.pop3s }}</td>
+                    {% if status.count_all_attacks > 0 %}
+                    <td>{{ '%0.2f' % (status.count_attack_type.pop3s/status.count_all_attacks * 100) }}%</td>
                     {% else %}
                     <td>No Attacks</td>
                     {% endif %}
                 </tr>
                 <tr>
                     <td>smtp</td>
-                    <td>{{ status.attacks.smtp }}</td>
-                    {% if status.nattacks > 0 %}
-                    <td>{{ '%0.2f' % (status.attacks.smtp/status.nattacks * 100) }}%</td>
+                    <td>{{ status.count_attack_type.smtp }}</td>
+                    {% if status.count_all_attacks > 0 %}
+                    <td>{{ '%0.2f' % (status.count_attack_type.smtp/status.count_all_attacks * 100) }}%</td>
                     {% else %}
                     <td>No Attacks</td>
                     {% endif %}
@@ -97,13 +97,13 @@
         </li>
         <li class="thumbnail span6 text-center pull-right">
             <a class="btn-link" href="/ws/drones/client">
-                <h1>{{ status.nclients }}
+                <h1>{{ status.count_clients }}
                     <small>Clients</small>
                 </h1>
             </a>
             <hr>
             <div class="row-fluid">
-                <h2 class="alert alert-success">{{ status.bees.successful }}
+                <h2 class="alert alert-success">{{ status.baits.successful }}
                     <small>Bait sessions successful</small>
                 </h2>
             </div>

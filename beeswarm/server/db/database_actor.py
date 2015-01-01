@@ -152,6 +152,9 @@ class DatabaseActor(gevent.Greenlet):
                     self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, '{}'))
                 elif cmd == Messages.DRONE_ADD.value:
                     self._handle_command_add_drone()
+                elif cmd == Messages.GET_DB_STATS.value:
+                    result = self._handle_command_get_db_stats()
+                    self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, json.dumps(result)))
                 else:
                     logger.error('Unknown message received: {0}'.format(data))
                     assert False
@@ -467,7 +470,7 @@ class DatabaseActor(gevent.Greenlet):
         return send_zmq_request_socket(self.config_actor_socket, request)
 
     # TODO: This message needs to go, when db actor is done it will have full knowledge of drone changes
-    #       no need for outside actors to communicate this.
+    # no need for outside actors to communicate this.
     def _handle_command_drone_config_changed(self, drone_id):
         self._send_config_to_drone(drone_id)
         # TODO: Only Clients that communicate with this drone_id needs to get reconfigured.
@@ -589,10 +592,43 @@ class DatabaseActor(gevent.Greenlet):
 
         return drone_config
 
+    def _handle_command_get_db_stats(self):
+        db_session = database_setup.get_session()
+        database_stats = {
+            'count_honeypots': db_session.query(Honeypot).count(),
+            'count_clients': db_session.query(Client).count(),
+            'count_sessions': db_session.query(Session).count(),
+            'count_all_baits': db_session.query(BaitSession).count(),
+            'count_all_attacks': db_session.query(Session).filter(Session.classification_id != 'bait_session')
+                .filter(Session.classification_id is not None).count(),
+            'count_attack_type': {
+                'http': self._get_num_attacks('http', db_session),
+                'vnc': self._get_num_attacks('vnc', db_session),
+                'ssh': self._get_num_attacks('ssh', db_session),
+                'ftp': self._get_num_attacks('ftp', db_session),
+                'https': self._get_num_attacks('https', db_session),
+                'pop3': self._get_num_attacks('pop3', db_session),
+                'pop3s': self._get_num_attacks('pop3s', db_session),
+                'smtp': self._get_num_attacks('smtp', db_session),
+                'telnet': self._get_num_attacks('telnet', db_session),
+            },
+            'baits': {
+                'successful': db_session.query(BaitSession).filter(BaitSession.did_login).count(),
+                'failed': db_session.query(BaitSession).filter(not BaitSession.did_login).count(),
+
+            }
+        }
+        return database_stats
+
+    def _get_num_attacks(self, protocol, db_session):
+        return db_session.query(Session).filter(Session.classification_id != 'bait_session') \
+            .filter(Session.classification_id is not None) \
+            .filter(Session.protocol == protocol).count()
+
     def _db_maintenance(self):
         logger.debug('Doing database maintenance')
         bait_session_retain_days = int(self.send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM.value,
-                                                                                'bait_session_retain')))
+                                                                                 'bait_session_retain')))
         bait_retain = datetime.utcnow() - timedelta(days=bait_session_retain_days)
         malicious_session_retain_days = int(self.send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM.value,
                                                                                       'malicious_session_retain')))
@@ -607,5 +643,5 @@ class DatabaseActor(gevent.Greenlet):
             .filter(Session.timestamp < bait_retain).delete()
         db_session.commit()
 
-        logger.info('Database maintenance finished. Deleted {0} bait_sessions and {1} malicious sessions)' \
+        logger.info('Database maintenance finished. Deleted {0} bait_sessions and {1} malicious sessions)'
                     .format(bait_deleted_count, malicious_deleted_count))

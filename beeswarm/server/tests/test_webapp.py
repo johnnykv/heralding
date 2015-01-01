@@ -389,8 +389,8 @@ class WebAppTests(unittest.TestCase):
     #     self.app.post('/ws/drone/delete', data=json.dumps(data))
     #     gevent.sleep(1)
     #     db_session = database.get_session()
-    #     nclients = db_session.query(Client).count()
-    #     self.assertEquals(3, nclients)
+    #     count_clients = db_session.query(Client).count()
+    #     self.assertEquals(3, count_clients)
 
     def test_get_baitusers(self):
         """ Tests GET on the '/ws/bait_users' route."""

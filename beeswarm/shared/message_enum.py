@@ -1,5 +1,11 @@
 from enum import Enum
 
+# TODO: Clean this up in sections:
+#       *  Common messages
+#       *  Drone data messages
+#       *  Database request messages
+#       *  etc...
+
 
 class Messages(Enum):
     STOP = 'STOP'
@@ -50,3 +56,6 @@ class Messages(Enum):
     # A classified session is transmitted
     # Parameters is data in json.
     SESSION = "SESSION"
+
+    # Database requests
+    GET_DB_STATS = 'GET_DB_STATS'
