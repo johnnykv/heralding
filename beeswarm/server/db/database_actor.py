@@ -53,6 +53,7 @@ class DatabaseActor(gevent.Greenlet):
         db_session.commit()
         logging.info('Cleaned {0} pending sessions on startup'.format(pending_deleted))
         self.do_classify = False
+        self.do_maintenance = False
         if clear_sessions or max_sessions == 0:
             db_session = database_setup.get_session()
             count = db_session.query(Session).delete()
@@ -86,18 +87,21 @@ class DatabaseActor(gevent.Greenlet):
         # needed to send data directly to drones
         self.drone_command_receiver.connect(SocketNames.DRONE_COMMANDS.value)
 
-
         poller = zmq.Poller()
         poller.register(self.drone_data_socket, zmq.POLLIN)
         poller.register(self.databaseRequests, zmq.POLLIN)
         gevent.spawn(self._start_recurring_classify_set)
+        gevent.spawn(self._start_recurring_maintenance_set)
         while self.enabled:
             # .recv() gives no context switch - why not? using poller with timeout instead
             socks = dict(poller.poll(100))
             gevent.sleep()
-            if self.do_classify and self.enabled:
-                self.classify_malicious_sessions()
+            if self.do_classify:
+                self._classify_malicious_sessions()
                 self.do_classify = False
+            elif self.do_maintenance:
+                self._db_maintenance()
+                self.do_maintenance = False
             elif self.drone_data_socket in socks and socks[self.drone_data_socket] == zmq.POLLIN:
                 split_data = self.drone_data_socket.recv().split(' ', 2)
                 if len(split_data) == 3:
@@ -167,8 +171,14 @@ class DatabaseActor(gevent.Greenlet):
         db_session.add(drone)
         db_session.commit()
 
+    def _start_recurring_maintenance_set(self):
+        while self.enabled:
+            sleep_time = 60 * 60
+            gevent.sleep(sleep_time)
+            self.do_maintenance = True
+
     def _start_recurring_classify_set(self):
-        while True:
+        while self.enabled:
             sleep_time = self.delay_seconds / 2
             gevent.sleep(sleep_time)
             self.do_classify = True
@@ -334,7 +344,7 @@ class DatabaseActor(gevent.Greenlet):
         self.processedSessionsPublisher.send('{0} {1}'.format(Messages.SESSION.value,
                                                               json.dumps(bait_session.to_dict())))
 
-    def classify_malicious_sessions(self):
+    def _classify_malicious_sessions(self):
         """
         Will classify all unclassified sessions as malicious activity.
 
@@ -578,3 +588,24 @@ class DatabaseActor(gevent.Greenlet):
                 drone_config['bait_timings'] = {}
 
         return drone_config
+
+    def _db_maintenance(self):
+        logger.debug('Doing database maintenance')
+        bait_session_retain_days = int(self.send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM.value,
+                                                                                'bait_session_retain')))
+        bait_retain = datetime.utcnow() - timedelta(days=bait_session_retain_days)
+        malicious_session_retain_days = int(self.send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM.value,
+                                                                                      'malicious_session_retain')))
+        malicious_retain = datetime.utcnow() - timedelta(days=malicious_session_retain_days)
+
+        db_session = database_setup.get_session()
+
+        malicious_deleted_count = db_session.query(Session).filter(Session.classification_id != 'bait_session') \
+            .filter(Session.timestamp < malicious_retain).delete()
+
+        bait_deleted_count = db_session.query(Session).filter(Session.classification_id == 'bait_session') \
+            .filter(Session.timestamp < bait_retain).delete()
+        db_session.commit()
+
+        logger.info('Database maintenance finished. Deleted {0} bait_sessions and {1} malicious sessions)' \
+                    .format(bait_deleted_count, malicious_deleted_count))

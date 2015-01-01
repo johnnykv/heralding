@@ -26,7 +26,6 @@ from zmq.auth.certs import load_certificate
 
 import beeswarm
 from beeswarm.server.webapp.auth import Authenticator
-from beeswarm.server.misc.scheduler import Scheduler
 from beeswarm.shared.helpers import create_self_signed_cert, stop_if_not_write_workdir
 from beeswarm.shared.asciify import asciify
 from beeswarm.server.db.database_actor import DatabaseActor
@@ -179,7 +178,7 @@ class Server(object):
                 # relay message on internal socket
                 drone_data_socket.send(raw_msg)
 
-    def start(self, maintenance=True):
+    def start(self):
         """
             Starts the BeeSwarm server.
         """
@@ -192,10 +191,6 @@ class Server(object):
             http_server = WSGIServer(('', web_port), self.app, keyfile=key_file, certfile=cert_file)
             http_server_greenlet = gevent.spawn(http_server.serve_forever)
             self.greenlets.append(http_server_greenlet)
-
-        if maintenance:
-            maintenance_greenlet = gevent.spawn(self.start_maintenance_tasks)
-            self.greenlets.append(maintenance_greenlet)
 
         stop_if_not_write_workdir(self.work_dir)
         logger.info('Server started.')
@@ -220,30 +215,6 @@ class Server(object):
         with open(configfile) as config_file:
             config = json.load(config_file)
         return config
-
-    def start_maintenance_tasks(self):
-
-        maintenance_worker = Scheduler(self.config)
-        maintenance_greenlet = gevent.spawn(maintenance_worker.start)
-
-        config_last_modified = os.stat(self.config_file).st_mtime
-        while self.started:
-            poll_last_modified = os.stat(self.config_file).st_mtime
-            if poll_last_modified > config_last_modified:
-                logger.debug('Config file changed, restarting maintenance workers.')
-                config_last_modified = poll_last_modified
-                config = self.get_config(self.config_file)
-
-                # kill and stop old greenlet
-                maintenance_worker.stop()
-                maintenance_greenlet.kill(timeout=2)
-
-                # spawn new worker greenlet and pass the new config
-                maintenance_worker = Scheduler(config)
-                maintenance_greenlet = gevent.spawn(maintenance_worker.start)
-
-            # check config file for changes every 5 second
-            gevent.sleep(5)
 
     def prepare_environment(self, work_dir, customize, server_hostname=None):
 
