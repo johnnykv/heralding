@@ -46,6 +46,7 @@ class LoggerTests(unittest.TestCase):
         mock_logger.stop()
         # will except if the logger hangs.
         mock_logger.get(block=True, timeout=2)
+        processed_sessions_publisher.close()
 
 
 class TestLogger(BaseLogger):

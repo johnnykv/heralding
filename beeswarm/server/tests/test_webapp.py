@@ -11,6 +11,7 @@ from beeswarm.server.misc.config_actor import ConfigActor
 import beeswarm.server.db.database_setup as database
 from beeswarm.server.db.entities import Client, Honeypot, Session, BaitSession, Authentication, Transcript, BaitUser
 from beeswarm.server.webapp import app
+from beeswarm.server.db.database_actor import DatabaseActor
 
 
 class WebAppTests(unittest.TestCase):
@@ -20,20 +21,24 @@ class WebAppTests(unittest.TestCase):
         self.config_actor = ConfigActor(os.path.join(os.path.dirname(__file__), 'beeswarmcfg.json.test'), self.work_dir)
         self.config_actor.start()
         self.app = app.app.test_client()
+        app.connect_sockets()
         database.setup_db('sqlite://')
         self.authenticator = Authenticator()
         self.authenticator.add_user('test', 'test', 0)
+        # startup session database
+        self.database_actor = DatabaseActor(999, delay_seconds=2)
+        self.database_actor.start()
 
         session = database.get_session()
-
         session.add_all([Client(), Honeypot()])
-
         session.commit()
 
     def tearDown(self):
         database.clear_db()
         self.config_actor.close()
         shutil.rmtree(self.work_dir)
+        self.database_actor.stop()
+        self.config_actor.close()
 
     # TODO: All these posts should be moved to ZMQ tests
     # def test_basic_client_post(self):
@@ -327,7 +332,6 @@ class WebAppTests(unittest.TestCase):
 
     def test_data_honeypot(self):
         """ Tests if Honeypot information is returned properly """
-
         self.login('test', 'test')
         self.populate_honeypots()
         resp = self.app.get('/data/honeypots')
@@ -336,7 +340,6 @@ class WebAppTests(unittest.TestCase):
 
     def test_data_client(self):
         """ Tests if Client information is returned properly """
-
         self.login('test', 'test')
         self.populate_clients()
         resp = self.app.get('/data/clients')

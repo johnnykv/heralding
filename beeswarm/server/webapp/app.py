@@ -64,13 +64,24 @@ drone_keys = []
 
 context = beeswarm.shared.zmq_context
 config_actor_socket = context.socket(zmq.REQ)
-config_actor_socket.connect(SocketNames.CONFIG_COMMANDS.value)
+
 config_request_lock = gevent.lock.RLock()
 
 database_actor_socket = context.socket(zmq.REQ)
-database_actor_socket.connect(SocketNames.DATABASE_REQUESTS.value)
 database_request_lock = gevent.lock.RLock()
 
+
+def connect_sockets():
+    try:
+        config_actor_socket.disconnect(SocketNames.CONFIG_COMMANDS.value)
+        database_actor_socket.disconnect(SocketNames.DATABASE_REQUESTS.value)
+    except:
+        pass
+
+    config_actor_socket.connect(SocketNames.CONFIG_COMMANDS.value)
+    database_actor_socket.connect(SocketNames.DATABASE_REQUESTS.value)
+
+connect_sockets()
 
 def send_database_request(database_request):
     global database_actor_socket
