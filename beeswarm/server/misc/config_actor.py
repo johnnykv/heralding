@@ -45,7 +45,7 @@ class ConfigActor(Greenlet):
         self.config_commands = context.socket(zmq.REP)
         self.enabled = True
 
-    def close(self):
+    def stop(self):
         self.enabled = False
 
         if self.config_commands:

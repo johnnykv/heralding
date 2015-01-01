@@ -315,4 +315,4 @@ class Server(object):
                             'ignore_failed_bait_session': False}
             socket.send('{0} {1}'.format(Messages.SET_CONFIG_ITEM.value, json.dumps(message_dict)))
             socket.recv()
-            config_actor.close()
+            config_actor.stop()

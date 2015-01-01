@@ -170,7 +170,7 @@ class ClassifierTests(unittest.TestCase):
 
         # some time for the session actor to work
         gevent.sleep(2)
-        config_actor.close()
+        config_actor.stop()
         database_actor.stop()
         if os.path.isfile(config_file):
             os.remove(config_file)

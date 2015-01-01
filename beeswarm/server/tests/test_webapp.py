@@ -44,7 +44,7 @@ class WebAppTests(unittest.TestCase):
 
     def tearDown(self):
         self.database_actor.stop()
-        self.config_actor.close()
+        self.config_actor.stop()
         shutil.rmtree(self.work_dir)
         if os.path.isfile(self.db_file):
             os.remove(self.db_file)
