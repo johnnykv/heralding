@@ -78,6 +78,9 @@ class ConfigActor(Greenlet):
             self.config_commands.send('{0} {1}'.format(Messages.OK.value, value))
         elif cmd == Messages.GET_ZMQ_KEYS.value:
             self._handle_command_getkeys(data)
+        elif cmd == Messages.DELETE_ZMQ_KEYS.value:
+            self._remove_zmq_keys(data)
+            self.config_commands.send('{0} {1}'.format(Messages.OK.value, '{}'))
         else:
             logger.error('Unknown command received: {0}'.format(cmd))
             self.config_commands.send(Messages.FAIL.value)

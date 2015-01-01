@@ -35,6 +35,7 @@ class Messages(Enum):
     SET_CONFIG_ITEM = 'SET'
     GET_CONFIG_ITEM = 'GET'
     GET_ZMQ_KEYS = 'GET_ZMQ_KEYS'
+    DELETE_ZMQ_KEYS = 'DELETE_ZMQ_KEYS'
     PING = 'PING'
     PONG = 'PING'
     IP = 'IP'
