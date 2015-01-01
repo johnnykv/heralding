@@ -410,7 +410,7 @@ class DatabaseActor(gevent.Greenlet):
             db_session.commit()
             # tell the drone to kill itself
             self.drone_command_receiver.send('{0} {1} '.format(drone_id, Messages.DRONE_DELETE.value))
-            self._remove_zmq_keys(drone_id)
+            self.send_config_request('{0} {1}'.format(Messages.DELETE_ZMQ_KEYS.value, drone_id))
             self._reconfigure_all_clients()
 
     def _handle_command_add_drone(self):
@@ -600,6 +600,7 @@ class DatabaseActor(gevent.Greenlet):
             'count_sessions': db_session.query(Session).count(),
             'count_all_baits': db_session.query(BaitSession).count(),
             'count_all_attacks': db_session.query(Session).filter(Session.classification_id != 'bait_session')
+                .filter (Session.classification_id != 'pending')
                 .filter(Session.classification_id is not None).count(),
             'count_attack_type': {
                 'http': self._get_num_attacks('http', db_session),
