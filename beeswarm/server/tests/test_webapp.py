@@ -6,6 +6,8 @@ import tempfile
 import shutil
 from datetime import datetime
 
+import zmq.green as zmq
+import beeswarm
 from beeswarm.server.webapp.auth import Authenticator
 from beeswarm.server.misc.config_actor import ConfigActor
 import beeswarm.server.db.database_setup as database
@@ -18,27 +20,34 @@ class WebAppTests(unittest.TestCase):
     def setUp(self):
         app.app.config['WTF_CSRF_ENABLED'] = False
         self.work_dir = tempfile.mkdtemp()
+        beeswarm.shared.zmq_context = zmq.Context()
+        self.db_file = tempfile.mkstemp()[1]
+        connection_string = 'sqlite:///{0}'.format(self.db_file)
+        os.remove(self.db_file)
+        database.setup_db(connection_string)
         self.config_actor = ConfigActor(os.path.join(os.path.dirname(__file__), 'beeswarmcfg.json.test'), self.work_dir)
         self.config_actor.start()
-        self.app = app.app.test_client()
-        app.connect_sockets()
-        database.setup_db('sqlite://')
         self.authenticator = Authenticator()
         self.authenticator.add_user('test', 'test', 0)
-        # startup session database
-        self.database_actor = DatabaseActor(999, delay_seconds=2)
-        self.database_actor.start()
 
+        # seed database with test data
         session = database.get_session()
         session.add_all([Client(), Honeypot()])
         session.commit()
 
+        # startup session database
+        self.database_actor = DatabaseActor(999, delay_seconds=2)
+        self.database_actor.start()
+
+        self.app = app.app.test_client()
+        app.connect_sockets()
+
     def tearDown(self):
-        database.clear_db()
-        self.config_actor.close()
-        shutil.rmtree(self.work_dir)
         self.database_actor.stop()
         self.config_actor.close()
+        shutil.rmtree(self.work_dir)
+        if os.path.isfile(self.db_file):
+            os.remove(self.db_file)
 
     # TODO: All these posts should be moved to ZMQ tests
     # def test_basic_client_post(self):

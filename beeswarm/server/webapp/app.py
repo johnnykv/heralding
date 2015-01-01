@@ -62,29 +62,31 @@ first_cfg_received = gevent.event.Event()
 # keys used for adding new drones to the system
 drone_keys = []
 
-context = beeswarm.shared.zmq_context
-config_actor_socket = context.socket(zmq.REQ)
-
+config_actor_socket = None
+database_actor_socket = None
 config_request_lock = gevent.lock.RLock()
-
-database_actor_socket = context.socket(zmq.REQ)
 database_request_lock = gevent.lock.RLock()
 
 
 def connect_sockets():
+    global config_actor_socket, database_actor_socket
     try:
         config_actor_socket.disconnect(SocketNames.CONFIG_COMMANDS.value)
         database_actor_socket.disconnect(SocketNames.DATABASE_REQUESTS.value)
     except:
         pass
 
+    context = beeswarm.shared.zmq_context
+    config_actor_socket = context.socket(zmq.REQ)
+    database_actor_socket = context.socket(zmq.REQ)
+
     config_actor_socket.connect(SocketNames.CONFIG_COMMANDS.value)
     database_actor_socket.connect(SocketNames.DATABASE_REQUESTS.value)
 
 connect_sockets()
 
+
 def send_database_request(database_request):
-    global database_actor_socket
     database_request_lock.acquire()
     try:
         return send_zmq_request_socket(database_actor_socket, database_request)
@@ -93,7 +95,6 @@ def send_database_request(database_request):
 
 
 def send_config_request(config_request):
-    global config_actor_socket
     config_request_lock.acquire()
     try:
         return send_zmq_request_socket(config_actor_socket, config_request)
