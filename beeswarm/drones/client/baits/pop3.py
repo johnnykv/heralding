@@ -28,16 +28,13 @@ class Pop3(ClientBase):
         """
             Initializes common values.
 
-        :param sessions: A dict which is updated every time a new session is created.
         :param options: A dict containing all options
         """
         super(Pop3, self).__init__(options)
 
     def start(self):
         """
-            Launches a new POP3 client session on the server taken from the `self.options` dict.
-
-        :param my_ip: IP of this Client itself
+            Launches a new POP3 client session on the server.
         """
 
         username = self.options['username']
@@ -67,16 +64,16 @@ class Pop3(ClientBase):
             session.timestamp = datetime.utcnow()
         # except (poplib.error_proto, h_socket.error) as err:
         except Exception as err:
-            logger.debug('Caught exception: %s (%s)' % (err, str(type(err))))
+            logger.debug('Caught exception: {0} ({1})'.format(err, str(type(err))))
         else:
             list_entries = conn.list()[1]
             for entry in list_entries:
                 index, octets = entry.split(' ')
                 conn.retr(index)
                 conn.dele(index)
-            logger.debug('Found and deleted %i messages on %s' % (len(list_entries), server_host))
+            logger.debug('Found and deleted {0} messages on {1}'.format(len(list_entries), server_host))
             conn.quit()
             session.did_complete = True
         finally:
-            session.alldone = True
+            session.all_done = True
             session.end_session()

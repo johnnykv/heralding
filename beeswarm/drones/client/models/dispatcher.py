@@ -41,6 +41,8 @@ class BaitDispatcher(Greenlet):
         self.run_flag = True
         # my_ip and sessions should be moved from here
         self.bait_session_running = False
+        self.start_time = None
+        self.end_time = None
         try:
             self.set_active_interval()
         except (ValueError, AttributeError, KeyError, IndexError) as err:

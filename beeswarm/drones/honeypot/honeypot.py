@@ -100,10 +100,10 @@ class Honeypot(object):
 
         # spawning time checker
         if self.config['timecheck']['enabled']:
-            Greenlet.spawn(self.checktime)
+            Greenlet.spawn(self.check_time)
 
     # function to check the time offset
-    def checktime(self):
+    def check_time(self):
         """ Make sure our Honeypot time is consistent, and not too far off
         from the actual time. """
 

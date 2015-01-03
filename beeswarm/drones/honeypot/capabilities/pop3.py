@@ -67,7 +67,7 @@ class Pop3(HandlerBase):
 
             cmd = cmd.lower()
 
-            func_to_call = getattr(self, 'cmd_%s' % cmd, None)
+            func_to_call = getattr(self, 'cmd_{0}'.format(cmd), None)
             if func_to_call is None or not self.is_state_valid(state, cmd):
                 self.send_message(session, gsocket, '-ERR Unknown command')
             else:
@@ -175,12 +175,6 @@ class Pop3(HandlerBase):
 
     def cmd_quit(self, session, gsocket, msg):
         self.send_message(session, gsocket, '+OK Logging out')
-
-        user_mailspool = session.vdata['MAILSPOOL']
-
-        # session['deleted_index'].sort(reverse=True)
-        # for index in session['deleted_index']:
-        # del user_mailspool[index]
         return ''
 
     def cmd_list(self, session, gsocket, argument):

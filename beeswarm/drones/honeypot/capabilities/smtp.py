@@ -235,7 +235,7 @@ class SMTPChannel(smtpd.SMTPChannel):
                 arg = line[i + 1:].strip()
 
             # White list of operations that are allowed prior to AUTH.
-            if not command in ['AUTH', 'EHLO', 'HELO', 'NOOP', 'RSET', 'QUIT']:
+            if command not in ['AUTH', 'EHLO', 'HELO', 'NOOP', 'RSET', 'QUIT']:
                 if not self.authenticated:
                     self.push('530 Authentication required')
                     self.close_quit()

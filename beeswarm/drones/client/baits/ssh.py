@@ -64,7 +64,7 @@ class Ssh(ClientBase, Commands):
 
         self.sessions[session.id] = session
         logger.debug(
-            'Sending %s bait session to {0}:{1}. (bait id: %s)'.format('ssh', server_host, server_port, session.id))
+            'Sending ssh bait session to {0}:{1}. (bait id: {2})'.format(server_host, server_port, session.id))
         try:
             self.connect_login()
             session.did_connect = True

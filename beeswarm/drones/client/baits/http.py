@@ -22,7 +22,6 @@
 
 import random
 import logging
-from datetime import datetime
 
 from lxml.html import document_fromstring
 import requests

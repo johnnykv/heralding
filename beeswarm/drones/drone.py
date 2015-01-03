@@ -1,4 +1,3 @@
-# pylint: ignored-modules=zmq,zmq.green
 # Copyright (C) 2014 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # This program is free software: you can redistribute it and/or modify
