@@ -83,7 +83,7 @@ class Honeypot(object):
             with open(key_path, 'w') as keyfile:
                 keyfile.write(priv_key)
             send_zmq_push(SocketNames.SERVER_RELAY.value,
-                          '{0} {1} {2}'.format(Messages.KEY.value, self.honeypot_id, keyfile))
+                          '{0} {1} {2}'.format(Messages.KEY.value, self.honeypot_id, priv_key))
             send_zmq_push(SocketNames.SERVER_RELAY.value,
                           '{0} {1} {2}'.format(Messages.CERT.value, self.honeypot_id, cert))
 
