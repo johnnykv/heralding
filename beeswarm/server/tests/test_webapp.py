@@ -413,8 +413,8 @@ class WebAppTests(unittest.TestCase):
         self.assertEquals(len(table_data), 2)
         self.logout()
 
-    def test_post_baitusers(self):
-        """ Tests POST on the '/ws/bait_users' route."""
+    def test_add_baituser(self):
+        """ Tests POST on the '/ws/bait_users/add' route."""
         self.login('test', 'test')
 
         data = [
@@ -423,10 +423,12 @@ class WebAppTests(unittest.TestCase):
             {'username': 'userC', 'password': 'passC'}
         ]
 
-        self.app.post('/ws/bait_users', data=json.dumps(data), follow_redirects=True)
-        db_session = database.get_session()
-        bait_user_count = db_session.query(BaitUser).count()
-        self.assertEquals(bait_user_count, 3)
+        self.app.post('/ws/bait_users/add', data=json.dumps(data), follow_redirects=True)
+
+        resp = self.app.get('/ws/bait_users')
+        bait_users = json.loads(resp.data)
+        # 22 in bootstrapping, 3 just added
+        self.assertEquals(len(bait_users), 22 + 3)
         self.logout()
 
     def populate_clients(self):
