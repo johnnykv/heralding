@@ -167,6 +167,9 @@ class DatabaseActor(gevent.Greenlet):
                 elif cmd == Messages.GET_SESSION_TRANSCRIPT.value:
                     result = self._handle_command_get_transcript(data)
                     self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, json.dumps(result)))
+                elif cmd == Messages.GET_BAIT_USERS.value:
+                    result = self._handle_command_get_bait_users()
+                    self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, json.dumps(result)))
                 else:
                     logger.error('Unknown message received: {0}'.format(data))
                     assert False
@@ -495,7 +498,13 @@ class DatabaseActor(gevent.Greenlet):
         if bait_user:
             db_session.delete(bait_user)
             db_session.commit()
-            self._bait_user_changed(bait_user.username, bait_user.password)
+            drone_edge = db_session.query(DroneEdge).filter(DroneEdge.username == bait_user.username,
+                                                            DroneEdge.password == bait_user.password).first()
+        # A drone is using the bait users, reconfigure all
+        # TODO: This is lazy, we should only reconfigure the drone(s) who are actually
+        # using the credentials
+            if drone_edge:
+                self._reconfigure_all_clients()
         else:
             logger.warning('Tried to delete non-existing bait user with id {0}.'.format(bait_user_id))
 
@@ -509,15 +518,14 @@ class DatabaseActor(gevent.Greenlet):
             db_session.add(new_bait_user)
             db_session.commit()
 
-    def _bait_user_changed(self, username, password):
+    def _handle_command_get_bait_users(self):
         db_session = database_setup.get_session()
-        drone_edge = db_session.query(DroneEdge).filter(DroneEdge.username == username,
-                                                        DroneEdge.password == password).first()
-        # A drone is using the bait users, reconfigure all
-        # TODO: This is lazy, we should only reconfigure the drone(s) who are actually
-        # using the credentials
-        if drone_edge:
-            self._reconfigure_all_clients()
+        bait_users = db_session.query(BaitUser)
+        return_rows = []
+        for bait_user in bait_users:
+            row = {'id': bait_user.id, 'username': bait_user.username, 'password': bait_user.password}
+            return_rows.append(row)
+        return return_rows
 
     def _get_drone_config(self, drone_id):
         db_session = database_setup.get_session()

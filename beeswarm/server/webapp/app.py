@@ -31,8 +31,7 @@ from flask import request
 from beeswarm.server.webapp.auth import Authenticator
 from forms import HoneypotConfigurationForm, ClientConfigurationForm, LoginForm, SettingsForm
 from beeswarm.server.db import database_setup
-from beeswarm.server.db.entities import Client, BaitSession, Session, Honeypot, User, BaitUser, Transcript, Drone, \
-    Authentication
+from beeswarm.server.db.entities import Client, BaitSession, Session, Honeypot, User, BaitUser, Drone
 from beeswarm.shared.helpers import send_zmq_request_socket
 from beeswarm.shared.message_enum import Messages
 from beeswarm.shared.socket_enum import SocketNames
@@ -270,8 +269,6 @@ def configure_honeypot(id):
         honeypot.name = form.general__name.data
         db_session.add(honeypot)
         db_session.commit()
-        # advise config actor that we have change something on a given drone id
-        # TODO: make entity itself know if it has changed and then poke the config actor.
 
         send_database_request('{0} {1}'.format(Messages.DRONE_CONFIG_CHANGED.value, honeypot.id))
         return render_template('finish-config-honeypot.html', drone_id=honeypot.id, user=current_user)
@@ -390,8 +387,8 @@ def drone_key(key):
         logger.warn('Attempt to add new drone, but using wrong key from: {0}'.format(request.remote_addr))
         abort(401)
     else:
-        config_json = send_database_request('{0}'.format(Messages.DRONE_ADD.value))
-        return json.dumps(config_json)
+        drone_config = send_database_request('{0}'.format(Messages.DRONE_ADD.value))
+        return json.dumps(drone_config)
 
 
 @app.route('/ws/drone/delete', methods=['POST'])
@@ -403,28 +400,14 @@ def delete_drones():
         send_database_request('{0} {1}'.format(Messages.DRONE_DELETE.value, drone_id))
     return ''
 
-# requesting all bait users - or replacing all bait users
 @app.route('/ws/bait_users', methods=['GET', 'POST'])
 @login_required
 def get_bait_users():
-    db_session = database_setup.get_session()
     if request.method == 'GET':
-        bait_users = db_session.query(BaitUser)
-        rows = []
-        for bait_user in bait_users:
-            row = {'id': bait_user.id, 'username': bait_user.username, 'password': bait_user.password}
-            rows.append(row)
-        rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
+        bait_users = send_database_request('{0}'.format(Messages.GET_BAIT_USERS.value))
+        rsp = Response(response=bait_users, status=200, mimetype='application/json')
         return rsp
-    else:
-        db_session.query(BaitUser).delete()
-        bait_users = json.loads(request.data)
-        for bait_user in bait_users:
-            new_bait_users = BaitUser(username=bait_user['username'], password=bait_user['password'])
-            db_session.add(new_bait_users)
-    db_session.commit()
     return ''
-
 
 # add a list of bait users, if user exists the password will be replaced with the new one
 @app.route('/ws/bait_users/add', methods=['POST'])
