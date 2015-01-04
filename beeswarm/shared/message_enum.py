@@ -60,3 +60,12 @@ class Messages(Enum):
 
     # Database requests
     GET_DB_STATS = 'GET_DB_STATS'
+    # TODO: Following three should have to/from params to facilitate pagination
+    GET_SESSIONS_ALL = 'GET_SESSIONS_ALL'
+    GET_SESSIONS_BAIT = 'GET_SESSIONS_BAIT'
+    GET_SESSIONS_ATTACKS = 'GET_SESSIONS_ATTACKS'
+
+    # Param: session id
+    GET_SESSION_TRANSCRIPT = 'GET_SESSION_TRANSCRIPT'
+    # Param: session id
+    GET_SESSION_CREDENTIALS = 'GET_SESSION_CREDENTIALS'

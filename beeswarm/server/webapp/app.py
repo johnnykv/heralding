@@ -24,7 +24,6 @@ import zmq.green as zmq
 from flask import Flask, render_template, redirect, flash, Response, abort
 from flask.ext.login import LoginManager, login_user, current_user, login_required, logout_user
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy import desc
 from werkzeug.security import check_password_hash
 from wtforms import HiddenField
 from flask import request
@@ -104,6 +103,7 @@ def send_config_request(config_request):
 @login_manager.user_loader
 def user_loader(user_id):
     user_id = user_id.encode('utf-8')
+    # TODO: No need for this to be stored in session database, could just be a file...
     db_session = database_setup.get_session()
     user = None
     try:
@@ -453,51 +453,30 @@ def delete_bait_user():
 @app.route('/data/sessions/<_type>', methods=['GET'])
 @login_required
 def data_sessions_attacks(_type):
-    db_session = database_setup.get_session()
-    # the database_setup will not get hit until we start iterating the query object
-    query_iterators = {
-        'all': db_session.query(Session),
-        'bait_sessions': db_session.query(BaitSession),
-        'attacks': db_session.query(Session).filter(Session.classification_id != 'bait_session')
-    }
-
-    if _type not in query_iterators:
-        return 'Not Found', 404
-
-    # select which iterator to use
-    entries = query_iterators[_type].order_by(desc(Session.timestamp))
-
-    rows = []
-    for session in entries:
-        rows.append(session.to_dict())
-    rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
+    sessions = []
+    if _type == 'all':
+        sessions = send_database_request('{0}'.format(Messages.GET_SESSIONS_ALL.value))
+    elif _type == 'bait_sessions':
+        sessions = send_database_request('{0}'.format(Messages.GET_SESSIONS_BAIT.value))
+    elif _type == 'attacks':
+        sessions = send_database_request('{0}'.format(Messages.GET_SESSIONS_ATTACKS.value))
+    rsp = Response(response=sessions, status=200, mimetype='application/json')
     return rsp
 
 
 @app.route('/data/session/<_id>/credentials')
 @login_required
 def data_session_credentials(_id):
-    db_session = database_setup.get_session()
-
-    credentials = db_session.query(Authentication).filter(Authentication.session_id == _id)
-    return_rows = []
-    for c in credentials:
-        return_rows.append(c.to_dict())
-    rsp = Response(response=json.dumps(return_rows, indent=4), status=200, mimetype='application/json')
+    credentials = send_database_request('{0} {1}'.format(Messages.GET_SESSION_CREDENTIALS.value, _id))
+    rsp = Response(response=credentials, status=200, mimetype='application/json')
     return rsp
 
 
 @app.route('/data/session/<_id>/transcript')
 @login_required
 def data_session_transcript(_id):
-    db_session = database_setup.get_session()
-
-    transcripts = db_session.query(Transcript).filter(Transcript.session_id == _id)
-    return_rows = []
-    for t in transcripts:
-        row = {'time': t.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'direction': t.direction, 'data': t.data}
-        return_rows.append(row)
-    rsp = Response(response=json.dumps(return_rows, indent=4), status=200, mimetype='application/json')
+    transcript = send_database_request('{0} {1}'.format(Messages.GET_SESSION_TRANSCRIPT.value, _id))
+    rsp = Response(response=transcript, status=200, mimetype='application/json')
     return rsp
 
 

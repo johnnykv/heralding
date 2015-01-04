@@ -23,6 +23,7 @@ import zmq.green as zmq
 import gevent
 from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.expression import func
+from sqlalchemy import desc
 
 import beeswarm
 import beeswarm.shared
@@ -154,6 +155,17 @@ class DatabaseActor(gevent.Greenlet):
                     self._handle_command_add_drone()
                 elif cmd == Messages.GET_DB_STATS.value:
                     result = self._handle_command_get_db_stats()
+                    self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, json.dumps(result)))
+                elif cmd == Messages.GET_SESSIONS_ALL.value or cmd == Messages.GET_SESSIONS_ATTACKS.value \
+                        or cmd == Messages.GET_SESSIONS_BAIT.value:
+                    # TODO: Accept to/from param to facilitate pagination
+                    result = self._handle_command_get_sessions(cmd)
+                    self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, json.dumps(result)))
+                elif cmd == Messages.GET_SESSION_CREDENTIALS.value:
+                    result = self._handle_command_get_credentials(data)
+                    self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, json.dumps(result)))
+                elif cmd == Messages.GET_SESSION_TRANSCRIPT.value:
+                    result = self._handle_command_get_transcript(data)
                     self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, json.dumps(result)))
                 else:
                     logger.error('Unknown message received: {0}'.format(data))
@@ -600,7 +612,7 @@ class DatabaseActor(gevent.Greenlet):
             'count_sessions': db_session.query(Session).count(),
             'count_all_baits': db_session.query(BaitSession).count(),
             'count_all_attacks': db_session.query(Session).filter(Session.classification_id != 'bait_session')
-                .filter (Session.classification_id != 'pending')
+                .filter(Session.classification_id != 'pending')
                 .filter(Session.classification_id is not None).count(),
             'count_attack_type': {
                 'http': self._get_num_attacks('http', db_session),
@@ -625,6 +637,48 @@ class DatabaseActor(gevent.Greenlet):
         return db_session.query(Session).filter(Session.classification_id != 'bait_session') \
             .filter(Session.classification_id is not None) \
             .filter(Session.protocol == protocol).count()
+
+    def _handle_command_get_sessions(self, _type):
+        db_session = database_setup.get_session()
+        # the database_setup will not get hit until we start iterating the query object
+        query_iterators = {
+            Messages.GET_SESSIONS_ALL.value: db_session.query(Session),
+            Messages.GET_SESSIONS_BAIT.value: db_session.query(BaitSession),
+            Messages.GET_SESSIONS_ATTACKS.value: db_session.query(Session).filter(
+                Session.classification_id != 'bait_session')
+        }
+
+        if _type not in query_iterators:
+            return 'Not Found', 404
+
+        # select which iterator to use
+        entries = query_iterators[_type].order_by(desc(Session.timestamp))
+
+        rows = []
+        for session in entries:
+            rows.append(session.to_dict())
+
+        return rows
+
+    def _handle_command_get_credentials(self, session_id):
+        db_session = database_setup.get_session()
+
+        credentials = db_session.query(Authentication).filter(Authentication.session_id == session_id)
+        return_rows = []
+        for credential in credentials:
+            return_rows.append(credential.to_dict())
+        return return_rows
+
+    def _handle_command_get_transcript(self, session_id):
+        db_session = database_setup.get_session()
+
+        transcripts = db_session.query(Transcript).filter(Transcript.session_id == session_id)
+        return_rows = []
+        for transcript in transcripts:
+            row = {'time': transcript.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'direction': transcript.direction,
+                   'data': transcript.data}
+            return_rows.append(row)
+        return return_rows
 
     def _db_maintenance(self):
         logger.debug('Doing database maintenance')
