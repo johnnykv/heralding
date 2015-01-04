@@ -1,3 +1,0 @@
-echo "====== Installing dependencies for Beeswarm ======"
-easy_install -U distribute
-pip install git+https://github.com/honeynet/beeswarm.git
