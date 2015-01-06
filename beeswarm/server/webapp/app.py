@@ -31,7 +31,7 @@ from flask import request
 from beeswarm.server.webapp.auth import Authenticator
 from forms import HoneypotConfigurationForm, ClientConfigurationForm, LoginForm, SettingsForm
 from beeswarm.server.db import database_setup
-from beeswarm.server.db.entities import Client, BaitSession, Session, Honeypot, User, BaitUser, Drone
+from beeswarm.server.db.entities import Client, Honeypot, User, Drone
 from beeswarm.shared.helpers import send_zmq_request_socket
 from beeswarm.shared.message_enum import Messages
 from beeswarm.shared.socket_enum import SocketNames
@@ -68,11 +68,10 @@ database_request_lock = gevent.lock.RLock()
 
 def connect_sockets():
     global config_actor_socket, database_actor_socket
-    try:
+    if config_actor_socket is not None:
         config_actor_socket.disconnect(SocketNames.CONFIG_COMMANDS.value)
+    if database_actor_socket is not None:
         database_actor_socket.disconnect(SocketNames.DATABASE_REQUESTS.value)
-    except:
-        pass
 
     context = beeswarm.shared.zmq_context
     config_actor_socket = context.socket(zmq.REQ)
