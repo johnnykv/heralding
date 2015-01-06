@@ -339,22 +339,6 @@ class WebAppTests(unittest.TestCase):
         self.assertEquals(len(table_data), 4)
         self.logout()
 
-    def test_data_honeypot(self):
-        """ Tests if Honeypot information is returned properly """
-        self.login('test', 'test')
-        self.populate_honeypots()
-        resp = self.app.get('/data/honeypots')
-        table_data = json.loads(resp.data)
-        self.assertEquals(len(table_data), 5)  # One is added in the setup method, and 4 in populate
-
-    def test_data_client(self):
-        """ Tests if Client information is returned properly """
-        self.login('test', 'test')
-        self.populate_clients()
-        resp = self.app.get('/data/clients')
-        table_data = json.loads(resp.data)
-        self.assertEquals(len(table_data), 5)  # One is added in the setup method, and 4 in populate
-
     def test_data_transcripts(self):
         """ Tests that if given a session ID we can extract the relevant transcripts"""
         db_session = database.get_session()
@@ -379,31 +363,6 @@ class WebAppTests(unittest.TestCase):
         self.login('test', 'test')
         self.logout()
 
-    # def test_honeypot_delete(self):
-    #     """ Tests the '/ws/honeypot/delete' route."""
-    #
-    #     self.login('test', 'test')
-    #     self.populate_honeypots()
-    #     data = [self.honeypots[0], self.honeypots[1]]
-    #     self.app.post('/ws/drone/delete', data=json.dumps(data))
-    #     db_session = database.get_session()
-    #     honeypot_count = db_session.query(Honeypot).count()
-    #     self.assertEquals(3, honeypot_count)
-    #     gevent.sleep()
-    #
-    # def test_client_delete(self):
-    #     """ Tests the '/ws/client/delete' route."""
-    #
-    #     self.login('test', 'test')
-    #     self.populate_clients()
-    #     data = [self.clients[0], self.clients[1]]
-    #     print data
-    #     self.app.post('/ws/drone/delete', data=json.dumps(data))
-    #     gevent.sleep(1)
-    #     db_session = database.get_session()
-    #     count_clients = db_session.query(Client).count()
-    #     self.assertEquals(3, count_clients)
-
     def test_get_baitusers(self):
         """ Tests GET on the '/ws/bait_users' route."""
         self.login('test', 'test')
@@ -416,7 +375,6 @@ class WebAppTests(unittest.TestCase):
     def test_add_baituser(self):
         """ Tests POST on the '/ws/bait_users/add' route."""
         self.login('test', 'test')
-
         data = [
             {'username': 'userA', 'password': 'passA'},
             {'username': 'userB', 'password': 'passB'},

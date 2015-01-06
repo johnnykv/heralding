@@ -463,35 +463,6 @@ def data_session_transcript(_id):
     return rsp
 
 
-@app.route('/data/honeypots', methods=['GET'])
-@login_required
-def data_honeypots():
-    db_session = database_setup.get_session()
-    honeypots = db_session.query(Honeypot).all()
-    rows = []
-    for h in honeypots:
-        row = {'honeypot_id': h.id, 'attacks': db_session.query(Session).filter(Session.honeypot_id == h.id).count(),
-               'checked': False, 'name': h.name}
-        rows.append(row)
-    rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
-    return rsp
-
-
-@app.route('/data/clients', methods=['GET'])
-@login_required
-def data_clients():
-    db_session = database_setup.get_session()
-    clients = db_session.query(Client).all()
-    rows = []
-    for client in clients:
-        row = {'client_id': client.id,
-               'bees': db_session.query(BaitSession).filter(BaitSession.client_id == client.id).count(),
-               'checked': False, 'name': client.name}
-        rows.append(row)
-    rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
-    return rsp
-
-
 @app.route('/data/drones', defaults={'dronetype': None}, methods=['GET'])
 @app.route('/data/drones/<dronetype>', methods=['GET'])
 @login_required
@@ -547,8 +518,10 @@ def logout():
 @login_required
 def settings():
     bait_session_retain = send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM.value, 'bait_session_retain'))
-    ignore_failed_bait_session = ast.literal_eval(send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM.value, 'ignore_failed_bait_session')))
-    malicious_session_retain = send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM.value, 'malicious_session_retain'))
+    ignore_failed_bait_session = ast.literal_eval(send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM.value,
+                                                                                       'ignore_failed_bait_session')))
+    malicious_session_retain = send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM.value,
+                                                                    'malicious_session_retain'))
     form = SettingsForm(bait_session_retain=bait_session_retain, malicious_session_retain=malicious_session_retain,
                         ignore_failed_bait_session=ignore_failed_bait_session)
 
