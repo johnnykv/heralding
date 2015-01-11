@@ -163,10 +163,6 @@ class DictWrapper():
 @app.route('/ws/drone/honeypot/configure/<drone_id>', methods=['GET', 'POST'])
 @login_required
 def configure_honeypot(drone_id):
-    # db_session = database_setup.get_session()
-    #honeypot = db_session.query(Honeypot).filter(Drone.id == drone_id).one()
-    #if honeypot.discriminator != 'honeypot' or honeypot is None:
-    #    abort(404, 'Drone with id {0} not found or invalid.'.format(drone_id))
     config_dict = send_database_request('{0} {1}'.format(Messages.DRONE_CONFIG.value, drone_id))
     config_obj = DictWrapper(config_dict)
     form = HoneypotConfigurationForm(obj=config_obj)
