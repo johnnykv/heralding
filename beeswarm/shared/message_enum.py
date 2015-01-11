@@ -70,3 +70,5 @@ class Messages(Enum):
     GET_SESSION_TRANSCRIPT = 'GET_SESSION_TRANSCRIPT'
     # Param: session id
     GET_SESSION_CREDENTIALS = 'GET_SESSION_CREDENTIALS'
+    # Param: clientId config
+    CONFIG_DRONE = 'CONFIG_DRONE'

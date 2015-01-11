@@ -18,15 +18,7 @@
                 });
             }
             else if ($('#clientCheck').prop('checked') == true) {
-                $.ajax({
-                    url: '/ws/drone/client/' + '{{ drone_id }}',
-                    type: 'GET',
-                    contentType: 'application/json; charset=utf-8',
-                    async: false,
-                    success: function (msg) {
-                        window.location.href = '/ws/drone/client/configure/' + '{{ drone_id }}';
-                    }
-                });
+                window.location.href = '/ws/drone/client/configure/' + '{{ drone_id }}';
             }
         }));
     });

@@ -170,6 +170,9 @@ class DatabaseActor(gevent.Greenlet):
                 elif cmd == Messages.GET_BAIT_USERS.value:
                     result = self._handle_command_get_bait_users()
                     self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, json.dumps(result)))
+                elif cmd == Messages.CONFIG_DRONE.value:
+                    result = self._handle_command_config_drone(data)
+                    self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, json.dumps(result)))
                 else:
                     logger.error('Unknown message received: {0}'.format(data))
                     assert False
@@ -687,6 +690,42 @@ class DatabaseActor(gevent.Greenlet):
                    'data': transcript.data}
             return_rows.append(row)
         return return_rows
+
+    def _handle_command_config_drone(self, data):
+        drone_id, config = data.split(' ', 1)
+        config = json.loads(config)
+        if 'capabilities' in config:
+            # it is a honeypot
+            self._config_honeypot(drone_id, config)
+        # todo: better detection!
+        elif 'ssh' in config:
+            # it is a client
+            self._config_client(drone_id, config)
+        else:
+            # omg, what are you?
+            logger.error('Could not figure out mode for drone config, drone id: {0}'.format(drone_id))
+
+    def _config_honeypot(self, drone_id, config):
+        # TODO!
+        assert False
+
+    def _config_client(self, drone_id, config):
+        db_session = database_setup.get_session()
+        drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
+        if drone is None or drone.discriminator != 'client':
+            # meh, better way do do this?
+            # TODO: this cascade delete sessions, find a way to maintain sessions for deleted drones.
+            db_session.delete(drone)
+            db_session.commit()
+            drone = Client(id=drone_id)
+            drone.ip_address = drone.ip_address
+            db_session.add(drone)
+            db_session.commit()
+        drone.bait_timings = json.dumps(config)
+        db_session.add(drone)
+        db_session.commit()
+        self._handle_command_drone_config_changed(drone_id)
+
 
     def _db_maintenance(self):
         logger.debug('Doing database maintenance')

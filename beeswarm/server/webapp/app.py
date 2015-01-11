@@ -159,24 +159,6 @@ def set_honeypot_mode(drone_id):
         return ''
 
 
-@app.route('/ws/drone/client/<drone_id>')
-@login_required
-def set_client_mode(drone_id):
-    db_session = database_setup.get_session()
-    drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
-    if drone is None or drone.discriminator != 'client':
-        # meh, better way do do this?
-        db_session.delete(drone)
-        db_session.commit()
-        client = Client(id=drone_id)
-        client.ip_address = drone.ip_address
-        db_session.add(client)
-        db_session.commit()
-        return ''
-    else:
-        return ''
-
-
 class DictWrapper():
     def __init__(self, data):
         self.data = data
@@ -273,14 +255,10 @@ def configure_honeypot(id):
         return render_template('finish-config-honeypot.html', drone_id=honeypot.id, user=current_user)
 
 
-@app.route('/ws/drone/client/configure/<id>', methods=['GET', 'POST'])
+@app.route('/ws/drone/client/configure/<drone_id>', methods=['GET', 'POST'])
 @login_required
-def configure_client(id):
-    db_session = database_setup.get_session()
-    drone = db_session.query(Drone).filter(Drone.id == id).one()
-    if drone.discriminator != 'client' or drone is None:
-        abort(404, 'Drone with id {0} not found or invalid.'.format(id))
-    config_dict = send_database_request('{0} {1}'.format(Messages.DRONE_CONFIG.value, id))
+def configure_client(drone_id):
+    config_dict = send_database_request('{0} {1}'.format(Messages.DRONE_CONFIG.value, drone_id))
     config_obj = DictWrapper(config_dict)
     form = ClientConfigurationForm(obj=config_obj)
     if not form.validate_on_submit():
@@ -334,12 +312,12 @@ def configure_client(id):
             }
         }
 
-        drone.bait_timings = json.dumps(bait_timing_config)
-        db_session.add(drone)
-        db_session.commit()
-
-        send_database_request('{0} {1}'.format(Messages.DRONE_CONFIG_CHANGED.value, drone.id))
-        return render_template('finish-config-client.html', drone_id=drone.id, user=current_user)
+        send_database_request('{0} {1} {2}'.format(Messages.CONFIG_DRONE.value, drone_id,
+                                                   json.dumps(bait_timing_config)))
+        # TODO: Use message fail to communicate error back
+        # ... error below should come from the db actor
+        # abort(404, 'Drone with id {0} not found or invalid.'.format(id))
+        return render_template('finish-config-client.html', drone_id=drone_id, user=current_user)
 
 
 
