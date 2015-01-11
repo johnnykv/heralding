@@ -171,7 +171,11 @@ class DatabaseActor(gevent.Greenlet):
                     result = self._handle_command_get_bait_users()
                     self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, json.dumps(result)))
                 elif cmd == Messages.CONFIG_DRONE.value:
-                    result = self._handle_command_config_drone(data)
+                    self._handle_command_config_drone(data)
+                    self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, {}))
+                elif cmd == Messages.GET_DRONE_LIST.value:
+                    result = self._handle_command_get_drone_list(data)
+                    print result
                     self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, json.dumps(result)))
                 else:
                     logger.error('Unknown message received: {0}'.format(data))
@@ -539,7 +543,8 @@ class DatabaseActor(gevent.Greenlet):
         if not drone:
             drone = db_session.query(Drone).filter(Drone.id == drone_id).first()
         if not drone:
-            self.databaseRequests.send(Messages.FAIL.value)
+            # drone not found
+            return {}
 
         host = self.send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM.value, 'network,server_host'))
         zmq_port = self.send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM.value, 'network,zmq_port'))
@@ -690,6 +695,20 @@ class DatabaseActor(gevent.Greenlet):
                    'data': transcript.data}
             return_rows.append(row)
         return return_rows
+
+    def _handle_command_get_drone_list(self, drone_type):
+        db_session = database_setup.get_session()
+        if drone_type == 'all':
+            drones = db_session.query(Drone).all()
+        elif drone_type == 'unassigned':
+            drones = db_session.query(Drone).filter(Drone.discriminator == None)
+        else:
+            drones = db_session.query(Drone).filter(Drone.discriminator == drone_type)
+
+        drone_list = []
+        for drone in drones:
+            drone_list.append(drone.to_dict())
+        return drone_list
 
     def _handle_command_config_drone(self, data):
         drone_id, config = data.split(' ', 1)

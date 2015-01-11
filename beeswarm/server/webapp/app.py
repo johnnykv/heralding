@@ -31,7 +31,7 @@ from flask import request
 from beeswarm.server.webapp.auth import Authenticator
 from forms import HoneypotConfigurationForm, ClientConfigurationForm, LoginForm, SettingsForm
 from beeswarm.server.db import database_setup
-from beeswarm.server.db.entities import Client, Honeypot, User, Drone
+from beeswarm.server.db.entities import User
 from beeswarm.shared.helpers import send_zmq_request_socket
 from beeswarm.shared.message_enum import Messages
 from beeswarm.shared.socket_enum import SocketNames
@@ -164,6 +164,9 @@ class DictWrapper():
 @login_required
 def configure_honeypot(drone_id):
     config_dict = send_database_request('{0} {1}'.format(Messages.DRONE_CONFIG.value, drone_id))
+    if not config_dict:
+        abort(404, 'Drone with id {0} could not be found.'.format(drone_id))
+
     config_obj = DictWrapper(config_dict)
     form = HoneypotConfigurationForm(obj=config_obj)
     if not form.validate_on_submit():
@@ -320,15 +323,10 @@ def configure_client(drone_id):
         return render_template('finish-config-client.html', drone_id=drone_id, user=current_user)
 
 
-@app.route('/ws/drone/configure/<id>', methods=['GET', 'POST'])
+@app.route('/ws/drone/configure/<drone_id>', methods=['GET', 'POST'])
 @login_required
-def configure_drone(id):
-    db_session = database_setup.get_session()
-    drone = db_session.query(Drone).filter(Drone.id == id).one()
-    if drone is None:
-        abort(404, 'Drone with id {0} could not be found.'.format(id))
-    else:
-        return render_template('drone_mode.html', drone_id=drone.id, user=current_user)
+def configure_drone(drone_id):
+        return render_template('drone_mode.html', drone_id=drone_id, user=current_user)
 
 
 def reset_drone_key(key):
@@ -442,30 +440,20 @@ def data_session_transcript(_id):
     return rsp
 
 
-@app.route('/data/drones', defaults={'dronetype': None}, methods=['GET'])
-@app.route('/data/drones/<dronetype>', methods=['GET'])
+@app.route('/data/drones', defaults={'drone_type': None}, methods=['GET'])
+@app.route('/data/drones/<drone_type>', methods=['GET'])
 @login_required
-def data_drones(dronetype):
-    db_session = database_setup.get_session()
-    if dronetype is None:
-        drones = db_session.query(Drone).all()
-    elif dronetype == 'unassigned':
-        drones = db_session.query(Drone).filter(Drone.discriminator == None)
-    else:
-        drones = db_session.query(Drone).filter(Drone.discriminator == dronetype)
-
-    rows = []
-    for drone in drones:
-        rows.append(drone.to_dict())
-    rsp = Response(response=json.dumps(rows, indent=4), status=200, mimetype='application/json')
+def data_drones(drone_type):
+    drone_list = send_database_request('{0} {1}'.format(Messages.GET_DRONE_LIST.value, drone_type))
+    rsp = Response(response=drone_list, status=200, mimetype='application/json')
     return rsp
 
 
-@app.route('/ws/drones', defaults={'dronetype': None})
-@app.route('/ws/drones/<dronetype>')
+@app.route('/ws/drones', defaults={'drone_type': 'all'})
+@app.route('/ws/drones/<drone_type>')
 @login_required
-def drones(dronetype):
-    return render_template('drones.html', user=current_user, dronetype=dronetype)
+def drones(drone_type):
+    return render_template('drones.html', user=current_user, dronetype=drone_type)
 
 
 @app.route('/login', methods=['GET', 'POST'])
