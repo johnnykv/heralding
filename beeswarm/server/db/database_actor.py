@@ -503,9 +503,9 @@ class DatabaseActor(gevent.Greenlet):
             db_session.commit()
             drone_edge = db_session.query(DroneEdge).filter(DroneEdge.username == bait_user.username,
                                                             DroneEdge.password == bait_user.password).first()
-        # A drone is using the bait users, reconfigure all
-        # TODO: This is lazy, we should only reconfigure the drone(s) who are actually
-        # using the credentials
+            # A drone is using the bait users, reconfigure all
+            # TODO: This is lazy, we should only reconfigure the drone(s) who are actually
+            # using the credentials
             if drone_edge:
                 self._reconfigure_all_clients()
         else:
@@ -706,13 +706,54 @@ class DatabaseActor(gevent.Greenlet):
             logger.error('Could not figure out mode for drone config, drone id: {0}'.format(drone_id))
 
     def _config_honeypot(self, drone_id, config):
-        # TODO!
-        assert False
+        db_session = database_setup.get_session()
+        honeypot = db_session.query(Drone).filter(Drone.id == drone_id).one()
+        if not honeypot:
+            # TODO: Communicate attempt to configure non-exiting drone
+            assert False
+        elif honeypot.discriminator != 'honeypot':
+            # meh, better way do do this?
+            ip_address = honeypot.ip_address
+            db_session.delete(honeypot)
+            db_session.commit()
+            honeypot = Honeypot(id=drone_id)
+            honeypot.ip_address = ip_address
+            db_session.add(honeypot)
+            db_session.commit()
+
+        # common properties
+        honeypot.name = config['name']
+
+        # certificate information
+        honeypot.cert_common_name = config['certificate']['common_name']
+        honeypot.cert_country = config['certificate']['country']
+        honeypot.cert_state = config['certificate']['state']
+        honeypot.cert_locality = config['certificate']['locality']
+        honeypot.cert_organization = config['certificate']['organization']
+        honeypot.cert_organization_unit = config['certificate']['organization_unit']
+
+        # add capabilities
+        honeypot.capabilities = []
+        for protocol_name, protocol_config in config['capabilities'].items():
+            print protocol_name
+            print protocol_config
+            if 'protocol_specific_data' in protocol_config:
+                protocol_specific_data = protocol_config['protocol_specific_data']
+            else:
+                protocol_specific_data = {}
+            honeypot.add_capability(protocol_name, protocol_config['port'], protocol_specific_data)
+
+        db_session.add(honeypot)
+        db_session.commit()
+        self._handle_command_drone_config_changed(drone_id)
 
     def _config_client(self, drone_id, config):
         db_session = database_setup.get_session()
         drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
-        if drone is None or drone.discriminator != 'client':
+        if not drone:
+            # TODO: Communicate attempt to configure non-exiting drone
+            assert False
+        elif drone.discriminator != 'client':
             # meh, better way do do this?
             # TODO: this cascade delete sessions, find a way to maintain sessions for deleted drones.
             db_session.delete(drone)
@@ -725,7 +766,6 @@ class DatabaseActor(gevent.Greenlet):
         db_session.add(drone)
         db_session.commit()
         self._handle_command_drone_config_changed(drone_id)
-
 
     def _db_maintenance(self):
         logger.debug('Doing database maintenance')

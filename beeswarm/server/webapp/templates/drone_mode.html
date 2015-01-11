@@ -7,15 +7,7 @@
     $(document).ready(function () {
         $('#ContinueButton').on('click', (function () {
             if ($('#honeypotCheck').prop('checked') == true) {
-                $.ajax({
-                    url: '/ws/drone/honeypot/' + '{{ drone_id }}',
-                    type: 'GET',
-                    contentType: 'application/json; charset=utf-8',
-                    async: false,
-                    success: function (msg) {
-                        window.location.href = '/ws/drone/honeypot/configure/' + '{{ drone_id }}';
-                    }
-                });
+                window.location.href = '/ws/drone/honeypot/configure/' + '{{ drone_id }}';
             }
             else if ($('#clientCheck').prop('checked') == true) {
                 window.location.href = '/ws/drone/client/configure/' + '{{ drone_id }}';
