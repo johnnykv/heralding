@@ -106,8 +106,7 @@ class Server(object):
 
             self.app = app.app
             self.app.config['CERT_PATH'] = self.config['ssl']['certpath']
-            self.authenticator = Authenticator()
-            self.authenticator.ensure_default_user(reset_password)
+            app.ensure_admin_password(reset_password)
         else:
             self.app = None
 

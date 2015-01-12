@@ -20,18 +20,16 @@ import string
 import ast
 import gevent
 import gevent.lock
+import os
 import zmq.green as zmq
 from flask import Flask, render_template, redirect, flash, Response, abort
-from flask.ext.login import LoginManager, login_user, current_user, login_required, logout_user
-from sqlalchemy.orm.exc import NoResultFound
+from flask.ext.login import LoginManager, login_user, current_user, login_required, logout_user, UserMixin
 from werkzeug.security import check_password_hash
+from werkzeug.security import generate_password_hash
 from wtforms import HiddenField
 from flask import request
 
-from beeswarm.server.webapp.auth import Authenticator
 from forms import HoneypotConfigurationForm, ClientConfigurationForm, LoginForm, SettingsForm
-from beeswarm.server.db import database_setup
-from beeswarm.server.db.entities import User
 from beeswarm.shared.helpers import send_zmq_request_socket
 from beeswarm.shared.message_enum import Messages
 from beeswarm.shared.socket_enum import SocketNames
@@ -54,7 +52,6 @@ login_manager.login_view = 'login'
 
 logger = logging.getLogger(__name__)
 
-authenticator = Authenticator()
 first_cfg_received = gevent.event.Event()
 
 # keys used for adding new drones to the system
@@ -64,6 +61,7 @@ config_actor_socket = None
 database_actor_socket = None
 config_request_lock = gevent.lock.RLock()
 database_request_lock = gevent.lock.RLock()
+admin_passwd_file = 'admin_passwd_hash'
 
 
 def connect_sockets():
@@ -100,17 +98,55 @@ def send_config_request(config_request):
         config_request_lock.release()
 
 
+def ensure_admin_password(reset_password, password=None):
+    global admin_passwd_hash
+    if not os.path.isfile(admin_passwd_file) or reset_password:
+        if not password:
+            password = ''.join([random.choice(string.letters[:26]) for i in xrange(14)])
+        password_hash = generate_password_hash(password)
+        with os.fdopen(os.open(admin_passwd_file, os.O_WRONLY | os.O_CREAT, 0600), 'w') as _file:
+            _file.truncate()
+            _file.write(password_hash)
+
+        logger.info('Created default admin account for the beeswarm server, password has been '
+                    'printed to the console.')
+        print '****************************************************************************'
+        print 'Password for the admin account is: {0}'.format(password)
+        print '****************************************************************************'
+
+
+class User(UserMixin):
+    def __init__(self, user_name):
+        self.id = user_name
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        user_name = 'admin'
+        with open(admin_passwd_file, 'r') as _file:
+            password_hash = _file.read()
+        if check_password_hash(password_hash, form.password.data):
+            user = User(user_name)
+            login_user(user)
+            logger.info('User {0} logged in.'.format(user_name))
+            flash('Logged in successfully')
+            return redirect(request.args.get("next") or '/')
+    return render_template('login.html', form=form)
+
+
+@app.route('/logout', methods=['GET'])
+@login_required
+def logout():
+    logout_user()
+    flash('Logged out succesfully')
+    return redirect('/login')
+
+
 @login_manager.user_loader
-def user_loader(user_id):
-    user_id = user_id.encode('utf-8')
-    # TODO: No need for this to be stored in session database, could just be a file...
-    db_session = database_setup.get_session()
-    user = None
-    try:
-        user = db_session.query(User).filter(User.id == user_id).one()
-    except NoResultFound:
-        logger.info('Attempt to load non-existent user: {0}'.format(user_id))
-    return user
+def load_user(userid):
+    return User('admin')
 
 
 @app.route('/')
@@ -258,6 +294,7 @@ def configure_honeypot(drone_id):
         # abort(404, 'Drone with id {0} not found or invalid.'.format(id))
         return render_template('finish-config-honeypot.html', drone_id=drone_id, user=current_user)
 
+
 @app.route('/ws/drone/client/configure/<drone_id>', methods=['GET', 'POST'])
 @login_required
 def configure_client(drone_id):
@@ -326,7 +363,7 @@ def configure_client(drone_id):
 @app.route('/ws/drone/configure/<drone_id>', methods=['GET', 'POST'])
 @login_required
 def configure_drone(drone_id):
-        return render_template('drone_mode.html', drone_id=drone_id, user=current_user)
+    return render_template('drone_mode.html', drone_id=drone_id, user=current_user)
 
 
 def reset_drone_key(key):
@@ -454,32 +491,6 @@ def data_drones(drone_type):
 @login_required
 def drones(drone_type):
     return render_template('drones.html', user=current_user, dronetype=drone_type)
-
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        db_session = database_setup.get_session()
-        user = None
-        try:
-            user = db_session.query(User).filter(User.id == form.username.data).one()
-        except NoResultFound:
-            logger.info('Attempt to log in as non-existant user: {0}'.format(form.username.data))
-        if user and check_password_hash(user.password, form.password.data):
-            login_user(user)
-            logger.info('User {0} logged in.'.format(user.id))
-            flash('Logged in successfully')
-            return redirect(request.args.get("next") or '/')
-    return render_template('login.html', form=form)
-
-
-@app.route('/logout', methods=['GET'])
-@login_required
-def logout():
-    logout_user()
-    flash('Logged out succesfully')
-    return redirect('/login')
 
 
 @app.route('/settings', methods=['GET', 'POST'])

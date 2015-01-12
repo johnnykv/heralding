@@ -212,34 +212,6 @@ class Honeypot(Drone):
         self.capabilities.append(capability)
 
 
-class User(Base):
-    __tablename__ = 'user'
-
-    id = Column(String(32), primary_key=True)
-    nickname = Column(String(64))
-    password = Column(String(256))
-
-    # User type will be:
-    # Admin  == 0
-
-    utype = Column(Integer, default=0)
-
-    def is_authenticated(self):
-        return True
-
-    def is_active(self):
-        return True
-
-    def is_anonymous(self):
-        return False
-
-    def get_id(self):
-        return unicode(self.id)
-
-    def __repr__(self):
-        return '<User %r>' % self.nickname
-
-
 class BaitUser(Base):
     __tablename__ = 'baituser'
 

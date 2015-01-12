@@ -8,7 +8,6 @@ from datetime import datetime
 
 import zmq.green as zmq
 import beeswarm
-from beeswarm.server.webapp.auth import Authenticator
 from beeswarm.server.misc.config_actor import ConfigActor
 import beeswarm.server.db.database_setup as database
 from beeswarm.server.db.entities import Client, Honeypot, Session, BaitSession, Authentication, Transcript, BaitUser
@@ -18,6 +17,8 @@ from beeswarm.server.db.database_actor import DatabaseActor
 
 class WebAppTests(unittest.TestCase):
     def setUp(self):
+        self.password = 'testpassword'
+        app.ensure_admin_password(True, password=self.password)
         app.app.config['WTF_CSRF_ENABLED'] = False
         self.work_dir = tempfile.mkdtemp()
         beeswarm.shared.zmq_context = zmq.Context()
@@ -27,8 +28,6 @@ class WebAppTests(unittest.TestCase):
         database.setup_db(connection_string)
         self.config_actor = ConfigActor(os.path.join(os.path.dirname(__file__), 'beeswarmcfg.json.test'), self.work_dir)
         self.config_actor.start()
-        self.authenticator = Authenticator()
-        self.authenticator.add_user('test', 'test', 0)
 
         # seed database with test data
         session = database.get_session()
@@ -312,7 +311,7 @@ class WebAppTests(unittest.TestCase):
     def test_data_sessions_all(self):
         """ Tests if all sessions are returned properly"""
 
-        self.login('test', 'test')
+        self.login('test', self.password)
         self.populate_sessions()
         resp = self.app.get('/data/sessions/all')
         table_data = json.loads(resp.data)
@@ -322,7 +321,7 @@ class WebAppTests(unittest.TestCase):
     def test_data_sessions_honeybees(self):
         """ Tests if bait_sessions are returned properly """
 
-        self.login('test', 'test')
+        self.login('test', self.password)
         self.populate_honeybees()
         resp = self.app.get('/data/sessions/bait_sessions')
         table_data = json.loads(resp.data)
@@ -332,7 +331,7 @@ class WebAppTests(unittest.TestCase):
     def test_data_sessions_attacks(self):
         """ Tests if attacks are returned properly """
 
-        self.login('test', 'test')
+        self.login('test', self.password)
         self.populate_sessions()
         resp = self.app.get('/data/sessions/attacks')
         table_data = json.loads(resp.data)
@@ -342,7 +341,7 @@ class WebAppTests(unittest.TestCase):
     def test_data_transcripts(self):
         """ Tests that if given a session ID we can extract the relevant transcripts"""
         db_session = database.get_session()
-        self.login('test', 'test')
+        self.login('test', self.password)
         session_id = str(uuid.uuid4())
 
         timestamp = datetime.utcnow()
@@ -360,12 +359,12 @@ class WebAppTests(unittest.TestCase):
     def test_login_logout(self):
         """ Tests basic login/logout """
 
-        self.login('test', 'test')
+        self.login('admin', self.password)
         self.logout()
 
     def test_get_baitusers(self):
         """ Tests GET on the '/ws/bait_users' route."""
-        self.login('test', 'test')
+        self.login('admin', self.password)
         self.populate_bait_users()
         resp = self.app.get('/ws/bait_users')
         table_data = json.loads(resp.data)
@@ -374,7 +373,7 @@ class WebAppTests(unittest.TestCase):
 
     def test_add_baituser(self):
         """ Tests POST on the '/ws/bait_users/add' route."""
-        self.login('test', 'test')
+        self.login('admin', self.password)
         data = [
             {'username': 'userA', 'password': 'passA'},
             {'username': 'userB', 'password': 'passB'},
