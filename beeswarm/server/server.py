@@ -125,7 +125,6 @@ class Server(object):
         auth.allow('127.0.0.1')
         auth.configure_curve(domain='*', location=public_keys_dir)
 
-
         # external interfaces for communicating with drones
         server_secret_file = os.path.join(secret_keys_dir, 'beeswarm_server.pri')
         server_public, server_secret = load_certificate(server_secret_file)
