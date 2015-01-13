@@ -25,7 +25,6 @@ from zmq.auth.ioloop import IOLoopAuthenticator
 from zmq.auth.certs import load_certificate
 
 import beeswarm
-from beeswarm.server.webapp.auth import Authenticator
 from beeswarm.shared.helpers import create_self_signed_cert, stop_if_not_write_workdir
 from beeswarm.shared.asciify import asciify
 from beeswarm.server.db.database_actor import DatabaseActor
