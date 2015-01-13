@@ -40,8 +40,6 @@ class Client(object):
         :param config_arg: Beeswarm configuration dictionary.
         """
         self.run_flag = True
-        # maps honeypot id to IP
-        self.honeypot_map = {}
         self.config = config
 
         # write ZMQ keys to files - as expected by pyzmq
