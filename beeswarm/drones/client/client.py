@@ -12,6 +12,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import logging
 import urllib2
 
@@ -26,7 +27,6 @@ from beeswarm.drones.client.models.session import BaitSession
 from beeswarm.drones.client.models.dispatcher import BaitDispatcher
 from beeswarm.shared.helpers import extract_keys, get_most_likely_ip
 
-# Do not remove this import, it is used to autodetect the capabilities.
 logger = logging.getLogger(__name__)
 
 
@@ -57,7 +57,7 @@ class Client(object):
 
     def start(self):
         """
-            Starts sending client bees to the configured Honeypot.
+            Starts sending client bait to the configured Honeypot.
         """
         logger.info('Starting client.')
 
