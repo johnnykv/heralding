@@ -94,39 +94,13 @@ class DatabaseActor(gevent.Greenlet):
         gevent.spawn(self._start_recurring_classify_set)
         gevent.spawn(self._start_recurring_maintenance_set)
         while self.enabled:
-            # .recv() gives no context switch - why not? using poller with timeout instead
             socks = dict(poller.poll(100))
-            gevent.sleep()
             if self.do_classify:
                 self._classify_malicious_sessions()
                 self.do_classify = False
             elif self.do_maintenance:
                 self._db_maintenance()
                 self.do_maintenance = False
-            elif self.drone_data_socket in socks and socks[self.drone_data_socket] == zmq.POLLIN:
-                split_data = self.drone_data_socket.recv().split(' ', 2)
-                if len(split_data) == 3:
-                    topic, drone_id, data = split_data
-                else:
-                    data = None
-                    topic, drone_id, = split_data
-                self._update_drone_last_activity(drone_id)
-                if topic == Messages.SESSION_HONEYPOT.value or topic == Messages.SESSION_CLIENT.value:
-                    self.persist_session(topic, data)
-                elif topic == Messages.CERT.value:
-                    self._handle_cert_message(topic, drone_id, data)
-                elif topic == Messages.KEY.value:
-                    pass
-                elif topic == Messages.IP.value:
-                    self._handle_message_ip(topic, drone_id, data)
-                elif topic == Messages.DRONE_WANT_CONFIG.value:
-                    config_dict = self._handle_command_get_droneconfig(drone_id)
-                    self.drone_command_receiver.send('{0} {1} {2}'.format(drone_id, Messages.CONFIG.value,
-                                                                          json.dumps(config_dict)))
-                elif topic == Messages.PING.value:
-                    logger.debug('Received ping from {0}'.format(drone_id))
-                else:
-                    logger.debug('This actor cannot process this message: {0}'.format(topic))
             elif self.databaseRequests in socks and socks[self.databaseRequests] == zmq.POLLIN:
                 data = self.databaseRequests.recv()
                 if ' ' in data:
@@ -179,6 +153,30 @@ class DatabaseActor(gevent.Greenlet):
                 else:
                     logger.error('Unknown message received: {0}'.format(data))
                     assert False
+            elif self.drone_data_socket in socks and socks[self.drone_data_socket] == zmq.POLLIN:
+                split_data = self.drone_data_socket.recv().split(' ', 2)
+                if len(split_data) == 3:
+                    topic, drone_id, data = split_data
+                else:
+                    data = None
+                    topic, drone_id, = split_data
+                self._update_drone_last_activity(drone_id)
+                if topic == Messages.SESSION_HONEYPOT.value or topic == Messages.SESSION_CLIENT.value:
+                    self.persist_session(topic, data)
+                elif topic == Messages.CERT.value:
+                    self._handle_cert_message(topic, drone_id, data)
+                elif topic == Messages.KEY.value:
+                    pass
+                elif topic == Messages.IP.value:
+                    self._handle_message_ip(topic, drone_id, data)
+                elif topic == Messages.DRONE_WANT_CONFIG.value:
+                    config_dict = self._handle_command_get_droneconfig(drone_id)
+                    self.drone_command_receiver.send('{0} {1} {2}'.format(drone_id, Messages.CONFIG.value,
+                                                                          json.dumps(config_dict)))
+                elif topic == Messages.PING.value:
+                    logger.debug('Received ping from {0}'.format(drone_id))
+                else:
+                    logger.debug('This actor cannot process this message: {0}'.format(topic))
 
     def stop(self):
         self.enabled = False
