@@ -235,9 +235,7 @@ def configure_honeypot(drone_id):
             honeypot_config['capabilities']['telnet'] = {
                 'port': form.capabilities__telnet__port.data,
                 'protocol_specific_data': {
-                    'max_attempts': form.capabilities__ftp__protocol_specific_data__max_attempts.data,
-                    'banner': form.capabilities__ftp__protocol_specific_data__banner.data,
-                    'syst_type': form.capabilities__ftp__protocol_specific_data__syst_type.data
+                    'max_attempts': form.capabilities__telnet__protocol_specific_data__max_attempts.data,
                 }}
 
         if form.capabilities__pop3__enabled.data:
