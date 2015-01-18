@@ -175,7 +175,6 @@ class DatabaseActor(gevent.Greenlet):
                     self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, {}))
                 elif cmd == Messages.GET_DRONE_LIST.value:
                     result = self._handle_command_get_drone_list(data)
-                    print result
                     self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, json.dumps(result)))
                 else:
                     logger.error('Unknown message received: {0}'.format(data))

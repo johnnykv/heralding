@@ -110,12 +110,7 @@ class Session(Base):
     classification = relationship('Classification')
 
     # for display purposes
-    def to_dict(self, include_transcript=False):
-        transcript = []
-        if include_transcript:
-            for _transcript in self.transcript:
-                row = _transcript.to_dict()
-                transcript.append(row)
+    def to_dict(self):
 
         auth_attempts = []
         for attempt in self.authentication:
@@ -125,9 +120,7 @@ class Session(Base):
                   'protocol': self.protocol,
                   'ip_address': self.source_ip,
                   'classification': classification,
-                  'id': self.id,
-                  'auth_attempts': auth_attempts,
-                  'transcript': transcript}
+                  'id': self.id}
 
         return result
 
@@ -199,7 +192,7 @@ class Honeypot(Drone):
 
     # The following certificate attribute are temporarily
     # generation of certificate should be done on the server, hence no need for
-    # this informaiton here
+    # this information here
     cert_common_name = Column(String)
     cert_country = Column(String)
     cert_state = Column(String)
