@@ -166,7 +166,7 @@ def send_zmq_request_socket(socket, request):
                                                                                                              request))
         assert False
     else:
-        if data.startswith('{'):
+        if data.startswith('{') or data.startswith('['):
             return json.loads(result.split(' ', 1)[1])
         else:
             return data

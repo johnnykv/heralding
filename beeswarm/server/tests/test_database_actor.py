@@ -33,6 +33,8 @@ from beeswarm.shared.message_enum import Messages
 from beeswarm.server.db.database_actor import DatabaseActor
 from beeswarm.drones.client.models.session import BaitSession
 from beeswarm.server.misc.config_actor import ConfigActor
+from beeswarm.shared.helpers import send_zmq_request_socket
+
 
 
 class ClassifierTests(unittest.TestCase):
@@ -76,14 +78,14 @@ class ClassifierTests(unittest.TestCase):
             drone_data_socket.send('{0} {1} {2}'.format(Messages.SESSION_HONEYPOT.value, honeypot_id,
                                                             json.dumps(honeypot_session.to_dict(), default=json_default,
                                                             ensure_ascii=False)))
-        # TODO: figure out other way, we do not want slow tests
-        gevent.sleep(10)
 
-        sessions = db_session.query(Session).all()
-        database_actor.stop()
+        gevent.sleep(1)
+        database_actor_request_socket = beeswarm.shared.zmq_context.socket(zmq.REQ)
+        database_actor_request_socket.connect(SocketNames.DATABASE_REQUESTS.value)
+        sessions = send_zmq_request_socket(database_actor_request_socket, '{0}'.format(Messages.GET_SESSIONS_ALL.value))
 
         for session in sessions:
-            self.assertEqual(session.classification_id, 'bruteforce')
+            self.assertEqual(session['classification'], 'Bruteforce')
 
         self.assertEqual(len(sessions), 100)
 
@@ -94,6 +96,7 @@ class ClassifierTests(unittest.TestCase):
         """
 
         self.populate_bait(True)
+        # TODO: Use message request - not orm access!
         db_session = database_setup.get_session()
         sessions = db_session.query(Session).all()
         for session in sessions:
@@ -108,6 +111,7 @@ class ClassifierTests(unittest.TestCase):
         """
 
         self.populate_bait(False)
+        # TODO: Use message request - not orm access!
         db_session = database_setup.get_session()
         sessions = db_session.query(Session).all()
         for session in sessions:
