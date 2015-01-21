@@ -415,7 +415,7 @@ def delete_drones():
 def get_bait_users():
     if request.method == 'GET':
         bait_users = send_database_request('{0}'.format(Messages.GET_BAIT_USERS.value))
-        rsp = Response(response=bait_users, status=200, mimetype='application/json')
+        rsp = Response(response=json.dumps(bait_users), status=200, mimetype='application/json')
         return rsp
     return ''
 
@@ -455,7 +455,7 @@ def data_sessions_attacks(_type):
         sessions = send_database_request('{0}'.format(Messages.GET_SESSIONS_BAIT.value))
     elif _type == 'attacks':
         sessions = send_database_request('{0}'.format(Messages.GET_SESSIONS_ATTACKS.value))
-    rsp = Response(response=sessions, status=200, mimetype='application/json')
+    rsp = Response(response=json.dumps(sessions), status=200, mimetype='application/json')
     return rsp
 
 
@@ -463,7 +463,7 @@ def data_sessions_attacks(_type):
 @login_required
 def data_session_credentials(_id):
     credentials = send_database_request('{0} {1}'.format(Messages.GET_SESSION_CREDENTIALS.value, _id))
-    rsp = Response(response=credentials, status=200, mimetype='application/json')
+    rsp = Response(response=json.dumps(credentials), status=200, mimetype='application/json')
     return rsp
 
 
@@ -471,7 +471,7 @@ def data_session_credentials(_id):
 @login_required
 def data_session_transcript(_id):
     transcript = send_database_request('{0} {1}'.format(Messages.GET_SESSION_TRANSCRIPT.value, _id))
-    rsp = Response(response=transcript, status=200, mimetype='application/json')
+    rsp = Response(response=json.dumps(transcript), status=200, mimetype='application/json')
     return rsp
 
 
@@ -480,7 +480,7 @@ def data_session_transcript(_id):
 @login_required
 def data_drones(drone_type):
     drone_list = send_database_request('{0} {1}'.format(Messages.GET_DRONE_LIST.value, drone_type))
-    rsp = Response(response=drone_list, status=200, mimetype='application/json')
+    rsp = Response(response=json.dumps(drone_list), status=200, mimetype='application/json')
     return rsp
 
 
