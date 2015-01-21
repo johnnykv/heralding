@@ -158,7 +158,7 @@ def home():
 
 @app.route('/bait_users')
 @login_required
-def bait_users():
+def bait_users_route():
     return render_template('bait_users.html', user=current_user)
 
 
@@ -440,8 +440,8 @@ def add_bait_users():
 def delete_bait_user():
     # list of bait user id's
     bait_users = json.loads(request.data)
-    for id in bait_users:
-        send_database_request('{0} {1}'.format(Messages.BAIT_USER_DELETE.value, id))
+    for _id in bait_users:
+        send_database_request('{0} {1}'.format(Messages.BAIT_USER_DELETE.value, _id))
     return ''
 
 
