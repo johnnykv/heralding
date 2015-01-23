@@ -774,10 +774,11 @@ class DatabaseActor(gevent.Greenlet):
         elif drone.discriminator != 'client':
             # meh, better way do do this?
             # TODO: this cascade delete sessions, find a way to maintain sessions for deleted drones.
+            ip_address = drone.ip_address
             db_session.delete(drone)
             db_session.commit()
             drone = Client(id=drone_id)
-            drone.ip_address = drone.ip_address
+            drone.ip_address = ip_address
             db_session.add(drone)
             db_session.commit()
         drone.bait_timings = json.dumps(config)
