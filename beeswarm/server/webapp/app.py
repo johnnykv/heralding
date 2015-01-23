@@ -21,6 +21,7 @@ import ast
 import gevent
 import gevent.lock
 import os
+import uuid
 import zmq.green as zmq
 from flask import Flask, render_template, redirect, flash, Response, abort
 from flask.ext.login import LoginManager, login_user, current_user, login_required, logout_user, UserMixin
@@ -394,8 +395,9 @@ def reset_drone_key(key):
 @login_required
 def add_drone():
     global drone_keys
-    drone_key = ''.join(random.SystemRandom().choice('0123456789abcdef') for i in range(6))
+    drone_key = str(uuid.uuid4())
     drone_keys.append(drone_key)
+    # remove drone key after 120 seconds
     gevent.spawn_later(120, reset_drone_key, drone_key)
 
     server_host = send_config_request('{0} {1}'.format(Messages.GET_CONFIG_ITEM.value, 'network,server_host'))
