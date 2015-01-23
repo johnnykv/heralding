@@ -111,11 +111,6 @@ class DatabaseActor(gevent.Greenlet):
                 if cmd == Messages.DRONE_CONFIG.value:
                     result = self._handle_command_get_droneconfig(data)
                     self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, json.dumps(result)))
-                elif cmd == Messages.DRONE_CONFIG_CHANGED.value:
-                    # TODO: this should be removed when all db activity are contained within this actor
-                    # send OK straight away - we don't want the sender to wait
-                    self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, '{}'))
-                    self._handle_command_drone_config_changed(data)
                 elif cmd == Messages.BAIT_USER_ADD.value:
                     self._handle_command_bait_user_add(data)
                     self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, '{}'))
