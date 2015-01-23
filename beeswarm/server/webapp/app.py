@@ -30,7 +30,6 @@ from wtforms import HiddenField
 from flask import request
 
 from forms import HoneypotConfigurationForm, ClientConfigurationForm, LoginForm, SettingsForm
-from beeswarm.shared.helpers import send_zmq_request_socket
 from beeswarm.shared.message_enum import Messages
 from beeswarm.shared.socket_enum import SocketNames
 import beeswarm
@@ -80,6 +79,24 @@ def connect_sockets():
 
 
 connect_sockets()
+
+
+def send_zmq_request_socket(socket, _request):
+    socket.send(_request)
+    result = socket.recv()
+    status, data = result.split(' ', 1)
+    if status != Messages.OK.value:
+        logger.error('Receiving actor on socket {0} failed to respond properly. The request was: {1}'.format(socket,
+                                                                                                             _request))
+        if data:
+            abort(500, data)
+        else:
+            abort(500)
+    else:
+        if data.startswith('{') or data.startswith('['):
+            return json.loads(result.split(' ', 1)[1])
+        else:
+            return data
 
 
 def send_database_request(database_request):
