@@ -184,9 +184,12 @@ class DatabaseActor(gevent.Greenlet):
     def _update_drone_last_activity(self, drone_id):
         db_session = database_setup.get_session()
         drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
-        drone.last_activity = datetime.now()
-        db_session.add(drone)
-        db_session.commit()
+        if drone:
+            drone.last_activity = datetime.now()
+            db_session.add(drone)
+            db_session.commit()
+        else:
+            logger.warning('Trying to update last activity non-exting drone with id {0}'.format(drone_id))
 
     def _start_recurring_maintenance_set(self):
         while self.enabled:
@@ -205,10 +208,14 @@ class DatabaseActor(gevent.Greenlet):
         logging.debug('Drone {0} reported ip: {1}'.format(drone_id, ip_address))
         db_session = database_setup.get_session()
         drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
-        if drone.ip_address != ip_address:
-            drone.ip_address = ip_address
-            db_session.add(drone)
-            db_session.commit()
+        if drone:
+            if drone.ip_address != ip_address:
+                drone.ip_address = ip_address
+                db_session.add(drone)
+                db_session.commit()
+        else:
+            logger.warning('Trying to update IP on non-exting drone with id {0}'.format(drone_id))
+
 
     def _handle_cert_message(self, topic, drone_id, data):
         # for now we just store the fingerprint
@@ -219,9 +226,12 @@ class DatabaseActor(gevent.Greenlet):
         logging.debug('Storing public key digest: {0} for drone {1}.'.format(digest, drone_id))
         db_session = database_setup.get_session()
         drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
-        drone.cert_digest = digest
-        db_session.add(drone)
-        db_session.commit()
+        if drone:
+            drone.cert_digest = digest
+            db_session.add(drone)
+            db_session.commit()
+        else:
+            logger.warning('Trying to update cert on non-exting drone with id {0}'.format(drone_id))
 
     def persist_session(self, session_type, session_json):
         db_session = database_setup.get_session()
@@ -483,8 +493,6 @@ class DatabaseActor(gevent.Greenlet):
     def send_config_request(self, request):
         return send_zmq_request_socket(self.config_actor_socket, request)
 
-    # TODO: This message needs to go, when db actor is done it will have full knowledge of drone changes
-    # no need for outside actors to communicate this.
     def _handle_command_drone_config_changed(self, drone_id):
         self._send_config_to_drone(drone_id)
         # TODO: Only Clients that communicate with this drone_id needs to get reconfigured.
@@ -657,7 +665,8 @@ class DatabaseActor(gevent.Greenlet):
         }
 
         if _type not in query_iterators:
-            return 'Not Found', 404
+            logger.warning('Query for sessions with unknown type: {0}'.format(_type))
+            return []
 
         # select which iterator to use
         entries = query_iterators[_type].order_by(desc(Session.timestamp))
@@ -746,8 +755,6 @@ class DatabaseActor(gevent.Greenlet):
         # add capabilities
         honeypot.capabilities = []
         for protocol_name, protocol_config in config['capabilities'].items():
-            print protocol_name
-            print protocol_config
             if 'protocol_specific_data' in protocol_config:
                 protocol_specific_data = protocol_config['protocol_specific_data']
             else:
