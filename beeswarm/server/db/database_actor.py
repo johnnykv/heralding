@@ -215,7 +215,6 @@ class DatabaseActor(gevent.Greenlet):
         else:
             logger.warning('Trying to update IP on non-exting drone with id {0}'.format(drone_id))
 
-
     def _handle_cert_message(self, topic, drone_id, data):
         # for now we just store the fingerprint
         # in the future it might be relevant to store the entire public key and private key
@@ -725,10 +724,12 @@ class DatabaseActor(gevent.Greenlet):
                                                                              'found'.format(drone_id)))
         elif 'capabilities' in config:
             # it is a honeypot
+            self._config_honeypot(drone, db_session, config)
             self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, {}))
         # TODO: better detection!
         elif 'ssh' in config:
             # it is a client
+            self._config_client(drone, db_session, config)
             self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, {}))
 
         else:
