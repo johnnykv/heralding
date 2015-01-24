@@ -722,12 +722,11 @@ class DatabaseActor(gevent.Greenlet):
         if not drone:
             self.databaseRequests.send('{0} {1}'.format(Messages.FAIL.value, 'Drone with id {0} could not '
                                                                              'found'.format(drone_id)))
-        elif 'capabilities' in config:
+        elif config['mode'] == 'honeypot':
             # it is a honeypot
             self._config_honeypot(drone, db_session, config)
             self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, {}))
-        # TODO: better detection!
-        elif 'ssh' in config:
+        elif config['mode'] == 'client':
             # it is a client
             self._config_client(drone, db_session, config)
             self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, {}))

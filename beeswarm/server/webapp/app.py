@@ -227,6 +227,7 @@ def configure_honeypot(drone_id):
         # TODO: We really need to user protobuf, thrift or something like that for stuff like this.
         honeypot_config = {
             'name': form.general__name.data,
+            'mode': 'honeypot',
             'certificate': {
                 'common_name': form.certificate_info__common_name.data,
                 'country': form.certificate_info__country.data,
@@ -316,6 +317,7 @@ def configure_client(drone_id):
         return render_template('configure-client.html', form=form, mode_name='Client', user=current_user)
     else:
         bait_timing_config = {
+                         'mode': 'client'}
             'http': {
                 'active_range': form.bait_timings__http__active_range.data,
                 'sleep_interval': form.bait_timings__http__sleep_interval.data,

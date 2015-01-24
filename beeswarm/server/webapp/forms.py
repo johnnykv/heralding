@@ -88,6 +88,7 @@ class ClientConfigurationForm(Form):
     probability_description = '<small><em>0.0 - 0.1.</br> The probability that a given bait session will be transmitted ' \
                               'after waking up.</br>Set to 1 to always transmit </em></small>'
 
+    general__name = StringField(default='', label='Name')
     sleep_interval_validators = [validators.NumberRange(min=0, max=43000, message='Must be between 0 and 43000.')]
     probability_validators = [validators.NumberRange(min=0, max=1, message='Must be between 0.0 and 1.')]
 
