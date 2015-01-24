@@ -218,8 +218,6 @@ class DictWrapper():
 @login_required
 def configure_honeypot(drone_id):
     config_dict = send_database_request('{0} {1}'.format(Messages.DRONE_CONFIG.value, drone_id))
-    if not config_dict:
-        abort(404, 'Drone with id {0} could not be found.'.format(drone_id))
 
     config_obj = DictWrapper(config_dict)
     form = HoneypotConfigurationForm(obj=config_obj)
@@ -305,9 +303,6 @@ def configure_honeypot(drone_id):
 
         send_database_request('{0} {1} {2}'.format(Messages.CONFIG_DRONE.value, drone_id,
                                                    json.dumps(honeypot_config)))
-        # TODO: Use message fail to communicate error back
-        # ... error below should come from the db actor
-        # abort(404, 'Drone with id {0} not found or invalid.'.format(id))
         return render_template('finish-config-honeypot.html', drone_id=drone_id, user=current_user)
 
 
@@ -370,9 +365,6 @@ def configure_client(drone_id):
 
         send_database_request('{0} {1} {2}'.format(Messages.CONFIG_DRONE.value, drone_id,
                                                    json.dumps(bait_timing_config)))
-        # TODO: Use message fail to communicate error back
-        # ... error below should come from the db actor
-        # abort(404, 'Drone with id {0} not found or invalid.'.format(id))
         return render_template('finish-config-client.html', drone_id=drone_id, user=current_user)
 
 

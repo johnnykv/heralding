@@ -109,8 +109,7 @@ class DatabaseActor(gevent.Greenlet):
                     cmd = data
 
                 if cmd == Messages.DRONE_CONFIG.value:
-                    result = self._handle_command_get_droneconfig(data)
-                    self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, json.dumps(result)))
+                    self._handle_command_get_droneconfig(data)
                 elif cmd == Messages.BAIT_USER_ADD.value:
                     self._handle_command_bait_user_add(data)
                     self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, '{}'))
@@ -140,8 +139,8 @@ class DatabaseActor(gevent.Greenlet):
                     result = self._handle_command_get_bait_users()
                     self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, json.dumps(result)))
                 elif cmd == Messages.CONFIG_DRONE.value:
+                    # .send on socket is handled internally since it can send errors back
                     self._handle_command_config_drone(data)
-                    self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, {}))
                 elif cmd == Messages.GET_DRONE_LIST.value:
                     result = self._handle_command_get_drone_list(data)
                     self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, json.dumps(result)))
@@ -165,7 +164,7 @@ class DatabaseActor(gevent.Greenlet):
                 elif topic == Messages.IP.value:
                     self._handle_message_ip(topic, drone_id, data)
                 elif topic == Messages.DRONE_WANT_CONFIG.value:
-                    config_dict = self._handle_command_get_droneconfig(drone_id)
+                    config_dict = self._get_drone_config(drone_id)
                     self.drone_command_receiver.send('{0} {1} {2}'.format(drone_id, Messages.CONFIG.value,
                                                                           json.dumps(config_dict)))
                 elif topic == Messages.PING.value:
@@ -483,7 +482,11 @@ class DatabaseActor(gevent.Greenlet):
             self._send_config_to_drone(drone.id)
 
     def _handle_command_get_droneconfig(self, drone_id):
-        return self._get_drone_config(drone_id)
+        result = self._get_drone_config(drone_id)
+        if len(result) == 0:
+            self.databaseRequests.send('{0} {1}'.format(Messages.FAIL.value, 'Drone could not be found'))
+        else:
+            self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, json.dumps(result)))
 
     def _send_config_to_drone(self, drone_id):
         config = self._get_drone_config(drone_id)
@@ -714,67 +717,67 @@ class DatabaseActor(gevent.Greenlet):
     def _handle_command_config_drone(self, data):
         drone_id, config = data.split(' ', 1)
         config = json.loads(config)
-        if 'capabilities' in config:
+
+        db_session = database_setup.get_session()
+        drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
+        if not drone:
+            self.databaseRequests.send('{0} {1}'.format(Messages.FAIL.value, 'Drone with id {0} could not '
+                                                                             'found'.format(drone_id)))
+        elif 'capabilities' in config:
             # it is a honeypot
-            self._config_honeypot(drone_id, config)
-        # todo: better detection!
+            self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, {}))
+        # TODO: better detection!
         elif 'ssh' in config:
             # it is a client
-            self._config_client(drone_id, config)
-        else:
-            # omg, what are you?
-            logger.error('Could not figure out mode for drone config, drone id: {0}'.format(drone_id))
+            self.databaseRequests.send('{0} {1}'.format(Messages.OK.value, {}))
 
-    def _config_honeypot(self, drone_id, config):
-        db_session = database_setup.get_session()
-        honeypot = db_session.query(Drone).filter(Drone.id == drone_id).one()
-        if not honeypot:
-            # TODO: Communicate attempt to configure non-exiting drone
-            assert False
-        elif honeypot.discriminator != 'honeypot':
+        else:
+            logger.error('Could not detect mode for drone config, drone id: {0}'.format(drone_id))
+            self.databaseRequests.send('{0} {1}'.format(Messages.FAIL.value, 'Malformed data in drone config data.'
+                                                                             'Drone id: {0}'.format(drone_id)))
+
+    def _config_honeypot(self, drone, db_session, config):
+        if drone.discriminator != 'honeypot':
             # meh, better way do do this?
-            ip_address = honeypot.ip_address
-            db_session.delete(honeypot)
+            drone_id = drone.id
+            ip_address = drone.ip_address
+            db_session.delete(drone)
             db_session.commit()
-            honeypot = Honeypot(id=drone_id)
-            honeypot.ip_address = ip_address
-            db_session.add(honeypot)
+            drone = Honeypot(id=drone_id)
+            drone.ip_address = ip_address
+            db_session.add(drone)
             db_session.commit()
 
         # common properties
-        honeypot.name = config['name']
+        drone.name = config['name']
 
         # certificate information
-        honeypot.cert_common_name = config['certificate']['common_name']
-        honeypot.cert_country = config['certificate']['country']
-        honeypot.cert_state = config['certificate']['state']
-        honeypot.cert_locality = config['certificate']['locality']
-        honeypot.cert_organization = config['certificate']['organization']
-        honeypot.cert_organization_unit = config['certificate']['organization_unit']
+        drone.cert_common_name = config['certificate']['common_name']
+        drone.cert_country = config['certificate']['country']
+        drone.cert_state = config['certificate']['state']
+        drone.cert_locality = config['certificate']['locality']
+        drone.cert_organization = config['certificate']['organization']
+        drone.cert_organization_unit = config['certificate']['organization_unit']
 
         # add capabilities
-        honeypot.capabilities = []
+        drone.capabilities = []
         for protocol_name, protocol_config in config['capabilities'].items():
             if 'protocol_specific_data' in protocol_config:
                 protocol_specific_data = protocol_config['protocol_specific_data']
             else:
                 protocol_specific_data = {}
-            honeypot.add_capability(protocol_name, protocol_config['port'], protocol_specific_data)
+            drone.add_capability(protocol_name, protocol_config['port'], protocol_specific_data)
 
-        db_session.add(honeypot)
+        db_session.add(drone)
         db_session.commit()
-        self._handle_command_drone_config_changed(drone_id)
+        self._handle_command_drone_config_changed(drone.id)
 
-    def _config_client(self, drone_id, config):
-        db_session = database_setup.get_session()
-        drone = db_session.query(Drone).filter(Drone.id == drone_id).one()
-        if not drone:
-            # TODO: Communicate attempt to configure non-exiting drone
-            assert False
-        elif drone.discriminator != 'client':
+    def _config_client(self, drone, db_session, config):
+        if drone.discriminator != 'client':
             # meh, better way do do this?
             # TODO: this cascade delete sessions, find a way to maintain sessions for deleted drones.
             ip_address = drone.ip_address
+            drone_id = drone.id
             db_session.delete(drone)
             db_session.commit()
             drone = Client(id=drone_id)
@@ -784,7 +787,7 @@ class DatabaseActor(gevent.Greenlet):
         drone.bait_timings = json.dumps(config)
         db_session.add(drone)
         db_session.commit()
-        self._handle_command_drone_config_changed(drone_id)
+        self._handle_command_drone_config_changed(drone.id)
 
     def _db_maintenance(self):
         logger.debug('Doing database maintenance')
