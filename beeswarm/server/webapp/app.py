@@ -316,8 +316,10 @@ def configure_client(drone_id):
     if not form.validate_on_submit():
         return render_template('configure-client.html', form=form, mode_name='Client', user=current_user)
     else:
-        bait_timing_config = {
+        client_config = {'name': form.general__name.data,
                          'mode': 'client'}
+
+        client_config['bait_timings'] = {
             'http': {
                 'active_range': form.bait_timings__http__active_range.data,
                 'sleep_interval': form.bait_timings__http__sleep_interval.data,
@@ -366,7 +368,7 @@ def configure_client(drone_id):
         }
 
         send_database_request('{0} {1} {2}'.format(Messages.CONFIG_DRONE.value, drone_id,
-                                                   json.dumps(bait_timing_config)))
+                                                   json.dumps(client_config)))
         return render_template('finish-config-client.html', drone_id=drone_id, user=current_user)
 
 

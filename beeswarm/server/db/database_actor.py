@@ -784,7 +784,8 @@ class DatabaseActor(gevent.Greenlet):
             drone.ip_address = ip_address
             db_session.add(drone)
             db_session.commit()
-        drone.bait_timings = json.dumps(config)
+        drone.bait_timings = json.dumps(config['bait_timings'])
+        drone.name = config['name']
         db_session.add(drone)
         db_session.commit()
         self._handle_command_drone_config_changed(drone.id)

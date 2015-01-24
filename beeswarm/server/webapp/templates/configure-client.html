@@ -25,6 +25,7 @@
     {{ macros.form_errors(form, 'only') }}
     <div class="tabbable tabs-left">
         <ul class="nav nav-tabs" id="formtabs">
+            <li><a href="#general" data-toggle="tab">General</a></li>
             <li><a href="#http" data-toggle="tab">HTTP</a></li>
             <li><a href="#https" data-toggle="tab">HTTPs</a></li>
             <li><a href="#ftp" data-toggle="tab">FTP</a></li>
@@ -37,6 +38,17 @@
         </ul>
 
         <div class="tab-content">
+            <div id="general" class="tab-pane">
+                <fieldset>
+                    <legend>General Options</legend>
+                    {% for field in [form.general__name] %}
+                    {% if not field|bootstrap_is_hidden_field %}
+                    {{ macros.horizontal_field(field) }}
+                    {%- endif %}
+                    {% endfor %}
+                </fieldset>
+            </div>
+
             <div id="http" class="tab-pane">
                 <fieldset>
                     <legend>HTTP Options</legend>
