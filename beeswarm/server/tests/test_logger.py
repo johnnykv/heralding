@@ -54,5 +54,5 @@ class TestLogger(BaseLogger):
         super(TestLogger, self).__init__(options)
         self.test_queue = test_queue
 
-    def handle_data(self, topic, data):
+    def handle_processed_session(self, topic, data):
         self.test_queue.append(data)

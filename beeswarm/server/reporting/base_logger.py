@@ -33,23 +33,38 @@ class BaseLogger(Greenlet):
 
     def _run(self):
         context = beeswarm.shared.zmq_context
-        receiving_socket = context.socket(zmq.SUB)
-        receiving_socket.connect(SocketNames.PROCESSED_SESSIONS.value)
-        receiving_socket.setsockopt(zmq.SUBSCRIBE, '')
+        processed_sessions_socket = context.socket(zmq.SUB)
+        processed_sessions_socket.connect(SocketNames.PROCESSED_SESSIONS.value)
+        processed_sessions_socket.setsockopt(zmq.SUBSCRIBE, '')
+
+        live_sessions_socket = context.socket(zmq.SUB)
+        live_sessions_socket.connect(SocketNames.DRONE_DATA.value)
+        # this auto wildcards to SESSION_PART*
+        live_sessions_socket.setsockopt(zmq.SUBSCRIBE, 'SESSION_PART')
 
         poller = zmq.Poller()
-        poller.register(receiving_socket, zmq.POLLIN)
+        poller.register(processed_sessions_socket, zmq.POLLIN)
+        poller.register(live_sessions_socket, zmq.POLLIN)
 
         while self.enabled:
-            socks = dict(poller.poll(100))
-            if receiving_socket in socks and socks[receiving_socket] == zmq.POLLIN:
-                topic, data = receiving_socket.recv().split(' ', 1)
-                self.handle_data(topic, data)
-        receiving_socket.close()
+            socks = dict(poller.poll(1000))
+            if processed_sessions_socket in socks and socks[processed_sessions_socket] == zmq.POLLIN:
+                topic, data = processed_sessions_socket.recv().split(' ', 1)
+                self.handle_processed_session(topic, data)
+            elif live_sessions_socket in socks and socks[live_sessions_socket] == zmq.POLLIN:
+                topic, data = live_sessions_socket.recv().split(' ', 1)
+                self.handle_live_session_part(topic, data)
+
+        live_sessions_socket.close()
+        processed_sessions_socket.close()
 
     def stop(self):
         self.enabled = False
 
-    def handle_data(self, topic, data):
+    def handle_processed_session(self, topic, data):
+        # should be handled in child class
+        raise NotImplementedError("Please implement this method")
+
+    def handle_live_session_part(self, topic, data):
         # should be handled in child class
         raise NotImplementedError("Please implement this method")
