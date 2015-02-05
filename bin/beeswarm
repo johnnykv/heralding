@@ -32,7 +32,6 @@ from gevent import Greenlet
 import beeswarm
 from beeswarm.drones.drone import Drone
 from beeswarm.server.server import Server
-from beeswarm.errors import ConfigNotFound
 from beeswarm.shared.asciify import asciify
 from beeswarm.shared.helpers import is_url, extract_config_from_api
 
@@ -44,6 +43,36 @@ def stop_if_root():
     if os.getuid() == 0:
         logger.error('Beeswarm should not be started in this mode as root, please restart as a normal user.')
         sys.exit(1)
+
+
+def start_drone(workdir, config, config_file):
+    if config:
+        drone = Drone(args.workdir, config)
+        drone_greenlet = Greenlet.spawn(drone.start)
+    else:
+        drone = None
+        drone_greenlet = None
+        logger.info('Started in drone mode without configuration - waiting for url dropper!')
+
+    while True:
+        dropped_config_url_file = os.path.join(args.workdir, 'API_CONFIG_URL')
+        if os.path.isfile(dropped_config_url_file):
+            with open(dropped_config_url_file, 'r') as _file:
+                config_url = _file.read().splitlines()[0]
+            logger.info('Found dropped api config url in {0}, with content: {1}.'.format(workdir, config_url))
+            os.remove(dropped_config_url_file)
+            config = extract_config_from_api(config_url, config_file)
+
+            if config:
+                if drone:
+                    drone.stop()
+                if drone_greenlet:
+                    drone_greenlet.kill()
+                drone = Drone(workdir, config)
+                drone_greenlet = Greenlet.spawn(drone.start)
+            else:
+                logger.warning('Error while trying to extract config from URL, waiting for new file.')
+            gevent.sleep(1)
 
 
 def setup_logging(logfile, verbose):
@@ -94,6 +123,7 @@ if __name__ == '__main__':
     group.add_argument('-se', '--server', action='store_true', help='Starts beeswarm in server mode.')
 
     parser.add_argument('--config', dest='configurl', default='', help='Configuration URL to the server service.')
+    parser.add_argument('--waitingdrone', action='store_true', default=False, help='Waiting drone mode - expert mode!')
     parser.add_argument('--workdir', dest='workdir', default=os.getcwd())
     parser.add_argument('--max_sessions', dest='max_sessions', type=int, default=None,
                         help='Maximum number of sessions to store.')
@@ -116,8 +146,7 @@ if __name__ == '__main__':
     if not os.path.isabs(args.logfile):
         args.logfile = os.path.join(args.workdir, args.logfile)
     setup_logging(args.logfile, args.verbose)
-    mode = None
-    config = None
+
     logger.info('Initializing BeeSwarm version {0}'.format(beeswarm.version))
 
     config_file = os.path.join(args.workdir, 'beeswarmcfg.json')
@@ -131,35 +160,22 @@ if __name__ == '__main__':
                          'provided.'.format(args.configurl))
             sys.exit(1)
 
+    is_server = False
+    mode = None
+    config = None
     if os.path.isfile(config_file):
         with open(config_file, 'r') as _file:
             config = json.load(_file, object_hook=asciify)
             if 'general' in config:
-                _mode = config['general']['mode']
-                if _mode == 'server':
-                    mode = Server
-                else:
-                    mode = Drone
-    elif args.server:
+                mode = config['general']['mode']
+
+    if args.server or mode == 'server':
         stop_if_root()
-        mode = Server
+        server = Server(args.workdir, config, customize=args.customize, clear_db=args.clearsessions,
+                        reset_password=args.resetpw, max_sessions=args.max_sessions, start_webui=not args.no_webui)
+        server_greenlet = gevent.spawn(server.start)
+        gevent.joinall([server_greenlet])
+    elif args.waitingdrone or mode == 'drone':
+        start_drone(args.workdir, config, config_file)
     else:
         parser.print_help()
-        sys.exit(1)
-
-    try:
-        m = mode(args.workdir, config, customize=args.customize, clear_db=args.clearsessions,
-                 reset_password=args.resetpw, max_sessions=args.max_sessions, start_webui=not args.no_webui)
-    except ConfigNotFound as ex:
-        logger.error(ex)
-        sys.exit(ex)
-
-    mode_greenlet = Greenlet.spawn(m.start)
-    gevent.sleep()
-
-    try:
-        gevent.joinall([mode_greenlet])
-    except KeyboardInterrupt as ex:
-        m.stop()
-    finally:
-        gevent.joinall([mode_greenlet], 5)

@@ -28,7 +28,7 @@ from zmq.utils.monitor import recv_monitor_message
 import beeswarm
 import beeswarm.shared
 from beeswarm.shared.message_enum import Messages
-from beeswarm.shared.helpers import extract_keys, send_zmq_push, extract_config_from_api, asciify, get_most_likely_ip
+from beeswarm.shared.helpers import extract_keys, send_zmq_push, asciify, get_most_likely_ip
 from beeswarm.drones.honeypot.honeypot import Honeypot
 from beeswarm.drones.client.client import Client
 from beeswarm.shared.socket_enum import SocketNames
@@ -62,8 +62,6 @@ class Drone(object):
         self.drone_greenlet = None
         self.outgoing_msg_greenlet = None
         self.incoming_msg_greenlet = None
-
-        self.config_url_dropper_greenlet = None
 
         # messages from server relayed to internal listeners
         ctx = beeswarm.shared.zmq_context
@@ -101,8 +99,6 @@ class Drone(object):
         self.incoming_msg_greenlet = gevent.spawn(self.incoming_server_comms, server_public,
                                                   client_public, client_secret)
         self.incoming_msg_greenlet.link_exception(self.on_exception)
-
-        self.config_url_dropper_greenlet = gevent.spawn(self.config_url_drop_poller)
 
         logger.info('Waiting for detailed configuration from Beeswarm server.')
         gevent.joinall([self.outgoing_msg_greenlet])
@@ -278,20 +274,3 @@ class Drone(object):
             self.drone.stop()
             logger.warning('Drone has been deleted by the beeswarm server.')
         sys.exit(0)
-
-    # restarts the drone if a new file containing a new config url is dropped in the workdir
-    def config_url_drop_poller(self):
-        while True:
-            gevent.sleep(1)
-            dropped_config_url_file = os.path.join(self.work_dir, 'API_CONFIG_URL')
-            if os.path.isfile(dropped_config_url_file):
-                with open(dropped_config_url_file, 'r') as _file:
-                    config_url = open(_file).read()
-                logger.info('Found dropped api config url in {0}, with content: {1}.'.format(self.work_dir, config_url))
-                os.remove(dropped_config_url_file)
-                extract_config_from_api(config_url, self.config_file)
-                self.stop()
-                self._start_drone()
-
-
-

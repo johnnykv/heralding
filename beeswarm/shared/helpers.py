@@ -209,14 +209,14 @@ def extract_config_from_api(config_url, config_file):
         req = requests.get(config_url, verify=False)
     except Exception as ex:
         logger.error('Error while extracting config: {0}'.format(ex))
-        return False
+        return None
     if req.status_code == 200:
         config = json.loads(req.text, object_hook=asciify)
         with open(config_file, 'w') as local_config:
             local_config.write(json.dumps(config, indent=4))
-        return True
+        return config
     else:
-        return False
+        return None
 
 
 def stop_if_not_write_workdir(_dir):
