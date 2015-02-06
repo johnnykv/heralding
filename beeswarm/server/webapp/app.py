@@ -117,7 +117,6 @@ def send_config_request(config_request):
 
 
 def ensure_admin_password(reset_password, password=None):
-    global admin_passwd_hash
     if not os.path.isfile(admin_passwd_file) or reset_password:
         if not password:
             password = ''.join([random.choice(string.letters[:26]) for i in xrange(14)])
@@ -379,7 +378,6 @@ def configure_drone(drone_id):
 
 
 def reset_drone_key(key):
-    global drone_keys
     if key in drone_keys:
         drone_keys.remove(key)
         logger.debug('Removed drone add key.')
@@ -390,7 +388,6 @@ def reset_drone_key(key):
 @app.route('/ws/drone/add', methods=['GET'])
 @login_required
 def add_drone():
-    global drone_keys
     drone_key = str(uuid.uuid4())
     drone_keys.append(drone_key)
     # remove drone key after 120 seconds
@@ -406,7 +403,6 @@ def add_drone():
 # TODO: throttle this
 @app.route('/ws/drone/add/<key>', methods=['GET'])
 def drone_key(key):
-    global drone_keys
     if key not in drone_keys:
         logger.warn('Attempt to add new drone, but using wrong key from: {0}'.format(request.remote_addr))
         abort(401)

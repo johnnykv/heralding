@@ -92,7 +92,7 @@ class Pop3(HandlerBase):
     def cmd_user(self, session, gsocket, msg):
         session.vdata['USER'] = msg
         self.send_message(session, gsocket, '+OK User accepted')
-        return 'AUTHORIZATION'.format(msg)
+        return 'AUTHORIZATION'
 
     def is_state_valid(self, state, cmd):
         if state == 'AUTHORIZATION':
