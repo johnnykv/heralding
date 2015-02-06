@@ -4,3 +4,6 @@ autodetect: yes
 ignore-paths:
     - docs
 
+pylint:
+  disable:
+    - W1202
