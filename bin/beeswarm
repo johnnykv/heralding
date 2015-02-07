@@ -70,7 +70,7 @@ def start_drone(workdir, config, config_file, local_socket):
                 drone_greenlet = Greenlet.spawn(drone.start)
             else:
                 logger.warning('Error while trying to extract config from URL, waiting for new file.')
-            gevent.sleep(1)
+        gevent.sleep(1)
 
 
 def setup_logging(logfile, verbose):
