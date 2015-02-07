@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 class Drone(object):
     """ Aggregates a honeypot or client. """
 
-    def __init__(self, work_dir, config, key='server.key', cert='server.crt', **kwargs):
+    def __init__(self, work_dir, config, key='server.key', cert='server.crt', local_pull_socket=None, **kwargs):
         """
 
         :param work_dir: Working directory (usually the current working directory)
@@ -56,6 +56,7 @@ class Drone(object):
         self.key = key
         self.cert = cert
         self.id = self.config['general']['id']
+        self.local_pull_socket = local_pull_socket
 
         # Honeypot / Client
         self.drone = None
@@ -83,7 +84,6 @@ class Drone(object):
 
     def start(self):
         """ Starts services. """
-
         cert_path = os.path.join(self.work_dir, 'certificates')
         public_keys_dir = os.path.join(cert_path, 'public_keys')
         private_keys_dir = os.path.join(cert_path, 'private_keys')
@@ -147,26 +147,34 @@ class Drone(object):
     def incoming_server_comms(self, server_public, client_public, client_secret):
         context = beeswarm.shared.zmq_context
         # data (commands) received from server
-        receiving_socket = context.socket(zmq.SUB)
+        server_receiving_socket = context.socket(zmq.SUB)
 
         # setup receiving tcp socket
-        receiving_socket.curve_secretkey = client_secret
-        receiving_socket.curve_publickey = client_public
-        receiving_socket.curve_serverkey = server_public
-        receiving_socket.setsockopt(zmq.RECONNECT_IVL, 2000)
+        server_receiving_socket.curve_secretkey = client_secret
+        server_receiving_socket.curve_publickey = client_public
+        server_receiving_socket.curve_serverkey = server_public
+        server_receiving_socket.setsockopt(zmq.RECONNECT_IVL, 2000)
         # only subscribe to messages to this specific drone
-        receiving_socket.setsockopt(zmq.SUBSCRIBE, str(self.id))
+        server_receiving_socket.setsockopt(zmq.SUBSCRIBE, str(self.id))
+
+        # data from local socket
+        local_receiving_socket = context.socket(zmq.PULL)
+        if self.local_pull_socket:
+            local_receiving_socket.bind('ipc://{0}'.format(self.local_pull_socket))
 
         logger.debug(
             'Trying to connect receiving socket to server on {0}'.format(
                 self.config['beeswarm_server']['zmq_command_url']))
 
-        receiving_socket.connect(self.config['beeswarm_server']['zmq_command_url'])
-        gevent.spawn(self.monitor_worker, receiving_socket.get_monitor_socket(), 'incomming socket ({0}).'
+        outgoing_proxy = context.socket(zmq.PUSH)
+        outgoing_proxy.connect(SocketNames.SERVER_RELAY.value)
+
+        server_receiving_socket.connect(self.config['beeswarm_server']['zmq_command_url'])
+        gevent.spawn(self.monitor_worker, server_receiving_socket.get_monitor_socket(), 'incomming socket ({0}).'
                      .format(self.config['beeswarm_server']['zmq_command_url']))
 
         poller = zmq.Poller()
-        poller.register(receiving_socket, zmq.POLLIN)
+        poller.register(server_receiving_socket, zmq.POLLIN)
 
         while True:
             # .recv() gives no context switch - why not? using poller with timeout instead
@@ -174,8 +182,8 @@ class Drone(object):
             # hmm, do we need to sleep here (0.1) works, gevnet.sleep() does not work
             gevent.sleep(0.1)
 
-            if receiving_socket in socks and socks[receiving_socket] == zmq.POLLIN:
-                message = receiving_socket.recv()
+            if server_receiving_socket in socks and socks[server_receiving_socket] == zmq.POLLIN:
+                message = server_receiving_socket.recv()
                 # expected format for drone commands are:
                 # DRONE_ID COMMAND OPTIONAL_DATA
                 # DRONE_ID and COMMAND must not contain spaces
@@ -198,6 +206,10 @@ class Drone(object):
                     self._handle_delete()
                 else:
                     self.internal_server_relay.send('{0} {1}'.format(command, data))
+            elif local_receiving_socket in socks and socks[local_receiving_socket] == zmq.POLLIN:
+                data = local_receiving_socket.recv()
+                outgoing_proxy.send('{0} {1}'.format(self.id, data))
+
         logger.warn('Command listener exiting.')
 
     def outgoing_server_comms(self, server_public, client_public, client_secret):

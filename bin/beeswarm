@@ -45,15 +45,14 @@ def stop_if_root():
         sys.exit(1)
 
 
-def start_drone(workdir, config, config_file):
+def start_drone(workdir, config, config_file, local_socket):
     if config:
-        drone = Drone(args.workdir, config)
+        drone = Drone(args.workdir, config, local_pull_socket=local_socket)
         drone_greenlet = Greenlet.spawn(drone.start)
     else:
         drone = None
         drone_greenlet = None
         logger.info('Started in drone mode without configuration - waiting for url dropper!')
-
     while True:
         dropped_config_url_file = os.path.join(args.workdir, 'API_CONFIG_URL')
         if os.path.isfile(dropped_config_url_file):
@@ -62,13 +61,12 @@ def start_drone(workdir, config, config_file):
             logger.info('Found dropped api config url in {0}, with content: {1}.'.format(workdir, config_url))
             os.remove(dropped_config_url_file)
             config = extract_config_from_api(config_url, config_file)
-
             if config:
                 if drone:
                     drone.stop()
                 if drone_greenlet:
                     drone_greenlet.kill()
-                drone = Drone(workdir, config)
+                drone = Drone(workdir, config, local_pull_socket=local_socket)
                 drone_greenlet = Greenlet.spawn(drone.start)
             else:
                 logger.warning('Error while trying to extract config from URL, waiting for new file.')
@@ -124,6 +122,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--config', dest='configurl', default='', help='Configuration URL to the server service.')
     parser.add_argument('--waitingdrone', action='store_true', default=False, help='Waiting drone mode - expert mode!')
+    parser.add_argument('--local_socket', dest='local_socket', default=None)
     parser.add_argument('--workdir', dest='workdir', default=os.getcwd())
     parser.add_argument('--max_sessions', dest='max_sessions', type=int, default=None,
                         help='Maximum number of sessions to store.')
@@ -168,6 +167,8 @@ if __name__ == '__main__':
             config = json.load(_file, object_hook=asciify)
             if 'general' in config:
                 mode = config['general']['mode']
+                if not mode:
+                    mode = 'drone'
 
     if args.server or mode == 'server':
         stop_if_root()
@@ -176,6 +177,6 @@ if __name__ == '__main__':
         server_greenlet = gevent.spawn(server.start)
         gevent.joinall([server_greenlet])
     elif args.waitingdrone or mode == 'drone':
-        start_drone(args.workdir, config, config_file)
+        start_drone(args.workdir, config, config_file, args.local_socket)
     else:
         parser.print_help()
