@@ -663,7 +663,8 @@ class DatabaseActor(gevent.Greenlet):
             Messages.GET_SESSIONS_ALL.value: db_session.query(Session),
             Messages.GET_SESSIONS_BAIT.value: db_session.query(BaitSession),
             Messages.GET_SESSIONS_ATTACKS.value: db_session.query(Session).filter(
-                Session.classification_id != 'bait_session')
+                Session.classification_id != 'bait_session'),
+            Messages.GET_DRONE_LIST.value: db_session.query(Drone)
         }
 
         if _type not in query_iterators:
@@ -675,7 +676,7 @@ class DatabaseActor(gevent.Greenlet):
 
         rows = []
         for session in entries:
-            rows.append(session.to_dict())
+            rows.append(session.to_dict(query_iterators[Messages.GET_DRONE_LIST.value].filter(Drone.id == session.honeypot_id).first().name))
 
         return rows
 

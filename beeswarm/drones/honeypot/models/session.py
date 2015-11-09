@@ -104,4 +104,3 @@ class Session(BaseSession):
 
     def end_session(self):
         super(Session, self).end_session(Messages.SESSION_HONEYPOT.value)
-

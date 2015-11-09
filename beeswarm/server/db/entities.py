@@ -95,6 +95,7 @@ class Session(Base):
     __mapper_args__ = {'polymorphic_on': discriminator}
 
     id = Column(String, primary_key=True)
+
     received = Column(DateTime)
     timestamp = Column(DateTime, index=True)
     protocol = Column(String)
@@ -110,7 +111,7 @@ class Session(Base):
     classification = relationship('Classification')
 
     # for display purposes
-    def to_dict(self):
+    def to_dict(self, honeypots=None):
 
         auth_attempts = []
         for attempt in self.authentication:
@@ -119,8 +120,11 @@ class Session(Base):
         result = {'time': self.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
                   'protocol': self.protocol,
                   'ip_address': self.source_ip,
+                  'honeypot_id': self.honeypot_id,
                   'classification': classification,
-                  'id': self.id}
+                  'id': self.id,
+                  'honeypot_name': honeypots
+                  }
 
         return result
 

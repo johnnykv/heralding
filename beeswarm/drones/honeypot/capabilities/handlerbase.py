@@ -35,6 +35,7 @@ class HandlerBase(object):
                         particular instance of Beeswarm
         """
         self.options = options
+        logger.debug(" JESUS FUCK TRY AND NOT MISS THIS " + str(options))
         self.sessions = {}
         if 'users' in options:
             self.users = options['users']
@@ -47,6 +48,7 @@ class HandlerBase(object):
 
     def create_session(self, address):
         protocol = self.__class__.__name__.lower()
+        logger.debug(address)
         session = Session(address[0], address[1], protocol, self.users)
         self.sessions[session.id] = session
         session.destination_port = self.port
