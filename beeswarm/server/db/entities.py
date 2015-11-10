@@ -95,7 +95,6 @@ class Session(Base):
     __mapper_args__ = {'polymorphic_on': discriminator}
 
     id = Column(String, primary_key=True)
-
     received = Column(DateTime)
     timestamp = Column(DateTime, index=True)
     protocol = Column(String)
@@ -107,11 +106,12 @@ class Session(Base):
     destination_ip = Column(String)
     destination_port = Column(Integer)
     honeypot_id = Column(String, ForeignKey('honeypot.id'))
+    drone = relationship(Drone, primaryjoin=honeypot_id==Drone.id, foreign_keys=honeypot_id, backref='session')
     classification_id = Column(String, ForeignKey('classification.type'), nullable=False, default='pending')
     classification = relationship('Classification')
 
     # for display purposes
-    def to_dict(self, honeypots=None):
+    def to_dict(self):
 
         auth_attempts = []
         for attempt in self.authentication:
@@ -123,7 +123,7 @@ class Session(Base):
                   'honeypot_id': self.honeypot_id,
                   'classification': classification,
                   'id': self.id,
-                  'honeypot_name': honeypots
+                  'honeypot_name': self.name
                   }
 
         return result
