@@ -106,6 +106,7 @@ class Session(Base):
     destination_ip = Column(String)
     destination_port = Column(Integer)
     honeypot_id = Column(String, ForeignKey('honeypot.id'))
+    drone = relationship(Drone, primaryjoin=honeypot_id==Drone.id, foreign_keys=honeypot_id, backref='session')
     classification_id = Column(String, ForeignKey('classification.type'), nullable=False, default='pending')
     classification = relationship('Classification')
 
@@ -119,8 +120,11 @@ class Session(Base):
         result = {'time': self.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
                   'protocol': self.protocol,
                   'ip_address': self.source_ip,
+                  'honeypot_id': self.honeypot_id,
                   'classification': classification,
-                  'id': self.id}
+                  'id': self.id,
+                  'honeypot_name': self.name
+                  }
 
         return result
 

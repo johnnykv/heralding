@@ -289,15 +289,17 @@ class DatabaseActor(gevent.Greenlet):
         session.source_ip = data['source_ip']
         session.source_port = data['source_port']
         session.honeypot = _honeypot
-
+        _dronename = db_session.query(Drone).filter(Drone.id==_honeypot.id).first().name
         db_session.add(session)
         db_session.commit()
         matching_session = self.get_matching_session(session, db_session)
         if session_type == Messages.SESSION_HONEYPOT.value:
             if matching_session:
+                matching_session.name = _dronename
                 self.merge_bait_and_session(session, matching_session, db_session)
         elif session_type == Messages.SESSION_CLIENT.value:
             if matching_session:
+                session.name = _dronename
                 self.merge_bait_and_session(matching_session, session, db_session)
         else:
             assert False
@@ -391,13 +393,14 @@ class DatabaseActor(gevent.Greenlet):
             db_session.commit()
 
         # find and process honeypot sessions that did not get classified during persistence.
-        sessions = db_session.query(Session).filter(Session.discriminator == None) \
+        sessions = db_session.query(Session, Drone.name).filter(Session.discriminator == None) \
             .filter(Session.timestamp <= min_datetime) \
             .filter(Session.classification_id == 'pending') \
             .all()
 
-        for session in sessions:
+        for entry in sessions:
             # Check if the attack used credentials leaked by beeswarm drones
+            session = entry[0]
             bait_match = None
             for a in session.authentication:
                 bait_match = db_session.query(BaitSession) \
@@ -419,6 +422,7 @@ class DatabaseActor(gevent.Greenlet):
                 session.classification = db_session.query(Classification).filter(
                     Classification.type == 'bruteforce').one()
             db_session.commit()
+            session.name = entry[1]
             self.processedSessionsPublisher.send(
                 '{0} {1}'.format(Messages.SESSION.value, json.dumps(session.to_dict())))
 
@@ -660,9 +664,9 @@ class DatabaseActor(gevent.Greenlet):
         db_session = database_setup.get_session()
         # the database_setup will not get hit until we start iterating the query object
         query_iterators = {
-            Messages.GET_SESSIONS_ALL.value: db_session.query(Session),
-            Messages.GET_SESSIONS_BAIT.value: db_session.query(BaitSession),
-            Messages.GET_SESSIONS_ATTACKS.value: db_session.query(Session).filter(
+            Messages.GET_SESSIONS_ALL.value: db_session.query(Session, Drone.name),
+            Messages.GET_SESSIONS_BAIT.value: db_session.query(BaitSession, Drone.name),
+            Messages.GET_SESSIONS_ATTACKS.value: db_session.query(Session, Drone.name).filter(
                 Session.classification_id != 'bait_session')
         }
 
@@ -675,7 +679,8 @@ class DatabaseActor(gevent.Greenlet):
 
         rows = []
         for session in entries:
-            rows.append(session.to_dict())
+            session[0].name = session[1]
+            rows.append(session[0].to_dict())
 
         return rows
 
