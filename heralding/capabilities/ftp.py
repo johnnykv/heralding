@@ -23,9 +23,6 @@
 
 
 import logging
-import os
-
-from gevent import socket
 
 from heralding.capabilities.handlerbase import HandlerBase
 
@@ -34,7 +31,7 @@ logger = logging.getLogger(__name__)
 TERMINATOR = '\r\n'
 
 
-class BeeFTPHandler(object):
+class FtpHandler(object):
     """Handles a single FTP connection"""
 
     def __init__(self, conn, session, options):
@@ -51,19 +48,9 @@ class BeeFTPHandler(object):
         # TODO: What is this?
         self.local_ip = '127.0.0.1'
 
-        # These are set and used if the user is authenticated.
         self.state = None
-        self.mode = None
-        self.transfer_mode = None
-        self.client_sock = None
-        self.serv_sock = None
-
-        self.client_addr = None  # data connection
-        self.client_port = None  #
-        self.working_dir = None
         self.user = None
-        self.cli_ip = None
-        self.cli_port = None
+
         self.serve()
 
     def getcmd(self):
@@ -72,7 +59,6 @@ class BeeFTPHandler(object):
     def serve(self):
         while self.serve_flag:
             resp = self.getcmd()
-            self.session.transcript_outgoing(resp)
             if not resp:
                 self.stop()
                 break
@@ -111,34 +97,10 @@ class BeeFTPHandler(object):
             self.respond('503 Login with USER first.')
             return
         passwd = arg
-        if self.session.try_auth('plaintext', username=self.user, password=passwd):
-            self.authenticated = True
-            self.working_dir = '/'
-            self.respond('230 Login Successful.')
-        else:
-            self.authenticated = False
-            self.respond('530 Authentication Failed.')
-            if self.session.get_number_of_login_attempts() >= self.max_logins:
-                self.stop()
-
-    def do_PORT(self, arg):
-        if self.mode == 'PASV':
-            self.client_sock.close()
-            self.mode = 'PORT'
-        try:
-            portlist = arg.split(',')
-        except ValueError:
-            self.respond('501 Bad syntax for PORT.')
-            return
-        if len(portlist) != 6:
-            self.respond('501 Bad syntax for PORT.')
-            return
-        self.cli_ip = '.'.join(portlist[:4])
-        self.cli_port = (int(portlist[4]) << 8) + int(portlist[5])
-        self.respond('200 PORT Command Successful')
-
-    def do_NOOP(self, arg):
-        self.respond('200 Command Successful.')
+        self.session.try_auth('plaintext', username=self.user, password=passwd)
+        self.respond('530 Authentication Failed.')
+        if self.session.get_number_of_login_attempts() >= self.max_logins:
+            self.stop()
 
     def do_SYST(self, arg):
         self.respond('215 %s' % self.syst_type)
@@ -150,7 +112,6 @@ class BeeFTPHandler(object):
 
     def respond(self, msg):
         msg += TERMINATOR
-        self.session.transcript_outgoing(msg)
         self.conn.send(msg)
 
     def stop(self):
@@ -165,6 +126,6 @@ class ftp(HandlerBase):
     def handle_session(self, gsocket, address):
         session = self.create_session(address)
         try:
-            BeeFTPHandler(gsocket, session, self._options)
+            FtpHandler(gsocket, session, self._options)
         finally:
             self.close_session(session)

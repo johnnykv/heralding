@@ -33,7 +33,6 @@ class BaseSession(object):
         self.destination_port = destination_port
         self.timestamp = datetime.utcnow()
         self.login_attempts = []
-        self.transcript = []
         self.session_ended = False
 
     def add_auth_attempt(self, auth_type, **kwargs):
@@ -63,16 +62,8 @@ class BaseSession(object):
     def get_number_of_login_attempts(self):
         return len(self.login_attempts)
 
-    def _add_transcript(self, direction, data):
-        self.transcript.append({'timestamp': datetime.utcnow(), 'direction': direction, 'data': data})
-
-    def transcript_incoming(self, data):
-        self._add_transcript('incoming', data)
-
-    def transcript_outgoing(self, data):
-        self._add_transcript('outgoing', data)
-
     def send_log(self, in_data):
+        # TODO: Send logging to log worker using ZMQ
         pass
 
     def to_dict(self):
