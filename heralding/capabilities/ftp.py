@@ -35,7 +35,6 @@ class FtpHandler(object):
     """Handles a single FTP connection"""
 
     def __init__(self, conn, session, options):
-        print options
         self.banner = options['protocol_specific_data']['banner']
         self.max_logins = int(options['protocol_specific_data']['max_attempts'])
         self.syst_type = options['protocol_specific_data']['syst_type']
