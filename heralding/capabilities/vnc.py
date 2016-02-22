@@ -32,7 +32,8 @@ from shared.vnc_constants import *
 logger = logging.getLogger(__name__)
 
 
-class BaitVncHandler(SocketServer.StreamRequestHandler):
+class BaitVncHandler(object):
+#class BaitVncHandler(SocketServer.StreamRequestHandler):
     """
         Handler of VNC Connections. This is a rather primitive state machine.
     """

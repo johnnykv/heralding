@@ -95,7 +95,8 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
         pass
 
 
-class Http(HandlerBase):
+class Http(object):
+#class Http(HandlerBase):
     HandlerClass = BeeHTTPHandler
 
     def __init__(self, options, workdir):

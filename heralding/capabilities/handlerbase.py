@@ -16,10 +16,6 @@
 import logging
 import os
 
-from fs.osfs import OSFS
-
-from honeypot import Session
-
 logger = logging.getLogger(__name__)
 
 

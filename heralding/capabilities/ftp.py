@@ -159,18 +159,6 @@ class BeeFTPHandler(object):
         else:
             self.respond('550 The system cannot find the path specified.')
 
-    def do_PWD(self, arg):
-        self.respond('257 "%s"' % self.working_dir)
-
-    def do_PASV(self, arg):
-        self.mode = 'PASV'
-        self.serv_sock = socket.socket()
-        self.serv_sock.bind((self.local_ip, 0))
-        self.serv_sock.listen(1)
-        ip, port = self.serv_sock.getsockname()
-        self.respond('227 Entering Passive Mode (%s,%u,%u).' % (','.join(ip.split('.')),
-                                                                port >> 8 & 0xFF, port & 0xFF))
-
     def do_NOOP(self, arg):
         self.respond('200 Command Successful.')
 
@@ -181,38 +169,6 @@ class BeeFTPHandler(object):
         self.respond('221 Bye.')
         self.serve_flag = False
         self.stop()
-
-    def do_RETR(self, arg):
-        filename = os.path.join(self.working_dir, arg)
-        if self.vfs.isfile(filename):
-            self.respond('150 Initiating transfer.')
-            self.start_data_conn()
-            file_ = self.vfs.open(filename)
-            send_whole_file(self.client_sock.fileno(), file_.fileno())
-            file_.close()
-            self.stop_data_conn()
-            self.respond('226 Transfer complete.')
-        else:
-            self.respond('550 The system cannot find the file specified.')
-
-    def do_TYPE(self, arg):
-        self.transfer_mode = arg
-        self.respond('200 Transfer type set to:' + self.transfer_mode)
-
-    def getcmd(self):
-        return self.conn.recv(512)
-
-    def start_data_conn(self):
-        if self.mode == 'PASV':
-            self.client_sock, (self.cli_ip, self.cli_port) = self.serv_sock.accept()
-        else:
-            self.client_sock = socket.socket()
-            self.client_sock.connect((self.cli_ip, self.cli_port))
-
-    def stop_data_conn(self):
-        self.client_sock.close()
-        if self.mode == 'PASV':
-            self.serv_sock.close()
 
     def respond(self, msg):
         msg += TERMINATOR

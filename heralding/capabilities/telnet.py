@@ -24,7 +24,8 @@ from honeypot.capabilities.handlerbase import HandlerBase
 logger = logging.getLogger(__name__)
 
 
-class Telnet(HandlerBase):
+class Telnet(object):
+#class Telnet(HandlerBase):
     def __init__(self, options, work_dir):
         super(Telnet, self).__init__(options, work_dir)
 

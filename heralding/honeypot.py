@@ -16,30 +16,22 @@
 import _socket
 import logging
 import os
-import shutil
-import sys
+
 
 import gevent
-import ntplib
 import requests
-from beeswarm.drones.honeypot.models.session import Session
-from beeswarm.shared.helpers import create_self_signed_cert, send_zmq_push, extract_keys, get_most_likely_ip, \
-    stop_if_not_write_workdir
-from beeswarm.shared.socket_enum import SocketNames
 from gevent import Greenlet
 from gevent.server import StreamServer
 from requests.exceptions import Timeout, ConnectionError
 
-import beeswarm
-from honeypot.capabilities import handlerbase
-from shared.message_enum import Messages
+from heralding.capabilities import handlerbase
 
 logger = logging.getLogger(__name__)
 
 
 class Honeypot(object):
     """ This is the main class, which starts up all capabilities. """
-    def __init__(self, work_dir, config, key='server.key', cert='server.crt', **kwargs):
+    def __init__(self, config, work_dir, key='server.key', cert='server.crt'):
         """
             Main class which runs Beeswarm in Honeypot mode.
 
@@ -48,8 +40,6 @@ class Honeypot(object):
         :param key: Key file used for SSL enabled capabilities
         :param cert: Cert file used for SSL enabled capabilities
         """
-        if config is None or not os.path.isdir(os.path.join(work_dir, 'data')):
-            Honeypot.prepare_environment(work_dir)
 
         self.work_dir = work_dir
         self.config = config
@@ -59,31 +49,6 @@ class Honeypot(object):
         self._server_greenlets = []
 
         self.honeypot_id = self.config['general']['id']
-        Session.honeypot_id = self.honeypot_id
-
-        # write ZMQ keys to files - as expected by pyzmq
-        extract_keys(work_dir, config)
-        if not (os.path.isfile(os.path.join(work_dir, 'server.key'))):
-            cert_info = config['certificate_info']
-            if cert_info['common_name']:
-                cert_info['common_name'] = cert_info['common_name']
-            else:
-                cert_info['common_name'] = get_most_likely_ip()
-
-            cert, priv_key = create_self_signed_cert(cert_info['country'], cert_info['state'],
-                                                     cert_info['organization'], cert_info['locality'],
-                                                     cert_info['organization_unit'], cert_info['common_name'])
-
-            cert_path = os.path.join(work_dir, 'server.crt')
-            key_path = os.path.join(work_dir, 'server.key')
-            with open(cert_path, 'w') as certfile:
-                certfile.write(cert)
-            with open(key_path, 'w') as keyfile:
-                keyfile.write(priv_key)
-            send_zmq_push(SocketNames.SERVER_RELAY.value,
-                          '{0} {1} {2}'.format(Messages.KEY.value, self.honeypot_id, priv_key))
-            send_zmq_push(SocketNames.SERVER_RELAY.value,
-                          '{0} {1} {2}'.format(Messages.CERT.value, self.honeypot_id, cert))
 
         if self.config['general']['fetch_ip']:
             try:
@@ -95,31 +60,6 @@ class Honeypot(object):
                 logger.warning('Could not fetch public ip: {0}'.format(e))
         else:
             self.honeypot_ip = ''
-
-        # spawning time checker
-        if self.config['timecheck']['enabled']:
-            Greenlet.spawn(self.check_time)
-
-    # function to check the time offset
-    def check_time(self):
-        """ Make sure our Honeypot time is consistent, and not too far off
-        from the actual time. """
-
-        poll = self.config['timecheck']['poll']
-        ntp_poll = self.config['timecheck']['ntp_pool']
-        while True:
-            clnt = ntplib.NTPClient()
-            try:
-                response = clnt.request(ntp_poll, version=3)
-                diff = response.offset
-                if abs(diff) >= 15:
-                    logger.error('Timings found to be far off, shutting down drone ({0})'.format(diff))
-                    sys.exit(1)
-                else:
-                    logger.debug('Polled ntp server and found that drone has {0} seconds offset.'.format(diff))
-            except (ntplib.NTPException, _socket.error) as ex:
-                logger.warning('Error while polling ntp server: {0}'.format(ex))
-            gevent.sleep(poll * 60 * 60)
 
     def start(self):
         """ Starts services. """
@@ -154,7 +94,6 @@ class Honeypot(object):
                 else:
                     logger.info('Started {0} capability listening on port {1}'.format(c.__name__, port))
 
-        stop_if_not_write_workdir(self.work_dir)
         logger.info("Honeypot running.")
 
         gevent.joinall(self._server_greenlets)
@@ -169,26 +108,3 @@ class Honeypot(object):
             g.kill()
 
         logger.info('All workers stopped.')
-
-    @staticmethod
-    def prepare_environment(work_dir):
-        """
-            Performs a few maintenance tasks before the Honeypot is run. Copies the data directory,
-            and the config file to the cwd. The config file copied here is overwritten if
-            the __init__ method is called with a configuration URL.
-
-        :param work_dir: The directory to copy files to.
-        """
-        package_directory = os.path.dirname(os.path.abspath(beeswarm.__file__))
-
-        logger.info('Copying data files to workdir.')
-        shutil.copytree(os.path.join(package_directory, 'drones/honeypot/data'), os.path.join(work_dir, 'data/'),
-                        ignore=Honeypot._ignore_copy_files)
-
-    @staticmethod
-    def _ignore_copy_files(path, content):
-        to_ignore = []
-        for file_ in content:
-            if file_ in ('.placeholder', '.git'):
-                to_ignore.append(file_)
-        return to_ignore

@@ -29,11 +29,8 @@ import os
 
 from gevent import Greenlet
 
-import beeswarm
-from beeswarm.drones.drone import Drone
-from beeswarm.server.server import Server
-from shared.asciify import asciify
-from shared.helpers import is_url, extract_config_from_api
+import heralding
+import heralding.honeypot
 
 
 logger = logging.getLogger()
@@ -43,34 +40,6 @@ def stop_if_root():
     if os.getuid() == 0:
         logger.error('Beeswarm should not be started in this mode as root, please restart as a normal user.')
         sys.exit(1)
-
-
-def start_drone(workdir, config, config_file, local_socket):
-    if config:
-        drone = Drone(args.workdir, config, local_pull_socket=local_socket)
-        drone_greenlet = Greenlet.spawn(drone.start)
-    else:
-        drone = None
-        drone_greenlet = None
-        logger.info('Started in drone mode without configuration - waiting for url dropper!')
-    while True:
-        dropped_config_url_file = os.path.join(args.workdir, 'API_CONFIG_URL')
-        if os.path.isfile(dropped_config_url_file):
-            with open(dropped_config_url_file, 'r') as _file:
-                config_url = _file.read().splitlines()[0]
-            logger.info('Found dropped api config url in {0}, with content: {1}.'.format(workdir, config_url))
-            os.remove(dropped_config_url_file)
-            config = extract_config_from_api(config_url, config_file)
-            if config:
-                if drone:
-                    drone.stop()
-                if drone_greenlet:
-                    drone_greenlet.kill()
-                drone = Drone(workdir, config, local_pull_socket=local_socket)
-                drone_greenlet = Greenlet.spawn(drone.start)
-            else:
-                logger.warning('Error while trying to extract config from URL, waiting for new file.')
-        gevent.sleep(1)
 
 
 def setup_logging(logfile, verbose):
@@ -115,11 +84,12 @@ class LogFilter(logging.Filter):
 
 
 if __name__ == '__main__':
-    parser = ArgumentParser(description='Beeswarm')
+    parser = ArgumentParser(description='Heralding')
 
     group = parser.add_argument_group()
     group.add_argument('-se', '--server', action='store_true', help='Starts heralding in server mode.')
 
+    '''
     parser.add_argument('--config', dest='configurl', default='', help='Configuration URL to the server service.')
     parser.add_argument('--waitingdrone', action='store_true', default=False, help='Waiting drone mode - expert mode!')
     parser.add_argument('--local_socket', dest='local_socket', default=None)
@@ -136,47 +106,22 @@ if __name__ == '__main__':
     parser.add_argument('--no_webui', action='store_true', default=False,
                         help='Do not start the web ui.')
     parser.add_argument('-l', '--logfile', dest='logfile', default='heralding.log', help='Beeswarm log file..')
-    args = parser.parse_args()
+    '''
 
-    if not os.path.isabs(args.workdir):
-        error_text = 'Work directory must be as a absolute path: {0}'.format(args.workdir)
-        sys.exit(error_text)
+    args = parser.parse_args()
 
     if not os.path.isabs(args.logfile):
         args.logfile = os.path.join(args.workdir, args.logfile)
     setup_logging(args.logfile, args.verbose)
 
-    logger.info('Initializing BeeSwarm version {0}'.format(beeswarm.version))
+    logger.info('Initializing Heralding version {0}'.format(heralding.version))
 
-    config_file = os.path.join(args.workdir, 'beeswarmcfg.json')
+    config_file = os.path.join(args.workdir, 'heralding.json')
 
-    if is_url(args.configurl):
-        # meh, MiTM problem here... Acceptable? Workaround?
-        # maybe print fingerprint on the web ui and let user verify manually?
-        config_extracted = extract_config_from_api(args.configurl, config_file)
-        if not config_extracted:
-            logger.error('Error while extracting configuration from {0}, please make sure that the correct url was '
-                         'provided.'.format(args.configurl))
-            sys.exit(1)
-
-    is_server = False
-    mode = None
+    # TODO: Reimplement config stuff
     config = None
-    if os.path.isfile(config_file):
-        with open(config_file, 'r') as _file:
-            config = json.load(_file, object_hook=asciify)
-            if 'general' in config:
-                mode = config['general']['mode']
-                if not mode:
-                    mode = 'drone'
-
-    if args.server or mode == 'server':
-        stop_if_root()
-        server = Server(args.workdir, config, customize=args.customize, clear_db=args.clearsessions,
-                        reset_password=args.resetpw, max_sessions=args.max_sessions, start_webui=not args.no_webui)
-        server_greenlet = gevent.spawn(server.start)
-        gevent.joinall([server_greenlet])
-    elif args.waitingdrone or mode == 'drone':
-        start_drone(args.workdir, config, config_file, args.local_socket)
-    else:
-        parser.print_help()
+    # TODO: custom work_dir
+    work_dir = os.getcwd()
+    honeypot = heralding.honeypot.Honeypot(config, work_dir)
+    drone_greenlet = Greenlet.spawn(honeypot.start)
+    gevent.wait(drone_greenlet)

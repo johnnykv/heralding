@@ -24,7 +24,8 @@ from honeypot.capabilities.handlerbase import HandlerBase
 logger = logging.getLogger(__name__)
 
 
-class BeeHTTPSHandler(BeeHTTPHandler):
+#class BeeHTTPSHandler(BeeHTTPHandler):
+class BeeHTTPSHandler(object):
     """
         This class doesn't do anything about HTTPS, the difference is in the way the
         HTML body is sent. We need smaller chunks for HTTPS apparently.

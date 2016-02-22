@@ -27,7 +27,8 @@ from honeypot.capabilities.handlerbase import HandlerBase
 logger = logging.getLogger(__name__)
 
 
-class SSH(HandlerBase):
+class SSH(object):
+#class SSH(HandlerBase):
     def __init__(self, options, work_dir, key='server.key'):
         logging.getLogger("telnetsrv.paramiko_ssh ").setLevel(logging.WARNING)
         logging.getLogger("paramiko").setLevel(logging.WARNING)

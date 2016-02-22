@@ -24,7 +24,8 @@ from honeypot.capabilities.handlerbase import HandlerBase
 logger = logging.getLogger(__name__)
 
 
-class Pop3S(Pop3, HandlerBase):
+#class Pop3S(Pop3, HandlerBase):
+class Pop3S(object):
     """
     This class will get wrapped in SSL. This is possible because we by convention  wrap
     all capabilities that ends with the letter 's' in SSL."""

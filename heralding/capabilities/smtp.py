@@ -38,7 +38,8 @@ logger = logging.getLogger(__name__)
 
 
 
-class SMTPChannel(smtpd.SMTPChannel):
+class SMTPChannel(object):
+#class SMTPChannel(smtpd.SMTPChannel):
     def __init__(self, smtp_server, newsocket, fromaddr,
                  smtp_map=None, session=None, opts=None):
         self.options = opts

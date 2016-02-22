@@ -21,7 +21,8 @@ from honeypot.capabilities.handlerbase import HandlerBase
 logger = logging.getLogger(__name__)
 
 
-class Pop3(HandlerBase):
+#class Pop3(HandlerBase):
+class Pop3(object):
     max_tries = 10
     cmds = {}
 

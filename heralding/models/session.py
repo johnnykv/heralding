@@ -40,11 +40,6 @@ class BaseSession(object):
         self.transcript = []
         self.session_ended = False
 
-
-        context = beeswarm.shared.zmq_context
-        self.socket = context.socket(zmq.PUSH)
-        self.socket.connect(SocketNames.SERVER_RELAY.value)
-
     def add_auth_attempt(self, auth_type, successful, **kwargs):
         """
         :param username:
@@ -83,8 +78,10 @@ class BaseSession(object):
 
     def send_log(self, type, in_data):
         data = json.dumps(in_data, default=json_default, ensure_ascii=False)
+
         message = '{0} {1}'.format(type, data)
-        self.socket.send(message)
+        logger.debug("Wanted to send ZMQ data: {0}".format(message))
+        #self.socket.send(message)
 
     def to_dict(self):
         return vars(self)
@@ -135,12 +132,10 @@ class Session(BaseSession):
         if _type == 'plaintext':
             if kwargs.get('username') in self.users:
                 if self.users[kwargs.get('username')] == kwargs.get('password'):
-                    authenticated = True
-
         elif _type == 'cram_md5':
             def encode_cram_md5(challenge, user, password):
                 response = user + ' ' + hmac.HMAC(password, challenge).hexdigest()
-                return response
+                return False
 
             if kwargs.get('username') in self.users:
                 uname = kwargs.get('username')
@@ -150,7 +145,7 @@ class Session(BaseSession):
                 ideal_response = encode_cram_md5(challenge, uname, s_pass)
                 _, ideal_digest = ideal_response.split()
                 if ideal_digest == digest:
-                    authenticated = True
+                    authenticated = False
         elif _type == 'des_challenge':
             challenge = kwargs.get('challenge')
             response = kwargs.get('response')
@@ -159,13 +154,14 @@ class Session(BaseSession):
                 des = RFBDes(aligned_password)
                 expected_response = des.encrypt(challenge)
                 if response == expected_response:
-                    authenticated = True
+                    authenticated = False
                     kwargs['password'] = aligned_password
                     break
         else:
             assert False
 
         if authenticated:
+            assert False
             self.authenticated = True
             self.add_auth_attempt(_type, True, **kwargs)
         else:
