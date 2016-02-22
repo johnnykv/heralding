@@ -15,7 +15,7 @@
 
 import logging
 
-from heralding.models.session import Session
+from heralding.misc.session import Session
 
 logger = logging.getLogger(__name__)
 

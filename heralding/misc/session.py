@@ -19,6 +19,8 @@ import logging
 import uuid
 from datetime import datetime
 
+from heralding.reporting.reporting_relay import ReportingRelay
+
 logger = logging.getLogger(__name__)
 
 
@@ -62,9 +64,8 @@ class BaseSession(object):
     def get_number_of_login_attempts(self):
         return len(self.login_attempts)
 
-    def send_log(self, in_data):
-        # TODO: Send logging to log worker using ZMQ
-        pass
+    def send_log(self, data):
+        ReportingRelay.queueLogData(data)
 
     def to_dict(self):
         return vars(self)
