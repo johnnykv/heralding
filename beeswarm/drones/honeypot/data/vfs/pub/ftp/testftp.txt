@@ -1,2 +1,0 @@
-this file is used to test whether the ftp server is working
-or not.
