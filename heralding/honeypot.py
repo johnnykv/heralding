@@ -59,6 +59,8 @@ class Honeypot(object):
             cap_name = c.__name__.lower()
 
             if cap_name in self.config['capabilities']:
+                if not self.config['capabilities'][cap_name]['enabled']:
+                    continue
                 port = self.config['capabilities'][cap_name]['port']
                 # carve out the options for this specific service
                 options = self.config['capabilities'][cap_name]

@@ -25,7 +25,6 @@
 import logging
 import os
 
-from fs.path import dirname
 from gevent import socket
 
 from heralding.capabilities.handlerbase import HandlerBase
@@ -38,7 +37,8 @@ TERMINATOR = '\r\n'
 class BeeFTPHandler(object):
     """Handles a single FTP connection"""
 
-    def __init__(self, conn, session, vfs, options):
+    def __init__(self, conn, session, options):
+        print options
         self.banner = options['protocol_specific_data']['banner']
         self.max_logins = int(options['protocol_specific_data']['max_attempts'])
         self.syst_type = options['protocol_specific_data']['syst_type']
@@ -47,7 +47,8 @@ class BeeFTPHandler(object):
         self.serve_flag = True
         self.session = session
         self.respond('200 ' + self.banner)
-        self.vfs = vfs
+
+        # TODO: What is this?
         self.local_ip = '127.0.0.1'
 
         # These are set and used if the user is authenticated.
@@ -64,6 +65,9 @@ class BeeFTPHandler(object):
         self.cli_ip = None
         self.cli_port = None
         self.serve()
+
+    def getcmd(self):
+        return self.conn.recv(512)
 
     def serve(self):
         while self.serve_flag:
@@ -133,31 +137,6 @@ class BeeFTPHandler(object):
         self.cli_port = (int(portlist[4]) << 8) + int(portlist[5])
         self.respond('200 PORT Command Successful')
 
-    def do_LIST(self, arg):
-        self.respond('150 Listing Files.')
-        self.start_data_conn()
-
-        file_names = self.vfs.listdir(self.working_dir)
-        for fname in file_names:
-            abspath = self.vfs.getsyspath(self.working_dir + '/' + fname)
-            self.client_sock.send(path_to_ls(abspath) + '\r\n')
-        self.stop_data_conn()
-        self.respond('226 File listing successful.')
-
-    def do_CWD(self, arg):
-        newdir = self.working_dir[:]
-        while arg.startswith('..'):
-            if newdir.endswith('/'):
-                newdir = newdir[:-1]
-            newdir = dirname(newdir)
-            arg = arg[3:]
-        newdir = os.path.join(newdir, arg)
-        if self.vfs.isdir(newdir):
-            self.working_dir = newdir[:]
-            self.respond('250 Directory Changed.')
-        else:
-            self.respond('550 The system cannot find the path specified.')
-
     def do_NOOP(self, arg):
         self.respond('200 Command Successful.')
 
@@ -186,6 +165,6 @@ class ftp(HandlerBase):
     def handle_session(self, gsocket, address):
         session = self.create_session(address)
         try:
-            BeeFTPHandler(gsocket, session, self.vfsystem.opendir('/pub/ftp'), self._options)
+            BeeFTPHandler(gsocket, session, self._options)
         finally:
             self.close_session(session)

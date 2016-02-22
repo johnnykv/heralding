@@ -72,7 +72,7 @@ class BaseSession(object):
     def transcript_outgoing(self, data):
         self._add_transcript('outgoing', data)
 
-    def send_log(self, type, in_data):
+    def send_log(self, in_data):
         pass
 
     def to_dict(self):
