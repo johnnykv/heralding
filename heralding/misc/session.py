@@ -24,9 +24,10 @@ from heralding.reporting.reporting_relay import ReportingRelay
 logger = logging.getLogger(__name__)
 
 
-# TODO: Merge the two sessions objects
-class BaseSession(object):
-    def __init__(self, protocol, source_ip=None, source_port=None, destination_ip=None, destination_port=None):
+class Session(object):
+
+    def __init__(self, source_ip, source_port, protocol, users, destination_port=None, destination_ip=None):
+
         self.id = uuid.uuid4()
         self.source_ip = source_ip
         self.source_port = source_port
@@ -34,68 +35,11 @@ class BaseSession(object):
         self.destination_ip = destination_ip
         self.destination_port = destination_port
         self.timestamp = datetime.utcnow()
-        self.login_attempts = []
+        self.login_attempts = 0
         self.session_ended = False
-
-    def add_auth_attempt(self, auth_type, **kwargs):
-        """
-        :param username:
-        :param password:
-        :param auth_type: possible values:
-                                plain: plaintext username/password
-        :return:
-        """
-
-        entry = {'timestamp': datetime.utcnow(),
-                 'auth': auth_type,
-                 'id': uuid.uuid4()
-                 }
-
-        log_string = ''
-        for key, value in kwargs.iteritems():
-            if key == 'challenge' or key == 'response':
-                entry[key] = repr(value)
-            else:
-                entry[key] = value
-                log_string += '{0}:{1}, '.format(key, value)
-
-        self.login_attempts.append(entry)
-
-    def get_number_of_login_attempts(self):
-        return len(self.login_attempts)
-
-    def send_log(self, data):
-        ReportingRelay.queueLogData(data)
-
-    def to_dict(self):
-        return vars(self)
-
-    def end_session(self):
-        if not self.session_ended:
-            self.session_ended = True
-            self.connected = False
-
-
-def json_default(obj):
-    if isinstance(obj, datetime):
-        return obj.isoformat()
-    elif isinstance(obj, uuid.UUID):
-        return str(obj)
-    else:
-        return None
-
-class Session(BaseSession):
-    authenticator = None
-    default_timeout = 25
-    honeypot_id = None
-
-    def __init__(self, source_ip, source_port, protocol, users, destination_port=None, destination_ip=None):
-
-        super(Session, self).__init__(protocol, source_ip, source_port, destination_ip, destination_port)
 
         self.connected = True
         self.authenticated = False
-        self.honeypot_id = Session.honeypot_id
         self.users = users
 
         # for session specific volatile data (will not get logged)
@@ -105,31 +49,20 @@ class Session(BaseSession):
     def activity(self):
         self.last_activity = datetime.utcnow()
 
+    def get_number_of_login_attempts(self):
+        return self.login_attempts
+
     def is_connected(self):
         return self.connected
 
     def try_auth(self, _type, **kwargs):
-        authenticated = False
-        if _type == 'plaintext':
-            if kwargs.get('username') in self.users:
-                pass
-        elif _type == 'cram_md5':
+        self.login_attempts += 1
+        if _type == 'cram_md5':
             def encode_cram_md5(challenge, user, password):
                 response = user + ' ' + hmac.HMAC(password, challenge).hexdigest()
                 return False
 
-            if kwargs.get('username') in self.users:
-                uname = kwargs.get('username')
-                digest = kwargs.get('digest')
-                s_pass = self.users[uname]
-                challenge = kwargs.get('challenge')
-                ideal_response = encode_cram_md5(challenge, uname, s_pass)
-                _, ideal_digest = ideal_response.split()
-                if ideal_digest == digest:
-                    authenticated = False
-        else:
-            assert False
-
+        # for now we forget about challenge/response...
         '''
         # This before else above
         elif _type == 'des_challenge':
@@ -143,23 +76,30 @@ class Session(BaseSession):
                     authenticated = False
                     kwargs['password'] = aligned_password
                     break
-        '''
 
-        if authenticated:
-            assert False
-            self.authenticated = True
-
-        self.add_auth_attempt(_type, **kwargs)
 
         if _type == 'des_challenge':
             kwargs['challenge'] = kwargs.get('challenge').encode('hex')
             kwargs['response'] = kwargs.get('response').encode('hex')
+        '''
 
-        self.send_log(self.login_attempts[-1])
+        entry = {'timestamp': datetime.utcnow(),
+                 'auth_id': uuid.uuid4(),
+                 'auth_type': _type,
+                 'session_id': self.id,
+                 'source_ip': self.source_ip,
+                 'souce_port': self.source_port,
+                 'destination_port': self.destination_port,
+                 'username': None,
+                 'password': None
+                 }
+
+        ReportingRelay.queueLogData(entry)
         logger.debug('{0} authentication attempt from {1}:{2}. Credentials: {3}'.format(self.protocol, self.source_ip,
                                                                                         self.source_port,
                                                                                         json.dumps(kwargs)))
-        return authenticated
 
     def end_session(self):
-        super(Session, self).end_session()
+        if not self.session_ended:
+            self.session_ended = True
+            self.connected = False
