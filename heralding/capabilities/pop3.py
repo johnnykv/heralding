@@ -16,7 +16,7 @@
 import logging
 import socket
 
-from honeypot.capabilities.handlerbase import HandlerBase
+from heralding.capabilities.handlerbase import HandlerBase
 
 logger = logging.getLogger(__name__)
 

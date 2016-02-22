@@ -31,6 +31,7 @@ from gevent import Greenlet
 
 import heralding
 import heralding.honeypot
+from heralding.helpers.asciify import asciify
 
 
 logger = logging.getLogger()
@@ -93,10 +94,8 @@ if __name__ == '__main__':
     parser.add_argument('--config', dest='configurl', default='', help='Configuration URL to the server service.')
     parser.add_argument('--waitingdrone', action='store_true', default=False, help='Waiting drone mode - expert mode!')
     parser.add_argument('--local_socket', dest='local_socket', default=None)
-    parser.add_argument('--workdir', dest='workdir', default=os.getcwd())
     parser.add_argument('--max_sessions', dest='max_sessions', type=int, default=None,
                         help='Maximum number of sessions to store.')
-    parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Logs debug messages.')
     parser.add_argument('--customize', action='store_true', default=False,
                         help='Asks for specific network and certificate information on the first run.')
     parser.add_argument('--clearsessions', action='store_true', default=False,
@@ -105,9 +104,10 @@ if __name__ == '__main__':
                         help='Deletes all sessions on startup.')
     parser.add_argument('--no_webui', action='store_true', default=False,
                         help='Do not start the web ui.')
-    parser.add_argument('-l', '--logfile', dest='logfile', default='heralding.log', help='Beeswarm log file..')
     '''
-
+    parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Logs debug messages.')
+    parser.add_argument('--workdir', dest='workdir', default=os.getcwd())
+    parser.add_argument('-l', '--logfile', dest='logfile', default='heralding.log', help='Heralding log file')
     args = parser.parse_args()
 
     if not os.path.isabs(args.logfile):
@@ -116,12 +116,12 @@ if __name__ == '__main__':
 
     logger.info('Initializing Heralding version {0}'.format(heralding.version))
 
-    config_file = os.path.join(args.workdir, 'heralding.json')
+    config_file = os.path.join(args.workdir, 'heralding.cfg')
 
     # TODO: Reimplement config stuff
-    config = None
-    # TODO: custom work_dir
-    work_dir = os.getcwd()
-    honeypot = heralding.honeypot.Honeypot(config, work_dir)
+    with open(config_file, "r") as _file:
+        config = json.loads(_file.read(), object_hook=asciify)
+
+    honeypot = heralding.honeypot.Honeypot(config, args.workdir)
     drone_greenlet = Greenlet.spawn(honeypot.start)
-    gevent.wait(drone_greenlet)
+    gevent.wait([drone_greenlet,])

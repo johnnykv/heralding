@@ -17,12 +17,12 @@
 import logging
 import os
 
-from beeswarm.drones.honeypot.capabilities.shared.shell import Commands
 from paramiko import RSAKey
 from paramiko.ssh_exception import SSHException
 from telnetsrv.paramiko_ssh import SSHHandler, TelnetToPtyHandler
 
-from honeypot.capabilities.handlerbase import HandlerBase
+from heralding.capabilities.handlerbase import HandlerBase
+from heralding.capabilities.shared.shell import Commands
 
 logger = logging.getLogger(__name__)
 

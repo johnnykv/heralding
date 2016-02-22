@@ -16,9 +16,9 @@
 
 import logging
 
-from beeswarm.drones.honeypot.capabilities.pop3 import Pop3
+from heralding.capabilities.pop3 import  Pop3
 
-from honeypot.capabilities.handlerbase import HandlerBase
+from heralding.capabilities.handlerbase import HandlerBase
 
 
 logger = logging.getLogger(__name__)

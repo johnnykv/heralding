@@ -48,18 +48,7 @@ class Honeypot(object):
         self._servers = []
         self._server_greenlets = []
 
-        self.honeypot_id = self.config['general']['id']
-
-        if self.config['general']['fetch_ip']:
-            try:
-                url = 'http://api.externalip.net/ip'
-                req = requests.get(url)
-                self.honeypot_ip = req.text
-                logger.info('Fetched {0} as external ip for Honeypot.'.format(self.honeypot_ip))
-            except (Timeout, ConnectionError) as e:
-                logger.warning('Could not fetch public ip: {0}'.format(e))
-        else:
-            self.honeypot_ip = ''
+        self.honeypot_ip = ''
 
     def start(self):
         """ Starts services. """

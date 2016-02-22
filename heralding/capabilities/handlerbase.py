@@ -14,7 +14,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import os
+
+from heralding.models.session import Session
 
 logger = logging.getLogger(__name__)
 
@@ -31,13 +32,8 @@ class HandlerBase(object):
         """
         self.options = options
         self.sessions = {}
-        if 'users' in options:
-            self.users = options['users']
-        else:
-            self.users = {}
-        # virtual file system shared by all capabilities
-        self.vfsystem = OSFS(os.path.join(workdir, 'data/vfs'))
-        # service port
+        self.users = {}
+
         self.port = int(options['port'])
 
     def create_session(self, address):

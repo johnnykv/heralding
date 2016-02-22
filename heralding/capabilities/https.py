@@ -16,9 +16,8 @@
 
 import logging
 
-from beeswarm.drones.honeypot.capabilities.http import Http, BeeHTTPHandler
-
-from honeypot.capabilities.handlerbase import HandlerBase
+from heralding.capabilities.handlerbase import HandlerBase
+from heralding.capabilities.http import Http
 
 
 logger = logging.getLogger(__name__)

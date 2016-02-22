@@ -1,14 +1,4 @@
 {
-    "general": {
-        "mode": "honeypot",
-        "id": "",
-        "ip": "",
-        "fetch_ip": true
-    },
-    "log_server": {
-        "enabled": false,
-        "server_url": "http://127.0.0.1:5000/ws/honeypot_data"
-    },
     "capabilities": {
 		"ftp": {
 			"enabled": true,
@@ -57,10 +47,4 @@
 			"port": 5900
 		}
 	},
-	"users": {},
-    "timecheck": {
-        "enabled": true,
-        "poll": 5,
-        "ntp_pool": "pool.ntp.org"
-    }
 }

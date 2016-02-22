@@ -17,9 +17,9 @@ import curses
 import logging
 import socket
 
-from beeswarm.drones.honeypot.capabilities.shared.shell import Commands
+from heralding.capabilities.handlerbase import HandlerBase
+from heralding.capabilities.shared.shell import Commands
 
-from honeypot.capabilities.handlerbase import HandlerBase
 
 logger = logging.getLogger(__name__)
 

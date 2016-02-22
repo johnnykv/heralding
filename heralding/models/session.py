@@ -19,10 +19,6 @@ import logging
 import uuid
 from datetime import datetime
 
-from beeswarm.shared.misc.rfbes import RFBDes
-
-from shared.message_enum import Messages
-
 logger = logging.getLogger(__name__)
 
 
@@ -40,7 +36,7 @@ class BaseSession(object):
         self.transcript = []
         self.session_ended = False
 
-    def add_auth_attempt(self, auth_type, successful, **kwargs):
+    def add_auth_attempt(self, auth_type, **kwargs):
         """
         :param username:
         :param password:
@@ -51,8 +47,8 @@ class BaseSession(object):
 
         entry = {'timestamp': datetime.utcnow(),
                  'auth': auth_type,
-                 'id': uuid.uuid4(),
-                 'successful': successful}
+                 'id': uuid.uuid4()
+                 }
 
         log_string = ''
         for key, value in kwargs.iteritems():
@@ -77,19 +73,14 @@ class BaseSession(object):
         self._add_transcript('outgoing', data)
 
     def send_log(self, type, in_data):
-        data = json.dumps(in_data, default=json_default, ensure_ascii=False)
-
-        message = '{0} {1}'.format(type, data)
-        logger.debug("Wanted to send ZMQ data: {0}".format(message))
-        #self.socket.send(message)
+        pass
 
     def to_dict(self):
         return vars(self)
 
-    def end_session(self, session_type):
+    def end_session(self):
         if not self.session_ended:
             self.session_ended = True
-            self.send_log(session_type, self.to_dict())
             self.connected = False
 
 
@@ -119,8 +110,6 @@ class Session(BaseSession):
         self.vdata = {}
         self.last_activity = datetime.utcnow()
 
-        self.send_log(Messages.SESSION_PART_HONEYPOT_SESSION_START.value, self.to_dict())
-
     def activity(self):
         self.last_activity = datetime.utcnow()
 
@@ -131,7 +120,7 @@ class Session(BaseSession):
         authenticated = False
         if _type == 'plaintext':
             if kwargs.get('username') in self.users:
-                if self.users[kwargs.get('username')] == kwargs.get('password'):
+                pass
         elif _type == 'cram_md5':
             def encode_cram_md5(challenge, user, password):
                 response = user + ' ' + hmac.HMAC(password, challenge).hexdigest()
@@ -146,6 +135,11 @@ class Session(BaseSession):
                 _, ideal_digest = ideal_response.split()
                 if ideal_digest == digest:
                     authenticated = False
+        else:
+            assert False
+
+        '''
+        # This before else above
         elif _type == 'des_challenge':
             challenge = kwargs.get('challenge')
             response = kwargs.get('response')
@@ -157,25 +151,23 @@ class Session(BaseSession):
                     authenticated = False
                     kwargs['password'] = aligned_password
                     break
-        else:
-            assert False
+        '''
 
         if authenticated:
             assert False
             self.authenticated = True
-            self.add_auth_attempt(_type, True, **kwargs)
-        else:
-            self.add_auth_attempt(_type, False, **kwargs)
+
+        self.add_auth_attempt(_type, **kwargs)
 
         if _type == 'des_challenge':
             kwargs['challenge'] = kwargs.get('challenge').encode('hex')
             kwargs['response'] = kwargs.get('response').encode('hex')
 
-        self.send_log(Messages.SESSION_PART_HONEYPOT_AUTH.value, self.login_attempts[-1])
+        self.send_log(self.login_attempts[-1])
         logger.debug('{0} authentication attempt from {1}:{2}. Credentials: {3}'.format(self.protocol, self.source_ip,
                                                                                         self.source_port,
                                                                                         json.dumps(kwargs)))
         return authenticated
 
     def end_session(self):
-        super(Session, self).end_session(Messages.SESSION_HONEYPOT.value)
+        super(Session, self).end_session()

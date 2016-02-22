@@ -25,9 +25,7 @@ import logging
 import socket
 from BaseHTTPServer import BaseHTTPRequestHandler
 
-from beeswarm.drones.honeypot.helpers.common import send_whole_file
-
-from honeypot.capabilities.handlerbase import HandlerBase
+from heralding.capabilities.handlerbase import HandlerBase
 
 logger = logging.getLogger(__name__)
 

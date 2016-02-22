@@ -25,12 +25,16 @@ import logging
 import random
 import socket
 
-from honeypot.capabilities.handlerbase import HandlerBase
-# Import the constants defined for the VNC protocol
-from shared.vnc_constants import *
+from heralding.capabilities.handlerbase import HandlerBase
 
 logger = logging.getLogger(__name__)
 
+RFB_VERSION = 'RFB 003.007\n'
+SUPPORTED_AUTH_METHODS = '\x01\x02'
+VNC_AUTH = '\x02'
+NO_AUTH = '\x01'
+AUTH_FAILED = '\x00\x00\x00\x01'
+AUTH_SUCCESSFUL = '\x00\x00\x00\x00'
 
 class BaitVncHandler(object):
 #class BaitVncHandler(SocketServer.StreamRequestHandler):

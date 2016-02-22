@@ -25,11 +25,10 @@
 import logging
 import os
 
-from beeswarm.drones.honeypot.helpers.common import send_whole_file, path_to_ls
 from fs.path import dirname
 from gevent import socket
 
-from honeypot.capabilities.handlerbase import HandlerBase
+from heralding.capabilities.handlerbase import HandlerBase
 
 logger = logging.getLogger(__name__)
 
