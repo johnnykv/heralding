@@ -85,9 +85,6 @@ class FtpHandler(object):
                     self.state = cmd
 
     def do_USER(self, arg):
-        if self.authenticated:
-            self.respond('530 Cannot switch to another user.')
-            return
         self.user = arg
         self.respond('331 Now specify the Password.')
 
@@ -118,8 +115,8 @@ class FtpHandler(object):
 
 
 class ftp(HandlerBase):
-    def __init__(self, options, work_dir):
-        super(ftp, self).__init__(options, work_dir)
+    def __init__(self, options):
+        super(ftp, self).__init__(options)
         self._options = options
 
     def handle_session(self, gsocket, address):

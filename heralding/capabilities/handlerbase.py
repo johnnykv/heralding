@@ -21,14 +21,12 @@ logger = logging.getLogger(__name__)
 
 
 class HandlerBase(object):
-    def __init__(self, options, workdir):
+    def __init__(self, options):
         """
         Base class that all capabilities must inherit from.
 
         :param sessions: a dictionary of Session objects.
         :param options: a dictionary of configuration options.
-        :param workdir: the directory which contains files for this
-                        particular instance of Beeswarm
         """
         self.options = options
         self.sessions = {}

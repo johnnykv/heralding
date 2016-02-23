@@ -31,20 +31,16 @@ logger = logging.getLogger(__name__)
 
 class Honeypot(object):
     """ This is the main class, which starts up all capabilities. """
-    def __init__(self, config, work_dir, key='server.key', cert='server.crt'):
+    def __init__(self, config, key='server.key', cert='server.crt'):
         """
             Main class which runs Beeswarm in Honeypot mode.
 
-        :param work_dir: Working directory (usually the current working directory)
         :param config: Beeswarm configuration dictionary, None if no configuration was supplied.
         :param key: Key file used for SSL enabled capabilities
         :param cert: Cert file used for SSL enabled capabilities
         """
 
-        self.work_dir = work_dir
         self.config = config
-        self.key = os.path.join(work_dir, key)
-        self.cert = os.path.join(work_dir, cert)
         self._servers = []
         self._server_greenlets = []
 
@@ -65,7 +61,7 @@ class Honeypot(object):
                 # carve out the options for this specific service
                 options = self.config['capabilities'][cap_name]
                 # capabilities are only allowed to append to the session list
-                cap = c(options, self.work_dir)
+                cap = c(options)
 
                 try:
                     # Convention: All capability names which end in 's' will be wrapped in ssl.
