@@ -120,6 +120,7 @@ class SMTPChannel(object):
                 self.push('451 Internal confusion')
                 return
             authbool = self.session.try_auth('cram_md5', username=self.username, digest=self.digest,
+            self.session.add_auth_attempt('cram_md5', username=self.username, digest=self.digest,
                                              challenge=self.sent_cram_challenge)
             if authbool:
                 self.push('235 Authentication Successful')
@@ -148,6 +149,7 @@ class SMTPChannel(object):
             else:
                 self.push('535 authentication failed')
                 self.close_quit()
+            self.session.add_auth_attempt('plaintext', username=self.username, password=self.password)
 
             self.push('535 authentication failed')
             self.close_quit()
@@ -156,14 +158,9 @@ class SMTPChannel(object):
             self.plain_authenticating = False
             # Our arg will ideally be the username/password
             _, self.username, self.password = base64.b64decode(arg).split('\x00')
-            authbool = self.session.try_auth('plaintext', username=self.username, password=self.password)
-            if authbool:
-                self.push('235 Authentication Successful')
-                self.authenticated = True
-                return
-            else:
-                self.push('535 authentication failed')
-                self.close_quit()
+            self.session.add_auth_attempt('plaintext', username=self.username, password=self.password)
+            self.push('535 authentication failed')
+            self.close_quit()
 
         elif 'PLAIN' in arg:
             self.plain_authenticating = True
@@ -175,14 +172,9 @@ class SMTPChannel(object):
                 self.push("334 ")
                 return
             _, self.username, self.password = base64.b64decode(param).split('\x00')
-            authbool = self.session.try_auth('plaintext', username=self.username, password=self.password)
-            if authbool:
-                self.push('235 Authentication Successful')
-                self.authenticated = True
-                return
-            else:
-                self.push('535 authentication failed')
-                self.close_quit()
+            self.session.add_auth_attempt('plaintext', username=self.username, password=self.password)
+            self.push('535 authentication failed')
+            self.close_quit()
 
         elif 'LOGIN' in arg:
             param = arg.split()

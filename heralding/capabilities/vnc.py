@@ -68,7 +68,7 @@ class BaitVncHandler(object):
         client_response_ = self.request.recv(1024)
 
         # This could result in an ugly log file, since the des_challenge is just an array of 4 bytes
-        self.session.try_auth('des_challenge', challenge=challenge, response=client_response_)
+        self.session.add_auth_attempt('des_challenge', challenge=challenge, response=client_response_)
         if self.session.authenticated:
             self.request.send(AUTH_SUCCESSFUL)
         else:

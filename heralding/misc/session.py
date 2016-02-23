@@ -55,7 +55,7 @@ class Session(object):
     def is_connected(self):
         return self.connected
 
-    def try_auth(self, _type, **kwargs):
+    def add_auth_attempt(self, _type, **kwargs):
         self.login_attempts += 1
         if _type == 'cram_md5':
             def encode_cram_md5(challenge, user, password):

@@ -93,7 +93,7 @@ class FtpHandler(object):
             self.respond('503 Login with USER first.')
             return
         passwd = arg
-        self.session.try_auth('plaintext', username=self.user, password=passwd)
+        self.session.add_auth_attempt('plaintext', username=self.user, password=passwd)
         self.respond('530 Authentication Failed.')
         if self.session.get_number_of_login_attempts() >= self.max_logins:
             self.stop()

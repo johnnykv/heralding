@@ -86,7 +86,7 @@ class SshWrapper(SSHHandler):
 
     def authCallback(self, username, password):
         self.session.activity()
-        if self.session.try_auth('plaintext', username=username, password=password):
+        if self.session.add_auth_attempt('plaintext', username=username, password=password):
             self.working_dir = '/'
             self.username = username
             self.telnet_handler.PROMPT = '[{0}@{1} {2}]$ '.format(self.username, self.HOSTNAME, self.working_dir)

@@ -107,7 +107,7 @@ class Pop3(object):
         if 'USER' not in session.vdata:
             self.send_message(session, gsocket, '-ERR No username given.')
         else:
-            if session.try_auth('plaintext', username=session.vdata['USER'], password=msg):
+            if session.add_auth_attempt('plaintext', username=session.vdata['USER'], password=msg):
                 self.send_message(session, gsocket, "+OK Pass accepted")
                 return 'TRANSACTION'
 
