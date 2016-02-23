@@ -64,6 +64,20 @@ class ReportingRelay(Greenlet):
 
         self.internalReportingPublisher.close()
 
+        # None is also used to signal we are all done
+        ReportingRelay._incommingLogQueueLock.acquire()
+        ReportingRelay._incommingLogQueue = None
+        ReportingRelay._incommingLogQueueLock.release()
+
     def stop(self):
         self.enabled = False
-
+        while True:
+                try:
+                    ReportingRelay._incommingLogQueueLock.acquire()
+                    if ReportingRelay._incommingLogQueue is not None:
+                        gevent.sleep(0.1)
+                    else:
+                        break
+                finally:
+                    ReportingRelay._incommingLogQueueLock.release()
+                    gevent.sleep()

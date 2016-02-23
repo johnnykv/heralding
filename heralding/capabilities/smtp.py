@@ -38,8 +38,7 @@ logger = logging.getLogger(__name__)
 
 
 
-class SMTPChannel(object):
-#class SMTPChannel(smtpd.SMTPChannel):
+class SMTPChannel(smtpd.SMTPChannel):
     def __init__(self, smtp_server, newsocket, fromaddr,
                  smtp_map=None, session=None, opts=None):
         self.options = opts
@@ -56,7 +55,6 @@ class SMTPChannel(object):
         self.login_uname_authenticating = False
         self.plain_authenticating = False
         self.cram_authenticating = False
-        self.authenticated = False
 
         self.username = None
         self.password = None
@@ -78,7 +76,6 @@ class SMTPChannel(object):
         # Only send data after superclass initialization
         if self._initflag:
             transmit_msg = msg + '\r\n'
-            self.session.transcript_outgoing(transmit_msg)
             asynchat.async_chat.push(self, transmit_msg)
 
     def close_quit(self):
@@ -91,7 +88,6 @@ class SMTPChannel(object):
         self.close_quit()
 
     def collect_incoming_data(self, data):
-        self.session.transcript_incoming(data + self.terminator)
         self.__line.append(data)
 
     def smtp_EHLO(self, arg):
@@ -119,16 +115,10 @@ class SMTPChannel(object):
             if self.sent_cram_challenge is None:
                 self.push('451 Internal confusion')
                 return
-            authbool = self.session.try_auth('cram_md5', username=self.username, digest=self.digest,
             self.session.add_auth_attempt('cram_md5', username=self.username, digest=self.digest,
                                              challenge=self.sent_cram_challenge)
-            if authbool:
-                self.push('235 Authentication Successful')
-                self.authenticated = True
-                return
-            else:
-                self.push('535 authentication failed')
-                self.close_quit()
+            self.push('535 authentication failed')
+            self.close_quit()
 
         elif self.login_uname_authenticating:
             self.login_uname_authenticating = False
@@ -140,15 +130,6 @@ class SMTPChannel(object):
         elif self.login_pass_authenticating:
             self.login_pass_authenticating = False
             self.password = base64.b64decode(arg)
-            authbool = self.session.try_auth('plaintext', username=self.username, password=self.password)
-
-            if authbool:
-                self.push('235 Authentication Successful')
-                self.authenticated = True
-                return
-            else:
-                self.push('535 authentication failed')
-                self.close_quit()
             self.session.add_auth_attempt('plaintext', username=self.username, password=self.password)
 
             self.push('535 authentication failed')
@@ -202,7 +183,6 @@ class SMTPChannel(object):
     # support for AUTH is added.
     def found_terminator(self):
         line = EMPTYSTRING.join(self.__line)
-        logger.debug('found_terminator(): data: {0}'.format(repr(line)))
 
         self.__line = []
         if self.__state == self.COMMAND:
@@ -229,10 +209,9 @@ class SMTPChannel(object):
 
             # White list of operations that are allowed prior to AUTH.
             if command not in ['AUTH', 'EHLO', 'HELO', 'NOOP', 'RSET', 'QUIT']:
-                if not self.authenticated:
-                    self.push('530 Authentication required')
-                    self.close_quit()
-                    return
+                self.push('530 Authentication required')
+                self.close_quit()
+                return
 
             method = getattr(self, 'smtp_' + command, None)
             if not method:
@@ -270,9 +249,8 @@ class SMTPChannel(object):
 
 
 class DummySMTPServer(object):
-    def __init__(self, mail_vfs):
-        self.mail_vfs = mail_vfs
-        self.mboxpath = self.mail_vfs.getsyspath('mailbox')
+    def __init__(self):
+        self.mboxpath = None
 
     def process_message(self, peer, mailfrom, rcpttos, data):
         logging.info('Got new mail, peer ({}), from ({}), to ({})'.format(peer, mailfrom, rcpttos))
@@ -282,20 +260,17 @@ class DummySMTPServer(object):
 
 
 class smtp(HandlerBase):
-    def __init__(self, options, work_dir):
-        super(smtp, self).__init__(options, work_dir)
+    def __init__(self, options):
+        super(smtp, self).__init__(options)
         self._options = options
 
     def handle_session(self, gsocket, address):
         session = self.create_session(address)
         try:
             local_map = {}
-            server = DummySMTPServer(self.vfsystem.opendir('/var/mail'))
+            server = DummySMTPServer()
             SMTPChannel(server, gsocket, address, session=session,
                         smtp_map=local_map, opts=self._options)
             asyncore.loop(map=local_map)
-        except Exception:
-            # im sooooo evil!
-            pass
         finally:
             self.close_session(session)
