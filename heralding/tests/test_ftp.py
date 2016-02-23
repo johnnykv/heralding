@@ -25,26 +25,27 @@ import os
 import ftplib
 from ftplib import FTP
 from gevent.server import StreamServer
-from honeypot.honeypot import Honeypot
-from honeypot.capabilities import ftp
+
+from heralding.capabilities import ftp
+from heralding.reporting.reporting_relay import ReportingRelay
 
 
 class FtpTests(unittest.TestCase):
     def setUp(self):
-        self.work_dir = tempfile.mkdtemp()
-        Honeypot.prepare_environment(self.work_dir)
+        self.reportingRelay = ReportingRelay()
+        self.reportingRelay.start()
 
     def tearDown(self):
-        if os.path.isdir(self.work_dir):
-            shutil.rmtree(self.work_dir)
+        self.reportingRelay.stop()
 
     def test_login(self):
         """Testing different login combinations"""
 
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test Banner', 'users': {'test': 'test'},
                    'protocol_specific_data': {'max_attempts': 3, 'banner': 'test banner', 'syst_type': 'Test Type'}}
-        cap = ftp.ftp(options, self.work_dir)
-        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
+
+        ftp_capability = ftp.ftp(options)
+        srv = StreamServer(('0.0.0.0', 0), ftp_capability.handle_session)
         srv.start()
 
         ftp_client = FTP()
