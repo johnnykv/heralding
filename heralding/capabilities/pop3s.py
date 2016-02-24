@@ -16,16 +16,13 @@
 
 import logging
 
-from heralding.capabilities.pop3 import  Pop3
-
 from heralding.capabilities.handlerbase import HandlerBase
-
+from heralding.capabilities.pop3 import Pop3
 
 logger = logging.getLogger(__name__)
 
 
-#class Pop3S(Pop3, HandlerBase):
-class Pop3S(object):
+class Pop3S(Pop3, HandlerBase):
     """
     This class will get wrapped in SSL. This is possible because we by convention  wrap
     all capabilities that ends with the letter 's' in SSL."""
