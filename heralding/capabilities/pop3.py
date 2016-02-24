@@ -21,13 +21,12 @@ from heralding.capabilities.handlerbase import HandlerBase
 logger = logging.getLogger(__name__)
 
 
-#class Pop3(HandlerBase):
-class Pop3(object):
+class Pop3(HandlerBase):
     max_tries = 10
     cmds = {}
 
-    def __init__(self, options, workdir):
-        super(Pop3, self).__init__(options, workdir)
+    def __init__(self, options,):
+        super(Pop3, self).__init__(options)
         Pop3.max_tries = int(self.options['protocol_specific_data']['max_attempts'])
 
     def handle_session(self, gsocket, address):
@@ -38,9 +37,6 @@ class Pop3(object):
             self.close_session(session)
 
     def _handle_session(self, session, gsocket, address):
-        session.vdata['MAILSPOOL'] = {}
-        session.vdata['deleted_index'] = []
-
         fileobj = gsocket.makefile()
 
         self.send_message(session, gsocket, '+OK POP3 server ready')
@@ -54,7 +50,6 @@ class Pop3(object):
                 break
 
             session.activity()
-            session.transcript_incoming(raw_msg)
             cmd_msg = raw_msg.rstrip().split(' ', 1)
             if len(cmd_msg) == 0:
                 continue
@@ -67,10 +62,10 @@ class Pop3(object):
 
             cmd = cmd.lower()
 
-            func_to_call = getattr(self, 'cmd_{0}'.format(cmd), None)
-            if func_to_call is None or not self.is_state_valid(state, cmd):
+            if cmd not in ['apop', 'user', 'pass', 'quit']:
                 self.send_message(session, gsocket, '-ERR Unknown command')
             else:
+                func_to_call = getattr(self, 'cmd_{0}'.format(cmd), None)
                 return_value = func_to_call(session, gsocket, msg)
                 # state changers!
                 if state == 'AUTHORIZATION' or cmd == 'quit':
@@ -94,24 +89,13 @@ class Pop3(object):
         self.send_message(session, gsocket, '+OK User accepted')
         return 'AUTHORIZATION'
 
-    def is_state_valid(self, state, cmd):
-        if state == 'AUTHORIZATION':
-            if cmd in ['apop', 'user', 'pass', 'quit']:
-                return True;
-        elif state == 'TRANSACTION':
-            if cmd in ['list', 'retr', 'dele', 'noop', 'stat', 'rset', 'quit']:
-                return True
-        return False
-
     def cmd_pass(self, session, gsocket, msg):
         if 'USER' not in session.vdata:
             self.send_message(session, gsocket, '-ERR No username given.')
         else:
-            if session.add_auth_attempt('plaintext', username=session.vdata['USER'], password=msg):
-                self.send_message(session, gsocket, "+OK Pass accepted")
-                return 'TRANSACTION'
+            session.add_auth_attempt('plaintext', username=session.vdata['USER'], password=msg)
+            self.send_message(session, gsocket, "-ERR Authentication failed.")
 
-        self.send_message(session, gsocket, "-ERR Authentication failed.")
         if 'USER' in session.vdata:
             del session.vdata['USER']
         return 'AUTHORIZATION'
@@ -119,100 +103,15 @@ class Pop3(object):
     def cmd_noop(self, session, gsocket, msg):
         self.send_message(session, gsocket, '+OK')
 
-    def cmd_retr(self, session, gsocket, msg):
-
-        user_mailspool = self.mailspools[session['USER']]
-
-        try:
-            index = int(msg) - 1
-        except ValueError:
-            self.send_message(session, gsocket, '-ERR no such message')
-        else:
-            if index < 0 or len(user_mailspool) < index:
-                self.send_message(session, gsocket, '-ERR no such message')
-            else:
-                msg = '+OK %i octets' % (len(user_mailspool[index]))
-                self.send_message(session, gsocket, msg)
-                self.send_data(session, gsocket, user_mailspool[index])
-                self.send_message(session, gsocket, '')
-                self.send_message(session, gsocket, '.')
-
-    def cmd_dele(self, session, gsocket, msg):
-
-        user_mailspool = session.vdata['MAILSPOOL']
-
-        try:
-            index = int(msg) - 1
-        except ValueError:
-            self.send_message(session, gsocket, '-ERR no such message')
-        else:
-            if index < 0 or len(user_mailspool) <= index:
-                self.send_message(session, gsocket, '-ERR no such message')
-            else:
-                if index in session['deleted_index']:
-                    reply = '-ERR message %s already deleted' % (msg)
-                    self.send_message(session, gsocket, reply)
-                else:
-                    session['deleted_index'].append(index)
-                    reply = '+OK message %s deleted' % (msg)
-                    self.send_message(session, gsocket, reply)
-
-
-    def cmd_stat(self, session, gsocket, msg):
-
-        user_mailspool = session.vdata['MAILSPOOL']
-        mailspool_bytes_size = 0
-        mailspool_num_messages = 0
-
-        for index, value in enumerate(user_mailspool):
-            if index not in session.vdata['deleted_index']:  # ignore deleted messages
-                mailspool_bytes_size += len(value)
-                mailspool_num_messages += 1
-
-        reply = '+OK %i %i' % (mailspool_num_messages, mailspool_bytes_size)
-
-        self.send_message(session, gsocket, reply)
-
     def cmd_quit(self, session, gsocket, msg):
         self.send_message(session, gsocket, '+OK Logging out')
         return ''
-
-    def cmd_list(self, session, gsocket, argument):
-        user_mailspool = session.vdata['MAILSPOOL']
-
-        if not argument:
-            mailspool_bytes_size = 0
-            mailspool_num_messages = 0
-
-            for index, value in enumerate(user_mailspool):
-                if index not in session['deleted_index']:  # ignore deleted messages
-                    mailspool_bytes_size += len(value)
-                    mailspool_num_messages += 1
-
-            reply = "+OK %i messages (%i octets)" % (mailspool_num_messages, mailspool_bytes_size)
-            self.send_message(session, gsocket, reply)
-
-            for index, value in enumerate(user_mailspool):
-                if index not in session['deleted_index']:  # ignore deleted messages
-                    reply = "%i %i" % (index + 1, len(value))
-                    self.send_message(session, gsocket, reply)
-            self.send_message(session, gsocket, '.')
-        else:
-            index = int(argument) - 1
-            if index < 0 or len(user_mailspool) <= index or index in session['deleted_index']:
-                reply = '-ERR no such message'
-                self.send_message(session, gsocket, reply)
-            else:
-                mail = user_mailspool[index]
-                reply = '+OK %i %i' % (index + 1, len(mail))
-                self.send_message(session, gsocket, reply)
 
     def not_impl(self, session, gsocket, msg):
         raise Exception('Not implemented yet!')
 
     def send_message(self, session, gsocket, msg):
         try:
-            session.transcript_outgoing(msg + '\n')
             gsocket.sendall(msg + "\n")
         except socket.error, (value, msg):
             session.end_session()

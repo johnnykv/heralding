@@ -19,26 +19,25 @@ import tempfile
 import unittest
 
 import gevent
-from beeswarm.drones.honeypot.capabilities.pop3 import Pop3
+from heralding.capabilities.pop3 import Pop3
+from heralding.reporting.reporting_relay import ReportingRelay
 from gevent.server import StreamServer
 
-from honeypot.honeypot import Honeypot
 
 
 class Pop3Tests(unittest.TestCase):
     def setUp(self):
-        self.work_dir = tempfile.mkdtemp()
-        Honeypot.prepare_environment(self.work_dir)
+        self.reportingRelay = ReportingRelay()
+        self.reportingRelay.start()
 
     def tearDown(self):
-        if os.path.isdir(self.work_dir):
-            shutil.rmtree(self.work_dir)
+        self.reportingRelay.stop()
 
     def test_initial_session(self):
         """Tests if the basic parts of the session is filled correctly"""
 
-        options = {'port': 110, 'protocol_specific_data': {'max_attempts': 3}, 'users': {'test': 'test'}}
-        sut = Pop3(options, self.work_dir)
+        options = {'port': 110, 'protocol_specific_data': {'max_attempts': 3}}
+        sut = Pop3(options)
 
         # dont really care about the socket at this point (None...)
         # TODO: mock the socket!
@@ -59,11 +58,6 @@ class Pop3Tests(unittest.TestCase):
         """Testing different login combinations"""
 
         login_sequences = [
-            # valid login. valid password
-            (('USER james', '+OK User accepted'), ('PASS bond', '+OK Pass accepted')),
-            # valid login, invalid password, try to run TRANSACTION state command
-            (('USER james', '+OK User accepted'), ('PASS wakkawakka', '-ERR Authentication failed.'),
-             ('RETR', '-ERR Unknown command')),
             # invalid login, invalid password
             (('USER wakkwakk', '+OK User accepted'), ('PASS wakkwakk', '-ERR Authentication failed.')),
             # PASS without user
@@ -73,7 +67,7 @@ class Pop3Tests(unittest.TestCase):
         ]
 
         options = {'port': 110, 'protocol_specific_data': {'max_attempts': 3}, 'users': {'james': 'bond'}}
-        sut = Pop3(options, self.work_dir)
+        sut = Pop3(options)
 
         server = StreamServer(('127.0.0.1', 0), sut.handle_session)
         server.start()
@@ -92,85 +86,3 @@ class Pop3Tests(unittest.TestCase):
                 self.assertEqual(response, pair[1])
 
         server.stop()
-
-        # def test_dele(self):
-        # """Testing DELE command"""
-        #
-        # sequences = [
-        # #[mailspool_initialstate], ((cmd, response), (cmd, response))
-        # #Delete message
-        #         (['mail1', 'mail2'], (('DELE 1', '+OK message 1 deleted'), ('STAT', '+OK 1 5'))),
-        #         #Delete message twice
-        #         (['mail1', 'mail2'], (('DELE 1', '+OK message 1 deleted'), ('STAT', '+OK 1 5'))),
-        #         #Delete non-existing mail
-        #         (['mail1'], (('DELE 2', '-ERR no such message'),)),
-        #     ]
-        #
-        #     sessions = {}
-        #     accounts = {'james': 'bond'}
-        #     sut = pop3.pop3(sessions, accounts)
-        #
-        #     server = StreamServer(('127.0.0.1', 0), sut.handle_session)
-        #     server.start()
-        #
-        #     for sequence in sequences:
-        #         client = gevent.socket.create_connection(('127.0.0.1', server.server_port))
-        #
-        #         fileobj = client.makefile()
-        #
-        #         #set initial mailstate
-        #         sut.mailspools['james'] = sequence[0]
-        #
-        #         #skip banner and login
-        #         fileobj.readline()
-        #         client.sendall('USER james' + "\r\n")
-        #         fileobj.readline()
-        #         client.sendall('PASS bond' + "\r\n")
-        #         fileobj.readline()
-        #
-        #         for pair in sequence[1]:
-        #             client.sendall(pair[0] + "\r\n")
-        #             response = fileobj.readline().rstrip()
-        #             self.assertEqual(response, pair[1])
-        #
-        #     server.stop()
-        #
-        # def test_stat(self):
-        #     """Testing STAT command"""
-        #
-        #     sequences = [
-        #         #[mailspool_initialstate], ((cmd, response), (cmd, response))
-        #         #Delete message
-        #         ([], (('STAT', '+OK 0 0'),)),
-        #         (['mail1'], (('STAT', '+OK 1 5'),)),
-        #         (['mail1', 'mail2'], (('STAT', '+OK 2 10'),)),
-        #     ]
-        #
-        #     sessions = {}
-        #     accounts = {'james': 'bond'}
-        #     sut = pop3.pop3(sessions, accounts)
-        #
-        #     server = StreamServer(('127.0.0.1', 0), sut.handle_session)
-        #     server.start()
-        #
-        #     for sequence in sequences:
-        #         client = gevent.socket.create_connection(('127.0.0.1', server.server_port))
-        #
-        #         fileobj = client.makefile()
-        #
-        #         #set initial mailstate
-        #         sut.mailspools['james'] = sequence[0]
-        #
-        #         #skip banner and login
-        #         fileobj.readline()
-        #         client.sendall('USER james' + "\r\n")
-        #         fileobj.readline()
-        #         client.sendall('PASS bond' + "\r\n")
-        #         fileobj.readline()
-        #
-        #         for pair in sequence[1]:
-        #             client.sendall(pair[0] + "\r\n")
-        #             response = fileobj.readline().rstrip()
-        #             self.assertEqual(response, pair[1])
-        #
-        #     server.stop()
