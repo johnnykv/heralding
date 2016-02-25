@@ -22,26 +22,7 @@ from heralding.capabilities.http import Http
 
 logger = logging.getLogger(__name__)
 
-
-#class BeeHTTPSHandler(BeeHTTPHandler):
-class BeeHTTPSHandler(object):
-    """
-        This class doesn't do anything about HTTPS, the difference is in the way the
-        HTML body is sent. We need smaller chunks for HTTPS apparently.
-    """
-
-    def send_html(self, filename):
-        with self.vfs.open(filename) as f:
-            while True:
-                chunk = f.read(1024)
-                if not chunk:
-                    break
-                self.request.send(chunk)
-
-
 class https(Http, HandlerBase):
     """
     This class will get wrapped in SSL. This is possible because we by convention wrap
     all capabilities that ends with the letter 's' in SSL."""
-
-    HandlerClass = BeeHTTPSHandler

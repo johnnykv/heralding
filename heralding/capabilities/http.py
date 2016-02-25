@@ -31,11 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 class BeeHTTPHandler(BaseHTTPRequestHandler):
-    def __init__(self, request, client_address, vfs, server, httpsession, options, users):
-
-        self.vfs = vfs
-        self.users = users
-        self.current_user = None  # This is set if a login attempt is successful
+    def __init__(self, request, client_address, server, httpsession, options):
 
         # Had to call parent initializer later, because the methods used
         # in BaseHTTPRequestHandler.__init__() call handle_one_request()
@@ -58,32 +54,25 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
 
     def do_AUTHHEAD(self):
         self.send_response(401)
-        self.send_header('WWW-Authenticate', 'Basic realm=\"Test\"')
+        # TODO: Value for basic realm...
+        self.send_header('WWW-Authenticate', 'Basic realm=\"\"')
         self.send_header('Content-type', 'text/html')
         self.end_headers()
 
     def do_GET(self):
         if self.headers.getheader('Authorization') is None:
             self.do_AUTHHEAD()
-            self.send_html('please_auth.html')
         else:
             hdr = self.headers.getheader('Authorization')
             _, enc_uname_pwd = hdr.split(' ')
             dec_uname_pwd = base64.b64decode(enc_uname_pwd)
             uname, pwd = dec_uname_pwd.split(':')
-            if not self._session.add_auth_attempt('plaintext', username=uname, password=pwd):
-                self.do_AUTHHEAD()
-                self.send_html('please_auth.html')
-            else:
-                self.do_HEAD()
-                self.send_html('index.html')
+            self._session.add_auth_attempt('plaintext', username=uname, password=pwd)
+            self.do_AUTHHEAD()
+            self.wfile.write(self.headers.getheader('Authorization'))
+            self.wfile.write('not authenticated')
+
         self.request.close()
-
-    def send_html(self, filename):
-
-        file_ = self.vfs.open(filename)
-        send_whole_file(self.request.fileno(), file_.fileno())
-        file_.close()
 
     def version_string(self):
         return self._banner
@@ -92,13 +81,11 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
     def log_message(self, format_, *args):
         pass
 
-
-class Http(object):
-#class Http(HandlerBase):
+class Http(HandlerBase):
     HandlerClass = BeeHTTPHandler
 
-    def __init__(self, options, workdir):
-        super(Http, self).__init__(options, workdir)
+    def __init__(self, options):
+        super(Http, self).__init__(options)
         self._options = options
 
     def handle_session(self, gsocket, address):
@@ -106,8 +93,7 @@ class Http(object):
         try:
             # The third argument ensures that the BeeHTTPHandler will access
             # only the data in vfs/var/www
-            self.HandlerClass(gsocket, address, self.vfsystem.opendir('/var/www'), None, httpsession=session,
-                              options=self._options, users=self.users)
+            self.HandlerClass(gsocket, address, None, httpsession=session, options=self._options)
         except socket.error as err:
             logger.debug('Unexpected end of http session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
         finally:
