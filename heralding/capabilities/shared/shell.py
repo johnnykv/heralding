@@ -48,40 +48,16 @@ class Commands(OwnGreenTelnetHandler):
     """This class implements the shell functionality for the telnet and SSH capabilities"""
 
     max_tries = 3
-    PROMPT = ''
-    WELCOME = ''
-    HOSTNAME = 'host'
     TERM = 'ansi'
-
-    ENVIRONMENT_VARS = {
-        'http_proxy': 'http://10.1.0.23/',
-        'https_proxy': 'http://10.1.0.23/',
-        'ftp_proxy': 'http://10.1.0.23/',
-        'BROWSER': 'firefox',
-        'EDITOR': 'gedit',
-        'SHELL': '/bin/bash',
-        'PAGER': 'less'
-    }
 
     authNeedUser = True
     authNeedPass = True
 
-    def __init__(self, request, client_address, server, vfs, session):
-        self.vfs = vfs
+    def __init__(self, request, client_address, server, session):
         self.session = session
-        with self.vfs.open('/etc/motd') as motd:
-            Commands.WELCOME = motd.read()
-        self.working_dir = '/'
-
-        self.total_file_size = 0
-        self.update_total_file_size(self.working_dir)
-
         TelnetHandler.__init__(self, request, client_address, server)
 
-    def handle(self):
-        "The actual service to which the user has connected."
-        return
-
     def handleException(self, exc_type, exc_param, exc_tb):
-        logger.warning('Exception during telnet sessions: {0}'.format(''.join(traceback.format_exception(exc_type, exc_param, exc_tb) )))
+        logger.warning('Exception during telnet sessions: {0}'.format(''.join(
+            traceback.format_exception(exc_type, exc_param, exc_tb) )))
         return True
