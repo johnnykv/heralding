@@ -20,29 +20,23 @@ gevent.monkey.patch_all()
 from gevent.server import StreamServer
 
 import unittest
-import os
-import shutil
-import tempfile
 
-from honeypot.honeypot import Honeypot
-from honeypot.capabilities import ssh
 from paramiko import SSHClient, AutoAddPolicy, AuthenticationException
+from heralding.reporting.reporting_relay import ReportingRelay
+from heralding.capabilities.ssh import SSH
 
 
 class SshTests(unittest.TestCase):
     def setUp(self):
-        self.work_dir = tempfile.mkdtemp()
-        self.key = os.path.join(os.path.dirname(__file__), 'dummy_key.key')
-        self.cert = os.path.join(os.path.dirname(__file__), 'dummy_cert.crt')
-        Honeypot.prepare_environment(self.work_dir)
+        self.reportingRelay = ReportingRelay()
+        self.reportingRelay.start()
 
     def tearDown(self):
-        if os.path.isdir(self.work_dir):
-            shutil.rmtree(self.work_dir)
+        self.reportingRelay.stop()
 
     def test_basic_login(self):
-        options = {'port': 0, 'users': {'test': 'test'}}
-        sut = ssh.SSH(options, self.work_dir, self.key)
+        options = {'port': 0}
+        sut = SSH(options)
         server = StreamServer(('127.0.0.1', 0), sut.handle_session)
         server.start()
 
