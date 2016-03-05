@@ -15,11 +15,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import os
+import tempfile
 
+from Crypto.PublicKey import RSA
 from paramiko import RSAKey
 from paramiko.ssh_exception import SSHException
-from telnetsrv.paramiko_ssh import SSHHandler, TelnetToPtyHandler
+from telnetsrv.paramiko_ssh import SSHHandler
 
 from heralding.capabilities.handlerbase import HandlerBase
 from heralding.capabilities.shared.shell import Commands
@@ -27,18 +28,23 @@ from heralding.capabilities.shared.shell import Commands
 logger = logging.getLogger(__name__)
 
 
-class SSH(object):
-#class SSH(HandlerBase):
-    def __init__(self, options, work_dir, key='server.key'):
+class SSH(HandlerBase):
+    def __init__(self, options):
         logging.getLogger("telnetsrv.paramiko_ssh ").setLevel(logging.WARNING)
         logging.getLogger("paramiko").setLevel(logging.WARNING)
-        self.key = os.path.join(work_dir, key)
-        super(SSH, self).__init__(options, work_dir)
+
+        # generate key
+        rsa_key = RSA.generate(1024)
+        priv_key_text = rsa_key.exportKey('PEM', pkcs=1)
+
+        self.key = tempfile.mkstemp()[1]
+        open(self.key, 'w').write(priv_key_text)
+        super(SSH, self).__init__(options)
 
     def handle_session(self, gsocket, address):
         session = self.create_session(address)
         try:
-            SshWrapper(address, None, gsocket, session, self.options, self.vfsystem, self.key)
+            SshWrapper(address, None, gsocket, session, self.options, self.key)
         except (SSHException, EOFError) as ex:
             logger.debug('Unexpected end of ssh session: {0}. ({1})'.format(ex, session.id))
         finally:
@@ -46,39 +52,28 @@ class SSH(object):
 
 
 class BeeTelnetHandler(Commands):
-    def __init__(self, request, client_address, server, vfs, session):
-        Commands.__init__(self, request, client_address, server, vfs, session)
+    def __init__(self, request, client_address, server, session):
+        Commands.__init__(self, request, client_address, server, session)
 
 
 class SshWrapper(SSHHandler):
-    """
-    Wraps the telnetsrv paramiko module to fit the Honeypot architecture.
-    """
 
-    WELCOME = '...'
-    HOSTNAME = 'host'
-    PROMPT = None
+    # reusing telnetsrv stuff
     telnet_handler = BeeTelnetHandler
 
-    def __init__(self, client_address, server, socket, session, options, vfs, key):
+    def __init__(self, client_address, server, socket, session, options, key):
         self.session = session
         self.auth_count = 0
-        self.vfs = vfs
         self.working_dir = None
         self.username = None
 
         SshWrapper.host_key = RSAKey(filename=key)
+        # TODO: Figure out why this is necessary
         request = SshWrapper.dummy_request()
         request._sock = socket
+        # TODO END
 
         SSHHandler.__init__(self, request, client_address, server)
-
-        class __MixedPtyHandler(TelnetToPtyHandler, BeeTelnetHandler):
-            # BaseRequestHandler does not inherit from object, must call the __init__ directly
-            def __init__(self, *args):
-                TelnetToPtyHandler.__init__(self, *args)
-
-        self.pty_handler = __MixedPtyHandler
 
     def authCallbackUsername(self, username):
         # make sure no one can logon
@@ -86,11 +81,7 @@ class SshWrapper(SSHHandler):
 
     def authCallback(self, username, password):
         self.session.activity()
-        if self.session.add_auth_attempt('plaintext', username=username, password=password):
-            self.working_dir = '/'
-            self.username = username
-            self.telnet_handler.PROMPT = '[{0}@{1} {2}]$ '.format(self.username, self.HOSTNAME, self.working_dir)
-            return True
+        self.session.add_auth_attempt('plaintext', username=username, password=password)
         raise
 
     def finish(self):
@@ -115,17 +106,3 @@ class SshWrapper(SSHHandler):
                         break
                 if not any_running:
                     break
-
-    def start_pty_request(self, channel, term, modes):
-        """Start a PTY - intended to run it a (green)thread."""
-        request = self.dummy_request()
-        request._sock = channel
-        request.modes = modes
-        request.term = term
-        request.username = self.username
-
-        # This should block until the user quits the pty
-        self.pty_handler(request, self.client_address, self.tcp_server, self.vfs, self.session)
-
-        # Shutdown the entire session
-        self.transport.close()
