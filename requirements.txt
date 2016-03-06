@@ -10,11 +10,8 @@ gevent>=1.0
 requests
 telnetsrv
 paramiko
-ntplib
-pysendfile
 pyOpenSSL
 lxml
-flask-wtf>=0.9.0
 mock
 Enum34
 netifaces

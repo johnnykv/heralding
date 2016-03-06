@@ -24,7 +24,6 @@
 		"ssh": {
 			"enabled": false,
 			"port": 0,
-			"key": "server.key"
 		},
 		"http": {
 			"enabled": false,
@@ -41,9 +40,5 @@
 			"port": 0,
 			"protocol_specific_data" : {"banner": "Microsoft ESMTP MAIL service ready"}
 		},
-		"vnc": {
-			"enabled": false,
-			"port": 0
-		}
 	}
 }
