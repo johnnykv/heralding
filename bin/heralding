@@ -22,10 +22,8 @@ gevent.monkey.patch_all()
 
 import logging
 import logging.handlers
-import json
 from argparse import ArgumentParser
-import sys
-import os
+import sys, os, pwd, grp, json, platform
 
 from gevent import Greenlet
 
@@ -34,17 +32,13 @@ import heralding.honeypot
 import heralding.reporting.reporting_relay
 from heralding.misc.asciify import asciify
 
-
 logger = logging.getLogger()
+
 
 def on_unhandled_greenlet_exception(dead_greenlet):
     logger.error('Stopping because %s died: %s', dead_greenlet, dead_greenlet.exception)
     sys.exit(1)
 
-def stop_if_root():
-    if os.getuid() == 0:
-        logger.error('Beeswarm should not be started in this mode as root, please restart as a normal user.')
-        sys.exit(1)
 
 def setup_logging(logfile, verbose):
     """
@@ -87,39 +81,42 @@ class LogFilter(logging.Filter):
             return True
 
 
+def drop_privileges(uid_name='nobody', gid_name='nogroup'):
+    if os.getuid() != 0:
+        return
+
+    wanted_uid = pwd.getpwnam(uid_name)[2]
+    # special handling for os x. (getgrname has trouble with gid below 0)
+    if platform.mac_ver()[0] and platform.mac_ver()[0] < float('10.9'):
+        wanted_gid = -2
+    else:
+        wanted_gid = grp.getgrnam(gid_name)[2]
+
+    os.setgid(wanted_gid)
+
+    os.setuid(wanted_uid)
+
+    new_uid_name = pwd.getpwuid(os.getuid())[0]
+    new_gid_name = grp.getgrgid(os.getgid())[0]
+
+    logger.info("Privileges dropped, running as {0}/{1}.".format(new_uid_name, new_gid_name))
+
+
 if __name__ == '__main__':
     parser = ArgumentParser(description='Heralding')
 
     group = parser.add_argument_group()
     group.add_argument('-se', '--server', action='store_true', help='Starts heralding in server mode.')
 
-    '''
-    parser.add_argument('--config', dest='configurl', default='', help='Configuration URL to the server service.')
-    parser.add_argument('--waitingdrone', action='store_true', default=False, help='Waiting drone mode - expert mode!')
-    parser.add_argument('--local_socket', dest='local_socket', default=None)
-    parser.add_argument('--max_sessions', dest='max_sessions', type=int, default=None,
-                        help='Maximum number of sessions to store.')
-    parser.add_argument('--customize', action='store_true', default=False,
-                        help='Asks for specific network and certificate information on the first run.')
-    parser.add_argument('--clearsessions', action='store_true', default=False,
-                        help='Deletes all sessions on startup.')
-    parser.add_argument('--resetpw', action='store_true', default=False,
-                        help='Deletes all sessions on startup.')
-    parser.add_argument('--no_webui', action='store_true', default=False,
-                        help='Do not start the web ui.')
-    '''
     parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Logs debug messages.')
-    parser.add_argument('--workdir', dest='workdir', default=os.getcwd())
     parser.add_argument('-l', '--logfile', dest='logfile', default='heralding.log', help='Heralding log file')
     args = parser.parse_args()
 
-    if not os.path.isabs(args.logfile):
-        args.logfile = os.path.join(args.workdir, args.logfile)
     setup_logging(args.logfile, args.verbose)
 
     logger.info('Initializing Heralding version {0}'.format(heralding.version))
 
-    config_file = os.path.join(args.workdir, 'heralding.cfg')
+    config_file = 'heralding.cfg'
 
     # TODO: Reimplement config stuff
     with open(config_file, "r") as _file:
@@ -130,7 +127,9 @@ if __name__ == '__main__':
     reporting_relay_greenlet.link_exception(on_unhandled_greenlet_exception)
     reporting_relay_greenlet.start()
 
-
-    honeypot = heralding.honeypot.Honeypot(config, args.workdir)
+    honeypot = heralding.honeypot.Honeypot(config)
     drone_greenlet = Greenlet.spawn(honeypot.start)
-    gevent.wait([drone_greenlet,])
+    honeypot.blokUntilReadyForDroppingPrivs()
+    drop_privileges()
+
+    gevent.wait([drone_greenlet, ])

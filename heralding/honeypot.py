@@ -15,14 +15,13 @@
 
 import _socket
 import logging
-import os
 
 
 import gevent
-import requests
+import gevent.event
 from gevent import Greenlet
 from gevent.server import StreamServer
-from requests.exceptions import Timeout, ConnectionError
+
 
 from heralding.capabilities import handlerbase
 
@@ -31,20 +30,17 @@ logger = logging.getLogger(__name__)
 
 class Honeypot(object):
     """ This is the main class, which starts up all capabilities. """
-    def __init__(self, config, key='server.key', cert='server.crt'):
+    def __init__(self, config):
         """
-            Main class which runs Beeswarm in Honeypot mode.
+            Main class which takes of starting protocol implementations.
 
-        :param config: Beeswarm configuration dictionary, None if no configuration was supplied.
-        :param key: Key file used for SSL enabled capabilities
-        :param cert: Cert file used for SSL enabled capabilities
+        :param config: configuration dictionary.
         """
-
+        assert config != None
+        self.readyForDroppingPrivs = gevent.event.Event()
         self.config = config
         self._servers = []
         self._server_greenlets = []
-
-        self.honeypot_ip = ''
 
     def start(self):
         """ Starts services. """
@@ -82,7 +78,7 @@ class Honeypot(object):
                     logger.info('Started {0} capability listening on port {1}'.format(c.__name__, port))
 
         logger.info("Honeypot running.")
-
+        self.readyForDroppingPrivs.set()
         gevent.joinall(self._server_greenlets)
 
     def stop(self):
@@ -95,3 +91,6 @@ class Honeypot(object):
             g.kill()
 
         logger.info('All workers stopped.')
+
+    def blokUntilReadyForDroppingPrivs(self):
+        self.readyForDroppingPrivs.wait()
