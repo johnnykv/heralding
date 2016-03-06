@@ -1,0 +1,12 @@
+language: python
+python:
+- 2.7
+install:
+- pip install --upgrade setuptools
+- pip install coveralls
+- pip install cython
+script:
+- python setup.py test
+after_success:
+- coverage run --source=heralding setup.py -q nosetests
+- coveralls

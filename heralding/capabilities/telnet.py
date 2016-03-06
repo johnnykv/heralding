@@ -64,6 +64,22 @@ class TelnetWrapper(Commands):
             self.auth_count += 1
         return False
 
+    def setterm(self, term):
+        # Dummy file for the purpose of tests.
+        f = open('/dev/null', 'w')
+        curses.setupterm(term, f.fileno())  # This will raise if the termtype is not supported
+        self.TERM = term
+        self.ESCSEQ = {}
+        for k in self.KEYS.keys():
+            str_ = curses.tigetstr(curses.has_key._capability_names[k])
+            if str_:
+                self.ESCSEQ[str_] = k
+        self.CODES['DEOL'] = curses.tigetstr('el')
+        self.CODES['DEL'] = curses.tigetstr('dch1')
+        self.CODES['INS'] = curses.tigetstr('ich1')
+        self.CODES['CSRLEFT'] = curses.tigetstr('cub1')
+        self.CODES['CSRRIGHT'] = curses.tigetstr('cuf1')
+
     def session_end(self):
         self.session.end_session()
 
