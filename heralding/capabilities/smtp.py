@@ -37,7 +37,6 @@ from heralding.capabilities.handlerbase import HandlerBase
 logger = logging.getLogger(__name__)
 
 
-
 class SMTPChannel(smtpd.SMTPChannel):
     def __init__(self, smtp_server, newsocket, fromaddr,
                  smtp_map=None, session=None, opts=None):
@@ -116,7 +115,7 @@ class SMTPChannel(smtpd.SMTPChannel):
                 self.push('451 Internal confusion')
                 return
             self.session.add_auth_attempt('cram_md5', username=self.username, digest=self.digest,
-                                             challenge=self.sent_cram_challenge)
+                                          challenge=self.sent_cram_challenge)
             self.push('535 authentication failed')
             self.close_quit()
 

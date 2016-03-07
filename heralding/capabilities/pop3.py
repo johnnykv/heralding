@@ -32,11 +32,11 @@ class Pop3(HandlerBase):
     def handle_session(self, gsocket, address):
         session = self.create_session(address)
         try:
-            self._handle_session(session, gsocket, address)
+            self._handle_session(session, gsocket)
         finally:
             self.close_session(session)
 
-    def _handle_session(self, session, gsocket, address):
+    def _handle_session(self, session, gsocket):
         fileobj = gsocket.makefile()
 
         self.send_message(session, gsocket, '+OK POP3 server ready')
@@ -113,11 +113,11 @@ class Pop3(HandlerBase):
     def send_message(self, session, gsocket, msg):
         try:
             gsocket.sendall(msg + "\n")
-        except socket.error, (value, msg):
+        except socket.error, (value, exceptionMessage):
             session.end_session()
 
     def send_data(self, session, gsocket, data):
         try:
             gsocket.sendall(data)
-        except socket.error, (value, msg):
+        except socket.error, (value, exceptionMessage):
             session.end_session()

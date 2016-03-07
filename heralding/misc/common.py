@@ -1,7 +1,6 @@
 import logging
-import time
 import os
-
+import time
 from sendfile import sendfile
 
 logger = logging.getLogger(__name__)

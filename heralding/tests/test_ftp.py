@@ -18,9 +18,6 @@ import gevent.monkey
 gevent.monkey.patch_all()
 
 import unittest
-import tempfile
-import shutil
-import os
 
 import ftplib
 from ftplib import FTP

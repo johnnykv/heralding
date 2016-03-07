@@ -81,6 +81,7 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
     def log_message(self, format_, *args):
         pass
 
+
 class Http(HandlerBase):
     HandlerClass = BeeHTTPHandler
 

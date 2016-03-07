@@ -19,8 +19,8 @@ import logging
 from heralding.capabilities.handlerbase import HandlerBase
 from heralding.capabilities.http import Http
 
-
 logger = logging.getLogger(__name__)
+
 
 class https(Http, HandlerBase):
     """

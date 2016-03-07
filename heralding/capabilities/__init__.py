@@ -1,5 +1,5 @@
-import os
 import glob
+import os
 
 # Detect all modules
 for fullname in glob.glob(os.path.dirname(__file__) + "/*.py"):

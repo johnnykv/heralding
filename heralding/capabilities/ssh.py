@@ -57,7 +57,6 @@ class BeeTelnetHandler(Commands):
 
 
 class SshWrapper(SSHHandler):
-
     # reusing telnetsrv stuff
     telnet_handler = BeeTelnetHandler
 

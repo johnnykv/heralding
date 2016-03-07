@@ -25,7 +25,6 @@ logger = logging.getLogger(__name__)
 
 
 class Session(object):
-
     def __init__(self, source_ip, source_port, protocol, users, destination_port=None, destination_ip=None):
 
         self.id = uuid.uuid4()

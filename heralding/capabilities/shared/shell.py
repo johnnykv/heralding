@@ -59,5 +59,5 @@ class Commands(OwnGreenTelnetHandler):
 
     def handleException(self, exc_type, exc_param, exc_tb):
         logger.warning('Exception during telnet sessions: {0}'.format(''.join(
-            traceback.format_exception(exc_type, exc_param, exc_tb) )))
+            traceback.format_exception(exc_type, exc_param, exc_tb))))
         return True

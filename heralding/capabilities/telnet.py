@@ -20,7 +20,6 @@ import socket
 from heralding.capabilities.handlerbase import HandlerBase
 from heralding.capabilities.shared.shell import Commands
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -82,4 +81,3 @@ class TelnetWrapper(Commands):
 
     def session_end(self):
         self.session.end_session()
-

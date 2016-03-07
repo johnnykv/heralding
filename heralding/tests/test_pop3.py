@@ -13,16 +13,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
-import shutil
-import tempfile
 import unittest
 
 import gevent
-from heralding.capabilities.pop3 import Pop3
-from heralding.reporting.reporting_relay import ReportingRelay
 from gevent.server import StreamServer
 
+from heralding.capabilities.pop3 import Pop3
+from heralding.reporting.reporting_relay import ReportingRelay
 
 
 class Pop3Tests(unittest.TestCase):
@@ -49,10 +46,10 @@ class Pop3Tests(unittest.TestCase):
 
             # TODO: Bind to SERVER_RELAY and assert that we get messages as expected
             # self.assertEqual(0, len(sut.sessions))
-            #session = sut.sessions.values()[0]
-            #self.assertEqual('pop3', session.protocol)
-            #self.assertEquals('192.168.1.200', session.source_ip)
-            #self.assertEqual(12000, session.source_port)
+            # session = sut.sessions.values()[0]
+            # self.assertEqual('pop3', session.protocol)
+            # self.assertEquals('192.168.1.200', session.source_ip)
+            # self.assertEqual(12000, session.source_port)
 
     def test_login(self):
         """Testing different login combinations"""
@@ -62,7 +59,7 @@ class Pop3Tests(unittest.TestCase):
             (('USER wakkwakk', '+OK User accepted'), ('PASS wakkwakk', '-ERR Authentication failed.')),
             # PASS without user
             (('PASS bond', '-ERR No username given.'),),
-            #Try to run a TRANSACITON state command in AUTHORIZATION state
+            # Try to run a TRANSACITON state command in AUTHORIZATION state
             (('RETR', '-ERR Unknown command'),),
         ]
 

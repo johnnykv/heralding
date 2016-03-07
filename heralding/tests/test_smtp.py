@@ -116,5 +116,6 @@ class SmtpTests(unittest.TestCase):
         self.assertEqual(code, 535)
         srv.stop()
 
+
 if __name__ == '__main__':
     unittest.main()

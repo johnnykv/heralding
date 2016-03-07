@@ -15,10 +15,10 @@
 
 import logging
 
-import zmq.green as zmq
-from gevent import Greenlet
 import gevent
 import gevent.lock
+import zmq.green as zmq
+from gevent import Greenlet
 
 import heralding.misc
 from heralding.misc.socket_names import SocketNames
@@ -44,7 +44,6 @@ class ReportingRelay(Greenlet):
         context = heralding.misc.zmq_context
         self.internalReportingPublisher = context.socket(zmq.PUB)
 
-
     @staticmethod
     def queueLogData(data):
         assert ReportingRelay._incommingLogQueue is not None
@@ -57,7 +56,7 @@ class ReportingRelay(Greenlet):
 
         while self.enabled:
             try:
-                data  = ReportingRelay._incommingLogQueue.get(timeout=0.5)
+                data = ReportingRelay._incommingLogQueue.get(timeout=0.5)
                 self.internalReportingPublisher.send_pyobj(data)
             except gevent.queue.Empty:
                 pass
@@ -72,12 +71,12 @@ class ReportingRelay(Greenlet):
     def stop(self):
         self.enabled = False
         while True:
-                try:
-                    ReportingRelay._incommingLogQueueLock.acquire()
-                    if ReportingRelay._incommingLogQueue is not None:
-                        gevent.sleep(0.1)
-                    else:
-                        break
-                finally:
-                    ReportingRelay._incommingLogQueueLock.release()
-                    gevent.sleep()
+            try:
+                ReportingRelay._incommingLogQueueLock.acquire()
+                if ReportingRelay._incommingLogQueue is not None:
+                    gevent.sleep(0.1)
+                else:
+                    break
+            finally:
+                ReportingRelay._incommingLogQueueLock.release()
+                gevent.sleep()
