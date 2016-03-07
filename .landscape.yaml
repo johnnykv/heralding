@@ -2,7 +2,7 @@ strictness: medium
 autodetect: yes
 
 ignore-paths:
-    - docs
+    - ez_setup.py
 
 pylint:
   disable:
