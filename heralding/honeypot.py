@@ -49,7 +49,6 @@ class Honeypot(object):
         for c in handlerbase.HandlerBase.__subclasses__():
 
             cap_name = c.__name__.lower()
-
             if cap_name in self.config['capabilities']:
                 if not self.config['capabilities'][cap_name]['enabled']:
                     continue

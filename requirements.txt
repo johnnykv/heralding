@@ -15,3 +15,4 @@ lxml
 mock
 Enum34
 netifaces
+pyaml

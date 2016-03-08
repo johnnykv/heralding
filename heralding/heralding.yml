@@ -1,0 +1,48 @@
+capabilities:
+  ftp:
+    enabled: true
+    port: 21
+    protocol_specific_data:
+      max_attempts: 3
+      banner: "Microsoft FTP Server"
+      syst_type: "Windows-NT"
+
+  telnet:
+    enabled: true
+    port: 23
+    protocol_specific_data:
+      max_attempts: 3
+
+  pop3:
+    enabled: true
+    port: 110
+    protocol_specific_data:
+      max_attempts: 3
+
+  pop3s:
+    enabled: false
+    port: 993,
+    protocol_specific_data:
+      max_attempts: 3
+
+  ssh:
+    enabled: true
+    port: 22
+
+  http:
+    enabled: false
+    port: 80
+    protocol_specific_data:
+      banner: ""
+
+  https:
+    enabled: false
+    port: 443
+    protocol_specific_data:
+      banner: ""
+
+  smtp:
+    enabled: true
+    port: 25
+    protocol_specific_data:
+      banner: "Microsoft ESMTP MAIL service ready"

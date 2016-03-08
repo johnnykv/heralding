@@ -23,15 +23,14 @@ gevent.monkey.patch_all()
 import logging
 import logging.handlers
 from argparse import ArgumentParser
-import sys, os, pwd, grp, json, platform
+import sys, os, pwd, grp, platform
 
 from gevent import Greenlet
 
 import heralding
 import heralding.honeypot
 import heralding.reporting.reporting_relay
-from heralding.misc.asciify import asciify
-
+import yaml
 logger = logging.getLogger()
 
 
@@ -116,11 +115,12 @@ if __name__ == '__main__':
 
     logger.info('Initializing Heralding version {0}'.format(heralding.version))
 
-    config_file = 'heralding.cfg'
+    config_file = 'heralding.yml'
 
     # TODO: Reimplement config stuff
     with open(config_file, "r") as _file:
-        config = json.loads(_file.read(), object_hook=asciify)
+        config = yaml.safe_load(_file.read())
+
 
     # startup reporting actors
     reporting_relay_greenlet = heralding.reporting.reporting_relay.ReportingRelay()
