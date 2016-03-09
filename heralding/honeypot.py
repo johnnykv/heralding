@@ -45,7 +45,6 @@ class Honeypot(object):
     def start(self):
         """ Starts services. """
 
-        # protocol handlers
         for c in handlerbase.HandlerBase.__subclasses__():
 
             cap_name = c.__name__.lower()
@@ -76,7 +75,6 @@ class Honeypot(object):
                 else:
                     logger.info('Started {0} capability listening on port {1}'.format(c.__name__, port))
 
-        logger.info("Honeypot running.")
         self.readyForDroppingPrivs.set()
         gevent.joinall(self._server_greenlets)
 
