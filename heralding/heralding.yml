@@ -18,13 +18,6 @@ capabilities:
     port: 110
     protocol_specific_data:
       max_attempts: 3
-
-  pop3s:
-    enabled: false
-    port: 993,
-    protocol_specific_data:
-      max_attempts: 3
-
   ssh:
     enabled: true
     port: 22
@@ -32,12 +25,6 @@ capabilities:
   http:
     enabled: true
     port: 80
-    protocol_specific_data:
-      banner: ""
-
-  https:
-    enabled: false
-    port: 443
     protocol_specific_data:
       banner: ""
 
