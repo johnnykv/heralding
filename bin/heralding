@@ -116,8 +116,12 @@ if __name__ == '__main__':
     logger.info('Initializing Heralding version {0}'.format(heralding.version))
 
     config_file = 'heralding.yml'
+    if not os.path.isfile(config_file):
+        package_directory = os.path.dirname(os.path.abspath(heralding.__file__))
+        config_file = os.path.join(package_directory, config_file)
+        logger.warning('Using default config file: "{0}", if you want to customize values please '
+                       'copy this file to the current working directory'.format(config_file))
 
-    # TODO: Reimplement config stuff
     with open(config_file, "r") as _file:
         config = yaml.safe_load(_file.read())
 
