@@ -24,6 +24,7 @@ from gevent.server import StreamServer
 
 
 from heralding.capabilities import handlerbase
+from heralding.reporting.file_logger import FileLogger
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,12 @@ class Honeypot(object):
 
     def start(self):
         """ Starts services. """
+
+        # start activity logging
+        if 'activity_logging' in self.config:
+            if 'file' in self.config['activity_logging'] and self.config['activity_logging']['file']['enabled']:
+                logFile = self.config['activity_logging']['file']['filename']
+                FileLogger(logFile).start()
 
         for c in handlerbase.HandlerBase.__subclasses__():
 

@@ -25,10 +25,9 @@ logger = logging.getLogger(__name__)
 
 
 class BaseLogger(Greenlet):
-    def __init__(self, options):
+    def __init__(self):
         Greenlet.__init__(self)
         self.enabled = True
-        self.options = options
 
     def _run(self):
         context = heralding.misc.zmq_context
@@ -55,3 +54,6 @@ class BaseLogger(Greenlet):
     def handle_log_data(self, data):
         # should be handled in child class
         raise NotImplementedError("Please implement this method")
+
+    def loggerStopped(self):
+        pass

@@ -1,3 +1,10 @@
+# logging of credentials
+activity_logging:
+  file:
+    enabled: true
+    filename: "heralding_activity.log"
+
+# protocols to enable
 capabilities:
   ftp:
     enabled: true

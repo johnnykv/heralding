@@ -56,34 +56,7 @@ class Session(object):
 
     def add_auth_attempt(self, _type, **kwargs):
         self.login_attempts += 1
-        if _type == 'cram_md5':
-            def encode_cram_md5(challenge, user, password):
-                response = user + ' ' + hmac.HMAC(password, challenge).hexdigest()
-                return False
-
-        # for now we forget about challenge/response...
-        '''
-        # This before else above
-        elif _type == 'des_challenge':
-            challenge = kwargs.get('challenge')
-            response = kwargs.get('response')
-            for valid_password in self.users.values():
-                aligned_password = (valid_password + '\0' * 8)[:8]
-                des = RFBDes(aligned_password)
-                expected_response = des.encrypt(challenge)
-                if response == expected_response:
-                    authenticated = False
-                    kwargs['password'] = aligned_password
-                    break
-
-
-        if _type == 'des_challenge':
-            kwargs['challenge'] = kwargs.get('challenge').encode('hex')
-            kwargs['response'] = kwargs.get('response').encode('hex')
-        '''
-
         entry = {'timestamp': datetime.utcnow(),
-                 'auth_id': uuid.uuid4(),
                  'auth_type': _type,
                  'session_id': self.id,
                  'source_ip': self.source_ip,
@@ -92,6 +65,10 @@ class Session(object):
                  'username': None,
                  'password': None
                  }
+        if 'username' in kwargs:
+            entry['username'] = kwargs['username']
+        if 'password' in kwargs:
+            entry['password'] = kwargs['password']
 
         ReportingRelay.queueLogData(entry)
         logger.debug('{0} authentication attempt from {1}:{2}. Credentials: {3}'.format(self.protocol, self.source_ip,
