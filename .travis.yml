@@ -10,3 +10,12 @@ script:
 after_success:
 - coverage run --source=heralding setup.py -q nosetests
 - coveralls
+deploy:
+  provider: pypi
+  user: Johnny.Vestergaard
+  password:
+    secure: EVml8GnoBJigUe1EmsnRQWK8zGd+9fOGOzrLN4t6HRAYBZAOdnDuiuRQ6q/mZQjfhqa5zf2pxpr/ufASVoP+SLSGpfofEDHSpWiuhk2iFJy/RY6+t6O0tr8ka+2Z3X+WLCNVPNuSIlR2V8RFTXzM1aOV0Dw5DgKnEMfZ40eSwmc=
+  on:
+    repo: johnnykv/heralding
+    all_branches: true
+    condition: $TRAVIS_TAG =~ ^Release_[0-9]+[.][0-9]+[.][0-9]+
