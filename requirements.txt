@@ -1,18 +1,14 @@
 --allow-unverified pyDes
 --allow-external pyDes
 pyzmq>=14.3.0
-fs
 pycrypto>=2.6.0
 ecdsa
-cssselect
 nose
 gevent>=1.0
-requests
 telnetsrv
 paramiko
 pyOpenSSL
 lxml
 mock
 Enum34
-netifaces
 pyaml
