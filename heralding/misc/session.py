@@ -62,6 +62,7 @@ class Session(object):
                  'source_ip': self.source_ip,
                  'souce_port': self.source_port,
                  'destination_port': self.destination_port,
+                 'protocol': self.protocol,
                  'username': None,
                  'password': None
                  }

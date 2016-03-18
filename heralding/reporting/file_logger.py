@@ -31,7 +31,7 @@ class FileLogger(BaseLogger):
             self.fileHandler = open(logFile, 'a')
 
         fieldNames = ['timestamp', 'auth_id', 'auth_type', 'session_id', 'source_ip', 'souce_port', 'destination_port',
-                      'username', 'password']
+                      'protocol', 'username', 'password']
         self.csvWriter = csv.DictWriter(self.fileHandler, fieldnames=fieldNames)
 
         # empty file, write csv header
