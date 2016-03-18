@@ -1,6 +1,11 @@
 Heralding
 =======================
 
+About
+-----
+
+Sometimes you just want a simple honeypot that collects credentials, nothing more. Heralding is that honeypot!
+
 Starting the honeypot
 -----------------------
 
@@ -26,12 +31,12 @@ Viewing the collected data
   (heralding)Johnnys-MacBook-Pro:tmp jkv$ tail -f heralding_activity.log
   timestamp,auth_id,auth_type,session_id,source_ip,souce_port,destination_port,protocol,username,password
   2016-03-12 20:35:02.258198,plaintext,192.168.2.129,51551,23,telnet,bond,james
-  2016-03-12 20:35:09.658593,plaintext,192.168.2.129,51551,23,telnet,ds,ds
-  2016-03-18 19:31:38.064700,plaintext,192.168.2.129,53416,22,ssh,jkv,james
-  2016-03-18 19:31:38.521047,plaintext,192.168.2.129,53416,22,ssh,jkv,bond
-  2016-03-18 19:31:39.376768,plaintext,192.168.2.129,53416,22,ssh,jkv,ads
-  2016-03-18 19:33:07.064504,plaintext,192.168.2.129,53431,110,pop3,NILLER,DILLER
-  2016-03-18 19:33:12.504483,plaintext,192.168.2.129,53431,110,pop3,BLAH,NOP
+  2016-03-12 20:35:09.658593,plaintext,192.168.2.129,51551,23,telnet,clark,P@SSw0rd123
+  2016-03-18 19:31:38.064700,plaintext,192.168.2.129,53416,22,ssh,NOP_Manden,M@MS3
+  2016-03-18 19:31:38.521047,plaintext,192.168.2.129,53416,22,ssh,guest,guest
+  2016-03-18 19:31:39.376768,plaintext,192.168.2.129,53416,22,ssh,HundeMad,katNIPkat
+  2016-03-18 19:33:07.064504,plaintext,192.168.2.129,53431,110,pop3,charles,N00P1SH
+  2016-03-18 19:33:12.504483,plaintext,192.168.2.129,53431,110,pop3,NektarManden,mANDENnEktar
   2016-03-18 19:33:24.952645,plaintext,192.168.2.129,53433,21,ftp,Jamie,brainfreeze
   2016-03-18 19:33:47.008562,plaintext,192.168.2.129,53436,21,ftp,NektarKongen,SuperS@cretP4ssw0rd1
-  2016-03-18 19:36:56.077840,plaintext,192.168.2.129,53445,21,ftp,JOP,PO
+  2016-03-18 19:36:56.077840,plaintext,192.168.2.129,53445,21,ftp,Joooop,Pooop
