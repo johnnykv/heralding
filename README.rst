@@ -11,6 +11,7 @@ About
 -----
 
 Sometimes you just want a simple honeypot that collects credentials, nothing more. Heralding is that honeypot!
+Currently the following protocols are supported: ftp, telnet, ssh, http, pop3 and smtp.
 
 Starting the honeypot
 -----------------------
