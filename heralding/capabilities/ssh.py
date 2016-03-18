@@ -14,8 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import StringIO
 import logging
-import tempfile
 
 from Crypto.PublicKey import RSA
 from paramiko import RSAKey
@@ -36,9 +36,7 @@ class SSH(HandlerBase):
         # generate key
         rsa_key = RSA.generate(1024)
         priv_key_text = rsa_key.exportKey('PEM', pkcs=1)
-
-        self.key = tempfile.mkstemp()[1]
-        open(self.key, 'w').write(priv_key_text)
+        self.key = RSAKey(file_obj=StringIO.StringIO(priv_key_text))
         super(SSH, self).__init__(options)
 
     def handle_session(self, gsocket, address):
@@ -66,7 +64,7 @@ class SshWrapper(SSHHandler):
         self.working_dir = None
         self.username = None
 
-        SshWrapper.host_key = RSAKey(filename=key)
+        SshWrapper.host_key = key
         # TODO: Figure out why this is necessary
         request = SshWrapper.dummy_request()
         request._sock = socket
