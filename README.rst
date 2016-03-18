@@ -28,7 +28,7 @@ Viewing the collected data
 
 .. code-block:: shell
 
-  (heralding)Johnnys-MacBook-Pro:tmp jkv$ tail -f heralding_activity.log
+  $ tail -f heralding_activity.log
   timestamp,auth_id,auth_type,session_id,source_ip,souce_port,destination_port,protocol,username,password
   2016-03-12 20:35:02.258198,plaintext,192.168.2.129,51551,23,telnet,bond,james
   2016-03-12 20:35:09.658593,plaintext,192.168.2.129,51551,23,telnet,clark,P@SSw0rd123
