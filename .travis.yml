@@ -14,7 +14,7 @@ deploy:
   provider: pypi
   user: Johnny.Vestergaard
   password:
-    secure: EVml8GnoBJigUe1EmsnRQWK8zGd+9fOGOzrLN4t6HRAYBZAOdnDuiuRQ6q/mZQjfhqa5zf2pxpr/ufASVoP+SLSGpfofEDHSpWiuhk2iFJy/RY6+t6O0tr8ka+2Z3X+WLCNVPNuSIlR2V8RFTXzM1aOV0Dw5DgKnEMfZ40eSwmc=
+    secure: D/qIk2VJ/uDbsK6xbSvdRGEyLQsrTDB2PPdivbHu9uhX8DTh1ACYywuzng84JQGq5QSYoASZ2QzeDIoh9wYzJ/bKXJgpmGA1aVJe8XAjt4TYa8TzXNDRaRfDIljK+jAwZjeD5AlKc0kFCUlya5HReK+3KWxba57mgROtaWIcwPhQJ3Zo8+rUUZbFsH7Og8qVpDhBfJMR9ZKz/TPOJfy4fizK1YHXmR6vgT6fM9DTa/fnrgcHB3cSh0zamIHO/qVbZ+Mritm0Qz9XpQus3lEmjC8l/m+UKlJUbwMv2yxhmfmucblQ16YzoekNYqMJtmtPtCnL7KE/aBEo8nC3maid4agfbm391gsL292aCa3X3+p/NGKk8KSypkIs2nBEQdjdVKnDBdDHqG1dzKcpaJ1ok1mbthj+uDK/cqGXM9PMbdbOMgCJOersRsk5sjtzL9JYLuWVpU55eoOD5nz+MzBuJHH0phVHlnGh6TI9Y7I7f9/X9ayJi7TcBPpN3Wgm+qCCzptT29086cF7pU//ELJEXSHWf786XD91SOY5ql2xTy/lJ8q6gYsQg32P+D0XdudU/30CbeH+nVMrStStTD8f84R7clAJGqDTH6iY7tV6HKWW6KGA6gM3CtaXDoZd3TdzNKUOGvpkIzMyGTW73IdZcb9TK/9DC5CAn1pcn2NqMvQ=
   on:
     repo: johnnykv/heralding
     all_branches: true
