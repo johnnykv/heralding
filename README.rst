@@ -2,9 +2,9 @@ Heralding |travis badge| |landscape badge|
 =======================
 
 .. |travis badge| image:: https://img.shields.io/travis/johnnykv/heralding/master.svg
-   :target: https://travis-ci.org/johnnykv/herlading
+   :target: https://travis-ci.org/johnnykv/heralding
 .. |landscape badge| image:: https://landscape.io/github/johnnykv/heralding/master/landscape.png
-   :target: https://landscape.io/johnnykv/heralding/conpot/master
+   :target: https://landscape.io/johnnykv/heralding/master
    :alt: Code Health
 
 About
