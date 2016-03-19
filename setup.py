@@ -7,7 +7,7 @@ from heralding import version as heralding_version
 setup(
     name='Heralding',
     version=heralding_version,
-    packages=find_packages(exclude=['bin', 'docs']),
+    packages=find_packages(exclude=['bin', 'docs', '*.pyc']),
     scripts=['bin/heralding'],
     url='https://github.com/johnnykv/heralding',
     license='GPL 3',
@@ -17,5 +17,8 @@ setup(
     long_description=open('README.rst').read(),
     description='Credentials catching honeypot.',
     test_suite='nose.collector',
-    install_requires=open('requirements.txt').read().splitlines()[2:],
+    install_requires=open('requirements.txt').read(),
+    package_data={
+        "heralding": ["heralding.yml"],
+    },
 )
