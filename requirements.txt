@@ -8,7 +8,5 @@ gevent>=1.0
 telnetsrv
 paramiko
 pyOpenSSL
-lxml
-mock
 Enum34
 pyaml

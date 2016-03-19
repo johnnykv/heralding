@@ -4,7 +4,6 @@ python:
 install:
 - pip install --upgrade setuptools
 - pip install coveralls
-- pip install cython
 script:
 - python setup.py test
 after_success:
@@ -14,8 +13,9 @@ deploy:
   provider: pypi
   user: Johnny.Vestergaard
   password:
-    secure: D/qIk2VJ/uDbsK6xbSvdRGEyLQsrTDB2PPdivbHu9uhX8DTh1ACYywuzng84JQGq5QSYoASZ2QzeDIoh9wYzJ/bKXJgpmGA1aVJe8XAjt4TYa8TzXNDRaRfDIljK+jAwZjeD5AlKc0kFCUlya5HReK+3KWxba57mgROtaWIcwPhQJ3Zo8+rUUZbFsH7Og8qVpDhBfJMR9ZKz/TPOJfy4fizK1YHXmR6vgT6fM9DTa/fnrgcHB3cSh0zamIHO/qVbZ+Mritm0Qz9XpQus3lEmjC8l/m+UKlJUbwMv2yxhmfmucblQ16YzoekNYqMJtmtPtCnL7KE/aBEo8nC3maid4agfbm391gsL292aCa3X3+p/NGKk8KSypkIs2nBEQdjdVKnDBdDHqG1dzKcpaJ1ok1mbthj+uDK/cqGXM9PMbdbOMgCJOersRsk5sjtzL9JYLuWVpU55eoOD5nz+MzBuJHH0phVHlnGh6TI9Y7I7f9/X9ayJi7TcBPpN3Wgm+qCCzptT29086cF7pU//ELJEXSHWf786XD91SOY5ql2xTy/lJ8q6gYsQg32P+D0XdudU/30CbeH+nVMrStStTD8f84R7clAJGqDTH6iY7tV6HKWW6KGA6gM3CtaXDoZd3TdzNKUOGvpkIzMyGTW73IdZcb9TK/9DC5CAn1pcn2NqMvQ=
+    secure: LLP/6dscaN6mI5wQYvuwhbOhpFrMtXa9eUz2HLSltFR+x5RN5agli0PFZaGJLRl+AneMbJy7+LwNSpNpiLX04ksAcl6ZO5boGQLeQbs5mQKURVlyLHL4848cp+Jy6K6xfFRePh6KBHslfEJU9YBWtzVCfrYEazYJMASLsQ8VL+zfJ8ZT8uzIzKe2EraN6nyqEpTZTCQMS3FCYPg6MGneHSm9AK5pXBjN1YuN3yggLVhYFJLtjqpwgLwj3xBQptdjZ4hGQ4ZS30ZpJVZ7IAM6uYXrTExWVbL+dIXlanzmUW2HaPyNKaosBwQkMxkouWaXylqzSZMklCZc1wXnBLs4BTYPVG4sbzer3kb8dPqnnCPkTrO2mTJtdmrwH9t1M5kGpx0U9x1s997CvvtwQJ2C8+cvy9W8+m5fzJIzUBrbUlMYzsb+N3qUjP+uzrUB1SFlJFSytFSHeJ6jQnpj3fFO99wyqlkO1ifE+kU9FXm1+Pb2g/EqRUfwrVQ/IdJYN2czq1li2E6meIanmAIWFsv91RdaAHgShyBU6q59b4LiBaAIrNmRZukehKu0Ub5xO5/1k6CY10dVlvjSAM0/0K8JKpIY2CSBfFxao4pi27qkHIe+78fZbF4l7DRIG5b3yxJcZnQizBQynzI7m8WKelQp8nHmtIWkv52ddjMznck6pAM=
   on:
+    tags: true
+    distributions: sdist bdist_wheel
     repo: johnnykv/heralding
-    all_branches: true
     condition: $TRAVIS_TAG =~ ^Release_[0-9]+[.][0-9]+[.][0-9]+
