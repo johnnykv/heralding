@@ -30,9 +30,9 @@ class FileLogger(BaseLogger):
         else:
             self.fileHandler = open(logFile, 'a')
 
-        fieldNames = ['timestamp', 'auth_id', 'auth_type', 'session_id', 'source_ip', 'souce_port', 'destination_port',
+        fieldNames = ['timestamp', 'session_id', 'source_ip', 'souce_port', 'destination_port',
                       'protocol', 'username', 'password']
-        self.csvWriter = csv.DictWriter(self.fileHandler, fieldnames=fieldNames)
+        self.csvWriter = csv.DictWriter(self.fileHandler, fieldnames=fieldNames, extrasaction='ignore')
 
         # empty file, write csv header
         if os.path.getsize(logFile) == 0:

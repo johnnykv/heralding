@@ -41,8 +41,6 @@ class Session(object):
         self.authenticated = False
         self.users = users
 
-        # for session specific volatile data (will not get logged)
-        self.vdata = {}
         self.last_activity = datetime.utcnow()
 
     def activity(self):
@@ -57,8 +55,8 @@ class Session(object):
     def add_auth_attempt(self, _type, **kwargs):
         self.login_attempts += 1
         entry = {'timestamp': datetime.utcnow(),
-                 'auth_type': _type,
                  'session_id': self.id,
+                 'auth_id': uuid.uuid4(),
                  'source_ip': self.source_ip,
                  'souce_port': self.source_port,
                  'destination_port': self.destination_port,
@@ -72,6 +70,7 @@ class Session(object):
             entry['password'] = kwargs['password']
 
         ReportingRelay.queueLogData(entry)
+        self.activity()
         logger.debug('{0} authentication attempt from {1}:{2}. Credentials: {3}'.format(self.protocol, self.source_ip,
                                                                                         self.source_port,
                                                                                         json.dumps(kwargs)))

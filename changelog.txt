@@ -1,3 +1,6 @@
+0.1.3 (2016-03-20):
+ - Fixed CSV logging issue
+
 0.1.2 (2016-03-19):
  - Fixed issue where config file was not included in module
 
