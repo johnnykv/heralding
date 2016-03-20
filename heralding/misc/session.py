@@ -41,6 +41,9 @@ class Session(object):
         self.authenticated = False
         self.users = users
 
+        # for session specific volatile data (will not get logged)
+        self.vdata = {}
+
         self.last_activity = datetime.utcnow()
 
     def activity(self):
