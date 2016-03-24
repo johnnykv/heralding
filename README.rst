@@ -1,4 +1,4 @@
-Heralding |travis badge| |landscape badge|
+Heralding |travis badge| |landscape badge| |version badge|
 =======================
 
 .. |travis badge| image:: https://img.shields.io/travis/johnnykv/heralding/master.svg
@@ -6,6 +6,8 @@ Heralding |travis badge| |landscape badge|
 .. |landscape badge| image:: https://landscape.io/github/johnnykv/heralding/master/landscape.png
    :target: https://landscape.io/johnnykv/heralding/master
    :alt: Code Health
+.. |version badge| image:: https://img.shields.io/pypi/v/heralding.svg
+   :target: https://pypi.python.org/pypi/Heralding/
 
 About
 -----
@@ -47,3 +49,11 @@ Viewing the collected data
   2016-03-18 19:33:24.952645,192.168.2.129,53433,21,ftp,Jamie,brainfreeze
   2016-03-18 19:33:47.008562,192.168.2.129,53436,21,ftp,NektarKongen,SuperS@cretP4ssw0rd1
   2016-03-18 19:36:56.077840,192.168.2.129,53445,21,ftp,Joooop,Pooop
+
+
+ Installing Heralding
+---------------------
+| 
+To install the latest stable (well, semi-stable) version, use pip::
+
+    pip install heralding
