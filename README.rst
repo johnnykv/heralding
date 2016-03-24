@@ -51,9 +51,11 @@ Viewing the collected data
   2016-03-18 19:36:56.077840,192.168.2.129,53445,21,ftp,Joooop,Pooop
 
 
- Installing Heralding
+Installing Heralding
 ---------------------
-| 
-To install the latest stable (well, semi-stable) version, use pip::
 
-    pip install heralding
+To install the latest stable (well, semi-stable) version, use pip:
+
+.. code-block:: shell
+
+  pip install heralding
