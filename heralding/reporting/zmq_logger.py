@@ -68,15 +68,15 @@ class ZmqLogger(BaseLogger):
         poller = zmq.Poller()
         poller.register(monitor_socket, zmq.POLLIN)
         while self.enabled:
-            socks = poller.poll(1)
-            # TODO: This, again, why?
-            gevent.sleep(0.01)
+            socks = poller.poll(500)
             if len(socks) > 0:
                 data = recv_monitor_message(monitor_socket)
                 event = data['event']
                 if event == zmq.EVENT_CONNECTED:
-                    logger.info('Connected to {0}'.format(self.zmq_socket_url))
+                    logger.warning('Connected to {0}'.format(self.zmq_socket_url))
                 elif event == zmq.EVENT_DISCONNECTED:
+                    logger.warning('Connection to {0} was disconencted'.format(self.zmq_socket_url))
+                elif event == zmq.EVENT_CONNECT_RETRIED:
                     logger.warning(
-                        'Disconnected from {0}, will reconnect in {1} seconds.'.format(self.zmq_socket_url, 5))
+                        'Retrying connect to {0}'.format(self.zmq_socket_url))
             gevent.sleep()
