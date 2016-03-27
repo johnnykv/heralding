@@ -50,8 +50,7 @@ class ReportingRelay(Greenlet):
         ReportingRelay._incommingLogQueue.put(data)
 
     def _run(self):
-        context = heralding.misc.zmq_context
-
+        
         self.internalReportingPublisher.bind(SocketNames.INTERNAL_REPORTING.value)
 
         while self.enabled:
