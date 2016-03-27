@@ -45,7 +45,6 @@ class BaseLogger(Greenlet):
                 data = internal_reporting_socket.recv_pyobj()
                 assert isinstance(data, dict)
                 self.handle_log_data(data)
-
         internal_reporting_socket.close()
 
     def stop(self):

@@ -33,10 +33,10 @@ class ZmqMessageTypes(Enum):
 
 
 class ZmqLogger(BaseLogger):
-    def __init__(self, logFile):
+    def __init__(self):
         super(ZmqLogger, self).__init__()
         # TODO: Take this as param
-        self.zmq_socket_url = "tcp://localhost:4567"
+        self.zmq_socket_url = "tcp://localhost:4569"
         self.enabled = True
 
         # TODO: auth and encryption (Curve)
@@ -44,18 +44,20 @@ class ZmqLogger(BaseLogger):
         self.socket = context.socket(zmq.PUSH)
 
         # setup sending tcp socket
-        self.sending_socket.setsockopt(zmq.RECONNECT_IVL, 2000)
+        self.socket.setsockopt(zmq.RECONNECT_IVL, 2000)
 
-        self.socket.connect(self.zmq_socket_url)
+
         # monitors socket and gives meaningful log messages in regards to connectivity issues
         gevent.spawn(self.monitor_worker)
+        self.socket.connect(self.zmq_socket_url)
 
     def loggerStopped(self):
         self.socket.close()
         self.enabled = False
 
     def handle_log_data(self, data):
-        message = "{0} {1}".format(ZmqMessageTypes.HERALDING_AUTH_LOG, jsonapi.dumps(data))
+        print 'zme logger got data'
+        message = "{0} {1}".format(ZmqMessageTypes.HERALDING_AUTH_LOG.value, jsonapi.dumps(data))
         self.socket.send(message)
 
     def monitor_worker(self):
