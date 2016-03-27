@@ -50,7 +50,7 @@ class ReportingRelay(Greenlet):
         ReportingRelay._incommingLogQueue.put(data)
 
     def _run(self):
-        
+
         self.internalReportingPublisher.bind(SocketNames.INTERNAL_REPORTING.value)
 
         while self.enabled:
