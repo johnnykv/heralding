@@ -4,6 +4,10 @@ activity_logging:
     enabled: true
     filename: "heralding_activity.log"
 
+  zmq:
+    enabled: false
+    url: "tcp://somewhere.anywhere.tld:4123"
+
 # protocols to enable
 capabilities:
   ftp:

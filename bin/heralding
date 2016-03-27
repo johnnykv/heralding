@@ -126,7 +126,7 @@ if __name__ == '__main__':
     with open(config_file, "r") as _file:
         config = yaml.safe_load(_file.read())
 
-    # startup reporting actors
+    # startup reporting relay
     reporting_relay_greenlet = heralding.reporting.reporting_relay.ReportingRelay()
     reporting_relay_greenlet.link_exception(on_unhandled_greenlet_exception)
     reporting_relay_greenlet.start()

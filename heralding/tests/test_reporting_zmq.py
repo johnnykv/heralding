@@ -48,7 +48,8 @@ class ZmqTests(unittest.TestCase):
         self.zmq_server_listning_event.wait(5)
 
         # our local zmq logger
-        zmqLogger = ZmqLogger()
+        zmq_url = 'tcp://localhost:{0}'.format(self.zmq_tcp_port)
+        zmqLogger = ZmqLogger(zmq_url)
         zmqLogger.start()
 
         # inject some data into the logging relay singleton
@@ -67,7 +68,7 @@ class ZmqTests(unittest.TestCase):
         context = heralding.misc.zmq_context
 
         socket = context.socket(zmq.PULL)
-        socket.bind('tcp://*:4569')
+        self.zmq_tcp_port = socket.bind_to_random_port('tcp://*', min_port=40000, max_port=50000, max_tries=10)
 
         poller = zmq.Poller()
         poller.register(socket, zmq.POLLIN)

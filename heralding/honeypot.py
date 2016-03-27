@@ -25,16 +25,14 @@ from gevent.server import StreamServer
 
 from heralding.capabilities import handlerbase
 from heralding.reporting.file_logger import FileLogger
+from heralding.reporting.zmq_logger import ZmqLogger
 
 logger = logging.getLogger(__name__)
 
 
 class Honeypot(object):
-    """ This is the main class, which starts up all capabilities. """
     def __init__(self, config):
         """
-            Main class which takes of starting protocol implementations.
-
         :param config: configuration dictionary.
         """
         assert config != None
@@ -51,6 +49,9 @@ class Honeypot(object):
             if 'file' in self.config['activity_logging'] and self.config['activity_logging']['file']['enabled']:
                 logFile = self.config['activity_logging']['file']['filename']
                 FileLogger(logFile).start()
+            if 'zmq' in self.config['activity_logging'] and self.config['activity_logging']['zmq']['enabled']:
+                zmq_url = self.config['activity_logging']['zmq']['url']
+                ZmqLogger(zmq_url).start()
 
         for c in handlerbase.HandlerBase.__subclasses__():
 

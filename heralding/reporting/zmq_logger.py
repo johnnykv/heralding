@@ -16,6 +16,7 @@
 import logging
 
 import gevent
+import zmq
 import zmq.auth
 import zmq.green as zmq
 from enum import Enum
@@ -33,10 +34,10 @@ class ZmqMessageTypes(Enum):
 
 
 class ZmqLogger(BaseLogger):
-    def __init__(self):
+    def __init__(self, zmq_url):
         super(ZmqLogger, self).__init__()
         # TODO: Take this as param
-        self.zmq_socket_url = "tcp://localhost:4569"
+        self.zmq_socket_url = zmq_url
         self.enabled = True
 
         # TODO: auth and encryption (Curve)
@@ -49,6 +50,7 @@ class ZmqLogger(BaseLogger):
 
         # monitors socket and gives meaningful log messages in regards to connectivity issues
         gevent.spawn(self.monitor_worker)
+        logger.info("Connecting to zmq: {0}".format(self.zmq_socket_url))
         self.socket.connect(self.zmq_socket_url)
 
     def loggerStopped(self):
