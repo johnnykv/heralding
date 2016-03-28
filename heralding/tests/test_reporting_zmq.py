@@ -12,22 +12,22 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import gevent.monkey
+gevent.monkey.patch_all()
+
+import unittest
+
 import gevent
 import gevent.event
-import gevent.monkey
 import gevent.queue
+
 from zmq import green as zmq
-
-
-gevent.monkey.patch_all()
 from zmq.auth.thread import ThreadAuthenticator, AuthenticationThread
-import unittest
 from zmq.utils import jsonapi
 
 from heralding.reporting.zmq_logger import ZmqLogger, ZmqMessageTypes
 from heralding.reporting.reporting_relay import ReportingRelay
-import logging
-logging.basicConfig(level=logging.DEBUG, format="[%(levelname)s] %(message)s")
 
 class ZmqTests(unittest.TestCase):
     def setUp(self):
@@ -75,7 +75,7 @@ class ZmqTests(unittest.TestCase):
         auth = GreenThreadAuthenticator(context)
         auth.start()
         auth.allow('127.0.0.1')
-        auth.configure_curve(domain='*', location='/Users/jkv/repos/heralding/heralding/tests/zmq_public_keys/')
+        auth.configure_curve(domain='*', location='heralding/tests/zmq_public_keys')
 
         # Bind our mock zmq pull server
         socket = context.socket(zmq.PULL)
