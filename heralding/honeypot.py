@@ -51,7 +51,10 @@ class Honeypot(object):
                 FileLogger(logFile).start()
             if 'zmq' in self.config['activity_logging'] and self.config['activity_logging']['zmq']['enabled']:
                 zmq_url = self.config['activity_logging']['zmq']['url']
-                ZmqLogger(zmq_url).start()
+                client_pub_key = self.config['activity_logging']['zmq']['client_public_key']
+                client_secret_key = self.config['activity_logging']['zmq']['client_secret_key']
+                server_pub_key = self.config['activity_logging']['zmq']['server_public_key']
+                ZmqLogger(zmq_url, client_pub_key, client_secret_key, server_pub_key).start()
 
         for c in handlerbase.HandlerBase.__subclasses__():
 

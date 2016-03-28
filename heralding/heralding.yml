@@ -7,6 +7,10 @@ activity_logging:
   zmq:
     enabled: false
     url: "tcp://somewhere.anywhere.tld:4123"
+    client_public_key: ""
+    client_secret_key: ""
+    server_public_key: ""
+
 
 # protocols to enable
 capabilities:

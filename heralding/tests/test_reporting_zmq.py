@@ -16,17 +16,18 @@ import gevent
 import gevent.event
 import gevent.monkey
 import gevent.queue
+from zmq import green as zmq
+
 
 gevent.monkey.patch_all()
-
+from zmq.auth.thread import ThreadAuthenticator, AuthenticationThread
 import unittest
-import zmq.green as zmq
 from zmq.utils import jsonapi
 
 from heralding.reporting.zmq_logger import ZmqLogger, ZmqMessageTypes
 from heralding.reporting.reporting_relay import ReportingRelay
-import heralding.misc
-
+import logging
+logging.basicConfig(level=logging.DEBUG, format="[%(levelname)s] %(message)s")
 
 class ZmqTests(unittest.TestCase):
     def setUp(self):
@@ -43,13 +44,16 @@ class ZmqTests(unittest.TestCase):
     def test_connect(self):
         """Tests that we can connect and send data to a zmq puller"""
 
-        # start dummy ZMQ server
+        # start dummy ZMQ pull server
         gevent.spawn(self._start_zmq_puller)
         self.zmq_server_listning_event.wait(5)
 
         # our local zmq logger
         zmq_url = 'tcp://localhost:{0}'.format(self.zmq_tcp_port)
-        zmqLogger = ZmqLogger(zmq_url)
+        client_public_key = "N[DC7+%FKdW3pJUPnaCwWxt-0/jo5Lrq&U28-GG}"
+        client_secret_key = "Gwt%C0a8J/:9Jy$qpDNTy8wRzlnRD-HT8H>u7F{B"
+        server_public_key = "^4b:-bZ8seRC+m2p(sg{7{skOuK*jInNeH^/Le}Q"
+        zmqLogger = ZmqLogger(zmq_url, client_public_key, client_secret_key, server_public_key)
         zmqLogger.start()
 
         # inject some data into the logging relay singleton
@@ -65,17 +69,70 @@ class ZmqTests(unittest.TestCase):
         self.assertEqual(message['somekey'], 'somedata')
 
     def _start_zmq_puller(self):
-        context = heralding.misc.zmq_context
+        context = zmq.Context()
 
+        # Authenticator runs in different greenlet.
+        auth = GreenThreadAuthenticator(context)
+        auth.start()
+        auth.allow('127.0.0.1')
+        auth.configure_curve(domain='*', location='/Users/jkv/repos/heralding/heralding/tests/zmq_public_keys/')
+
+        # Bind our mock zmq pull server
         socket = context.socket(zmq.PULL)
+        socket.curve_secretkey = "}vxNPm8lOJT1yvqu7-A<m<w>7OZ1ok<d?Qbq+a?5"
+        socket.curve_server = True
         self.zmq_tcp_port = socket.bind_to_random_port('tcp://*', min_port=40000, max_port=50000, max_tries=10)
 
+        # Poll and wait for data from test client
         poller = zmq.Poller()
         poller.register(socket, zmq.POLLIN)
+
+        # Need to notify test client that the server is ready
         self.zmq_server_listning_event.set()
+
         while self.test_running:
-            socks = dict(poller.poll(100))
+            socks = dict(poller.poll())
             if socket in socks and socks[socket] == zmq.POLLIN:
                 data = socket.recv()
                 self.testing_queue.put(data)
         socket.close()
+
+class GreenThreadAuthenticator(ThreadAuthenticator):
+    def __init__(self, context):
+        super(GreenThreadAuthenticator, self).__init__(context)
+
+    def start(self):
+        """Start the authentication thread"""
+        # create a socket to communicate with auth thread.
+        self.pipe = self.context.socket(zmq.PAIR)
+        self.pipe.linger = 1
+        self.pipe.bind(self.pipe_endpoint)
+        self.thread = GreenAuthenticationThread(self.context, self.pipe_endpoint, encoding=self.encoding, log=self.log)
+        self.thread.start()
+
+class GreenAuthenticationThread(AuthenticationThread):
+    def __init__(self, context, endpoint, encoding='utf-8', log=None, authenticator=None):
+        super(GreenAuthenticationThread, self).__init__(context, endpoint, encoding='utf-8', log=None, authenticator=None)
+
+    def run(self):
+        """ Start the Authentication Agent thread task """
+        self.authenticator.start()
+        zap = self.authenticator.zap_socket
+        poller = zmq.Poller()
+        poller.register(self.pipe, zmq.POLLIN)
+        poller.register(zap, zmq.POLLIN)
+        while True:
+            try:
+                socks = dict(poller.poll())
+            except zmq.ZMQError:
+                break  # interrupted
+
+            if self.pipe in socks and socks[self.pipe] == zmq.POLLIN:
+                terminate = self._handle_pipe()
+                if terminate:
+                    break
+
+            if zap in socks and socks[zap] == zmq.POLLIN:
+                self._handle_zap()
+        self.pipe.close()
+        self.authenticator.stop()

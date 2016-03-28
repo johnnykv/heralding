@@ -16,7 +16,6 @@
 import logging
 
 import gevent
-import zmq
 import zmq.auth
 import zmq.green as zmq
 from enum import Enum
@@ -34,19 +33,20 @@ class ZmqMessageTypes(Enum):
 
 
 class ZmqLogger(BaseLogger):
-    def __init__(self, zmq_url):
+    def __init__(self, zmq_url, client_pub_key, client_secret_key, server_pub_key):
         super(ZmqLogger, self).__init__()
-        # TODO: Take this as param
         self.zmq_socket_url = zmq_url
         self.enabled = True
 
         # TODO: auth and encryption (Curve)
         context = heralding.misc.zmq_context
         self.socket = context.socket(zmq.PUSH)
+        self.socket.curve_publickey = client_pub_key
+        self.socket.curve_secretkey = client_secret_key
+        self.socket.curve_serverkey = server_pub_key
 
         # setup sending tcp socket
         self.socket.setsockopt(zmq.RECONNECT_IVL, 2000)
-
 
         # monitors socket and gives meaningful log messages in regards to connectivity issues
         gevent.spawn(self.monitor_worker)
@@ -58,7 +58,6 @@ class ZmqLogger(BaseLogger):
         self.enabled = False
 
     def handle_log_data(self, data):
-        print 'zme logger got data'
         message = "{0} {1}".format(ZmqMessageTypes.HERALDING_AUTH_LOG.value, jsonapi.dumps(data))
         self.socket.send(message)
 
@@ -68,7 +67,7 @@ class ZmqLogger(BaseLogger):
         poller = zmq.Poller()
         poller.register(monitor_socket, zmq.POLLIN)
         while self.enabled:
-            socks = poller.poll(500)
+            socks = poller.poll()
             if len(socks) > 0:
                 data = recv_monitor_message(monitor_socket)
                 event = data['event']
@@ -77,6 +76,5 @@ class ZmqLogger(BaseLogger):
                 elif event == zmq.EVENT_DISCONNECTED:
                     logger.warning('Connection to {0} was disconencted'.format(self.zmq_socket_url))
                 elif event == zmq.EVENT_CONNECT_RETRIED:
-                    logger.warning(
-                        'Retrying connect to {0}'.format(self.zmq_socket_url))
+                    logger.warning('Retrying connect to {0}'.format(self.zmq_socket_url))
             gevent.sleep()
