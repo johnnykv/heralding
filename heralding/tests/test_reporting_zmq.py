@@ -21,6 +21,9 @@ import unittest
 import gevent
 import gevent.event
 import gevent.queue
+import json
+import pprint
+import datetime
 
 from zmq import green as zmq
 from zmq.auth.thread import ThreadAuthenticator, AuthenticationThread
@@ -136,3 +139,37 @@ class GreenAuthenticationThread(AuthenticationThread):
                 self._handle_zap()
         self.pipe.close()
         self.authenticator.stop()
+
+# this file double-poses as a mock zmq server used for manual testing
+if __name__ == '__main__':
+    context = zmq.Context()
+
+    # Authenticator runs in different greenlet.
+    auth = GreenThreadAuthenticator(context)
+    auth.start()
+    auth.allow('127.0.0.1')
+    auth.configure_curve(domain='*', location='zmq_public_keys')
+
+    # Bind our mock zmq pull server
+    socket = context.socket(zmq.PULL)
+    socket.curve_secretkey = "}vxNPm8lOJT1yvqu7-A<m<w>7OZ1ok<d?Qbq+a?5"
+    socket.curve_server = True
+    port = 4123
+    socket.bind('tcp://*:{0}'.format(port))
+    print '[*] Heralding test zmq puller started on port {0}\n'
+
+    # Poll and wait for data from test client
+    poller = zmq.Poller()
+    poller.register(socket, zmq.POLLIN)
+
+    pp = pprint.PrettyPrinter(indent=1)
+    try:
+        while True:
+            socks = dict(poller.poll())
+            if socket in socks and socks[socket] == zmq.POLLIN:
+                topic, data = socket.recv().split(' ', 1)
+                data = json.loads(data)
+                print '[+] Got data at {0}:'.format(datetime.datetime.now())
+                pp.pprint(data)
+    finally:
+        socket.close()

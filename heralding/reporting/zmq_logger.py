@@ -14,6 +14,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+import uuid
+import datetime
 
 import gevent
 import zmq.auth
@@ -58,7 +60,7 @@ class ZmqLogger(BaseLogger):
         self.enabled = False
 
     def handle_log_data(self, data):
-        message = "{0} {1}".format(ZmqMessageTypes.HERALDING_AUTH_LOG.value, jsonapi.dumps(data))
+        message = "{0} {1}".format(ZmqMessageTypes.HERALDING_AUTH_LOG.value, jsonapi.dumps(data, default=json_default))
         self.socket.send(message)
 
     def monitor_worker(self):
@@ -78,3 +80,11 @@ class ZmqLogger(BaseLogger):
                 elif event == zmq.EVENT_CONNECT_RETRIED:
                     logger.warning('Retrying connect to {0}'.format(self.zmq_socket_url))
             gevent.sleep()
+
+def json_default(obj):
+    if isinstance(obj, datetime.datetime):
+        return obj.isoformat()
+    elif isinstance(obj, uuid.UUID):
+        return str(obj)
+    else:
+        return None
