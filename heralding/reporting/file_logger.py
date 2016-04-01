@@ -30,7 +30,7 @@ class FileLogger(BaseLogger):
         else:
             self.fileHandler = open(logFile, 'a')
 
-        fieldNames = ['timestamp', 'session_id', 'source_ip', 'souce_port', 'destination_port',
+        fieldNames = ['timestamp', 'auth_id', 'session_id', 'source_ip', 'souce_port', 'destination_port',
                       'protocol', 'username', 'password']
         self.csvWriter = csv.DictWriter(self.fileHandler, fieldnames=fieldNames, extrasaction='ignore')
 
