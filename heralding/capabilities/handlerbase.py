@@ -1,4 +1,4 @@
-# Copyright (C) 2014 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2016 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,6 +14,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+import socket
+
+from gevent.timeout import Timeout
 
 from heralding.misc.session import Session
 
@@ -33,6 +36,10 @@ class HandlerBase(object):
         self.users = {}
 
         self.port = int(options['port'])
+        if 'timeout' in options:
+            self.timeout = options['timeout']
+        else:
+            self.timeout = 5
 
     def create_session(self, address):
         protocol = self.__class__.__name__.lower()
@@ -53,5 +60,21 @@ class HandlerBase(object):
         else:
             assert False
 
-    def handle_session(self, socket, address):
-        raise Exception('Do no call base class!')
+    def execute_capability(self, address, socket, session):
+        raise Exception("Must be implemented by child")
+
+    def handle_session(self, gsocket, address):
+        session = self.create_session(address)
+        try:
+            with Timeout(self.timeout):
+                self.execute_capability(address, gsocket, session)
+        except socket.error as err:
+            logger.debug('Unexpected end of session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
+        except Timeout:
+            logger.debug('Session timed out. ({0})'.format(session.id))
+        finally:
+            self.close_session(session)
+            try:
+                gsocket.close()
+            except:
+                pass

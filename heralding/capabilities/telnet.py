@@ -20,23 +20,17 @@ import socket
 from heralding.capabilities.handlerbase import HandlerBase
 from heralding.capabilities.shared.shell import Commands
 
-logger = logging.getLogger(__name__)
+from gevent.timeout import Timeout
 
+logger = logging.getLogger(__name__)
 
 class Telnet(HandlerBase):
     def __init__(self, options):
         super(Telnet, self).__init__(options)
-
-    def handle_session(self, gsocket, address):
         TelnetWrapper.max_tries = int(self.options['protocol_specific_data']['max_attempts'])
-        session = self.create_session(address)
-        try:
-            TelnetWrapper(address, None, gsocket, session)
-        except socket.error as err:
-            logger.debug('Unexpected end of telnet session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
-        finally:
-            self.close_session(session)
 
+    def execute_capability(self, address, socket, session):
+        TelnetWrapper(address, None, socket, session)
 
 class TelnetWrapper(Commands):
     """

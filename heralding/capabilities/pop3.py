@@ -29,12 +29,8 @@ class Pop3(HandlerBase):
         super(Pop3, self).__init__(options)
         Pop3.max_tries = int(self.options['protocol_specific_data']['max_attempts'])
 
-    def handle_session(self, gsocket, address):
-        session = self.create_session(address)
-        try:
-            self._handle_session(session, gsocket)
-        finally:
-            self.close_session(session)
+    def execute_capability(self, address, socket, session):
+        self._handle_session(session, socket)
 
     def _handle_session(self, session, gsocket):
         fileobj = gsocket.makefile()

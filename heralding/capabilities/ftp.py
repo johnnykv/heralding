@@ -119,9 +119,5 @@ class ftp(HandlerBase):
         super(ftp, self).__init__(options)
         self._options = options
 
-    def handle_session(self, gsocket, address):
-        session = self.create_session(address)
-        try:
-            FtpHandler(gsocket, session, self._options)
-        finally:
-            self.close_session(session)
+    def execute_capability(self, address, socket, session):
+        FtpHandler(socket, session, self._options)

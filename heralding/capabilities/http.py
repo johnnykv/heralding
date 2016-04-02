@@ -89,13 +89,5 @@ class Http(HandlerBase):
         super(Http, self).__init__(options)
         self._options = options
 
-    def handle_session(self, gsocket, address):
-        session = self.create_session(address)
-        try:
-            # The third argument ensures that the BeeHTTPHandler will access
-            # only the data in vfs/var/www
-            self.HandlerClass(gsocket, address, None, httpsession=session, options=self._options)
-        except socket.error as err:
-            logger.debug('Unexpected end of http session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
-        finally:
-            self.close_session(session)
+    def execute_capability(self, address, socket, session):
+        self.HandlerClass(socket, address, None, httpsession=session, options=self._options)

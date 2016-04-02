@@ -39,15 +39,8 @@ class SSH(HandlerBase):
         self.key = RSAKey(file_obj=StringIO.StringIO(priv_key_text))
         super(SSH, self).__init__(options)
 
-    def handle_session(self, gsocket, address):
-        session = self.create_session(address)
-        try:
-            SshWrapper(address, None, gsocket, session, self.options, self.key)
-        except (SSHException, EOFError) as ex:
-            logger.debug('Unexpected end of ssh session: {0}. ({1})'.format(ex, session.id))
-        finally:
-            self.close_session(session)
-
+    def execute_capability(self, address, socket, session):
+        SshWrapper(address, None, socket, session, self.options, self.key)
 
 class BeeTelnetHandler(Commands):
     def __init__(self, request, client_address, server, session):
