@@ -24,6 +24,9 @@ logger = logging.getLogger(__name__)
 
 
 class HandlerBase(object):
+    MAX_GLOBAL_SESSIONS = 800
+    global_sessions = 0
+
     def __init__(self, options):
         """
         Base class that all capabilities must inherit from.
@@ -45,6 +48,7 @@ class HandlerBase(object):
         protocol = self.__class__.__name__.lower()
         session = Session(address[0], address[1], protocol, self.users)
         self.sessions[session.id] = session
+        HandlerBase.global_sessions += 1
         session.destination_port = self.port
         logger.debug(
             'Accepted {0} session on port {1} from {2}:{3}. ({4})'.format(protocol, self.port, address[0],
@@ -59,22 +63,29 @@ class HandlerBase(object):
             del self.sessions[session.id]
         else:
             assert False
+        HandlerBase.global_sessions -= 1
 
     def execute_capability(self, address, socket, session):
         raise Exception("Must be implemented by child")
 
     def handle_session(self, gsocket, address):
-        session = self.create_session(address)
-        try:
-            with Timeout(self.timeout):
-                self.execute_capability(address, gsocket, session)
-        except socket.error as err:
-            logger.debug('Unexpected end of session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
-        except Timeout:
-            logger.debug('Session timed out. ({0})'.format(session.id))
-        finally:
-            self.close_session(session)
+        if HandlerBase.global_sessions > HandlerBase.MAX_GLOBAL_SESSIONS:
+            protocol = self.__class__.__name__.lower()
+            logger.warning(
+                'Got {0} session on port {1} from {2}:{3}, but not handling it because the global session limit has '
+                'been reached'.format(protocol, self.port, address[0], address[1]))
+        else:
+            session = self.create_session(address)
             try:
-                gsocket.close()
-            except:
-                pass
+                with Timeout(self.timeout):
+                    self.execute_capability(address, gsocket, session)
+            except socket.error as err:
+                logger.debug('Unexpected end of session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
+            except Timeout:
+                logger.debug('Session timed out. ({0})'.format(session.id))
+            finally:
+                self.close_session(session)
+                try:
+                    gsocket.close()
+                except:
+                    pass
