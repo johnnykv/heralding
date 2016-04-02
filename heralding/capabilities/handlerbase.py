@@ -46,7 +46,7 @@ class HandlerBase(object):
         return session
 
     def close_session(self, session):
-        logger.debug('Closing sessions')
+        logger.debug('Closing session. ({0})'.format(str(session.id)))
         session.end_session()
         if session.id in self.sessions:
             del self.sessions[session.id]

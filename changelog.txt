@@ -1,3 +1,6 @@
+0.1.5 (2016-04-03):
+ - Added some debug logging
+
 0.1.4 (2016-04-02):
  - Added ZMQ logger
  - Added auth_id to file logger
