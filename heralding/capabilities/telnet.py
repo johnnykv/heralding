@@ -15,12 +15,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import curses
 import logging
-import socket
 
 from heralding.capabilities.handlerbase import HandlerBase
 from heralding.capabilities.shared.shell import Commands
-
-from gevent.timeout import Timeout
 
 logger = logging.getLogger(__name__)
 

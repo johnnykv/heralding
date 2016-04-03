@@ -19,7 +19,6 @@ import logging
 
 from Crypto.PublicKey import RSA
 from paramiko import RSAKey
-from paramiko.ssh_exception import SSHException
 from telnetsrv.paramiko_ssh import SSHHandler
 
 from heralding.capabilities.handlerbase import HandlerBase

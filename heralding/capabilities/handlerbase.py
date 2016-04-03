@@ -65,7 +65,10 @@ class HandlerBase(object):
             assert False
         HandlerBase.global_sessions -= 1
 
-    def execute_capability(self, address, socket, session):
+    def execute_capability(self, address, gsocket, session):
+        address = None
+        gsocket = None
+        session = None
         raise Exception("Must be implemented by child")
 
     def handle_session(self, gsocket, address):
