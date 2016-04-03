@@ -17,6 +17,7 @@ capabilities:
   ftp:
     enabled: true
     port: 21
+    timeout: 30
     protocol_specific_data:
       max_attempts: 3
       banner: "Microsoft FTP Server"
@@ -25,26 +26,31 @@ capabilities:
   telnet:
     enabled: true
     port: 23
+    timeout: 30
     protocol_specific_data:
       max_attempts: 3
 
   pop3:
     enabled: true
     port: 110
+    timeout: 30
     protocol_specific_data:
       max_attempts: 3
   ssh:
     enabled: true
     port: 22
+    timeout: 30
 
   http:
     enabled: true
     port: 80
+    timeout: 30
     protocol_specific_data:
       banner: ""
 
   smtp:
     enabled: true
     port: 25
+    timeout: 30
     protocol_specific_data:
       banner: "Microsoft ESMTP MAIL service ready"

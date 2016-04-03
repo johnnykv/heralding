@@ -1,3 +1,6 @@
+0.1.7 (2016-04-03):
+ - Configurable timeouts
+
 0.1.6 (2016-04-03):
  - Fixed issue with sessions not getting closed
  - Introduced hard limit on number of concurrent sessions

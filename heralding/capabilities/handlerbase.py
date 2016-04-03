@@ -42,7 +42,7 @@ class HandlerBase(object):
         if 'timeout' in options:
             self.timeout = options['timeout']
         else:
-            self.timeout = 5
+            self.timeout = 30
 
     def create_session(self, address):
         protocol = self.__class__.__name__.lower()
