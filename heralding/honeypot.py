@@ -15,7 +15,7 @@
 
 import _socket
 import logging
-
+import sys
 
 import gevent
 import gevent.event
@@ -80,9 +80,10 @@ class Honeypot(object):
                     self._servers.append(server)
                     server_greenlet = Greenlet(server.start())
                     self._server_greenlets.append(server_greenlet)
-
-                except _socket.error as ex:
-                    logger.error("Could not start {0} server on port {1}. Error: {2}".format(c.__name__, port, ex))
+                except Exception as ex:
+                    error_message = "Could not start {0} server on port {1}. Error: {2}".format(c.__name__, port, ex)
+                    logger.error(error_message)
+                    sys.exit(error_message)
                 else:
                     logger.info('Started {0} capability listening on port {1}'.format(c.__name__, port))
 
