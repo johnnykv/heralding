@@ -13,7 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import _socket
 import logging
 import sys
 
@@ -22,15 +21,17 @@ import gevent.event
 from gevent import Greenlet
 from gevent.server import StreamServer
 
-
 from heralding.capabilities import handlerbase
 from heralding.reporting.file_logger import FileLogger
 from heralding.reporting.zmq_logger import ZmqLogger
+
+from ipify import get_ip
 
 logger = logging.getLogger(__name__)
 
 
 class Honeypot(object):
+    public_ip = ''
     def __init__(self, config):
         """
         :param config: configuration dictionary.
@@ -39,10 +40,23 @@ class Honeypot(object):
         self.readyForDroppingPrivs = gevent.event.Event()
         self.config = config
         self._servers = []
-        self._server_greenlets = []
+        self._greenlets = []
+
+    def _record_and_lookup_public_ip(self):
+        while True:
+            try:
+                Honeypot.public_ip = get_ip()
+                logger.warn('Found public ip: {0}'.format(Honeypot.public_ip))
+            except Exception as ex:
+                Honeypot.public_ip = ''
+                logger.warn('Could not request public ip from ipify, error: {0}'.format(ex))
+            gevent.sleep(3600)
 
     def start(self):
         """ Starts services. """
+
+        if 'public_ip_as_destination_ip' in self.config and self.config['public_ip_as_destination_ip'] == True:
+            self._greenlets.append(gevent.spawn(self._record_and_lookup_public_ip))
 
         # start activity logging
         if 'activity_logging' in self.config:
@@ -79,7 +93,7 @@ class Honeypot(object):
                     logger.debug('Adding {0} capability with options: {1}'.format(cap_name, options))
                     self._servers.append(server)
                     server_greenlet = Greenlet(server.start())
-                    self._server_greenlets.append(server_greenlet)
+                    self._greenlets.append(server_greenlet)
                 except Exception as ex:
                     error_message = "Could not start {0} server on port {1}. Error: {2}".format(c.__name__, port, ex)
                     logger.error(error_message)
@@ -88,7 +102,7 @@ class Honeypot(object):
                     logger.info('Started {0} capability listening on port {1}'.format(c.__name__, port))
 
         self.readyForDroppingPrivs.set()
-        gevent.joinall(self._server_greenlets)
+        gevent.joinall(self._greenlets)
 
     def stop(self):
         """Stops services"""
@@ -96,7 +110,7 @@ class Honeypot(object):
         for s in self._servers:
             s.stop()
 
-        for g in self._server_greenlets:
+        for g in self._greenlets:
             g.kill()
 
         logger.info('All workers stopped.')

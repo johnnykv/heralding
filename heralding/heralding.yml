@@ -1,3 +1,6 @@
+# will request and log the public ip every hours from ipify
+public_ip_as_destination_ip: false
+
 # logging of credentials
 activity_logging:
   file:

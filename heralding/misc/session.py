@@ -13,14 +13,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import hmac
 import json
 import logging
 import uuid
 from datetime import datetime
 
 from heralding.reporting.reporting_relay import ReportingRelay
-
+import heralding.honeypot
 logger = logging.getLogger(__name__)
 
 
@@ -62,6 +61,7 @@ class Session(object):
                  'auth_id': uuid.uuid4(),
                  'source_ip': self.source_ip,
                  'souce_port': self.source_port,
+                 'destination_ip': heralding.honeypot.Honeypot.public_ip,
                  'destination_port': self.destination_port,
                  'protocol': self.protocol,
                  'username': None,
