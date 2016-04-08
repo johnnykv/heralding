@@ -21,7 +21,7 @@ import gevent.event
 from gevent import Greenlet
 from gevent.server import StreamServer
 
-from heralding.capabilities import handlerbase
+import heralding.capabilities.handlerbase
 from heralding.reporting.file_logger import FileLogger
 from heralding.reporting.zmq_logger import ZmqLogger
 
@@ -70,7 +70,7 @@ class Honeypot(object):
                 server_pub_key = self.config['activity_logging']['zmq']['server_public_key']
                 ZmqLogger(zmq_url, client_pub_key, client_secret_key, server_pub_key).start()
 
-        for c in handlerbase.HandlerBase.__subclasses__():
+        for c in heralding.capabilities.handlerbase.HandlerBase.__subclasses__():
 
             cap_name = c.__name__.lower()
             if cap_name in self.config['capabilities']:
