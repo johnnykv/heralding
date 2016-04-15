@@ -60,7 +60,7 @@ class Session(object):
                  'session_id': self.id,
                  'auth_id': uuid.uuid4(),
                  'source_ip': self.source_ip,
-                 'souce_port': self.source_port,
+                 'source_port': self.source_port,
                  'destination_ip': heralding.honeypot.Honeypot.public_ip,
                  'destination_port': self.destination_port,
                  'protocol': self.protocol,

@@ -38,7 +38,7 @@ Viewing the collected data
 .. code-block:: shell
 
   $ tail -f heralding_activity.log
-  timestamp,auth_id,auth_type,session_id,source_ip,souce_port,destination_port,protocol,username,password
+  timestamp,auth_id,auth_type,session_id,source_ip,source_port,destination_port,protocol,username,password
   2016-03-12 20:35:02.258198,192.168.2.129,51551,23,telnet,bond,james
   2016-03-12 20:35:09.658593,192.168.2.129,51551,23,telnet,clark,P@SSw0rd123
   2016-03-18 19:31:38.064700,192.168.2.129,53416,22,ssh,NOP_Manden,M@MS3

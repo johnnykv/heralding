@@ -1,3 +1,6 @@
+0.1.9 (2016-04-15):
+ - Fixed typo in CSV reporter (souce_port -> source_port)
+
 0.1.8 (2016-04-08):
  - Application will now exit if a capability cannot bind to a port
  - Added option to lookup public ip
