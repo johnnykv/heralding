@@ -14,8 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import StringIO
 import logging
+import os.path
 
 from Crypto.PublicKey import RSA
 from paramiko import RSAKey
@@ -33,9 +33,14 @@ class SSH(HandlerBase):
         logging.getLogger("paramiko").setLevel(logging.WARNING)
 
         # generate key
-        rsa_key = RSA.generate(1024)
-        priv_key_text = rsa_key.exportKey('PEM', pkcs=1)
-        self.key = RSAKey(file_obj=StringIO.StringIO(priv_key_text))
+        ssh_key_file = 'ssh.key'
+        if not os.path.isfile(ssh_key_file):
+            with open(ssh_key_file, 'w') as _file:
+                rsa_key = RSA.generate(1024)
+                priv_key_text = rsa_key.exportKey('PEM', pkcs=1)
+                _file.write(priv_key_text)
+                _file.close()
+        self.key = RSAKey(filename=ssh_key_file)
         super(SSH, self).__init__(options)
 
     def execute_capability(self, address, socket, session):
