@@ -39,12 +39,27 @@ capabilities:
     timeout: 30
     protocol_specific_data:
       max_attempts: 3
+
+  pop3s:
+    enabled: true
+    port: 993
+    timeout: 30
+    protocol_specific_data:
+      max_attempts: 3
+
   ssh:
     enabled: true
     port: 22
     timeout: 30
 
   http:
+    enabled: true
+    port: 443
+    timeout: 30
+    protocol_specific_data:
+      banner: ""
+
+  https:
     enabled: true
     port: 80
     timeout: 30

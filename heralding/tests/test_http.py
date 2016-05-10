@@ -46,8 +46,6 @@ class HttpTests(unittest.TestCase):
             HTTP 401 (Unauthorized) headers.
         """
 
-        # Use uncommon port so that you can run the test even if the Honeypot
-        # is running.
         options = {'enabled': 'True', 'port': 0, 'users': {'test': 'test'}}
         cap = http.Http(options)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
