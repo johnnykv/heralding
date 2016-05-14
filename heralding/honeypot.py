@@ -130,7 +130,6 @@ class Honeypot(object):
         if not os.path.isfile(pem_file):
             logger.debug('Generating certificate and key: {0}'.format(pem_file))
 
-            # TODO: These should be configurable from config file
             cert_dict = self.config['capabilities'][cap_name]['protocol_specific_data']['cert']
             cert_cn = cert_dict['common_name']
             cert_country = cert_dict['country']
@@ -138,9 +137,11 @@ class Honeypot(object):
             cert_locality = cert_dict['locality']
             cert_org = cert_dict['organization']
             cert_org_unit = cert_dict['organizational_unit']
+            valid_days = int(cert_dict['valid_days'])
+            serial_number = int(cert_dict['serial_number'])
 
             cert, key = generate_self_signed_cert(cert_country, cert_state, cert_org, cert_locality, cert_org_unit,
-                                                     cert_cn)
+                                                     cert_cn, valid_days, serial_number)
 
             with open(pem_file, 'w') as _pem_file:
                 _pem_file.write(cert)

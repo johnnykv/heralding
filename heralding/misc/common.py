@@ -14,8 +14,9 @@ def on_unhandled_greenlet_exception(dead_greenlet):
     sys.exit(1)
 
 def generate_self_signed_cert(cert_country, cert_state, cert_organization, cert_locality, cert_organizational_unit,
-                            cert_common_name):
+                            cert_common_name, valid_days, serial_number):
     rsa_key = RSA.generate(1024)
+
     pk = crypto.load_privatekey(crypto.FILETYPE_PEM, rsa_key.exportKey('PEM', pkcs=1))
     cert = crypto.X509()
     sub = cert.get_subject()
@@ -29,10 +30,9 @@ def generate_self_signed_cert(cert_country, cert_state, cert_organization, cert_
     if cert_organizational_unit:
         sub.OU = cert_organizational_unit
 
-    # TODO: These should be set from config file
-    cert.set_serial_number(1000)
+    cert.set_serial_number(serial_number)
     cert.gmtime_adj_notBefore(0)
-    cert.gmtime_adj_notAfter(365 * 24 * 60 * 60)  # Valid for a year
+    cert.gmtime_adj_notAfter(valid_days * 24 * 60 * 60)  # Valid for a year
     cert.set_issuer(sub)
     cert.set_pubkey(pk)
     cert.sign(pk, 'sha1')

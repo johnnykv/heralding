@@ -57,6 +57,7 @@ capabilities:
         organizational_unit: None
         # how many days should the certificate be valid for
         valid_days: 365
+        serial_number: 0
 
   ssh:
     enabled: true
@@ -87,6 +88,7 @@ capabilities:
         organizational_unit: None
         # how many days should the certificate be valid for
         valid_days: 365
+        serial_number: 0
 
   smtp:
     enabled: true
