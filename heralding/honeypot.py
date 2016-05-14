@@ -91,11 +91,10 @@ class Honeypot(object):
                 try:
                     # Convention: All capability names which end in 's' will be wrapped in ssl.
                     if cap_name.endswith('s'):
-                        key_file = '{0}.key'.format(cap_name)
-                        cert_file = '{0}.cert'.format(cap_name)
-                        self.create_cert_if_not_exists(cap_name, key_file, cert_file)
+                        pem_file = '{0}.pem'.format(cap_name)
+                        self.create_cert_if_not_exists(pem_file)
                         server = StreamServer(('0.0.0.0', port), cap.handle_session,
-                                              keyfile=key_file, certfile=cert_file)
+                                              keyfile=pem_file, certfile=pem_file)
                     else:
                         server = StreamServer(('0.0.0.0', port), cap.handle_session)
 
@@ -127,9 +126,9 @@ class Honeypot(object):
     def blokUntilReadyForDroppingPrivs(self):
         self.readyForDroppingPrivs.wait()
 
-    def create_cert_if_not_exists(self, capability_name, key_file, cert_file):
-        if not os.path.isfile(key_file) or not os.path.isfile(cert_file):
-            logger.debug('Generating certificate and key for {0}'.format(capability_name))
+    def create_cert_if_not_exists(self, pem_file):
+        if not os.path.isfile(pem_file):
+            logger.debug('Generating certificate and key: {0}'.format(pem_file))
 
             # TODO: These should be configurable from config file
             cert_cn = '*'
@@ -142,7 +141,6 @@ class Honeypot(object):
             cert, key = generate_self_signed_cert(cert_country, cert_state, cert_org, cert_locality, cert_org_unit,
                                                      cert_cn)
 
-            with open(key_file, 'w') as keyfile:
-                keyfile.write(key)
-            with open(cert_file, 'w') as certfile:
-                certfile.write(cert)
+            with open(pem_file, 'w') as _pem_file:
+                _pem_file.write(cert)
+                _pem_file.write(key)
