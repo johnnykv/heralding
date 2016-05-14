@@ -46,6 +46,17 @@ capabilities:
     timeout: 30
     protocol_specific_data:
       max_attempts: 3
+      # if a .pem file is not found in work dir, a new pem file will be created
+      # using these values
+      cert:
+        common_name: "*"
+        country: "US"
+        state: None
+        locality: None
+        organization: None
+        organizational_unit: None
+        # how many days should the certificate be valid for
+        valid_days: 365
 
   ssh:
     enabled: true
@@ -65,6 +76,17 @@ capabilities:
     timeout: 30
     protocol_specific_data:
       banner: ""
+      # if a .pem file is not found in work dir, a new pem file will be created
+      # using these values
+      cert:
+        common_name: "*"
+        country: "US"
+        state: None
+        locality: None
+        organization: None
+        organizational_unit: None
+        # how many days should the certificate be valid for
+        valid_days: 365
 
   smtp:
     enabled: true

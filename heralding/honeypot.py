@@ -92,7 +92,7 @@ class Honeypot(object):
                     # Convention: All capability names which end in 's' will be wrapped in ssl.
                     if cap_name.endswith('s'):
                         pem_file = '{0}.pem'.format(cap_name)
-                        self.create_cert_if_not_exists(pem_file)
+                        self.create_cert_if_not_exists(cap_name, pem_file)
                         server = StreamServer(('0.0.0.0', port), cap.handle_session,
                                               keyfile=pem_file, certfile=pem_file)
                     else:
@@ -126,17 +126,18 @@ class Honeypot(object):
     def blokUntilReadyForDroppingPrivs(self):
         self.readyForDroppingPrivs.wait()
 
-    def create_cert_if_not_exists(self, pem_file):
+    def create_cert_if_not_exists(self, cap_name, pem_file):
         if not os.path.isfile(pem_file):
             logger.debug('Generating certificate and key: {0}'.format(pem_file))
 
             # TODO: These should be configurable from config file
-            cert_cn = '*'
-            cert_country = 'US'
-            cert_state = 'None'
-            cert_locality = 'None'
-            cert_org = 'None'
-            cert_org_unit = ''
+            cert_dict = self.config['capabilities'][cap_name]['protocol_specific_data']['cert']
+            cert_cn = cert_dict['common_name']
+            cert_country = cert_dict['country']
+            cert_state = cert_dict['state']
+            cert_locality = cert_dict['locality']
+            cert_org = cert_dict['organization']
+            cert_org_unit = cert_dict['organizational_unit']
 
             cert, key = generate_self_signed_cert(cert_country, cert_state, cert_org, cert_locality, cert_org_unit,
                                                      cert_cn)
