@@ -1,3 +1,6 @@
+0.1.12 (2016-05-15):
+ - https and pop3s fixed and enabled by default
+
 0.1.11 (2016-05-6):
  - Fixed bug that involved source_port not getting logged in CSV files
 
