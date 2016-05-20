@@ -111,7 +111,7 @@ class SmtpTests(unittest.TestCase):
 
         smtp_ = smtplib.SMTP('127.0.0.1', srv.server_port, local_hostname='localhost', timeout=15)
         smtp_.docmd('AUTH', 'LOGIN')
-        smtp_.docmd(base64.b64encode('test'))
+        smtp_.docmd(base64.b64encode('test') )
         code, resp = smtp_.docmd(base64.b64encode('test'))
         self.assertEqual(code, 535)
         srv.stop()

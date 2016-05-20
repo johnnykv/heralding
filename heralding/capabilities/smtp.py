@@ -30,6 +30,7 @@ import mailbox
 import random
 import smtpd
 import time
+import binascii
 from smtpd import NEWLINE, EMPTYSTRING
 
 from heralding.capabilities.handlerbase import HandlerBase
@@ -44,7 +45,7 @@ class SMTPChannel(smtpd.SMTPChannel):
         # A sad hack because SMTPChannel doesn't
         # allow custom banners, and sends it's own through its
         # __init__() method. When the initflag is False,
-        # the push() method is effectively disabled, so the 
+        # the push() method is effectively disabled, so the
         # superclass banner is not sent.
         self._initflag = False
         self.banner = self.options['protocol_specific_data']['banner']
@@ -100,8 +101,15 @@ class SMTPChannel(smtpd.SMTPChannel):
             self.push('250-AUTH PLAIN LOGIN CRAM-MD5')
             self.push('250 EHLO')
 
-    def smtp_AUTH(self, arg):
+    def try_b64decode(self, arg):
+        try:
+            result = base64.b64decode(arg)
+            return True, result
+        except TypeError:
+            logger.warning('Error decoding base64: {0} ({1})'.format(binascii.hexlify(arg), self.session.id))
+            return False, ''
 
+    def smtp_AUTH(self, arg):
         if (self.plain_authenticating and self.login_pass_authenticating and
                 self.cram_authenticating):
             self.push('503 Bad sequence of commands')
@@ -109,11 +117,11 @@ class SMTPChannel(smtpd.SMTPChannel):
 
         if self.cram_authenticating:
             self.cram_authenticating = False
-            cred = base64.b64decode(arg)
-            self.username, self.digest = cred.split()
-            if self.sent_cram_challenge is None:
+            success, cred = self.try_b64decode(arg)
+            if self.sent_cram_challenge is None or not success or ' ' not in cred:
                 self.push('451 Internal confusion')
                 return
+            self.username, self.digest = cred.split()
             self.session.add_auth_attempt('cram_md5', username=self.username, digest=self.digest,
                                           challenge=self.sent_cram_challenge)
             self.push('535 authentication failed')
@@ -121,15 +129,17 @@ class SMTPChannel(smtpd.SMTPChannel):
 
         elif self.login_uname_authenticating:
             self.login_uname_authenticating = False
-            self.username = base64.b64decode(arg)
-            self.push('334 ' + base64.b64encode('Password:'))
-            self.login_pass_authenticating = True
+            success, self.username = self.try_b64decode(arg)
+            if success:
+                self.push('334 ' + base64.b64encode('Password:'))
+                self.login_pass_authenticating = True
             return
 
         elif self.login_pass_authenticating:
             self.login_pass_authenticating = False
-            self.password = base64.b64decode(arg)
-            self.session.add_auth_attempt('plaintext', username=self.username, password=self.password)
+            success, self.password = self.try_b64decode(arg)
+            if success:
+                self.session.add_auth_attempt('plaintext', username=self.username, password=self.password)
 
             self.push('535 authentication failed')
             self.close_quit()
@@ -137,8 +147,10 @@ class SMTPChannel(smtpd.SMTPChannel):
         elif self.plain_authenticating:
             self.plain_authenticating = False
             # Our arg will ideally be the username/password
-            _, self.username, self.password = base64.b64decode(arg).split('\x00')
-            self.session.add_auth_attempt('plaintext', username=self.username, password=self.password)
+            success, credentials = self.try_b64decode(arg)
+            if success and '\x00' in credentials:
+                _, self.username, self.password = base64.b64decode(arg).split('\x00')
+                self.session.add_auth_attempt('plaintext', username=self.username, password=self.password)
             self.push('535 authentication failed')
             self.close_quit()
 
@@ -151,8 +163,10 @@ class SMTPChannel(smtpd.SMTPChannel):
                 # them. The space after the 334 is important as said in the RFC
                 self.push("334 ")
                 return
-            _, self.username, self.password = base64.b64decode(param).split('\x00')
-            self.session.add_auth_attempt('plaintext', username=self.username, password=self.password)
+            success, credentials = self.try_b64decode(arg)
+            if success and '\x00' in credentials:
+                _, self.username, self.password = base64.b64decode(param).split('\x00')
+                self.session.add_auth_attempt('plaintext', username=self.username, password=self.password)
             self.push('535 authentication failed')
             self.close_quit()
 
