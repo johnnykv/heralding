@@ -19,6 +19,7 @@ import os.path
 
 from Crypto.PublicKey import RSA
 from paramiko import RSAKey
+from paramiko.ssh_exception import SSHException
 from telnetsrv.paramiko_ssh import SSHHandler
 
 from heralding.capabilities.handlerbase import HandlerBase
@@ -45,6 +46,7 @@ class SSH(HandlerBase):
 
     def execute_capability(self, address, socket, session):
         SshWrapper(address, None, socket, session, self.options, self.key)
+
 
 class BeeTelnetHandler(Commands):
     def __init__(self, request, client_address, server, session):
@@ -87,16 +89,18 @@ class SshWrapper(SSHHandler):
 
         self.transport.add_server_key(self.host_key)
 
-        self.transport.start_server(server=self)
-
-        while True:
-            channel = self.transport.accept(20)
-            if channel is None:
-                # check to see if any thread is running
-                any_running = False
-                for _, thread in self.channels.items():
-                    if thread.is_alive():
-                        any_running = True
+        try:
+            self.transport.start_server(server=self)
+            while True:
+                channel = self.transport.accept(20)
+                if channel is None:
+                    # check to see if any thread is running
+                    any_running = False
+                    for _, thread in self.channels.items():
+                        if thread.is_alive():
+                            any_running = True
+                            break
+                    if not any_running:
                         break
-                if not any_running:
-                    break
+        except SSHException as exception:
+            logger.warning('Premature end of SSH session: {0} ({1})'.format(exception, self.session.id))
