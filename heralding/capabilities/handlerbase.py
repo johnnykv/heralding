@@ -66,9 +66,9 @@ class HandlerBase(object):
         HandlerBase.global_sessions -= 1
 
     def execute_capability(self, address, gsocket, session):
-        address = None
-        gsocket = None
-        session = None
+        address = None  # NOQA
+        gsocket = None  # NOQA
+        session = None  # NOQA
         raise Exception("Must be implemented by child")
 
     def handle_session(self, gsocket, address):

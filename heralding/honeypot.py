@@ -34,11 +34,12 @@ logger = logging.getLogger(__name__)
 
 class Honeypot(object):
     public_ip = ''
+
     def __init__(self, config):
         """
         :param config: configuration dictionary.
         """
-        assert config != None
+        assert config is not None
         self.readyForDroppingPrivs = gevent.event.Event()
         self.config = config
         self._servers = []
@@ -57,7 +58,7 @@ class Honeypot(object):
     def start(self):
         """ Starts services. """
 
-        if 'public_ip_as_destination_ip' in self.config and self.config['public_ip_as_destination_ip'] == True:
+        if 'public_ip_as_destination_ip' in self.config and self.config['public_ip_as_destination_ip'] is True:
             self._greenlets.append(gevent.spawn(self._record_and_lookup_public_ip))
 
         # start activity logging
@@ -141,7 +142,7 @@ class Honeypot(object):
             serial_number = int(cert_dict['serial_number'])
 
             cert, key = generate_self_signed_cert(cert_country, cert_state, cert_org, cert_locality, cert_org_unit,
-                                                     cert_cn, valid_days, serial_number)
+                                                  cert_cn, valid_days, serial_number)
 
             with open(pem_file, 'w') as _pem_file:
                 _pem_file.write(cert)

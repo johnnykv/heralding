@@ -14,8 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import gevent
 import gevent.monkey
-
-gevent.monkey.patch_all()
+gevent.monkey.patch_all()  # NOQA
 
 import unittest
 
@@ -51,7 +50,7 @@ class FtpTests(unittest.TestCase):
         # expect perm exception
         try:
             ftp_client.login('james', 'bond')
-            response = ftp_client.getresp()
+            response = ftp_client.getresp()  # NOQA
         except ftplib.error_perm:
             pass
         srv.stop()

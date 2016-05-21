@@ -1,6 +1,5 @@
-import multiprocessing
 from ez_setup import use_setuptools
-use_setuptools()
+use_setuptools()  # NOQA
 from setuptools import setup, find_packages
 from heralding import version as heralding_version
 

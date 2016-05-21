@@ -21,6 +21,7 @@ from heralding.capabilities.shared.shell import Commands
 
 logger = logging.getLogger(__name__)
 
+
 class Telnet(HandlerBase):
     def __init__(self, options):
         super(Telnet, self).__init__(options)
@@ -28,6 +29,7 @@ class Telnet(HandlerBase):
 
     def execute_capability(self, address, socket, session):
         TelnetWrapper(address, None, socket, session)
+
 
 class TelnetWrapper(Commands):
     """
@@ -69,7 +71,6 @@ class TelnetWrapper(Commands):
             self.CODES['INS'] = curses.tigetstr('ich1')
             self.CODES['CSRLEFT'] = curses.tigetstr('cub1')
             self.CODES['CSRRIGHT'] = curses.tigetstr('cuf1')
-
 
     def session_end(self):
         self.session.end_session()

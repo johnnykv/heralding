@@ -81,6 +81,7 @@ class ZmqLogger(BaseLogger):
                     logger.warning('Retrying connect to {0}'.format(self.zmq_socket_url))
             gevent.sleep()
 
+
 def json_default(obj):
     if isinstance(obj, datetime.datetime):
         return obj.isoformat()

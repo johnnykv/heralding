@@ -14,7 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import gevent.monkey
-gevent.monkey.patch_all()
+gevent.monkey.patch_all()  # NOQA
 
 import unittest
 
@@ -31,6 +31,7 @@ from zmq.utils import jsonapi
 
 from heralding.reporting.zmq_logger import ZmqLogger, ZmqMessageTypes
 from heralding.reporting.reporting_relay import ReportingRelay
+
 
 class ZmqTests(unittest.TestCase):
     def setUp(self):
@@ -100,6 +101,7 @@ class ZmqTests(unittest.TestCase):
                 self.testing_queue.put(data)
         socket.close()
 
+
 class GreenThreadAuthenticator(ThreadAuthenticator):
     def __init__(self, context):
         super(GreenThreadAuthenticator, self).__init__(context)
@@ -112,6 +114,7 @@ class GreenThreadAuthenticator(ThreadAuthenticator):
         self.pipe.bind(self.pipe_endpoint)
         self.thread = GreenAuthenticationThread(self.context, self.pipe_endpoint, encoding=self.encoding, log=self.log)
         self.thread.start()
+
 
 class GreenAuthenticationThread(AuthenticationThread):
     def __init__(self, context, endpoint, encoding='utf-8', log=None, authenticator=None):

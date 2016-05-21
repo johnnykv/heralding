@@ -23,4 +23,3 @@ class ConfigFileTests(unittest.TestCase):
         file_content = open("heralding/heralding.yml", "r").read()
         # excepts if not valid
         yaml.safe_load(file_content)
-

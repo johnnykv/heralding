@@ -45,7 +45,6 @@ class FileLogger(BaseLogger):
         self.fileHandler.Flush()
         self.fileHandler.close()
 
-
     def handle_log_data(self, data):
         self.csvWriter.writerow(data)
         # meh

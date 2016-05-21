@@ -1,6 +1,4 @@
 import logging
-import os
-import time
 import sys
 
 from OpenSSL import crypto
@@ -13,8 +11,9 @@ def on_unhandled_greenlet_exception(dead_greenlet):
     logger.error('Stopping because %s died: %s', dead_greenlet, dead_greenlet.exception)
     sys.exit(1)
 
+
 def generate_self_signed_cert(cert_country, cert_state, cert_organization, cert_locality, cert_organizational_unit,
-                            cert_common_name, valid_days, serial_number):
+                              cert_common_name, valid_days, serial_number):
     rsa_key = RSA.generate(1024)
 
     pk = crypto.load_privatekey(crypto.FILETYPE_PEM, rsa_key.exportKey('PEM', pkcs=1))

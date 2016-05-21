@@ -30,7 +30,7 @@ from gevent.server import StreamServer
 from heralding.capabilities import smtp
 from heralding.reporting.reporting_relay import ReportingRelay
 
-gevent.monkey.patch_all()
+gevent.monkey.patch_all()  # NOQA
 
 import unittest
 
@@ -49,7 +49,7 @@ class SmtpTests(unittest.TestCase):
 
         # Use uncommon port so that we can run test even if the Honeypot is running.
         options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'test'},
-                   'users': {'test': 'test'},}
+                   'users': {'test': 'test'}, }
         cap = smtp.smtp(options)
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
@@ -111,7 +111,7 @@ class SmtpTests(unittest.TestCase):
 
         smtp_ = smtplib.SMTP('127.0.0.1', srv.server_port, local_hostname='localhost', timeout=15)
         smtp_.docmd('AUTH', 'LOGIN')
-        smtp_.docmd(base64.b64encode('test') )
+        smtp_.docmd(base64.b64encode('test'))
         code, resp = smtp_.docmd(base64.b64encode('test'))
         self.assertEqual(code, 535)
         srv.stop()
