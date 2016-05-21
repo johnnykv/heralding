@@ -4,7 +4,7 @@ Heralding |travis badge| |landscape badge| |version badge|
 .. |travis badge| image:: https://img.shields.io/travis/johnnykv/heralding/master.svg
    :target: https://travis-ci.org/johnnykv/heralding
 .. |landscape badge| image:: https://landscape.io/github/johnnykv/heralding/master/landscape.png
-   :target: https://landscape.io/johnnykv/heralding/master
+   :target: https://landscape.io/github/johnnykv/heralding/
    :alt: Code Health
 .. |version badge| image:: https://img.shields.io/pypi/v/heralding.svg
    :target: https://pypi.python.org/pypi/Heralding/
@@ -20,7 +20,7 @@ Starting the honeypot
 
 .. code-block:: shell
 
-  $ sudo heralding 
+  $ sudo heralding
   2016-03-18 20:36:47,090 (root) Initializing Heralding version 0.1.0
   2016-03-18 20:36:47,090 (root) Using default config file: "/Users/jkv/repos/heralding/heralding/heralding.yml", if you want to customize values please copy this file to the current working directory
   2016-03-18 20:36:47,098 (heralding.reporting.file_logger) File logger started, using file: heralding_activity.log
