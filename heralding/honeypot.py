@@ -25,6 +25,7 @@ from gevent.server import StreamServer
 import heralding.capabilities.handlerbase
 from heralding.reporting.file_logger import FileLogger
 from heralding.reporting.zmq_logger import ZmqLogger
+from heralding.reporting.syslog_logger import SyslogLogger
 from heralding.misc.common import on_unhandled_greenlet_exception, generate_self_signed_cert
 
 from ipify import get_ip
@@ -74,6 +75,10 @@ class Honeypot(object):
                 client_secret_key = self.config['activity_logging']['zmq']['client_secret_key']
                 server_pub_key = self.config['activity_logging']['zmq']['server_public_key']
                 greenlet = ZmqLogger(zmq_url, client_pub_key, client_secret_key, server_pub_key)
+                greenlet.link_exception(on_unhandled_greenlet_exception)
+                greenlet.start()
+            if 'syslog' in self.config['activity_logging'] and self.config['activity_logging']['syslog']['enabled']:
+                greenlet = SyslogLogger()
                 greenlet.link_exception(on_unhandled_greenlet_exception)
                 greenlet.start()
 

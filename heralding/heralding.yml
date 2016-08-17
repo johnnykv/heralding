@@ -14,6 +14,9 @@ activity_logging:
     client_secret_key: ""
     server_public_key: ""
 
+  syslog:
+    enabled: false
+
 
 # protocols to enable
 capabilities:
