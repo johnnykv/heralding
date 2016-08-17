@@ -1,3 +1,6 @@
+0.1.14 (2016-08-17):
+ - fixed premature ending of SSH sessions
+
 0.1.13 (2016-05-20):
  - fixed decoding issue in smtp capability
 
