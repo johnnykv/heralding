@@ -59,3 +59,11 @@ To install the latest stable (well, semi-stable) version, use pip:
 .. code-block:: shell
 
   pip install heralding
+
+Make sure that requirements and pip is installed.
+Simple way to do this on a Debian-based OS is:
+
+.. code-block:: shell
+
+  sudo apt-get install python-pip python-dev build-essential
+  sudo pip install -r requirements.txt
