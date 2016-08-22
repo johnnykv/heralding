@@ -42,7 +42,7 @@ class FileLogger(BaseLogger):
         logger.info('File logger started, using file: {0}'.format(logFile))
 
     def loggerStopped(self):
-        self.fileHandler.Flush()
+        self.fileHandler.flush()
         self.fileHandler.close()
 
     def handle_log_data(self, data):
