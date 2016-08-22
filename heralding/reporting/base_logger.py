@@ -17,6 +17,7 @@ import logging
 
 import zmq.green as zmq
 from gevent import Greenlet
+import gevent.event
 
 import heralding.misc
 from heralding.misc.socket_names import SocketNames
@@ -28,6 +29,7 @@ class BaseLogger(Greenlet):
     def __init__(self):
         Greenlet.__init__(self)
         self.enabled = True
+        self.Ready = gevent.event.Event()
 
     def _run(self):
         context = heralding.misc.zmq_context
@@ -38,14 +40,20 @@ class BaseLogger(Greenlet):
 
         poller = zmq.Poller()
         poller.register(internal_reporting_socket, zmq.POLLIN)
-
+        self.Ready.set()
         while self.enabled:
             socks = dict(poller.poll(500))
             if internal_reporting_socket in socks and socks[internal_reporting_socket] == zmq.POLLIN:
                 data = internal_reporting_socket.recv_pyobj()
-                assert isinstance(data, dict)
-                self.handle_log_data(data)
+                # if None is received, this means that ReportingRelay is going down
+                if not data:
+                    self.stop()
+                else:
+                    assert isinstance(data, dict)
+                    self.handle_log_data(data)
         internal_reporting_socket.close()
+        # at this point we know no more data will arrive.
+        self.loggerStopped()
 
     def stop(self):
         self.enabled = False
@@ -54,5 +62,7 @@ class BaseLogger(Greenlet):
         # should be handled in child class
         raise NotImplementedError("Please implement this method")
 
+    # called after we are sure no more data is received
+    # override this to close filesockets, etc.
     def loggerStopped(self):
         pass

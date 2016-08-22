@@ -17,6 +17,7 @@ import logging
 
 import gevent
 import gevent.lock
+import gevent.queue
 import zmq.green as zmq
 from gevent import Greenlet
 
@@ -36,7 +37,7 @@ class ReportingRelay(Greenlet):
         # we are singleton
         ReportingRelay._incommingLogQueueLock.acquire()
         assert ReportingRelay._incommingLogQueue is None
-        ReportingRelay._incommingLogQueue = gevent.queue.Queue()
+        ReportingRelay._incommingLogQueue = gevent.queue.Queue(10000)
         ReportingRelay._incommingLogQueueLock.release()
 
         self.enabled = True
@@ -49,17 +50,26 @@ class ReportingRelay(Greenlet):
         assert ReportingRelay._incommingLogQueue is not None
         ReportingRelay._incommingLogQueue.put(data)
 
+    @staticmethod
+    def getQueueSize():
+        if ReportingRelay._incommingLogQueue is not None:
+            return len(ReportingRelay._incommingLogQueue)
+        else:
+            return 0
+
     def _run(self):
 
         self.internalReportingPublisher.bind(SocketNames.INTERNAL_REPORTING.value)
 
-        while self.enabled:
+        while self.enabled or ReportingRelay.getQueueSize() > 0:
             try:
                 data = ReportingRelay._incommingLogQueue.get(timeout=0.5)
                 self.internalReportingPublisher.send_pyobj(data)
             except gevent.queue.Empty:
                 pass
 
+        # None signals 'going down' to listeners
+        self.internalReportingPublisher.send_pyobj(None)
         self.internalReportingPublisher.close()
 
         # None is also used to signal we are all done
@@ -70,12 +80,10 @@ class ReportingRelay(Greenlet):
     def stop(self):
         self.enabled = False
         while True:
-            try:
-                ReportingRelay._incommingLogQueueLock.acquire()
-                if ReportingRelay._incommingLogQueue is not None:
-                    gevent.sleep(0.1)
-                else:
-                    break
-            finally:
+            ReportingRelay._incommingLogQueueLock.acquire()
+            if ReportingRelay._incommingLogQueue is not None:
                 ReportingRelay._incommingLogQueueLock.release()
-                gevent.sleep()
+                gevent.sleep(0.1)
+            else:
+                ReportingRelay._incommingLogQueueLock.release()
+                break
