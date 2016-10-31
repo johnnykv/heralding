@@ -1,3 +1,6 @@
+0.1.15 (2016-10-31):
+ - improvements to logger shutdown flow
+
 0.1.14 (2016-08-17):
  - fixed premature ending of SSH sessions
 
