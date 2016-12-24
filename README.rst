@@ -70,7 +70,7 @@ Simple way to do this on a Debian-based OS is:
   
 And finally start the honeypot:
   
-  .. code-block:: shell
+.. code-block:: shell
 
   mkdir tmp
   cd tmp
