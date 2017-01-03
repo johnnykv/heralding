@@ -106,13 +106,14 @@ if __name__ == '__main__':
 
     parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Logs debug messages.')
     parser.add_argument('-l', '--logfile', dest='logfile', default='heralding.log', help='Heralding log file')
+    parser.add_argument('-c', '--config', dest='config', default='heralding.yml', help='Heralding config file')
     args = parser.parse_args()
 
     setup_logging(args.logfile, args.verbose)
 
     logger.info('Initializing Heralding version {0}'.format(heralding.version))
 
-    config_file = 'heralding.yml'
+    config_file = args.config
     if not os.path.isfile(config_file):
         package_directory = os.path.dirname(os.path.abspath(heralding.__file__))
         config_file = os.path.join(package_directory, config_file)
