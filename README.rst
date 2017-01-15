@@ -65,7 +65,7 @@ Simple way to do this on a Debian-based OS is:
 
 .. code-block:: shell
 
-  sudo apt-get install python-pip python-dev build-essential
+  sudo apt-get install python-pip python-dev build-essential libssl-dev libffi-dev
   sudo pip install -r requirements.txt
   
 And finally start the honeypot:
