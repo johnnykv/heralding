@@ -46,6 +46,16 @@ class FileLogger(BaseLogger):
         self.fileHandler.close()
 
     def handle_log_data(self, data):
+        if data['username'] is not None:
+            try:
+                data['username'] = data['username'].encode('utf-8')
+            except UnicodeDecodeError:
+                pass
+        if data['password'] is not None:
+            try:
+                data['password'] = data['password'].encode('utf-8')
+            except UnicodeDecodeError:
+                pass
         self.csvWriter.writerow(data)
         # meh
         self.fileHandler.flush()
