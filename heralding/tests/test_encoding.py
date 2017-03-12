@@ -14,33 +14,37 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import unittest
 
-from heralding.reporting.file_logger import get_utf_repr
+from heralding.reporting.file_logger import FileLogger
 
 
 class EncodingTests(unittest.TestCase):
+    def setUp(self):
+        log_filename = "test_csv.log"
+        self.flogger_greenlet = FileLogger(log_filename)
+
     def test_ascii(self):
-        test_login = "girls_like_python".encode('ascii')
-        utf_login = get_utf_repr(test_login)
-        expected_utf = "girls_like_python"
-        self.assertEqual(utf_login, expected_utf)
+        test_login = test_password = "girls_like_python".encode('ascii')
+        test_data = {'username': test_login, 'password': test_password}
+        self.flogger_greenlet.handle_log_data(test_data)
 
     def test_unicode(self):
         # word 'python' in russian spelling
-        test_login = u"пайтон"
-        utf_login = get_utf_repr(test_login)
-        expected_utf = "пайтон"
-        self.assertEqual(utf_login, expected_utf)
+        test_login = test_password = u"пайтон"
+        test_data = {'username': test_login, 'password': test_password}
+        self.flogger_greenlet.handle_log_data(test_data)
 
     def test_already_in_utf(self):
-        test_login = "пайтон"
-        utf_login = get_utf_repr(test_login)
-        expected_utf = "пайтон"
-        self.assertEqual(utf_login, expected_utf)
+        test_login = test_password = "пайтон"
+        test_data = {'username': test_login, 'password': test_password}
+        self.flogger_greenlet.handle_log_data(test_data)
 
     def test_invalid_utf(self):
-        test_login = "пайт\x80он"
-        utf_login = get_utf_repr(test_login)
-        expected_utf = "пайт?он"
-        self.assertEqual(utf_login, expected_utf)
+        test_login = test_password = "пайт\x80он"
+        test_data = {'username': test_login, 'password': test_password}
+        self.flogger_greenlet.handle_log_data(test_data)
+
+    def tearDown(self):
+        os.remove("test_csv.log")
