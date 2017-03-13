@@ -47,4 +47,5 @@ class EncodingTests(unittest.TestCase):
         self.flogger_greenlet.handle_log_data(test_data)
 
     def tearDown(self):
+        self.flogger_greenlet.fileHandler.close()
         os.remove("test_csv.log")
