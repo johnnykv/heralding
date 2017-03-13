@@ -16,14 +16,16 @@
 
 import os
 import unittest
+import random
 
 from heralding.reporting.file_logger import FileLogger
 
 
 class EncodingTests(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         log_filename = "test_csv.log"
-        self.flogger_greenlet = FileLogger(log_filename)
+        cls.flogger_greenlet = FileLogger(log_filename)
 
     def test_ascii(self):
         test_login = test_password = "girls_like_python".encode('ascii')
@@ -46,6 +48,7 @@ class EncodingTests(unittest.TestCase):
         test_data = {'username': test_login, 'password': test_password}
         self.flogger_greenlet.handle_log_data(test_data)
 
-    def tearDown(self):
-        self.flogger_greenlet.fileHandler.close()
+    @classmethod
+    def tearDownClass(cls):
+        cls.flogger_greenlet.fileHandler.close()
         os.remove("test_csv.log")
