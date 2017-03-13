@@ -16,7 +16,6 @@
 
 import os
 import unittest
-import random
 
 from heralding.reporting.file_logger import FileLogger
 
