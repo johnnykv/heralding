@@ -66,6 +66,8 @@ capabilities:
     enabled: true
     port: 22
     timeout: 30
+    protocol_specific_data:
+      banner: "SSH-2.0-OpenSSH_6.6.1p1 Ubuntu-2ubuntu2.8"
 
   http:
     enabled: true
