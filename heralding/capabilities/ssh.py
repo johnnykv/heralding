@@ -62,6 +62,9 @@ class SshWrapper(SSHHandler):
         self.auth_count = 0
         self.working_dir = None
         self.username = None
+        self.banner = 'SSH-2.0-OpenSSH_6.6.1p1 Ubuntu-2ubuntu2.8'
+        if 'protocol_specific_data' in options and 'banner' in options['protocol_specific_data']:
+            self.banner = options['protocol_specific_data']['banner']
 
         SshWrapper.host_key = key
         # TODO: Figure out why this is necessary
@@ -88,6 +91,8 @@ class SshWrapper(SSHHandler):
         self.transport.load_server_moduli()
 
         self.transport.add_server_key(self.host_key)
+
+        self.transport.local_version = self.banner
 
         try:
             self.transport.start_server(server=self)
