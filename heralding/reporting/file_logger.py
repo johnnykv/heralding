@@ -46,19 +46,6 @@ class FileLogger(BaseLogger):
         self.fileHandler.close()
 
     def handle_log_data(self, data):
-        data['username'] = get_utf_repr(data['username'])
-        data['password'] = get_utf_repr(data['password'])
         self.csvWriter.writerow(data)
         # meh
         self.fileHandler.flush()
-
-
-def get_utf_repr(data_value):
-    if data_value is not None:
-        try:
-            unicode_data_value = data_value.decode('utf-8', 'replace')
-            unicode_data_value = unicode_data_value.replace(u'\ufffd', '?')
-        except UnicodeEncodeError:
-            unicode_data_value = data_value
-        utf_data_value = unicode_data_value.encode('utf-8')
-        return utf_data_value
