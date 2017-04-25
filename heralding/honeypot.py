@@ -14,6 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+import ssl
 import sys
 import os
 
@@ -31,6 +32,23 @@ from heralding.misc.common import on_unhandled_greenlet_exception, generate_self
 from ipify import get_ip
 
 logger = logging.getLogger(__name__)
+
+
+class SSLStreamServer(StreamServer):
+    """StreamServer class, but with handling of 'NO_SHARED_CIPHER' error."""
+    
+    def wrap_socket_and_handle(self, client_socket, address):
+        try:
+            return super(SSLStreamServer, self).wrap_socket_and_handle(client_socket, address)
+        except ssl.SSLError as err:
+            if err.reason == "NO_SHARED_CIPHER":
+                target_port = client_socket.getsockname()[1]
+                client_address = "{0}:{1}".format(*address)
+                error_message = "{0} tried to connect {1} port, " \
+                                "but no supported ciphers were found!".format(client_address, target_port)
+                logger.error(error_message)
+            else:
+                raise ssl.SSLError(err)
 
 
 class Honeypot(object):
@@ -99,8 +117,8 @@ class Honeypot(object):
                     if cap_name.endswith('s'):
                         pem_file = '{0}.pem'.format(cap_name)
                         self.create_cert_if_not_exists(cap_name, pem_file)
-                        server = StreamServer(('0.0.0.0', port), cap.handle_session,
-                                              keyfile=pem_file, certfile=pem_file)
+                        server = SSLStreamServer(('0.0.0.0', port), cap.handle_session,
+                                                  keyfile=pem_file, certfile=pem_file)
                     else:
                         server = StreamServer(('0.0.0.0', port), cap.handle_session)
 
