@@ -31,12 +31,13 @@ class Imap(HandlerBase):
         self.max_tries = int(self.options['protocol_specific_data']['max_attempts'])
         self.banner = self.options['protocol_specific_data']['banner']
 
+        self.available_commands = ['authenticate', 'capability', 'login', 'logout', 'noop']
+        self.available_mechanisms = ['plain']
+
     def execute_capability(self, address, socket, session):
         self._handle_session(session, socket)
 
     def _handle_session(self, session, gsocket):
-        available_cmds = ['authenticate', 'capability', 'login', 'logout', 'noop']
-
         fileobj = gsocket.makefile()
 
         self.send_message(session, gsocket, self.banner)
@@ -45,12 +46,10 @@ class Imap(HandlerBase):
         while state != 'Logout' and session.connected:
             try:
                 raw_msg = fileobj.readline()
-            except socket.error as err:
-                logger.error("An error occured while reading user's line {0}".format(err))
+            except socket.error:
                 session.end_session()
                 break
 
-            print raw_msg
             cmd_msg = raw_msg.rstrip().split(' ', 2)
             if len(cmd_msg) == 0:
                 continue
@@ -67,7 +66,7 @@ class Imap(HandlerBase):
                 args = cmd_msg[2]
 
             cmd = cmd.lower()
-            if cmd not in available_cmds:
+            if cmd not in self.available_commands:
                 self.send_message(session, gsocket, "* BAD invalid command")
             else:
                 func_to_call = getattr(self, 'cmd_{0}'.format(cmd), None)
@@ -86,15 +85,17 @@ class Imap(HandlerBase):
             self.send_message(session, gsocket, '* BAD invalid command')
             return "Not Authenticated"
 
-        self.send_message(session, gsocket, '+')
-        raw_msg = gsocket.recv(512)
+        if auth_mechanism in self.available_mechanisms:
+            # the space after '+' is needed according to RFC
+            self.send_message(session, gsocket, '+ ')
+            raw_msg = gsocket.recv(512)
 
-        if auth_mechanism == 'plain':
-            success, credentials = self.try_b64decode(raw_msg)
-            if success and '\x00' in credentials:
-                _, user, password = base64.b64decode(raw_msg).split('\x00')
-                session.add_auth_attempt('plaintext', username=user, password=password)
-                self.send_message(session, gsocket, tag + ' NO Authentication failed')
+            if auth_mechanism == 'plain':
+                success, credentials = self.try_b64decode(raw_msg)
+                if success and '\x00' in credentials:
+                    _, user, password = base64.b64decode(raw_msg).split('\x00')
+                    session.add_auth_attempt('plaintext', username=user, password=password)
+                    self.send_message(session, gsocket, tag + ' NO Authentication failed')
         else:
             self.send_message(session, gsocket, '* BAD invalid command')
         self.stop_if_too_many_attempts(session)
@@ -112,7 +113,8 @@ class Imap(HandlerBase):
             self.send_message(session, gsocket, '* BAD invalid command')
             return 'Not Authenticated'
 
-        # Delete first and last quote, because login and password can be sent as quoted strings
+        # Delete first and last quote,
+        # because login and password can be sent as quoted strings
         if len(user_cred) == 1:
             user = self.strip_quotes(user_cred[0])
             password = ''
@@ -137,22 +139,21 @@ class Imap(HandlerBase):
     def send_message(self, session, gsocket, msg):
         try:
             gsocket.sendall(msg + CRLF)
-        except socket.error as err:
-            logger.error("An error occured while sending a message: {0}".format(err))
-            #session.end_session()
-
-    def try_b64decode(self, b64_str):
-        try:
-            result = base64.b64decode(b64_str)
-            return True, result
-        except TypeError:
-            logger.warning('Error decoding base64:'
-                           ' {0} ({1})'.format(binascii.hexlify(b64_str), self.session.id))
-            return False, ''
+        except socket.error:
+            session.end_session()
 
     def stop_if_too_many_attempts(self, session):
         if self.max_tries < session.get_number_of_login_attempts():
             session.end_session()
+
+    @staticmethod
+    def try_b64decode(b64_str):
+        try:
+            result = base64.b64decode(b64_str)
+            return True, result
+        except TypeError:
+            logger.warning('Error decoding base64: {0}'.format(binascii.hexlify(b64_str)))
+            return False, ''
 
     @staticmethod
     def strip_quotes(quoted_str):
