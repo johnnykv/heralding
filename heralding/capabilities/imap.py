@@ -92,10 +92,12 @@ class Imap(HandlerBase):
 
             if auth_mechanism == 'plain':
                 success, credentials = self.try_b64decode(raw_msg)
-                if success and '\x00' in credentials:
+                if success and credentials.count('\x00') == 2:
                     _, user, password = base64.b64decode(raw_msg).split('\x00')
                     session.add_auth_attempt('plaintext', username=user, password=password)
                     self.send_message(session, gsocket, tag + ' NO Authentication failed')
+                else:
+                    self.send_message(session, gsocket, '* BAD invalid command')
         else:
             self.send_message(session, gsocket, '* BAD invalid command')
         self.stop_if_too_many_attempts(session)
