@@ -67,14 +67,14 @@ class Imap(HandlerBase):
 
             cmd = cmd.lower()
             if cmd not in self.available_commands:
-                self.send_message(session, gsocket, "* BAD invalid command")
+                self.send_message(session, gsocket, tag + " BAD invalid command")
             else:
                 func_to_call = getattr(self, 'cmd_{0}'.format(cmd), None)
                 if func_to_call:
                     return_value = func_to_call(session, gsocket, tag, args)
                     state = return_value
                 else:
-                    self.send_message(session, gsocket, "* BAD invalid command")
+                    self.send_message(session, gsocket, tag + " BAD invalid command")
         session.end_session()
 
     def cmd_authenticate(self, session, gsocket, tag, args):
@@ -82,7 +82,7 @@ class Imap(HandlerBase):
         if len(mechanism) == 1:
             auth_mechanism = mechanism[0].lower()
         else:
-            self.send_message(session, gsocket, '* BAD invalid command')
+            self.send_message(session, gsocket, tag + ' BAD invalid command')
             return "Not Authenticated"
 
         if auth_mechanism in self.available_mechanisms:
@@ -91,15 +91,15 @@ class Imap(HandlerBase):
             raw_msg = gsocket.recv(512)
 
             if auth_mechanism == 'plain':
-                success, credentials = self.try_b64decode(raw_msg)
+                success, credentials = self.try_b64decode(raw_msg, session)
                 if success and credentials.count('\x00') == 2:
                     _, user, password = base64.b64decode(raw_msg).split('\x00')
                     session.add_auth_attempt('plaintext', username=user, password=password)
                     self.send_message(session, gsocket, tag + ' NO Authentication failed')
                 else:
-                    self.send_message(session, gsocket, '* BAD invalid command')
+                    self.send_message(session, gsocket, tag + ' BAD invalid command')
         else:
-            self.send_message(session, gsocket, '* BAD invalid command')
+            self.send_message(session, gsocket, tag + ' BAD invalid command')
         self.stop_if_too_many_attempts(session)
         return 'Not Authenticated'
 
@@ -112,7 +112,7 @@ class Imap(HandlerBase):
         if args:
             user_cred = args.split(' ', 1)
         else:
-            self.send_message(session, gsocket, '* BAD invalid command')
+            self.send_message(session, gsocket, tag + ' BAD invalid command')
             return 'Not Authenticated'
 
         # Delete first and last quote,
@@ -149,12 +149,13 @@ class Imap(HandlerBase):
             session.end_session()
 
     @staticmethod
-    def try_b64decode(b64_str):
+    def try_b64decode(b64_str, session):
         try:
             result = base64.b64decode(b64_str)
             return True, result
         except TypeError:
-            logger.warning('Error decoding base64: {0}'.format(binascii.hexlify(b64_str)))
+            logger.warning('Error decoding base64: {0} '
+                           '({1})'.format(binascii.hexlify(b64_str), session.id))
             return False, ''
 
     @staticmethod
