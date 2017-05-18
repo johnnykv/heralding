@@ -92,6 +92,9 @@ class Imap(HandlerBase):
 
             if auth_mechanism == 'plain':
                 success, credentials = self.try_b64decode(raw_msg, session)
+                # \x00 is a separator between authorization identity,
+                # username and password. Authorization identity isn't used in
+                # this auth mechanism, so we must have 2 \x00 symbols.(RFC 4616) 
                 if success and credentials.count('\x00') == 2:
                     _, user, password = base64.b64decode(raw_msg).split('\x00')
                     session.add_auth_attempt('plaintext', username=user, password=password)
