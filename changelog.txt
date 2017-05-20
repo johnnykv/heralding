@@ -1,3 +1,8 @@
+0.1.16 (2017-04-25:
+ - Added ability to customize SSH banner
+ - Fixed issue with encoding in CSV logger (#17)
+ - Fixed issue when no shared ciphers found (#22)
+
 0.1.15 (2016-10-31):
  - improvements to logger shutdown flow
 
