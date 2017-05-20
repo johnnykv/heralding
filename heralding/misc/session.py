@@ -68,9 +68,9 @@ class Session(object):
                  'password': None
                  }
         if 'username' in kwargs:
-            entry['username'] = kwargs['username']
+            entry['username'] = kwargs['username'].encode('utf-8')
         if 'password' in kwargs:
-            entry['password'] = kwargs['password']
+            entry['password'] = kwargs['password'].encode('utf-8')
 
         ReportingRelay.queueLogData(entry)
         self.activity()
