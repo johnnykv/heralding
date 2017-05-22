@@ -1,4 +1,4 @@
-# Copyright (C) 2016 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2017 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,8 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import logging
 import uuid
+import logging
 import datetime
 
 import gevent
@@ -25,7 +25,7 @@ from zmq.utils import jsonapi
 from zmq.utils.monitor import recv_monitor_message
 
 import heralding.misc
-from base_logger import BaseLogger
+from .base_logger import BaseLogger
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class ZmqMessageTypes(Enum):
 
 class ZmqLogger(BaseLogger):
     def __init__(self, zmq_url, client_pub_key, client_secret_key, server_pub_key):
-        super(ZmqLogger, self).__init__()
+        super().__init__()
         self.zmq_socket_url = zmq_url
         self.enabled = True
 

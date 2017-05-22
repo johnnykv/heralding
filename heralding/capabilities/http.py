@@ -22,7 +22,7 @@
 
 import base64
 import logging
-from BaseHTTPServer import BaseHTTPRequestHandler
+from http.server import BaseHTTPRequestHandler
 
 from heralding.capabilities.handlerbase import HandlerBase
 
@@ -59,17 +59,18 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        if self.headers.getheader('Authorization') is None:
+        if self.headers['Authorization'] is None:
             self.do_AUTHHEAD()
         else:
-            hdr = self.headers.getheader('Authorization')
+            hdr = self.headers['Authorization']
             _, enc_uname_pwd = hdr.split(' ')
             dec_uname_pwd = base64.b64decode(enc_uname_pwd)
-            uname, pwd = dec_uname_pwd.split(':')
-            self._session.add_auth_attempt('plaintext', username=uname, password=pwd)
+            uname, pwd = dec_uname_pwd.split(b':')
+            self._session.add_auth_attempt('plaintext', username=str(uname, 'utf-8'), password=str(pwd, 'utf-8'))
             self.do_AUTHHEAD()
-            self.wfile.write(self.headers.getheader('Authorization'))
-            self.wfile.write('not authenticated')
+            headers_bytes = bytes(self.headers['Authorization'], 'utf-8')
+            self.wfile.write(headers_bytes)
+            self.wfile.write(b'not authenticated')
 
         self.request.close()
 

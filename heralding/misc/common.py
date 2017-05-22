@@ -1,5 +1,5 @@
-import logging
 import sys
+import logging
 
 from OpenSSL import crypto
 from Crypto.PublicKey import RSA

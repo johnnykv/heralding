@@ -13,9 +13,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import logging
 import socket
 import base64
+import logging
 import binascii
 
 from heralding.capabilities.handlerbase import HandlerBase
@@ -95,9 +95,9 @@ class Imap(HandlerBase):
                 # \x00 is a separator between authorization identity,
                 # username and password. Authorization identity isn't used in
                 # this auth mechanism, so we must have 2 \x00 symbols.(RFC 4616) 
-                if success and credentials.count('\x00') == 2:
-                    _, user, password = base64.b64decode(raw_msg).split('\x00')
-                    session.add_auth_attempt('plaintext', username=user, password=password)
+                if success and credentials.count(b'\x00') == 2:
+                    _, user, password = base64.b64decode(raw_msg).split(b'\x00')
+                    session.add_auth_attempt('plaintext', username=str(user, 'utf-8'), password=str(password, 'utf-8'))
                     self.send_message(session, gsocket, tag + ' NO Authentication failed')
                 else:
                     self.send_message(session, gsocket, tag + ' BAD invalid command')
@@ -143,7 +143,8 @@ class Imap(HandlerBase):
 
     def send_message(self, session, gsocket, msg):
         try:
-            gsocket.sendall(msg + CRLF)
+            message_bytes = bytes(msg + CRLF, 'utf-8')
+            gsocket.sendall(message_bytes)
         except socket.error:
             session.end_session()
 
@@ -156,7 +157,7 @@ class Imap(HandlerBase):
         try:
             result = base64.b64decode(b64_str)
             return True, result
-        except TypeError:
+        except binascii.Error:
             logger.warning('Error decoding base64: {0} '
                            '({1})'.format(binascii.hexlify(b64_str), session.id))
             return False, ''

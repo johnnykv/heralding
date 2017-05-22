@@ -1,4 +1,4 @@
-# Copyright (C) 2013 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2017 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,10 +13,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import logging
+import os
 import ssl
 import sys
-import os
+import logging
+from ipify import get_ip
 
 import gevent
 import gevent.event
@@ -29,8 +30,6 @@ from heralding.reporting.zmq_logger import ZmqLogger
 from heralding.reporting.syslog_logger import SyslogLogger
 from heralding.misc.common import on_unhandled_greenlet_exception, generate_self_signed_cert
 
-from ipify import get_ip
-
 logger = logging.getLogger(__name__)
 
 
@@ -39,7 +38,7 @@ class SSLStreamServer(StreamServer):
     
     def wrap_socket_and_handle(self, client_socket, address):
         try:
-            return super(SSLStreamServer, self).wrap_socket_and_handle(client_socket, address)
+            return super().wrap_socket_and_handle(client_socket, address)
         except ssl.SSLError as err:
             if err.reason == "NO_SHARED_CIPHER":
                 target_port = client_socket.getsockname()[1]
@@ -51,7 +50,7 @@ class SSLStreamServer(StreamServer):
                 raise ssl.SSLError(err)
 
 
-class Honeypot(object):
+class Honeypot:
     public_ip = ''
 
     def __init__(self, config):
@@ -68,10 +67,10 @@ class Honeypot(object):
         while True:
             try:
                 Honeypot.public_ip = get_ip()
-                logger.warn('Found public ip: {0}'.format(Honeypot.public_ip))
+                logger.warning('Found public ip: {0}'.format(Honeypot.public_ip))
             except Exception as ex:
                 Honeypot.public_ip = ''
-                logger.warn('Could not request public ip from ipify, error: {0}'.format(ex))
+                logger.warning('Could not request public ip from ipify, error: {0}'.format(ex))
             gevent.sleep(3600)
 
     def start(self):
@@ -166,7 +165,6 @@ class Honeypot(object):
 
             cert, key = generate_self_signed_cert(cert_country, cert_state, cert_org, cert_locality, cert_org_unit,
                                                   cert_cn, valid_days, serial_number)
-
-            with open(pem_file, 'w') as _pem_file:
+            with open(pem_file, 'wb') as _pem_file:
                 _pem_file.write(cert)
                 _pem_file.write(key)

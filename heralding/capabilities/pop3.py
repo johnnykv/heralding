@@ -1,4 +1,4 @@
-# Copyright (C) 2012 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2017 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ class Pop3(HandlerBase):
     cmds = {}
 
     def __init__(self, options, ):
-        super(Pop3, self).__init__(options)
+        super().__init__(options)
         Pop3.max_tries = int(self.options['protocol_specific_data']['max_attempts'])
 
     def execute_capability(self, address, socket, session):
@@ -108,12 +108,7 @@ class Pop3(HandlerBase):
 
     def send_message(self, session, gsocket, msg):
         try:
-            gsocket.sendall(msg + "\n")
-        except socket.error, (value, exceptionMessage):
-            session.end_session()
-
-    def send_data(self, session, gsocket, data):
-        try:
-            gsocket.sendall(data)
-        except socket.error, (value, exceptionMessage):
+            message_bytes = bytes(msg + "\n", 'utf-8')
+            gsocket.sendall(message_bytes)
+        except socket.error:
             session.end_session()

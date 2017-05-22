@@ -1,4 +1,4 @@
-# Copyright (C) 2013 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2017 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # Rewritten by Aniket Panse <contact@aniketpanse.in>
 #
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 TERMINATOR = '\r\n'
 
 
-class FtpHandler(object):
+class FtpHandler:
     """Handles a single FTP connection"""
 
     def __init__(self, conn, session, options):
@@ -53,7 +53,8 @@ class FtpHandler(object):
         self.serve()
 
     def getcmd(self):
-        return self.conn.recv(512)
+        cmd = self.conn.recv(512)
+        return str(cmd, 'utf-8')
 
     def serve(self):
         while self.serve_flag:
@@ -108,7 +109,8 @@ class FtpHandler(object):
 
     def respond(self, msg):
         msg += TERMINATOR
-        self.conn.send(msg)
+        msg_bytes = bytes(msg, 'utf-8')
+        self.conn.send(msg_bytes)
 
     def stop(self):
         self.session.end_session()
