@@ -41,7 +41,7 @@ class SSLStreamServer(StreamServer):
             return super().wrap_socket_and_handle(client_socket, address)
         except ssl.SSLError as err:
             if err.reason == "NO_SHARED_CIPHER":
-                target_port = client_socket.getsockname()[1]
+                target_port = self.server_port
                 client_address = "{0}:{1}".format(*address)
                 error_message = "{0} tried to connect {1} port, " \
                                 "but no supported ciphers were found!".format(client_address, target_port)

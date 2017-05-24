@@ -118,7 +118,7 @@ class FtpHandler:
 
 class ftp(HandlerBase):
     def __init__(self, options):
-        super(ftp, self).__init__(options)
+        super().__init__(options)
         self._options = options
 
     def execute_capability(self, address, socket, session):

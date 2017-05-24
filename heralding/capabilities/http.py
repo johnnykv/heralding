@@ -86,7 +86,7 @@ class Http(HandlerBase):
     HandlerClass = BeeHTTPHandler
 
     def __init__(self, options):
-        super(Http, self).__init__(options)
+        super().__init__(options)
         self._options = options
 
     def execute_capability(self, address, socket, session):
