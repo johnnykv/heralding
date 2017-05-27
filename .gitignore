@@ -2,6 +2,7 @@
 
 .idea
 .idea/libraries
+.vscode
 
 # Packages
 *.egg
