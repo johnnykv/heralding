@@ -58,7 +58,7 @@ class Pop3(HandlerBase):
 
             cmd = cmd.lower()
 
-            if cmd not in ['apop', 'user', 'pass', 'quit']:
+            if cmd not in ['apop', 'user', 'pass', 'quit', 'noop']:
                 self.send_message(session, gsocket, '-ERR Unknown command')
             else:
                 func_to_call = getattr(self, 'cmd_{0}'.format(cmd), None)
@@ -110,5 +110,11 @@ class Pop3(HandlerBase):
         try:
             message_bytes = bytes(msg + "\n", 'utf-8')
             gsocket.sendall(message_bytes)
+        except socket.error:
+            session.end_session()
+
+    def send_data(self, session, gsocket, data):
+        try:
+            gsocket.sendall(data)
         except socket.error:
             session.end_session()

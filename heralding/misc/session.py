@@ -24,7 +24,7 @@ from heralding.reporting.reporting_relay import ReportingRelay
 logger = logging.getLogger(__name__)
 
 
-class Session(object):
+class Session:
     def __init__(self, source_ip, source_port, protocol, users, destination_port=None, destination_ip=None):
 
         self.id = uuid.uuid4()

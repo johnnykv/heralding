@@ -17,7 +17,6 @@ import os
 import ssl
 import sys
 import logging
-from ipify import get_ip
 
 import gevent
 import gevent.event
@@ -29,6 +28,8 @@ from heralding.reporting.file_logger import FileLogger
 from heralding.reporting.zmq_logger import ZmqLogger
 from heralding.reporting.syslog_logger import SyslogLogger
 from heralding.misc.common import on_unhandled_greenlet_exception, generate_self_signed_cert
+
+from ipify import get_ip
 
 logger = logging.getLogger(__name__)
 

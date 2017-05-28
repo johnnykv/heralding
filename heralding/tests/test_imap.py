@@ -46,7 +46,6 @@ class ImapTests(unittest.TestCase):
 
         login_sequences = [
             ('kajoj_admin', 'thebestpassword'),
-            ('пайтон', 'наилучшийпароль'),  # ('python', 'thebestpassword')
             ('\"kajoj_admin\"', 'the best password')
         ]
 
@@ -55,7 +54,7 @@ class ImapTests(unittest.TestCase):
             with self.assertRaises(imaplib.IMAP4.error) as error:
                 imap_obj.login(sequence[0], sequence[1])
             imap_exception = error.exception
-            self.assertEqual(imap_exception.message, 'Authentication failed')
+            self.assertEqual(imap_exception.args[0], b'Authentication failed')
 
         imap_obj.logout()
         server.stop()
@@ -70,9 +69,9 @@ class ImapTests(unittest.TestCase):
         server.start()
 
         login_sequences = [
-            ('\0kajoj_admin\0thebestpassword', 'Authentication failed'),
-            ('\0пайтон\0наилучшийпароль', 'Authentication failed'),
-            ('kajoj_admin\0the best password', 'AUTHENTICATE command error: BAD [\'invalid command\']')
+            ('\0kajoj_admin\0thebestpassword', b'Authentication failed'),
+            ('\0пайтон\0наилучшийпароль', b'Authentication failed'),
+            ('kajoj_admin\0the best password', 'AUTHENTICATE command error: BAD [b\'invalid command\']')
         ]
 
         imap_obj = imaplib.IMAP4('127.0.0.1', port=2000)
@@ -80,7 +79,7 @@ class ImapTests(unittest.TestCase):
             with self.assertRaises(imaplib.IMAP4.error) as error:
                 imap_obj.authenticate('PLAIN', lambda x: sequence[0])
             imap_exception = error.exception
-            self.assertEqual(imap_exception.message, sequence[1])
+            self.assertEqual(imap_exception.args[0], sequence[1])
 
         imap_obj.logout()
         server.stop()

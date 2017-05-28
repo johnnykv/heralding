@@ -64,9 +64,9 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
         else:
             hdr = self.headers['Authorization']
             _, enc_uname_pwd = hdr.split(' ')
-            dec_uname_pwd = base64.b64decode(enc_uname_pwd)
-            uname, pwd = dec_uname_pwd.split(b':')
-            self._session.add_auth_attempt('plaintext', username=str(uname, 'utf-8'), password=str(pwd, 'utf-8'))
+            dec_uname_pwd = str(base64.b64decode(enc_uname_pwd), 'utf-8')
+            uname, pwd = dec_uname_pwd.split(':')
+            self._session.add_auth_attempt('plaintext', username=uname, password=pwd)
             self.do_AUTHHEAD()
             headers_bytes = bytes(self.headers['Authorization'], 'utf-8')
             self.wfile.write(headers_bytes)
