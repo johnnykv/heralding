@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 def on_unhandled_greenlet_exception(dead_greenlet):
-    logger.error('Stopping because %s died: %s', dead_greenlet, dead_greenlet.exception)
+    logger.error('Stopping because {0} died: {1}'.format(dead_greenlet, dead_greenlet.exception))
     sys.exit(1)
 
 

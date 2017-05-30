@@ -42,7 +42,7 @@ class FtpHandler:
         self.conn = conn
         self.serve_flag = True
         self.session = session
-        self.respond('200 ' + self.banner)
+        self.respond('220 ' + self.banner)
 
         # TODO: What is this?
         self.local_ip = '127.0.0.1'
@@ -100,7 +100,7 @@ class FtpHandler:
             self.stop()
 
     def do_SYST(self, arg):
-        self.respond('215 %s' % self.syst_type)
+        self.respond('215 {0}'.format(self.syst_type))
 
     def do_QUIT(self, arg):
         self.respond('221 Bye.')
