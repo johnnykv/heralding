@@ -31,10 +31,11 @@ import random
 import smtpd
 import time
 import binascii
-from smtpd import NEWLINE, EMPTYSTRING
+from smtpd import NEWLINE
 
 from heralding.capabilities.handlerbase import HandlerBase
 
+EMPTYSTRING = ""
 logger = logging.getLogger(__name__)
 
 
@@ -70,13 +71,14 @@ class SMTPChannel(smtpd.SMTPChannel):
         # Now we set the initflag, so that push() will work again.
         # And we push.
         self._initflag = True
-        self.push("220 %s" % self.banner)
+        self.push("220 {0}".format(self.banner))
 
     def push(self, msg):
         # Only send data after superclass initialization
         if self._initflag:
             transmit_msg = msg + '\r\n'
-            asynchat.async_chat.push(self, transmit_msg)
+            transmit_msg_bytes = bytes(transmit_msg, 'utf-8')
+            asynchat.async_chat.push(self, transmit_msg_bytes)
 
     def close_quit(self):
         self.close_when_done()
@@ -88,23 +90,23 @@ class SMTPChannel(smtpd.SMTPChannel):
         self.close_quit()
 
     def collect_incoming_data(self, data):
-        self.__line.append(data)
+        self.received_lines.append(data)
 
     def smtp_EHLO(self, arg):
         if not arg:
             self.push('501 Syntax: HELO/EHLO hostname')
             return
-        if self.__greeting:
+        if self.seen_greeting:
             self.push('503 Duplicate HELO/EHLO')
         else:
-            self.push('250-%s Hello %s' % (self.banner, arg))
+            self.push('250-{0} Hello {1}'.format(self.banner, arg))
             self.push('250-AUTH PLAIN LOGIN CRAM-MD5')
             self.push('250 EHLO')
 
     def try_b64decode(self, arg):
         try:
             result = base64.b64decode(arg)
-            return True, result
+            return True, str(result, 'utf-8')
         except TypeError:
             logger.warning('Error decoding base64: {0} ({1})'.format(binascii.hexlify(arg), self.session.id))
             return False, ''
@@ -131,7 +133,7 @@ class SMTPChannel(smtpd.SMTPChannel):
             self.login_uname_authenticating = False
             success, self.username = self.try_b64decode(arg)
             if success:
-                self.push('334 ' + base64.b64encode('Password:'))
+                self.push('334 ' + str(base64.b64encode(b'Password:'), 'utf-8'))
                 self.login_pass_authenticating = True
             return
 
@@ -149,7 +151,8 @@ class SMTPChannel(smtpd.SMTPChannel):
             # Our arg will ideally be the username/password
             success, credentials = self.try_b64decode(arg)
             if success and '\x00' in credentials:
-                _, self.username, self.password = base64.b64decode(arg).split('\x00')
+                arg_decoded = str(base64.b64decode(arg), 'utf-8')
+                _, self.username, self.password = arg_decoded.split('\x00')
                 self.session.add_auth_attempt('plaintext', username=self.username, password=self.password)
             self.push('535 authentication failed')
             self.close_quit()
@@ -165,7 +168,8 @@ class SMTPChannel(smtpd.SMTPChannel):
                 return
             success, credentials = self.try_b64decode(arg)
             if success and '\x00' in credentials:
-                _, self.username, self.password = base64.b64decode(param).split('\x00')
+                param_decoded = str(base64.b64decode(param), 'utf-8')
+                _, self.username, self.password = param_decoded.split('\x00')
                 self.session.add_auth_attempt('plaintext', username=self.username, password=self.password)
             self.push('535 authentication failed')
             self.close_quit()
@@ -173,12 +177,12 @@ class SMTPChannel(smtpd.SMTPChannel):
         elif 'LOGIN' in arg:
             param = arg.split()
             if len(param) > 1:
-                self.username = base64.b64decode(param[1])
-                self.push('334 ' + base64.b64encode('Password:'))
+                self.username = str(base64.b64decode(param[1]), 'utf-8')
+                self.push('334 ' + str(base64.b64encode(b'Password:'), 'utf-8'))
                 self.login_pass_authenticating = True
                 return
             else:
-                self.push('334 ' + base64.b64encode('Username:'))
+                self.push('334 ' + str(base64.b64encode(b'Username:'), 'utf-8'))
                 self.login_uname_authenticating = True
                 return
 
@@ -188,17 +192,17 @@ class SMTPChannel(smtpd.SMTPChannel):
             t = int(time.time())
 
             # challenge is of the form '<24609.1047914046@awesome.host.com>'
-            self.sent_cram_challenge = "<" + str(r) + "." + str(t) + "@" + self.__fqdn + ">"
-            self.push("334 " + base64.b64encode(self.sent_cram_challenge))
+            self.sent_cram_challenge = "<" + str(r) + "." + str(t) + "@" + self.fqdn + ">"
+            cram_challenge_bytes = bytes(self.sent_cram_challenge, 'utf-8')
+            self.push("334 " + str(base64.b64encode(cram_challenge_bytes), 'utf-8'))
             return
 
     # This code is taken directly from the underlying smtpd.SMTPChannel
     # support for AUTH is added.
     def found_terminator(self):
-        line = EMPTYSTRING.join(self.__line)
-
-        self.__line = []
-        if self.__state == self.COMMAND:
+        line = EMPTYSTRING.join(str(self.received_lines[0], 'utf-8'))
+        self.received_lines = []
+        if self.smtp_state == self.COMMAND:
             if not line:
                 self.push('500 Error: bad syntax')
                 return
@@ -218,8 +222,7 @@ class SMTPChannel(smtpd.SMTPChannel):
                 arg = None
             else:
                 command = line[:i].upper()
-                arg = line[i + 1:].strip()
-
+                arg = line[i+1:].strip()
             # White list of operations that are allowed prior to AUTH.
             if command not in ['AUTH', 'EHLO', 'HELO', 'NOOP', 'RSET', 'QUIT']:
                 self.push('530 Authentication required')
@@ -228,12 +231,12 @@ class SMTPChannel(smtpd.SMTPChannel):
 
             method = getattr(self, 'smtp_' + command, None)
             if not method:
-                self.push('502 Error: command "%s" not implemented' % command)
+                self.push('502 Error: command "{0}" not implemented'.format(command))
                 return
             method(arg)
             return
         else:
-            if self.__state != self.DATA:
+            if self.smtp_state != self.DATA:
                 self.push('451 Internal confusion')
                 return
                 # Remove extraneous carriage returns and de-transparency according
@@ -244,16 +247,16 @@ class SMTPChannel(smtpd.SMTPChannel):
                     data.append(text[1:])
                 else:
                     data.append(text)
-            self.__data = NEWLINE.join(data)
-            status = self.__server.process_message(
-                self.__peer,
-                self.__mailfrom,
-                self.__rcpttos,
-                self.__data
+            self.received_data = NEWLINE.join(data)
+            status = self.smtp_server.process_message(
+                self.peer,
+                self.mailfrom,
+                self.rcpttos,
+                self.received_data
             )
-            self.__rcpttos = []
-            self.__mailfrom = None
-            self.__state = self.COMMAND
+            self.rcpttos = []
+            self.mailfrom = None
+            self.smtp_state = self.COMMAND
             self.set_terminator('\r\n')
             if not status:
                 self.push('250 Ok')
@@ -261,12 +264,12 @@ class SMTPChannel(smtpd.SMTPChannel):
                 self.push(status)
 
 
-class DummySMTPServer(object):
+class DummySMTPServer:
     def __init__(self):
         self.mboxpath = None
 
     def process_message(self, peer, mailfrom, rcpttos, data):
-        logging.info('Got new mail, peer ({}), from ({}), to ({})'.format(peer, mailfrom, rcpttos))
+        logging.info('Got new mail, peer ({0}), from ({1}), to ({2})'.format(peer, mailfrom, rcpttos))
         if self.mboxpath is not None:
             mbox = mailbox.mbox(self.mboxpath, create=True)
             mbox.add(data)
@@ -274,7 +277,7 @@ class DummySMTPServer(object):
 
 class smtp(HandlerBase):
     def __init__(self, options):
-        super(smtp, self).__init__(options)
+        super().__init__(options)
         self._options = options
 
     def execute_capability(self, address, socket, session):
