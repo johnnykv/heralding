@@ -1,5 +1,5 @@
 # pylint: disable-msg=E1101
-# Copyright (C) 2013 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2017 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ import os.path
 from Crypto.PublicKey import RSA
 from paramiko import RSAKey
 from paramiko.ssh_exception import SSHException
-from telnetsrv.paramiko_ssh import SSHHandler
+from heralding.telnetsrv.paramiko_ssh import SSHHandler
 
 from heralding.capabilities.handlerbase import HandlerBase
 from heralding.capabilities.shared.shell import Commands
@@ -38,9 +38,8 @@ class SSH(HandlerBase):
         if not os.path.isfile(ssh_key_file):
             with open(ssh_key_file, 'w') as _file:
                 rsa_key = RSA.generate(1024)
-                priv_key_text = rsa_key.exportKey('PEM', pkcs=1)
+                priv_key_text = str(rsa_key.exportKey('PEM'), 'utf-8')
                 _file.write(priv_key_text)
-                _file.close()
         self.key = RSAKey(filename=ssh_key_file)
         super(SSH, self).__init__(options)
 
@@ -101,7 +100,7 @@ class SshWrapper(SSHHandler):
                 if channel is None:
                     # check to see if any thread is running
                     any_running = False
-                    for _, thread in self.channels.items():
+                    for _, thread in list(self.channels.items()):
                         if thread.is_alive():
                             any_running = True
                             break

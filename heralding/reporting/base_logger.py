@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 class BaseLogger(Greenlet):
     def __init__(self):
-        Greenlet.__init__(self)
+        super().__init__()
         self.enabled = True
         self.Ready = gevent.event.Event()
 

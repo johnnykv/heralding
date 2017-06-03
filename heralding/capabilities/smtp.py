@@ -106,7 +106,7 @@ class SMTPChannel(smtpd.SMTPChannel):
     def try_b64decode(self, arg):
         try:
             result = base64.b64decode(arg)
-            return True, str(result, 'utf-8')
+            return True, str(result, 'utf-8', 'ignore')
         except TypeError:
             logger.warning('Error decoding base64: {0} ({1})'.format(binascii.hexlify(arg), self.session.id))
             return False, ''
@@ -201,6 +201,7 @@ class SMTPChannel(smtpd.SMTPChannel):
     # support for AUTH is added.
     def found_terminator(self):
         line = EMPTYSTRING.join(str(self.received_lines[0], 'utf-8'))
+        print(line)
         self.received_lines = []
         if self.smtp_state == self.COMMAND:
             if not line:

@@ -7,13 +7,6 @@ activity_logging:
     enabled: true
     filename: "heralding_activity.log"
 
-  zmq:
-    enabled: false
-    url: "tcp://somewhere.anywhere.tld:4123"
-    client_public_key: ""
-    client_secret_key: ""
-    server_public_key: ""
-
   syslog:
     enabled: false
 

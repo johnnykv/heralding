@@ -1,5 +1,5 @@
 # pylint: disable-msg=E1101
-# Copyright (C) 2013 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2017 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 class Telnet(HandlerBase):
     def __init__(self, options):
-        super(Telnet, self).__init__(options)
+        super().__init__(options)
         TelnetWrapper.max_tries = int(self.options['protocol_specific_data']['max_attempts'])
 
     def execute_capability(self, address, socket, session):
@@ -35,7 +35,7 @@ class TelnetWrapper(Commands):
     """
     Wraps the telnetsrv module to fit the Honeypot architecture.
     """
-    PROMPT = '$ '
+    PROMPT = b'$ '
 
     def __init__(self, client_address, server, _socket, session):
         self.session = session
@@ -47,12 +47,12 @@ class TelnetWrapper(Commands):
 
     def authentication_ok(self):
         while self.auth_count < TelnetWrapper.max_tries:
-            username = self.readline(prompt="Username: ", use_history=False)
-            password = self.readline(echo=False, prompt="Password: ", use_history=False)
-            self.session.add_auth_attempt(_type='plaintext', username=username, password=password)
+            username = self.readline(prompt=b"Username: ", use_history=False)
+            password = self.readline(echo=False, prompt=b"Password: ", use_history=False)
+            self.session.add_auth_attempt(_type='plaintext', username=str(username, 'utf-8'), password=str(password, 'utf-8'))
             if self.DOECHO:
-                self.write("\n")
-            self.writeline('Invalid username/password\n')
+                self.write(b"\n")
+            self.writeline(b'Invalid username/password\n')
             self.auth_count += 1
         return False
 
@@ -62,7 +62,7 @@ class TelnetWrapper(Commands):
             curses.setupterm(term, f.fileno())  # This will raise if the termtype is not supported
             self.TERM = term
             self.ESCSEQ = {}
-            for k in self.KEYS.keys():
+            for k in list(self.KEYS.keys()):
                 str_ = curses.tigetstr(curses.has_key._capability_names[k])
                 if str_:
                     self.ESCSEQ[str_] = k

@@ -32,7 +32,7 @@ class ReportingRelay(Greenlet):
     _incommingLogQueueLock = gevent.lock.BoundedSemaphore()
 
     def __init__(self):
-        Greenlet.__init__(self)
+        super().__init__()
 
         # we are singleton
         ReportingRelay._incommingLogQueueLock.acquire()
