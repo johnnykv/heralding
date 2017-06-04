@@ -28,7 +28,6 @@ import traceback
 import gevent
 from gevent.util import wrap_errors
 from heralding.telnetsrv.green import TelnetHandler
-from heralding.telnetsrv.telnetsrvlib import TelnetHandlerBase
 
 logger = logging.getLogger(__name__)
 

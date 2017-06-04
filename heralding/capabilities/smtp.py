@@ -201,7 +201,6 @@ class SMTPChannel(smtpd.SMTPChannel):
     # support for AUTH is added.
     def found_terminator(self):
         line = EMPTYSTRING.join(str(self.received_lines[0], 'utf-8'))
-        print(line)
         self.received_lines = []
         if self.smtp_state == self.COMMAND:
             if not line:
