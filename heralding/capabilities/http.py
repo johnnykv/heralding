@@ -43,7 +43,7 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
         else:
             self._banner = 'Microsoft-IIS/5.0'
         self._session = httpsession
-        BaseHTTPRequestHandler.__init__(self, request, client_address, server)
+        super().__init__(request, client_address, server)
         self._session.end_session()
 
     def do_HEAD(self):

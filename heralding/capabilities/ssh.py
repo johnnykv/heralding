@@ -41,7 +41,7 @@ class SSH(HandlerBase):
                 priv_key_text = str(rsa_key.exportKey('PEM'), 'utf-8')
                 _file.write(priv_key_text)
         self.key = RSAKey(filename=ssh_key_file)
-        super(SSH, self).__init__(options)
+        super().__init__(options)
 
     def execute_capability(self, address, socket, session):
         SshWrapper(address, None, socket, session, self.options, self.key)
@@ -49,7 +49,7 @@ class SSH(HandlerBase):
 
 class BeeTelnetHandler(Commands):
     def __init__(self, request, client_address, server, session):
-        Commands.__init__(self, request, client_address, server, session)
+        super().__init__(request, client_address, server, session)
 
 
 class SshWrapper(SSHHandler):

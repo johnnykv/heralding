@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # Telnet handler concrete class using green threads
 
 import gevent, gevent.queue

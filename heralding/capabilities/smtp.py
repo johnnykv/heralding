@@ -65,7 +65,7 @@ class SMTPChannel(smtpd.SMTPChannel):
         self.session = session
         self.options = opts
 
-        smtpd.SMTPChannel.__init__(self, smtp_server, newsocket, fromaddr)
+        super().__init__(smtp_server, newsocket, fromaddr)
         asynchat.async_chat.__init__(self, newsocket, map=smtp_map)
 
         # Now we set the initflag, so that push() will work again.

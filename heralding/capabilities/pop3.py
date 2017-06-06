@@ -112,9 +112,3 @@ class Pop3(HandlerBase):
             gsocket.sendall(message_bytes)
         except socket.error:
             session.end_session()
-
-    def send_data(self, session, gsocket, data):
-        try:
-            gsocket.sendall(data)
-        except socket.error:
-            session.end_session()

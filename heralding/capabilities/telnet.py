@@ -43,7 +43,7 @@ class TelnetWrapper(Commands):
         self.username = None
         request = TelnetWrapper.false_request()
         request._sock = _socket
-        Commands.__init__(self, request, client_address, server, self.session)
+        super().__init__(request, client_address, server, self.session)
 
     def authentication_ok(self):
         while self.auth_count < TelnetWrapper.max_tries:
