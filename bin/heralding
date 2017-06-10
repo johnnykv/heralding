@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-# Copyright (C) 2013 Johnny Vestergaard <jkv@unixcluster.dk>
+#!/usr/bin/env python3
+# Copyright (C) 2017 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
 import gevent
 import gevent.monkey
 
@@ -22,16 +21,14 @@ gevent.monkey.patch_all()
 
 import logging
 import logging.handlers
-from argparse import ArgumentParser
-import sys, os, pwd, grp, platform
-
+import os, pwd, grp, yaml, platform
 from gevent import Greenlet
+from argparse import ArgumentParser
 
 import heralding
 import heralding.honeypot
 import heralding.reporting.reporting_relay
 from heralding.misc.common import on_unhandled_greenlet_exception
-import yaml
 
 logger = logging.getLogger()
 
@@ -54,8 +51,8 @@ def setup_logging(logfile, verbose):
 
     console_log = logging.StreamHandler()
     console_log.addFilter(LogFilter())
-    console_log.setLevel(loglevel)
     console_log.setFormatter(default_formatter)
+    console_log.setLevel(loglevel)
     root_logger.addHandler(console_log)
 
     if logfile in ('/dev/log', '/dev/syslog', '/var/run/syslog', '/var/run/log'):
@@ -78,6 +75,7 @@ class LogFilter(logging.Filter):
 
 
 def drop_privileges(uid_name='nobody', gid_name='nogroup'):
+    """Drops current privileges to the privileges of selected user."""
     if os.getuid() != 0:
         return
 
@@ -89,7 +87,6 @@ def drop_privileges(uid_name='nobody', gid_name='nogroup'):
         wanted_gid = grp.getgrnam(gid_name)[2]
 
     os.setgid(wanted_gid)
-
     os.setuid(wanted_uid)
 
     new_uid_name = pwd.getpwuid(os.getuid())[0]
@@ -100,9 +97,6 @@ def drop_privileges(uid_name='nobody', gid_name='nogroup'):
 
 if __name__ == '__main__':
     parser = ArgumentParser(description='Heralding')
-
-    group = parser.add_argument_group()
-    group.add_argument('-se', '--server', action='store_true', help='Starts heralding in server mode.')
 
     parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Logs debug messages.')
     parser.add_argument('-l', '--logfile', dest='logfile', default='heralding.log', help='Heralding log file')

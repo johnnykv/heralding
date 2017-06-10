@@ -1,4 +1,4 @@
-# Copyright (C) 2012 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2017 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -78,7 +78,7 @@ class Pop3Tests(unittest.TestCase):
             fileobj.readline()
 
             for pair in sequence:
-                client.sendall(pair[0] + "\r\n")
+                client.sendall(bytes(pair[0] + "\r\n", 'utf-8'))
                 response = fileobj.readline().rstrip()
                 self.assertEqual(response, pair[1])
 

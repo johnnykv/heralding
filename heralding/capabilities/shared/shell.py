@@ -27,15 +27,14 @@ import traceback
 
 import gevent
 from gevent.util import wrap_errors
-from telnetsrv.green import TelnetHandler
-from telnetsrv.telnetsrvlib import TelnetHandlerBase
+from heralding.telnetsrv.green import TelnetHandler
 
 logger = logging.getLogger(__name__)
 
 
 class OwnGreenTelnetHandler(TelnetHandler):
     def setup(self):
-        TelnetHandlerBase.setup(self)
+        super().setup()
         # Spawn a greenlet to handle socket input
         self.greenlet_ic = gevent.spawn(wrap_errors((socket.error), self.inputcooker))
         # Note that inputcooker exits on EOF
