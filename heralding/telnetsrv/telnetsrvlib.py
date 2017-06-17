@@ -1,4 +1,5 @@
 # license: LGPL
+# Thanks a lot to the author of original telnetsrvlib - Ian Epperson (https://github.com/ianepperson)!
 
 import socket
 import curses
@@ -46,7 +47,7 @@ SEND = bytes([1])
 
 
 class TelnetHandlerBase(socketserver.BaseRequestHandler):
-    "A telnet server based on the client in telnetlib"
+    """A telnet server based on the client in telnetlib"""
 
     # Several methods are not fully defined in this class, and are
     # very specific to either a threaded or green implementation.
@@ -125,11 +126,11 @@ class TelnetHandlerBase(socketserver.BaseRequestHandler):
             self.sock = None
 
     def setterm(self, term):
-        "Set the curses structures for this terminal"
+        """Set the curses structures for this terminal"""
         raise NotImplementedError("Please Implement the setterm method")
 
     def setup(self):
-        "Connect incoming connection to a telnet session"
+        """Connect incoming connection to a telnet session"""
         try:
             self.TERM = self.request.term
         except:
@@ -142,7 +143,7 @@ class TelnetHandlerBase(socketserver.BaseRequestHandler):
             self.sendcommand(self.WILLACK[k], k)
 
     def finish(self):
-        "End this session"
+        """End this session"""
         log.debug("Session disconnected.")
         try:
             self.sock.shutdown(socket.SHUT_RDWR)
@@ -157,38 +158,6 @@ class TelnetHandlerBase(socketserver.BaseRequestHandler):
         pass
 
     # ------------------------- Telnet Options Engine --------------------------
-
-    def options_handler(self, sock, cmd, opt):
-        "Negotiate options"
-        if cmd == NOP:
-            self.sendcommand(NOP)
-        elif cmd == WILL or cmd == WONT:
-            if opt in self.WILLACK:
-                self.sendcommand(self.WILLACK[opt], opt)
-            else:
-                self.sendcommand(DONT, opt)
-            if cmd == WILL and opt == TTYPE:
-                self.writecooked(IAC + SB + TTYPE + SEND + IAC + SE)
-        elif cmd == DO or cmd == DONT:
-            if opt in self.DOACK:
-                self.sendcommand(self.DOACK[opt], opt)
-            else:
-                self.sendcommand(WONT, opt)
-            if opt == ECHO:
-                self.DOECHO = (cmd == DO)
-        elif cmd == SE:
-            subreq = self.read_sb_data()
-            if subreq[0] == TTYPE and subreq[1] == IS:
-                try:
-                    self.setterm(subreq[2:])
-                except:
-                    log.debug("Terminal type not known")
-            elif subreq[0] == NAWS:
-                self.setnaws(subreq[1:])
-        elif cmd == SB:
-            pass
-        else:
-            log.debug("Unhandled option: %s %s" % (cmd, opt))
 
     def sendcommand(self, cmd, opt=None):
         "Send a telnet command (IAC)"
@@ -209,18 +178,6 @@ class TelnetHandlerBase(socketserver.BaseRequestHandler):
         else:
             self.writecooked(IAC + cmd)
 
-    def read_sb_data(self):
-        """Return any data available in the SB ... SE queue.
-
-        Return '' if no SB ... SE available. Should only be called
-        after seeing a SB or SE command. When a new SB command is
-        found, old unread SB data will be discarded. Don't block.
-
-        """
-        buf = self.sbdataq
-        self.sbdataq = b''
-        return buf
-
     # ---------------------------- Input Functions -----------------------------
 
     def _readline_do_echo(self, echo):
@@ -236,7 +193,7 @@ class TelnetHandlerBase(socketserver.BaseRequestHandler):
     _current_prompt = b''
 
     def ansi_to_curses(self, char):
-        '''Handles reading ANSI escape sequences'''
+        """Handles reading ANSI escape sequences"""
         # ANSI sequences are:
         # ESC [ <key>
         # If we see ESC, read a char
@@ -502,12 +459,8 @@ class TelnetHandlerBase(socketserver.BaseRequestHandler):
                             self.sb = 0
                         # Callback is supposed to look into
                         # the sbdataq
-                        self.options_handler(self.sock, cb, NOOPT)
                 elif len(self.iacseq) == 2:
-                    cmd = convert_to_bytes(self.iacseq[1])
                     self.iacseq = b''
-                    if cmd in (DO, DONT, WILL, WONT):
-                        self.options_handler(self.sock, cmd, cb)
         except (EOFError, socket.error):
             pass
 

@@ -1,4 +1,7 @@
 #!/usr/bin/python3
+# License: LGPL
+# Thanks a lot to the author of original telnetsrvlib - Ian Epperson (https://github.com/ianepperson)!
+# Original repository - https://github.com/ianepperson/telnetsrvlib
 # Telnet handler concrete class using green threads
 
 import gevent
@@ -53,4 +56,3 @@ class TelnetHandler(TelnetHandlerBase):
                 self.cookedq.put(v)
         else:
             self.cookedq.put(char)
-
