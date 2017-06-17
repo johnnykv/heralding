@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 class SSH(HandlerBase):
     def __init__(self, options):
-        logging.getLogger("telnetsrv.paramiko_ssh ").setLevel(logging.WARNING)
+        logging.getLogger("telnetsrv.paramiko_ssh").setLevel(logging.WARNING)
         logging.getLogger("paramiko").setLevel(logging.WARNING)
 
         # generate key
@@ -38,7 +38,7 @@ class SSH(HandlerBase):
         if not os.path.isfile(ssh_key_file):
             with open(ssh_key_file, 'w') as _file:
                 rsa_key = RSA.generate(1024)
-                priv_key_text = str(rsa_key.exportKey('PEM'), 'utf-8')
+                priv_key_text = str(rsa_key.exportKey('PEM', pkcs=1), 'utf-8')
                 _file.write(priv_key_text)
         self.key = RSAKey(filename=ssh_key_file)
         super().__init__(options)
@@ -71,7 +71,7 @@ class SshWrapper(SSHHandler):
         request._sock = socket
         # TODO END
 
-        SSHHandler.__init__(self, request, client_address, server)
+        super().__init__(request, client_address, server)
 
     def authCallbackUsername(self, username):
         # make sure no one can logon
@@ -100,7 +100,7 @@ class SshWrapper(SSHHandler):
                 if channel is None:
                     # check to see if any thread is running
                     any_running = False
-                    for _, thread in list(self.channels.items()):
+                    for _, thread in self.channels.items():
                         if thread.is_alive():
                             any_running = True
                             break

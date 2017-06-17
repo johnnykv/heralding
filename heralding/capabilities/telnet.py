@@ -41,6 +41,7 @@ class TelnetWrapper(Commands):
         self.session = session
         self.auth_count = 0
         self.username = None
+        self.sock = _socket
         request = TelnetWrapper.false_request()
         request._sock = _socket
         super().__init__(request, client_address, server, self.session)
@@ -49,11 +50,15 @@ class TelnetWrapper(Commands):
         while self.auth_count < TelnetWrapper.max_tries:
             username = self.readline(prompt=b"Username: ", use_history=False)
             password = self.readline(echo=False, prompt=b"Password: ", use_history=False)
-            self.session.add_auth_attempt(_type='plaintext', username=str(username, 'utf-8'), password=str(password, 'utf-8'))
+            self.session.add_auth_attempt(_type='plaintext', username=str(username, 'utf-8'),
+                                          password=str(password, 'utf-8'))
             if self.DOECHO:
                 self.write(b"\n")
+            # comment next line, if you want to collect credentials from Medusa bruteforcer
             self.writeline(b'Invalid username/password\n')
             self.auth_count += 1
+        else:
+            self.writeline(b'Username: ')  # It fixes a problem with Hydra bruteforcer.
         return False
 
     def setterm(self, term):
@@ -62,7 +67,7 @@ class TelnetWrapper(Commands):
             curses.setupterm(term, f.fileno())  # This will raise if the termtype is not supported
             self.TERM = term
             self.ESCSEQ = {}
-            for k in list(self.KEYS.keys()):
+            for k in self.KEYS.keys():
                 str_ = curses.tigetstr(curses.has_key._capability_names[k])
                 if str_:
                     self.ESCSEQ[str_] = k
