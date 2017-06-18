@@ -1,9 +1,15 @@
 #!/usr/bin/python3
+# License: LGPL
+# Thanks a lot to the author of original telnetsrvlib - Ian Epperson (https://github.com/ianepperson)!
+# Original repository - https://github.com/ianepperson/telnetsrvlib
 # Telnet handler concrete class using green threads
 
-import gevent, gevent.queue
+import gevent
+import gevent.queue
+import gevent.select
 
-from .telnetsrvlib import TelnetHandlerBase
+from heralding.telnetsrv.telnetsrvlib import TelnetHandlerBase
+
 
 class TelnetHandler(TelnetHandlerBase):
     "A telnet server handler using Gevent"
@@ -11,11 +17,11 @@ class TelnetHandler(TelnetHandlerBase):
         # Create a green queue for input handling
         self.cookedq = gevent.queue.Queue()
         # Call the base class init method
-        TelnetHandlerBase.__init__(self, request, client_address, server)
+        super().__init__(request, client_address, server)
         
     def setup(self):
         '''Called after instantiation'''
-        TelnetHandlerBase.setup(self)
+        super().setup()
         # Spawn a greenlet to handle socket input
         self.greenlet_ic = gevent.spawn(self.inputcooker)
         # Note that inputcooker exits on EOF
@@ -45,9 +51,8 @@ class TelnetHandler(TelnetHandlerBase):
 
     def inputcooker_store_queue(self, char):
         """Put the cooked data in the input queue (no locking needed)"""
-        if type(char) in [type(()), type([]), type(b"")]:
+        if type(char) in [type(()), type([]), type(""), type(b"")]:
             for v in char:
                 self.cookedq.put(v)
         else:
             self.cookedq.put(char)
-

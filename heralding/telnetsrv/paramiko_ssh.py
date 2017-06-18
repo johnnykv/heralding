@@ -1,30 +1,22 @@
+# License: LGPL
+# Thanks a lot to the author of original telnetsrvlib - Ian Epperson (https://github.com/ianepperson)!
+# Original repository - https://github.com/ianepperson/telnetsrvlib
+
 import logging
 from threading import Thread
 from socketserver import BaseRequestHandler
 
-from paramiko import Transport, ServerInterface, RSAKey, SSHException, \
-                    AUTH_SUCCESSFUL, AUTH_FAILED, \
-                    OPEN_SUCCEEDED, OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED
+from paramiko import Transport, ServerInterface, SSHException, AUTH_SUCCESSFUL,\
+                     AUTH_FAILED, OPEN_SUCCEEDED, OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED
 
 
 log = logging.getLogger(__name__)
 
 
-def getRsaKeyFile(filename, password=None):
-    try:
-        key = RSAKey(filename=filename, password=password)
-    except IOError:
-        log.info('Generating new server RSA key and saving in file %r.' % filename)
-        key = RSAKey.generate(1024)
-        key.write_private_key_file(filename, password=password)
-    return key
-
-
 class TelnetToPtyHandler:
-    '''Mixin to turn TelnetHandler into PtyHandler'''
-
+    """Mixin to turn TelnetHandler into PtyHandler"""
     def __init__(self, *args):
-        super(TelnetToPtyHandler, self).__init__(*args)
+        super().__init__(*args)
 
     # Don't mention these, client isn't listening for them.  Blank the dicts.
     DOACK = {}
@@ -32,7 +24,7 @@ class TelnetToPtyHandler:
 
     # Do not ask for auth in the PTY, it'll be handled via SSH, then passed in with the request
     def authentication_ok(self):
-        '''Checks the authentication and sets the username of the currently connected terminal.  Returns True or False'''
+        """Checks the authentication and sets the username of the currently connected terminal.  Returns True or False"""
         # Since authentication already happened, this should always return true
         self.username = self.request.username
         return True
@@ -60,7 +52,6 @@ class SSHHandler(ServerInterface, BaseRequestHandler):
         TelnetHandlerClass = self.telnet_handler
 
         class MixedPtyHandler(TelnetToPtyHandler, TelnetHandlerClass):
-            # BaseRequestHandler does not inherit from object, must call the __init__ directly
             def __init__(self, *args):
                 TelnetHandlerClass.__init__(self, *args)
 
@@ -100,7 +91,7 @@ class SSHHandler(ServerInterface, BaseRequestHandler):
             if channel is None:
                 # check to see if any thread is running
                 any_running = False
-                for c, thread in list(self.channels.items()):
+                for c, thread in self.channels.items():
                     if thread.is_alive():
                         any_running = True
                         break
@@ -116,14 +107,14 @@ class SSHHandler(ServerInterface, BaseRequestHandler):
 
     @classmethod
     def streamserver_handle(cls, socket, address):
-        '''Translate this class for use in a StreamServer'''
+        """Translate this class for use in a StreamServer"""
         request = cls.dummy_request()
         request._sock = socket
         server = None
         cls(request, address, server)
 
     def finish(self):
-        '''Called when the socket closes from the client.'''
+        """Called when the socket closes from the client."""
         self.transport.close()
 
     def check_channel_request(self, kind, chanid):
@@ -135,7 +126,7 @@ class SSHHandler(ServerInterface, BaseRequestHandler):
         self.username = username
         log.info('User logged in: %s' % username)
 
-    ######  Handle User Authentication ######
+    # Handle User Authentication ######
 
     # Override these with functions to use for callbacks
     authCallback = None
@@ -151,7 +142,7 @@ class SSHHandler(ServerInterface, BaseRequestHandler):
         if self.authCallbackKey is not None:
             methods.append('publickey')
 
-        if methods == []:
+        if not methods:
             # If no methods were defined, use none
             methods.append('none')
 
@@ -204,7 +195,7 @@ class SSHHandler(ServerInterface, BaseRequestHandler):
 
     def check_channel_pty_request(self, channel, term, width, height, pixelwidth,
                                   pixelheight, modes):
-        '''Request to allocate a PTY terminal.'''
+        """Request to allocate a PTY terminal."""
         # self.sshterm = term
         # print "term: %r, modes: %r" % (term, modes)
         log.debug('PTY requested.  Setting up %r.', self.telnet_handler)
@@ -214,7 +205,7 @@ class SSHHandler(ServerInterface, BaseRequestHandler):
         return True
 
     def start_pty_request(self, channel, term, modes):
-        '''Start a PTY - intended to run it a (green)thread.'''
+        """Start a PTY - intended to run it a (green)thread."""
         request = self.dummy_request()
         request._sock = channel
         request.modes = modes

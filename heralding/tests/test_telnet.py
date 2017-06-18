@@ -54,7 +54,7 @@ class TelnetTests(unittest.TestCase):
 
         # Expect username as first output
         reply = client.read_until(b'Username: ', 1)
-        self.assertEquals(b'Username: ', reply)
+        self.assertEqual(b'Username: ', reply)
 
         client.write(b'someuser' + b'\r\n')
         reply = client.read_until(b'Password: ', 5)
