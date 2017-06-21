@@ -22,29 +22,14 @@
 
 
 import logging
-import socket
 import traceback
 
-import gevent
-from gevent.util import wrap_errors
-from telnetsrv.green import TelnetHandler
-from telnetsrv.telnetsrvlib import TelnetHandlerBase
+from heralding.telnetsrv.green import TelnetHandler
 
 logger = logging.getLogger(__name__)
 
 
-class OwnGreenTelnetHandler(TelnetHandler):
-    def setup(self):
-        TelnetHandlerBase.setup(self)
-        # Spawn a greenlet to handle socket input
-        self.greenlet_ic = gevent.spawn(wrap_errors((socket.error), self.inputcooker))
-        # Note that inputcooker exits on EOF
-
-        # Sleep for 0.5 second to allow options negotiation
-        gevent.sleep(0.5)
-
-
-class Commands(OwnGreenTelnetHandler):
+class Commands(TelnetHandler):
     """This class implements the shell functionality for the telnet and SSH capabilities"""
 
     max_tries = 3
@@ -55,7 +40,7 @@ class Commands(OwnGreenTelnetHandler):
 
     def __init__(self, request, client_address, server, session):
         self.session = session
-        TelnetHandler.__init__(self, request, client_address, server)
+        super().__init__(request, client_address, server)
 
     def handleException(self, exc_type, exc_param, exc_tb):
         logger.warning('Exception during telnet sessions: {0}'.format(''.join(

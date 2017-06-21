@@ -71,13 +71,13 @@ class SmtpTests(unittest.TestCase):
         srv.start()
 
         def encode_cram_md5(challenge, user, password):
-            challenge = base64.decodestring(challenge)
-            response = user + ' ' + hmac.HMAC(password, challenge).hexdigest()
-            return base64.b64encode(response)
+            challenge = base64.decodebytes(challenge)
+            response = user + b' ' + bytes(hmac.HMAC(password, challenge).hexdigest(), 'utf-8')
+            return str(base64.b64encode(response), 'utf-8')
 
         smtp_ = smtplib.SMTP('127.0.0.1', srv.server_port, local_hostname='localhost', timeout=15)
         _, resp = smtp_.docmd('AUTH', 'CRAM-MD5')
-        code, resp = smtp_.docmd(encode_cram_md5(resp, 'test', 'test'))
+        code, resp = smtp_.docmd(encode_cram_md5(resp, b'test', b'test'))
         # For now, the server's going to return a 535 code.
         self.assertEqual(code, 535)
         srv.stop()
@@ -93,8 +93,8 @@ class SmtpTests(unittest.TestCase):
         srv.start()
 
         smtp_ = smtplib.SMTP('127.0.0.1', srv.server_port, local_hostname='localhost', timeout=15)
-        arg = '\0%s\0%s' % ('test', 'test')
-        code, resp = smtp_.docmd('AUTH', 'PLAIN ' + base64.b64encode(arg))
+        arg = bytes('\0{0}\0{1}'.format('test', 'test'), 'utf-8')
+        code, resp = smtp_.docmd('AUTH', 'PLAIN ' + str(base64.b64encode(arg), 'utf-8'))
         self.assertEqual(code, 535)
         srv.stop()
 
@@ -111,8 +111,8 @@ class SmtpTests(unittest.TestCase):
 
         smtp_ = smtplib.SMTP('127.0.0.1', srv.server_port, local_hostname='localhost', timeout=15)
         smtp_.docmd('AUTH', 'LOGIN')
-        smtp_.docmd(base64.b64encode('test'))
-        code, resp = smtp_.docmd(base64.b64encode('test'))
+        smtp_.docmd(str(base64.b64encode(b'test'), 'utf-8'))
+        code, resp = smtp_.docmd(str(base64.b64encode(b'test'), 'utf-8'))
         self.assertEqual(code, 535)
         srv.stop()
 

@@ -29,7 +29,7 @@ from heralding.capabilities import http
 from heralding.reporting.reporting_relay import ReportingRelay
 
 import unittest
-import httplib
+import http.client as httpclient
 
 
 class HttpTests(unittest.TestCase):
@@ -50,7 +50,7 @@ class HttpTests(unittest.TestCase):
         srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
         srv.start()
 
-        client = httplib.HTTPConnection('127.0.0.1', srv.server_port)
+        client = httpclient.HTTPConnection('127.0.0.1', srv.server_port)
         client.request('GET', '/')
         response = client.getresponse()
         self.assertEqual(response.status, 401)

@@ -1,4 +1,4 @@
-# Copyright (C) 2013 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2017 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # Rewritten by Aniket Panse <contact@aniketpanse.in>
 #
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 TERMINATOR = '\r\n'
 
 
-class FtpHandler(object):
+class FtpHandler:
     """Handles a single FTP connection"""
 
     def __init__(self, conn, session, options):
@@ -42,7 +42,7 @@ class FtpHandler(object):
         self.conn = conn
         self.serve_flag = True
         self.session = session
-        self.respond('200 ' + self.banner)
+        self.respond('220 ' + self.banner)
 
         # TODO: What is this?
         self.local_ip = '127.0.0.1'
@@ -53,7 +53,8 @@ class FtpHandler(object):
         self.serve()
 
     def getcmd(self):
-        return self.conn.recv(512)
+        cmd = self.conn.recv(512)
+        return str(cmd, 'utf-8')
 
     def serve(self):
         while self.serve_flag:
@@ -99,7 +100,7 @@ class FtpHandler(object):
             self.stop()
 
     def do_SYST(self, arg):
-        self.respond('215 %s' % self.syst_type)
+        self.respond('215 {0}'.format(self.syst_type))
 
     def do_QUIT(self, arg):
         self.respond('221 Bye.')
@@ -108,7 +109,8 @@ class FtpHandler(object):
 
     def respond(self, msg):
         msg += TERMINATOR
-        self.conn.send(msg)
+        msg_bytes = bytes(msg, 'utf-8')
+        self.conn.send(msg_bytes)
 
     def stop(self):
         self.session.end_session()
@@ -116,7 +118,7 @@ class FtpHandler(object):
 
 class ftp(HandlerBase):
     def __init__(self, options):
-        super(ftp, self).__init__(options)
+        super().__init__(options)
         self._options = options
 
     def execute_capability(self, address, socket, session):

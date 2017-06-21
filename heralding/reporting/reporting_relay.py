@@ -1,4 +1,4 @@
-# Copyright (C) 2016 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2017 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ class ReportingRelay(Greenlet):
     _incommingLogQueueLock = gevent.lock.BoundedSemaphore()
 
     def __init__(self):
-        Greenlet.__init__(self)
+        super().__init__()
 
         # we are singleton
         ReportingRelay._incommingLogQueueLock.acquire()

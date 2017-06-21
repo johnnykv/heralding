@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2012 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2017 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ class EncodingTests(unittest.TestCase):
 
     def test_unicode(self):
         # word 'python' in russian spelling
-        test_login = test_password = u"пайтон"
+        test_login = test_password = "пайтон"
         test_data = {'username': test_login, 'password': test_password}
         self.flogger_greenlet.handle_log_data(test_data)
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2016 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2017 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,14 +15,14 @@
 
 import syslog
 import logging
-from base_logger import BaseLogger
+from heralding.reporting.base_logger import BaseLogger
 
 logger = logging.getLogger(__name__)
 
 
 class SyslogLogger(BaseLogger):
     def __init__(self):
-        super(SyslogLogger, self).__init__()
+        super().__init__()
         logger.debug('Syslog logger started')
 
 
