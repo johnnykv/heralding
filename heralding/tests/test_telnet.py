@@ -1,4 +1,4 @@
-# Copyright (C) 2012 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2017 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -53,16 +53,16 @@ class TelnetTests(unittest.TestCase):
         client.set_option_negotiation_callback(self.cb)
 
         # Expect username as first output
-        reply = client.read_until('Username: ', 1)
-        self.assertEquals('Username: ', reply)
+        reply = client.read_until(b'Username: ', 1)
+        self.assertEqual(b'Username: ', reply)
 
-        client.write('someuser' + '\r\n')
-        reply = client.read_until('Password: ', 5)
-        self.assertTrue(reply.endswith('Password: '))
+        client.write(b'someuser' + b'\r\n')
+        reply = client.read_until(b'Password: ', 5)
+        self.assertTrue(reply.endswith(b'Password: '))
 
-        client.write('somepass' + '\r\n')
-        reply = client.read_until('Invalid username/password', 5)
-        self.assertTrue('Invalid username/password' in reply)
+        client.write(b'somepass' + b'\r\n')
+        reply = client.read_until(b'Invalid username/password', 5)
+        self.assertTrue(b'Invalid username/password' in reply)
         server.stop()
 
     def cb(self, socket, command, option):

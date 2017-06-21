@@ -1,4 +1,4 @@
-# Copyright (C) 2014 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2017 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,16 +14,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
-import logging
 import uuid
+import logging
 from datetime import datetime
 
-from heralding.reporting.reporting_relay import ReportingRelay
 import heralding.honeypot
+from heralding.reporting.reporting_relay import ReportingRelay
+
 logger = logging.getLogger(__name__)
 
 
-class Session(object):
+class Session:
     def __init__(self, source_ip, source_port, protocol, users, destination_port=None, destination_ip=None):
 
         self.id = uuid.uuid4()
