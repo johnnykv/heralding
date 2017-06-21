@@ -7,3 +7,4 @@ pyOpenSSL
 Enum34
 pyaml
 ipify
+pyzmq
