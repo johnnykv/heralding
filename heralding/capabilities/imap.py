@@ -34,8 +34,8 @@ class Imap(HandlerBase):
         self.available_commands = ['authenticate', 'capability', 'login', 'logout', 'noop']
         self.available_mechanisms = ['plain']
 
-    def execute_capability(self, address, socket, session):
-        self._handle_session(session, socket)
+    def execute_capability(self, address, gsocket, session):
+        self._handle_session(session, gsocket)
 
     def _handle_session(self, session, gsocket):
         fileobj = gsocket.makefile()

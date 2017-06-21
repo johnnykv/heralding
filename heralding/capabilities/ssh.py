@@ -43,8 +43,8 @@ class SSH(HandlerBase):
         self.key = RSAKey(filename=ssh_key_file)
         super().__init__(options)
 
-    def execute_capability(self, address, socket, session):
-        SshWrapper(address, None, socket, session, self.options, self.key)
+    def execute_capability(self, address, gsocket, session):
+        SshWrapper(address, None, gsocket, session, self.options, self.key)
 
 
 class BeeTelnetHandler(Commands):

@@ -27,8 +27,8 @@ class Telnet(HandlerBase):
         super().__init__(options)
         TelnetWrapper.max_tries = int(self.options['protocol_specific_data']['max_attempts'])
 
-    def execute_capability(self, address, socket, session):
-        TelnetWrapper(address, None, socket, session)
+    def execute_capability(self, address, gsocket, session):
+        TelnetWrapper(address, None, gsocket, session)
 
 
 class TelnetWrapper(Commands):
@@ -57,8 +57,7 @@ class TelnetWrapper(Commands):
             # comment next line, if you want to collect credentials from Medusa bruteforcer
             self.writeline(b'Invalid username/password\n')
             self.auth_count += 1
-        else:
-            self.writeline(b'Username: ')  # It fixes a problem with Hydra bruteforcer.
+        self.writeline(b'Username: ')  # It fixes a problem with Hydra bruteforcer.
         return False
 
     def setterm(self, term):

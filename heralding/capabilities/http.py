@@ -89,5 +89,5 @@ class Http(HandlerBase):
         super().__init__(options)
         self._options = options
 
-    def execute_capability(self, address, socket, session):
-        self.HandlerClass(socket, address, None, httpsession=session, options=self._options)
+    def execute_capability(self, address, gsocket, session):
+        self.HandlerClass(gsocket, address, None, httpsession=session, options=self._options)

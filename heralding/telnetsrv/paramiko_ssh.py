@@ -6,9 +6,8 @@ import logging
 from threading import Thread
 from socketserver import BaseRequestHandler
 
-from paramiko import Transport, ServerInterface, SSHException, AUTH_SUCCESSFUL,\
-                     AUTH_FAILED, OPEN_SUCCEEDED, OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED
-
+from paramiko import Transport, ServerInterface, AUTH_SUCCESSFUL, AUTH_FAILED,\
+                     OPEN_SUCCEEDED, OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED
 
 log = logging.getLogger(__name__)
 
@@ -147,7 +146,7 @@ class SSHHandler(ServerInterface, BaseRequestHandler):
             return AUTH_SUCCESSFUL
 
     def check_channel_shell_request(self, channel):
-        '''Request to start a shell on the given channel'''
+        """Request to start a shell on the given channel"""
         try:
             self.channels[channel].start()
         except KeyError:

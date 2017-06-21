@@ -22,7 +22,6 @@
 
 
 import logging
-import traceback
 
 from heralding.telnetsrv.green import TelnetHandler
 
