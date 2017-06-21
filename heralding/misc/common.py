@@ -14,7 +14,7 @@ def on_unhandled_greenlet_exception(dead_greenlet):
 
 def generate_self_signed_cert(cert_country, cert_state, cert_organization, cert_locality, cert_organizational_unit,
                               cert_common_name, valid_days, serial_number):
-    rsa_key = RSA.generate(1024)
+    rsa_key = RSA.generate(2048)
 
     pk = crypto.load_privatekey(crypto.FILETYPE_PEM, rsa_key.exportKey('PEM', pkcs=1))
     cert = crypto.X509()

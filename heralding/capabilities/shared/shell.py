@@ -41,8 +41,3 @@ class Commands(TelnetHandler):
     def __init__(self, request, client_address, server, session):
         self.session = session
         super().__init__(request, client_address, server)
-
-    def handleException(self, exc_type, exc_param, exc_tb):
-        logger.warning('Exception during telnet sessions: {0}'.format(''.join(
-            traceback.format_exception(exc_type, exc_param, exc_tb))))
-        return True

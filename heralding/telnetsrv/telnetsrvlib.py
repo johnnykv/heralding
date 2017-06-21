@@ -164,15 +164,15 @@ class TelnetHandlerBase(socketserver.BaseRequestHandler):
         if cmd in [DO, DONT]:
             if opt not in self.DOOPTS:
                 self.DOOPTS[opt] = None
-            if (((cmd == DO) and (self.DOOPTS[opt] != True))
-                or ((cmd == DONT) and (self.DOOPTS[opt] != False))):
+            if (((cmd == DO) and (self.DOOPTS[opt] is not True))
+                    or ((cmd == DONT) and (self.DOOPTS[opt] is not False))):
                 self.DOOPTS[opt] = (cmd == DO)
                 self.writecooked(IAC + cmd + opt)
         elif cmd in [WILL, WONT]:
             if opt not in self.WILLOPTS:
                 self.WILLOPTS[opt] = b''
-            if (((cmd == WILL) and (self.WILLOPTS[opt] != True))
-                or ((cmd == WONT) and (self.WILLOPTS[opt] != False))):
+            if (((cmd == WILL) and (self.WILLOPTS[opt] is not True))
+                    or ((cmd == WONT) and (self.WILLOPTS[opt] is not False))):
                 self.WILLOPTS[opt] = (cmd == WILL)
                 self.writecooked(IAC + cmd + opt)
         else:
@@ -182,7 +182,7 @@ class TelnetHandlerBase(socketserver.BaseRequestHandler):
 
     def _readline_do_echo(self, echo):
         """Determine if we should echo or not"""
-        return echo == True or (echo == None and self.DOECHO == True)
+        return echo is True or (echo is None and self.DOECHO is True)
 
     def _readline_echo(self, char, echo):
         """Echo a recieved character, move cursor etc..."""
@@ -428,7 +428,7 @@ class TelnetHandlerBase(socketserver.BaseRequestHandler):
                             self._inputcooker_ungetc(c2b)
                             cb = bytes([10])
                     elif cb in [x[0] for x in self.ESCSEQ.keys()]:
-                        'Looks like the begining of a key sequence'
+                        # Looks like the begining of a key sequence
                         codes = cb
                         for keyseq in self.ESCSEQ.keys():
                             if len(keyseq) == 0:
@@ -444,7 +444,7 @@ class TelnetHandlerBase(socketserver.BaseRequestHandler):
                             codes = codes[0]
                     self._inputcooker_store(cb)
                 elif len(self.iacseq) == 1:
-                    'IAC: IAC CMD [OPTION only for WILL/WONT/DO/DONT]'
+                    # IAC: IAC CMD [OPTION only for WILL/WONT/DO/DONT]
                     if cb in (DO, DONT, WILL, WONT):
                         self.iacseq += cb
                         continue
@@ -467,10 +467,11 @@ class TelnetHandlerBase(socketserver.BaseRequestHandler):
     def authentication_ok(self):
         """Checks the authentication and sets the username of the currently connected terminal.  Returns True or False"""
         raise NotImplementedError("Please Implement the authentication_ok method")
-            # ----------------------- Command Line Processor Engine --------------------
+
+    # ----------------------- Command Line Processor Engine --------------------
 
     def handle(self):
-        "The actual service to which the user has connected."
+        """The actual service to which the user has connected."""
         self.authentication_ok()
 
 

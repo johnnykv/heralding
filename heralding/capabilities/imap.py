@@ -94,7 +94,7 @@ class Imap(HandlerBase):
                 success, credentials = self.try_b64decode(raw_msg, session)
                 # \x00 is a separator between authorization identity,
                 # username and password. Authorization identity isn't used in
-                # this auth mechanism, so we must have 2 \x00 symbols.(RFC 4616) 
+                # this auth mechanism, so we must have 2 \x00 symbols.(RFC 4616)
                 if success and credentials.count('\x00') == 2:
                     raw_msg_dec = str(base64.b64decode(raw_msg), 'utf-8')
                     _, user, password = raw_msg_dec.split('\x00')
@@ -142,15 +142,16 @@ class Imap(HandlerBase):
         self.send_message(session, gsocket, tag + ' OK NOOP completed')
         return 'Not Authenticated'
 
-    def send_message(self, session, gsocket, msg):
+    def stop_if_too_many_attempts(self, session):
+        if self.max_tries < session.get_number_of_login_attempts():
+            session.end_session()
+
+    @staticmethod
+    def send_message(session, gsocket, msg):
         try:
             message_bytes = bytes(msg + CRLF, 'utf-8')
             gsocket.sendall(message_bytes)
         except socket.error:
-            session.end_session()
-
-    def stop_if_too_many_attempts(self, session):
-        if self.max_tries < session.get_number_of_login_attempts():
             session.end_session()
 
     @staticmethod

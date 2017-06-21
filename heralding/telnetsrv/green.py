@@ -18,7 +18,7 @@ class TelnetHandler(TelnetHandlerBase):
         self.cookedq = gevent.queue.Queue()
         # Call the base class init method
         super().__init__(request, client_address, server)
-        
+
     def setup(self):
         '''Called after instantiation'''
         super().setup()
@@ -51,7 +51,8 @@ class TelnetHandler(TelnetHandlerBase):
 
     def inputcooker_store_queue(self, char):
         """Put the cooked data in the input queue (no locking needed)"""
-        if type(char) in [type(()), type([]), type(""), type(b"")]:
+        if isinstance(char, list) or isinstance(char, tuple) \
+                or isinstance(char, str) or isinstance(char, bytes):
             for v in char:
                 self.cookedq.put(v)
         else:

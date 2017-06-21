@@ -88,7 +88,4 @@ class HandlerBase:
                 logger.debug('Session timed out. ({0})'.format(session.id))
             finally:
                 self.close_session(session)
-                try:
-                    gsocket.close()
-                except:
-                    pass
+                gsocket.close()

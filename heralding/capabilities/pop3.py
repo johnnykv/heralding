@@ -103,10 +103,8 @@ class Pop3(HandlerBase):
         self.send_message(session, gsocket, '+OK Logging out')
         return ''
 
-    def not_impl(self, session, gsocket, msg):
-        raise Exception('Not implemented yet!')
-
-    def send_message(self, session, gsocket, msg):
+    @staticmethod
+    def send_message(session, gsocket, msg):
         try:
             message_bytes = bytes(msg + "\n", 'utf-8')
             gsocket.sendall(message_bytes)
