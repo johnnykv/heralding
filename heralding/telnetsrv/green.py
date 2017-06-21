@@ -28,7 +28,7 @@ class TelnetHandler(TelnetHandlerBase):
 
         # Sleep for 0.5 second to allow options negotiation
         gevent.sleep(0.5)
-        
+
     def finish(self):
         '''Called as the session is ending'''
         TelnetHandlerBase.finish(self)

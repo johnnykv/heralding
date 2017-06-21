@@ -36,6 +36,8 @@ class ImapTests(unittest.TestCase):
         self.reportingRelay.stop()
 
     def test_LOGIN(self):
+        """Testing different login combinations using simple login auth mechanism."""
+
         options = {'enabled': 'True', 'port': 143, 'timeout': 30,
                    'protocol_specific_data': {'max_attempts': 3,
                                               'banner': '* OK IMAP4rev1 Server Ready'}}
@@ -60,6 +62,8 @@ class ImapTests(unittest.TestCase):
         server.stop()
 
     def test_AUTHENTICATE_PLAIN(self):
+        """Testing different login combinations using plain auth mechanism."""
+
         options = {'enabled': 'True', 'port': 143, 'timeout': 30,
                    'protocol_specific_data': {'max_attempts': 3,
                                               'banner': '* OK IMAP4rev1 Server Ready'}}

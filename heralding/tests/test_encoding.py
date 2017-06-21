@@ -37,11 +37,6 @@ class EncodingTests(unittest.TestCase):
         test_data = {'username': test_login, 'password': test_password}
         self.flogger_greenlet.handle_log_data(test_data)
 
-    def test_already_in_utf(self):
-        test_login = test_password = "пайтон"
-        test_data = {'username': test_login, 'password': test_password}
-        self.flogger_greenlet.handle_log_data(test_data)
-
     def test_invalid_utf(self):
         test_login = test_password = "пайт\x80он"
         test_data = {'username': test_login, 'password': test_password}

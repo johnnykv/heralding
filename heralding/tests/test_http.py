@@ -19,7 +19,6 @@
 # display, publicly perform, sublicense, relicense, and distribute [the] Contributions
 # and such derivative works.
 
-
 import gevent.monkey
 gevent.monkey.patch_all()  # NOQA
 
