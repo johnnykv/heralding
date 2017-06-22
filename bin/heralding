@@ -66,8 +66,8 @@ def setup_logging(logfile, verbose):
     root_logger.addHandler(file_log)
 
 def break_if_python_not_supported():
-    if sys.version_info[0] != 3:
-        raise Exception("Wrong python version! Use python 3!")
+    if sys.version_info[0:3] < (3,5,2):
+        raise Exception("Wrong python version! Your Python interpreter must be 3.5.2 or above!")
 
 class LogFilter(logging.Filter):
     def filter(self, rec):
