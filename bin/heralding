@@ -21,7 +21,7 @@ gevent.monkey.patch_all()
 
 import logging
 import logging.handlers
-import os, pwd, grp, yaml, platform
+import os, pwd, grp, yaml, platform, sys
 from gevent import Greenlet
 from argparse import ArgumentParser
 
@@ -65,6 +65,9 @@ def setup_logging(logfile, verbose):
     file_log.setLevel(loglevel)
     root_logger.addHandler(file_log)
 
+def break_if_python_not_supported():
+    if sys.version_info[0:3] < (3,5,2):
+        raise Exception("Wrong python version! Your Python interpreter must be 3.5.2 or above!")
 
 class LogFilter(logging.Filter):
     def filter(self, rec):
@@ -80,11 +83,7 @@ def drop_privileges(uid_name='nobody', gid_name='nogroup'):
         return
 
     wanted_uid = pwd.getpwnam(uid_name)[2]
-    # special handling for os x. (getgrname has trouble with gid below 0)
-    if platform.mac_ver()[0] and platform.mac_ver()[0] < float('10.9'):
-        wanted_gid = -2
-    else:
-        wanted_gid = grp.getgrnam(gid_name)[2]
+    wanted_gid = grp.getgrnam(gid_name)[2]
 
     os.setgid(wanted_gid)
     os.setuid(wanted_uid)
@@ -96,6 +95,7 @@ def drop_privileges(uid_name='nobody', gid_name='nogroup'):
 
 
 if __name__ == '__main__':
+    break_if_python_not_supported()
     parser = ArgumentParser(description='Heralding')
 
     parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Logs debug messages.')
