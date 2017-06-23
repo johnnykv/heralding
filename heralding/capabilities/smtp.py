@@ -280,9 +280,9 @@ class smtp(HandlerBase):
         super().__init__(options)
         self._options = options
 
-    def execute_capability(self, address, socket, session):
+    def execute_capability(self, address, gsocket, session):
         local_map = {}
         server = DummySMTPServer()
-        SMTPChannel(server, socket, address, session=session,
+        SMTPChannel(server, gsocket, address, session=session,
                     smtp_map=local_map, opts=self._options)
         asyncore.loop(map=local_map)

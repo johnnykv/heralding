@@ -18,23 +18,22 @@ class TelnetHandler(TelnetHandlerBase):
         self.cookedq = gevent.queue.Queue()
         # Call the base class init method
         super().__init__(request, client_address, server)
-        
+
     def setup(self):
         '''Called after instantiation'''
         super().setup()
         # Spawn a greenlet to handle socket input
         self.greenlet_ic = gevent.spawn(self.inputcooker)
         # Note that inputcooker exits on EOF
-        
+
         # Sleep for 0.5 second to allow options negotiation
         gevent.sleep(0.5)
-        
+
     def finish(self):
         '''Called as the session is ending'''
         TelnetHandlerBase.finish(self)
         # Ensure the greenlet is dead
         self.greenlet_ic.kill()
-
 
     # -- Green input handling functions --
 
@@ -51,7 +50,8 @@ class TelnetHandler(TelnetHandlerBase):
 
     def inputcooker_store_queue(self, char):
         """Put the cooked data in the input queue (no locking needed)"""
-        if type(char) in [type(()), type([]), type(""), type(b"")]:
+        if isinstance(char, list) or isinstance(char, tuple) \
+                or isinstance(char, str) or isinstance(char, bytes):
             for v in char:
                 self.cookedq.put(v)
         else:

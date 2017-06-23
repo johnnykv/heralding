@@ -29,8 +29,8 @@ class Pop3(HandlerBase):
         super().__init__(options)
         Pop3.max_tries = int(self.options['protocol_specific_data']['max_attempts'])
 
-    def execute_capability(self, address, socket, session):
-        self._handle_session(session, socket)
+    def execute_capability(self, address, gsocket, session):
+        self._handle_session(session, gsocket)
 
     def _handle_session(self, session, gsocket):
         fileobj = gsocket.makefile()
@@ -103,10 +103,8 @@ class Pop3(HandlerBase):
         self.send_message(session, gsocket, '+OK Logging out')
         return ''
 
-    def not_impl(self, session, gsocket, msg):
-        raise Exception('Not implemented yet!')
-
-    def send_message(self, session, gsocket, msg):
+    @staticmethod
+    def send_message(session, gsocket, msg):
         try:
             message_bytes = bytes(msg + "\n", 'utf-8')
             gsocket.sendall(message_bytes)

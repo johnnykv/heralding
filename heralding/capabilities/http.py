@@ -71,11 +71,7 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
             headers_bytes = bytes(self.headers['Authorization'], 'utf-8')
             self.wfile.write(headers_bytes)
             self.wfile.write(b'not authenticated')
-
         self.request.close()
-
-    def version_string(self):
-        return self._banner
 
     # Disable logging provided by BaseHTTPServer
     def log_message(self, format_, *args):
@@ -89,5 +85,5 @@ class Http(HandlerBase):
         super().__init__(options)
         self._options = options
 
-    def execute_capability(self, address, socket, session):
-        self.HandlerClass(socket, address, None, httpsession=session, options=self._options)
+    def execute_capability(self, address, gsocket, session):
+        self.HandlerClass(gsocket, address, None, httpsession=session, options=self._options)

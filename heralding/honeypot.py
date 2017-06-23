@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 class SSLStreamServer(StreamServer):
     """StreamServer class, but with handling of 'NO_SHARED_CIPHER' error."""
-    
+
     def wrap_socket_and_handle(self, client_socket, address):
         try:
             return super().wrap_socket_and_handle(client_socket, address)

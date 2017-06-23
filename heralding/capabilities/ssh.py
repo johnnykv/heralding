@@ -37,14 +37,14 @@ class SSH(HandlerBase):
         ssh_key_file = 'ssh.key'
         if not os.path.isfile(ssh_key_file):
             with open(ssh_key_file, 'w') as _file:
-                rsa_key = RSA.generate(1024)
+                rsa_key = RSA.generate(2048)
                 priv_key_text = str(rsa_key.exportKey('PEM', pkcs=1), 'utf-8')
                 _file.write(priv_key_text)
         self.key = RSAKey(filename=ssh_key_file)
         super().__init__(options)
 
-    def execute_capability(self, address, socket, session):
-        SshWrapper(address, None, socket, session, self.options, self.key)
+    def execute_capability(self, address, gsocket, session):
+        SshWrapper(address, None, gsocket, session, self.options, self.key)
 
 
 class BeeTelnetHandler(Commands):
@@ -75,12 +75,12 @@ class SshWrapper(SSHHandler):
 
     def authCallbackUsername(self, username):
         # make sure no one can logon
-        raise
+        raise Exception
 
     def authCallback(self, username, password):
         self.session.activity()
         self.session.add_auth_attempt('plaintext', username=username, password=password)
-        raise
+        raise Exception
 
     def finish(self):
         self.session.end_session()

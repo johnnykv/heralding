@@ -6,9 +6,8 @@ import logging
 from threading import Thread
 from socketserver import BaseRequestHandler
 
-from paramiko import Transport, ServerInterface, SSHException, AUTH_SUCCESSFUL,\
-                     AUTH_FAILED, OPEN_SUCCEEDED, OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED
-
+from paramiko import Transport, ServerInterface, AUTH_SUCCESSFUL, AUTH_FAILED,\
+                     OPEN_SUCCEEDED, OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED
 
 log = logging.getLogger(__name__)
 
@@ -61,45 +60,8 @@ class SSHHandler(ServerInterface, BaseRequestHandler):
         BaseRequestHandler.__init__(self, request, client_address, server)
 
     def setup(self):
-        '''Setup the connection.'''
-        log.debug('New request from address %s, port %d', self.client_address)
-
-        try:
-            self.transport.load_server_moduli()
-        except:
-            log.exception('(Failed to load moduli -- gex will be unsupported.)')
-            raise
-        try:
-            self.transport.add_server_key(self.host_key)
-        except:
-            if self.host_key is None:
-                log.critical('Host key not set!  SSHHandler MUST define the host_key parameter.')
-                raise NotImplementedError(
-                    'Host key not set!  SSHHandler instance must define the host_key parameter.  Try host_key = paramiko_ssh.getRsaKeyFile("server_rsa.key").')
-
-        try:
-            # Tell transport to use this object as a server
-            log.debug('Starting SSH server-side negotiation')
-            self.transport.start_server(server=self)
-        except SSHException as e:
-            log.warning('SSH negotiation failed. %s', e)
-            raise
-
-        # Accept any requested channels
-        while True:
-            channel = self.transport.accept(20)
-            if channel is None:
-                # check to see if any thread is running
-                any_running = False
-                for c, thread in self.channels.items():
-                    if thread.is_alive():
-                        any_running = True
-                        break
-                if not any_running:
-                    break
-            else:
-                log.info('Accepted channel %s', channel)
-                # raise RuntimeError('No channel requested.')
+        """Setup the connection."""
+        raise NotImplementedError("Please Implement the setup method")
 
     class dummy_request:
         def __init__(self):
@@ -184,7 +146,7 @@ class SSHHandler(ServerInterface, BaseRequestHandler):
             return AUTH_SUCCESSFUL
 
     def check_channel_shell_request(self, channel):
-        '''Request to start a shell on the given channel'''
+        """Request to start a shell on the given channel"""
         try:
             self.channels[channel].start()
         except KeyError:

@@ -36,16 +36,13 @@ class FtpHandler:
 
     def __init__(self, conn, session, options):
         self.banner = options['protocol_specific_data']['banner']
-        self.max_logins = int(options['protocol_specific_data']['max_attempts'])
+        self.max_loggins = int(options['protocol_specific_data']['max_attempts'])
         self.syst_type = options['protocol_specific_data']['syst_type']
         self.authenticated = False
         self.conn = conn
         self.serve_flag = True
         self.session = session
         self.respond('220 ' + self.banner)
-
-        # TODO: What is this?
-        self.local_ip = '127.0.0.1'
 
         self.state = None
         self.user = None
@@ -96,7 +93,7 @@ class FtpHandler:
         passwd = arg
         self.session.add_auth_attempt('plaintext', username=self.user, password=passwd)
         self.respond('530 Authentication Failed.')
-        if self.session.get_number_of_login_attempts() >= self.max_logins:
+        if self.session.get_number_of_login_attempts() >= self.max_loggins:
             self.stop()
 
     def do_SYST(self, arg):
@@ -121,5 +118,5 @@ class ftp(HandlerBase):
         super().__init__(options)
         self._options = options
 
-    def execute_capability(self, address, socket, session):
-        FtpHandler(socket, session, self._options)
+    def execute_capability(self, address, gsocket, session):
+        FtpHandler(gsocket, session, self._options)
