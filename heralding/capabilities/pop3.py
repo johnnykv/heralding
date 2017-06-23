@@ -1,4 +1,4 @@
-# Copyright (C) 2012 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2017 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,11 +26,11 @@ class Pop3(HandlerBase):
     cmds = {}
 
     def __init__(self, options, ):
-        super(Pop3, self).__init__(options)
+        super().__init__(options)
         Pop3.max_tries = int(self.options['protocol_specific_data']['max_attempts'])
 
-    def execute_capability(self, address, socket, session):
-        self._handle_session(session, socket)
+    def execute_capability(self, address, gsocket, session):
+        self._handle_session(session, gsocket)
 
     def _handle_session(self, session, gsocket):
         fileobj = gsocket.makefile()
@@ -58,7 +58,7 @@ class Pop3(HandlerBase):
 
             cmd = cmd.lower()
 
-            if cmd not in ['apop', 'user', 'pass', 'quit']:
+            if cmd not in ['user', 'pass', 'quit', 'noop']:
                 self.send_message(session, gsocket, '-ERR Unknown command')
             else:
                 func_to_call = getattr(self, 'cmd_{0}'.format(cmd), None)
@@ -103,17 +103,10 @@ class Pop3(HandlerBase):
         self.send_message(session, gsocket, '+OK Logging out')
         return ''
 
-    def not_impl(self, session, gsocket, msg):
-        raise Exception('Not implemented yet!')
-
-    def send_message(self, session, gsocket, msg):
+    @staticmethod
+    def send_message(session, gsocket, msg):
         try:
-            gsocket.sendall(msg + "\n")
-        except socket.error, (value, exceptionMessage):
-            session.end_session()
-
-    def send_data(self, session, gsocket, data):
-        try:
-            gsocket.sendall(data)
-        except socket.error, (value, exceptionMessage):
+            message_bytes = bytes(msg + "\n", 'utf-8')
+            gsocket.sendall(message_bytes)
+        except socket.error:
             session.end_session()

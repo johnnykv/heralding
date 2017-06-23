@@ -1,4 +1,4 @@
-# Copyright (C) 2016 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2017 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,17 +13,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import logging
-import csv
 import os
-from base_logger import BaseLogger
+import csv
+import logging
+
+from heralding.reporting.base_logger import BaseLogger
 
 logger = logging.getLogger(__name__)
 
 
 class FileLogger(BaseLogger):
     def __init__(self, logFile):
-        super(FileLogger, self).__init__()
+        super().__init__()
 
         if not os.path.isfile(logFile):
             self.fileHandler = open(logFile, 'w')
@@ -46,19 +47,6 @@ class FileLogger(BaseLogger):
         self.fileHandler.close()
 
     def handle_log_data(self, data):
-        data['username'] = get_utf_repr(data['username'])
-        data['password'] = get_utf_repr(data['password'])
         self.csvWriter.writerow(data)
         # meh
         self.fileHandler.flush()
-
-
-def get_utf_repr(data_value):
-    if data_value is not None:
-        try:
-            unicode_data_value = data_value.decode('utf-8', 'replace')
-            unicode_data_value = unicode_data_value.replace(u'\ufffd', '?')
-        except UnicodeEncodeError:
-            unicode_data_value = data_value
-        utf_data_value = unicode_data_value.encode('utf-8')
-        return utf_data_value

@@ -22,7 +22,7 @@
 
 import base64
 import logging
-from BaseHTTPServer import BaseHTTPRequestHandler
+from http.server import BaseHTTPRequestHandler
 
 from heralding.capabilities.handlerbase import HandlerBase
 
@@ -43,7 +43,7 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
         else:
             self._banner = 'Microsoft-IIS/5.0'
         self._session = httpsession
-        BaseHTTPRequestHandler.__init__(self, request, client_address, server)
+        super().__init__(request, client_address, server)
         self._session.end_session()
 
     def do_HEAD(self):
@@ -59,22 +59,19 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        if self.headers.getheader('Authorization') is None:
+        if self.headers['Authorization'] is None:
             self.do_AUTHHEAD()
         else:
-            hdr = self.headers.getheader('Authorization')
+            hdr = self.headers['Authorization']
             _, enc_uname_pwd = hdr.split(' ')
-            dec_uname_pwd = base64.b64decode(enc_uname_pwd)
+            dec_uname_pwd = str(base64.b64decode(enc_uname_pwd), 'utf-8')
             uname, pwd = dec_uname_pwd.split(':')
             self._session.add_auth_attempt('plaintext', username=uname, password=pwd)
             self.do_AUTHHEAD()
-            self.wfile.write(self.headers.getheader('Authorization'))
-            self.wfile.write('not authenticated')
-
+            headers_bytes = bytes(self.headers['Authorization'], 'utf-8')
+            self.wfile.write(headers_bytes)
+            self.wfile.write(b'not authenticated')
         self.request.close()
-
-    def version_string(self):
-        return self._banner
 
     # Disable logging provided by BaseHTTPServer
     def log_message(self, format_, *args):
@@ -85,8 +82,8 @@ class Http(HandlerBase):
     HandlerClass = BeeHTTPHandler
 
     def __init__(self, options):
-        super(Http, self).__init__(options)
+        super().__init__(options)
         self._options = options
 
-    def execute_capability(self, address, socket, session):
-        self.HandlerClass(socket, address, None, httpsession=session, options=self._options)
+    def execute_capability(self, address, gsocket, session):
+        self.HandlerClass(gsocket, address, None, httpsession=session, options=self._options)

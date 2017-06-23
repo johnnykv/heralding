@@ -1,4 +1,4 @@
-# Copyright (C) 2016 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2017 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,8 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import logging
 import socket
+import logging
 
 from gevent.timeout import Timeout
 
@@ -23,7 +23,7 @@ from heralding.misc.session import Session
 logger = logging.getLogger(__name__)
 
 
-class HandlerBase(object):
+class HandlerBase:
     MAX_GLOBAL_SESSIONS = 800
     global_sessions = 0
 
@@ -88,7 +88,4 @@ class HandlerBase(object):
                 logger.debug('Session timed out. ({0})'.format(session.id))
             finally:
                 self.close_session(session)
-                try:
-                    gsocket.close()
-                except:
-                    pass
+                gsocket.close()

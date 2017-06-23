@@ -1,5 +1,5 @@
 # pylint: disable-msg=E1101
-# Copyright (C) 2013 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2017 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,36 +24,40 @@ logger = logging.getLogger(__name__)
 
 class Telnet(HandlerBase):
     def __init__(self, options):
-        super(Telnet, self).__init__(options)
+        super().__init__(options)
         TelnetWrapper.max_tries = int(self.options['protocol_specific_data']['max_attempts'])
 
-    def execute_capability(self, address, socket, session):
-        TelnetWrapper(address, None, socket, session)
+    def execute_capability(self, address, gsocket, session):
+        TelnetWrapper(address, None, gsocket, session)
 
 
 class TelnetWrapper(Commands):
     """
     Wraps the telnetsrv module to fit the Honeypot architecture.
     """
-    PROMPT = '$ '
+    PROMPT = b'$ '
 
     def __init__(self, client_address, server, _socket, session):
         self.session = session
         self.auth_count = 0
         self.username = None
+        self.sock = _socket
         request = TelnetWrapper.false_request()
         request._sock = _socket
-        Commands.__init__(self, request, client_address, server, self.session)
+        super().__init__(request, client_address, server, self.session)
 
     def authentication_ok(self):
         while self.auth_count < TelnetWrapper.max_tries:
-            username = self.readline(prompt="Username: ", use_history=False)
-            password = self.readline(echo=False, prompt="Password: ", use_history=False)
-            self.session.add_auth_attempt(_type='plaintext', username=username, password=password)
+            username = self.readline(prompt=b"Username: ", use_history=False)
+            password = self.readline(echo=False, prompt=b"Password: ", use_history=False)
+            self.session.add_auth_attempt(_type='plaintext', username=str(username, 'utf-8'),
+                                          password=str(password, 'utf-8'))
             if self.DOECHO:
-                self.write("\n")
-            self.writeline('Invalid username/password\n')
+                self.write(b"\n")
+            # comment next line, if you want to collect credentials from Medusa bruteforcer
+            self.writeline(b'Invalid username/password\n')
             self.auth_count += 1
+        self.writeline(b'Username: ')  # It fixes a problem with Hydra bruteforcer.
         return False
 
     def setterm(self, term):

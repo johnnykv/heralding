@@ -1,4 +1,4 @@
-# Copyright (C) 2012 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2017 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ import yaml
 class ConfigFileTests(unittest.TestCase):
     def test_config_file(self):
         """Tests that the yaml config file is valid YAML"""
-        file_content = open("heralding/heralding.yml", "r").read()
+        with open("heralding/heralding.yml", "r") as f:
+            file_content = f.read()
         # excepts if not valid
         yaml.safe_load(file_content)

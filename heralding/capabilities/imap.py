@@ -13,9 +13,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import logging
 import socket
 import base64
+import logging
 import binascii
 
 from heralding.capabilities.handlerbase import HandlerBase
@@ -27,15 +27,15 @@ CRLF = '\r\n'
 
 class Imap(HandlerBase):
     def __init__(self, options):
-        super(Imap, self).__init__(options)
+        super().__init__(options)
         self.max_tries = int(self.options['protocol_specific_data']['max_attempts'])
         self.banner = self.options['protocol_specific_data']['banner']
 
         self.available_commands = ['authenticate', 'capability', 'login', 'logout', 'noop']
         self.available_mechanisms = ['plain']
 
-    def execute_capability(self, address, socket, session):
-        self._handle_session(session, socket)
+    def execute_capability(self, address, gsocket, session):
+        self._handle_session(session, gsocket)
 
     def _handle_session(self, session, gsocket):
         fileobj = gsocket.makefile()
@@ -94,9 +94,10 @@ class Imap(HandlerBase):
                 success, credentials = self.try_b64decode(raw_msg, session)
                 # \x00 is a separator between authorization identity,
                 # username and password. Authorization identity isn't used in
-                # this auth mechanism, so we must have 2 \x00 symbols.(RFC 4616) 
+                # this auth mechanism, so we must have 2 \x00 symbols.(RFC 4616)
                 if success and credentials.count('\x00') == 2:
-                    _, user, password = base64.b64decode(raw_msg).split('\x00')
+                    raw_msg_dec = str(base64.b64decode(raw_msg), 'utf-8')
+                    _, user, password = raw_msg_dec.split('\x00')
                     session.add_auth_attempt('plaintext', username=user, password=password)
                     self.send_message(session, gsocket, tag + ' NO Authentication failed')
                 else:
@@ -141,22 +142,24 @@ class Imap(HandlerBase):
         self.send_message(session, gsocket, tag + ' OK NOOP completed')
         return 'Not Authenticated'
 
-    def send_message(self, session, gsocket, msg):
-        try:
-            gsocket.sendall(msg + CRLF)
-        except socket.error:
-            session.end_session()
-
     def stop_if_too_many_attempts(self, session):
         if self.max_tries < session.get_number_of_login_attempts():
+            session.end_session()
+
+    @staticmethod
+    def send_message(session, gsocket, msg):
+        try:
+            message_bytes = bytes(msg + CRLF, 'utf-8')
+            gsocket.sendall(message_bytes)
+        except socket.error:
             session.end_session()
 
     @staticmethod
     def try_b64decode(b64_str, session):
         try:
             result = base64.b64decode(b64_str)
-            return True, result
-        except TypeError:
+            return True, str(result, 'utf-8')
+        except binascii.Error:
             logger.warning('Error decoding base64: {0} '
                            '({1})'.format(binascii.hexlify(b64_str), session.id))
             return False, ''

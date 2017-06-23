@@ -1,4 +1,12 @@
-0.1.16 (2017-04-25:
+0.2.0 (2016-06-23)
+ - Heralding converted to Python 3 
+
+0.1.17 (2017-06-20):
+ - NOTICE:  This will be the last python 2 version of Heralding. All
+            future versions will be Python 3.
+ - Imap capability added
+
+0.1.16 (2017-04-25):
  - Added ability to customize SSH banner
  - Fixed issue with encoding in CSV logger (#17)
  - Fixed issue when no shared ciphers found (#22)

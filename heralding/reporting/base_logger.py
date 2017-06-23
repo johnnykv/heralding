@@ -1,4 +1,4 @@
-# Copyright (C) 2016 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2017 Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,9 +15,9 @@
 
 import logging
 
+import gevent.event
 import zmq.green as zmq
 from gevent import Greenlet
-import gevent.event
 
 import heralding.misc
 from heralding.misc.socket_names import SocketNames
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 class BaseLogger(Greenlet):
     def __init__(self):
-        Greenlet.__init__(self)
+        super().__init__()
         self.enabled = True
         self.Ready = gevent.event.Event()
 
@@ -36,7 +36,7 @@ class BaseLogger(Greenlet):
 
         internal_reporting_socket = context.socket(zmq.SUB)
         internal_reporting_socket.connect(SocketNames.INTERNAL_REPORTING.value)
-        internal_reporting_socket.setsockopt(zmq.SUBSCRIBE, '')
+        internal_reporting_socket.setsockopt(zmq.SUBSCRIBE, b'')
 
         poller = zmq.Poller()
         poller.register(internal_reporting_socket, zmq.POLLIN)
