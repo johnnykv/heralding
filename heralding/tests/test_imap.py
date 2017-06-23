@@ -25,6 +25,7 @@ from heralding.reporting.reporting_relay import ReportingRelay
 
 import unittest
 import imaplib
+import sys
 
 
 class ImapTests(unittest.TestCase):
@@ -72,10 +73,18 @@ class ImapTests(unittest.TestCase):
         server = StreamServer(('0.0.0.0', 2000), capability.handle_session)
         server.start()
 
+        # imaplib in Python 3.5.3 and higher returns bytes representation of command error
+        # But imaplib in Python 3.5.2 and lower returns string.
+        # This is a sad hack to get around this problem.
+        pyversion = sys.version_info[:3]
+        if pyversion < (3, 5, 3):
+            auth_error_msg = 'AUTHENTICATE command error: BAD [b\'invalid command\']'
+        else:
+            auth_error_msg = b'AUTHENTICATE command error: BAD [b\'invalid command\']'
         login_sequences = [
             ('\0kajoj_admin\0thebestpassword', b'Authentication failed'),
             ('\0пайтон\0наилучшийпароль', b'Authentication failed'),
-            ('kajoj_admin\0the best password', 'AUTHENTICATE command error: BAD [b\'invalid command\']')
+            ('kajoj_admin\0the best password', auth_error_msg)
         ]
 
         imap_obj = imaplib.IMAP4('127.0.0.1', port=2000)
