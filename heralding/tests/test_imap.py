@@ -73,18 +73,18 @@ class ImapTests(unittest.TestCase):
         server = StreamServer(('0.0.0.0', 2000), capability.handle_session)
         server.start()
 
-        # imaplib in Python 3.5.3 and higher returns bytes representation of command error
-        # But imaplib in Python 3.5.2 and lower returns string.
+        # imaplib in Python 3.5.3 and higher returns str representation of auth failure
+        # But imaplib in Python 3.5.2 and lower returns bytes.
         # This is a sad hack to get around this problem.
         pyversion = sys.version_info[:3]
         if pyversion < (3, 5, 3):
-            auth_error_msg = 'AUTHENTICATE command error: BAD [b\'invalid command\']'
+            auth_failure_msg = b'Authentication failed'
         else:
-            auth_error_msg = b'AUTHENTICATE command error: BAD [b\'invalid command\']'
+            auth_failure_msg = 'Authentication failed'
         login_sequences = [
-            ('\0kajoj_admin\0thebestpassword', b'Authentication failed'),
-            ('\0пайтон\0наилучшийпароль', b'Authentication failed'),
-            ('kajoj_admin\0the best password', auth_error_msg)
+            ('\0kajoj_admin\0thebestpassword', auth_failure_msg),
+            ('\0пайтон\0наилучшийпароль', auth_failure_msg),
+            ('kajoj_admin\0the best password', 'AUTHENTICATE command error: BAD [b\'invalid command\']')
         ]
 
         imap_obj = imaplib.IMAP4('127.0.0.1', port=2000)
