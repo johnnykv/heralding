@@ -19,6 +19,7 @@ import logging
 from gevent.timeout import Timeout
 
 from heralding.misc.session import Session
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -65,27 +66,27 @@ class HandlerBase:
             assert False
         HandlerBase.global_sessions -= 1
 
-    def execute_capability(self, address, gsocket, session):
+    async def execute_capability(self, reader, writer, session):
         address = None  # NOQA
         gsocket = None  # NOQA
         session = None  # NOQA
         raise Exception("Must be implemented by child")
 
-    def handle_session(self, gsocket, address):
+    async def handle_session(self, reader, writer):
         if HandlerBase.global_sessions > HandlerBase.MAX_GLOBAL_SESSIONS:
             protocol = self.__class__.__name__.lower()
             logger.warning(
                 'Got {0} session on port {1} from {2}:{3}, but not handling it because the global session limit has '
                 'been reached'.format(protocol, self.port, address[0], address[1]))
         else:
-            session = self.create_session(address)
+            session = self.create_session(('127.0.0.1', 1000))
             try:
-                with Timeout(self.timeout):
-                    self.execute_capability(address, gsocket, session)
+                await asyncio.wait_for(self.execute_capability(reader, writer, session), timeout=30)
             except socket.error as err:
                 logger.debug('Unexpected end of session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
-            except Timeout:
+            except asyncio.TimeoutError:
                 logger.debug('Session timed out. ({0})'.format(session.id))
             finally:
                 self.close_session(session)
-                gsocket.close()
+                writer.close()
+

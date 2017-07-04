@@ -17,53 +17,34 @@ import os
 import ssl
 import sys
 import logging
+import asyncio
 
-import gevent
-import gevent.event
-from gevent import Greenlet
-from gevent.server import StreamServer
-
+import time
 import heralding.capabilities.handlerbase
 from heralding.reporting.file_logger import FileLogger
 from heralding.reporting.syslog_logger import SyslogLogger
-from heralding.misc.common import on_unhandled_greenlet_exception, generate_self_signed_cert
+from heralding.misc.common import on_unhandled_task_exception, generate_self_signed_cert
 
 from ipify import get_ip
 
 logger = logging.getLogger(__name__)
 
 
-class SSLStreamServer(StreamServer):
-    """StreamServer class, but with handling of 'NO_SHARED_CIPHER' error."""
-
-    def wrap_socket_and_handle(self, client_socket, address):
-        try:
-            return super().wrap_socket_and_handle(client_socket, address)
-        except ssl.SSLError as err:
-            if err.reason == "NO_SHARED_CIPHER":
-                target_port = self.server_port
-                client_address = "{0}:{1}".format(*address)
-                error_message = "{0} tried to connect {1} port, " \
-                                "but no supported ciphers were found!".format(client_address, target_port)
-                logger.error(error_message)
-            else:
-                raise ssl.SSLError(err)
-
-
 class Honeypot:
     public_ip = ''
 
-    def __init__(self, config):
+    def __init__(self, config, loop):
         """
         :param config: configuration dictionary.
         """
         assert config is not None
-        self.readyForDroppingPrivs = gevent.event.Event()
+        self.loop = loop
+        # self.readyForDroppingPrivs = asyncio.Event()
         self.config = config
         self._servers = []
-        self._greenlets = []
+        self._tasks = []
 
-    def _record_and_lookup_public_ip(self):
+    async def _record_and_lookup_public_ip(self):
         while True:
             try:
                 Honeypot.public_ip = get_ip()
@@ -71,25 +52,29 @@ class Honeypot:
             except Exception as ex:
                 Honeypot.public_ip = ''
                 logger.warning('Could not request public ip from ipify, error: {0}'.format(ex))
-            gevent.sleep(3600)
+            await asyncio.sleep(3600)
 
-    def start(self):
+    async def start(self):
         """ Starts services. """
 
         if 'public_ip_as_destination_ip' in self.config and self.config['public_ip_as_destination_ip'] is True:
-            self._greenlets.append(gevent.spawn(self._record_and_lookup_public_ip))
+            self._tasks.append(asyncio.ensure_future(self._record_and_lookup_public_ip()))
 
         # start activity logging
         if 'activity_logging' in self.config:
             if 'file' in self.config['activity_logging'] and self.config['activity_logging']['file']['enabled']:
                 logFile = self.config['activity_logging']['file']['filename']
-                greenlet = FileLogger(logFile)
-                greenlet.link_exception(on_unhandled_greenlet_exception)
-                greenlet.start()
+                file_logger = FileLogger(logFile)
+                file_logger_task = asyncio.ensure_future(file_logger.start())
+                file_logger_task.add_done_callback(on_unhandled_task_exception)
+                self._tasks.append(file_logger_task)
+
             if 'syslog' in self.config['activity_logging'] and self.config['activity_logging']['syslog']['enabled']:
-                greenlet = SyslogLogger()
-                greenlet.link_exception(on_unhandled_greenlet_exception)
-                greenlet.start()
+                sys_logger = SyslogLogger()
+                sys_logger = asyncio.ensure_future(sys_logger.start())
+                sys_logger_task = asyncio.ensure_future(sys_logger.start())
+                sys_logger_task.add_done_callback(on_unhandled_task_exception)
+                self._tasks.append(sys_logger_task)
 
         for c in heralding.capabilities.handlerbase.HandlerBase.__subclasses__():
 
@@ -104,19 +89,20 @@ class Honeypot:
                 cap = c(options)
 
                 try:
-                    # Convention: All capability names which end in 's' will be wrapped in ssl.
+                    # # Convention: All capability names which end in 's' will be wrapped in ssl.
                     if cap_name.endswith('s'):
                         pem_file = '{0}.pem'.format(cap_name)
                         self.create_cert_if_not_exists(cap_name, pem_file)
-                        server = SSLStreamServer(('0.0.0.0', port), cap.handle_session,
-                                                  keyfile=pem_file, certfile=pem_file)
+                        ssl_context = self.create_ssl_context(pem_file)
+                        server_coro = asyncio.start_server(cap.handle_session, '0.0.0.0', port,
+                                                           loop=self.loop, ssl=ssl_context)
                     else:
-                        server = StreamServer(('0.0.0.0', port), cap.handle_session)
+                        server_coro = asyncio.start_server(cap.handle_session, '0.0.0.0', port, loop=self.loop)
+                        server = self.loop.run_until_complete(server_coro)
+                        # server = StreamServer(('0.0.0.0', port), cap.handle_session)
 
                     logger.debug('Adding {0} capability with options: {1}'.format(cap_name, options))
                     self._servers.append(server)
-                    server_greenlet = Greenlet(server.start())
-                    self._greenlets.append(server_greenlet)
                 except Exception as ex:
                     error_message = "Could not start {0} server on port {1}. Error: {2}".format(c.__name__, port, ex)
                     logger.error(error_message)
@@ -124,8 +110,9 @@ class Honeypot:
                 else:
                     logger.info('Started {0} capability listening on port {1}'.format(c.__name__, port))
 
-        self.readyForDroppingPrivs.set()
-        gevent.joinall(self._greenlets)
+        # self.readyForDroppingPrivs.set()
+
+        # await asyncio.wait([*self._servers, *self._tasks])
 
     def stop(self):
         """Stops services"""
@@ -160,3 +147,9 @@ class Honeypot:
             with open(pem_file, 'wb') as _pem_file:
                 _pem_file.write(cert)
                 _pem_file.write(key)
+
+    def create_ssl_context(self, pem_file):
+        ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        ssl_context.check_hostname = False
+        ssl_context.load_cert_chain(pem_file)
+        return ssl_context

@@ -34,12 +34,13 @@ TERMINATOR = '\r\n'
 class FtpHandler:
     """Handles a single FTP connection"""
 
-    def __init__(self, conn, session, options):
+    def __init__(self, reader, writer, options, session):
         self.banner = options['protocol_specific_data']['banner']
         self.max_loggins = int(options['protocol_specific_data']['max_attempts'])
         self.syst_type = options['protocol_specific_data']['syst_type']
         self.authenticated = False
-        self.conn = conn
+        self.writer = writer
+        self.reader = reader
         self.serve_flag = True
         self.session = session
         self.respond('220 ' + self.banner)
@@ -47,15 +48,13 @@ class FtpHandler:
         self.state = None
         self.user = None
 
-        self.serve()
-
-    def getcmd(self):
-        cmd = self.conn.recv(512)
+    async def getcmd(self):
+        cmd = await self.reader.read(512)
         return str(cmd, 'utf-8')
 
-    def serve(self):
+    async def serve(self):
         while self.serve_flag:
-            resp = self.getcmd()
+            resp = await self.getcmd()
             if not resp:
                 self.stop()
                 break
@@ -79,19 +78,22 @@ class FtpHandler:
                         if cmd not in unauth_cmds:
                             self.respond('503 Login with USER first.')
                             continue
-                    meth(args)
+                    if cmd == "PASS":
+                        await meth(args)
+                    else:
+                        meth(args)
                     self.state = cmd
 
     def do_USER(self, arg):
         self.user = arg
         self.respond('331 Now specify the Password.')
 
-    def do_PASS(self, arg):
+    async def do_PASS(self, arg):
         if self.state != 'USER':
             self.respond('503 Login with USER first.')
             return
         passwd = arg
-        self.session.add_auth_attempt('plaintext', username=self.user, password=passwd)
+        await self.session.add_auth_attempt('plaintext', username=self.user, password=passwd)
         self.respond('530 Authentication Failed.')
         if self.session.get_number_of_login_attempts() >= self.max_loggins:
             self.stop()
@@ -107,7 +109,7 @@ class FtpHandler:
     def respond(self, msg):
         msg += TERMINATOR
         msg_bytes = bytes(msg, 'utf-8')
-        self.conn.send(msg_bytes)
+        self.writer.write(msg_bytes)
 
     def stop(self):
         self.session.end_session()
@@ -118,5 +120,6 @@ class ftp(HandlerBase):
         super().__init__(options)
         self._options = options
 
-    def execute_capability(self, address, gsocket, session):
-        FtpHandler(gsocket, session, self._options)
+    async def execute_capability(self, reader, writer, session):
+        ft = FtpHandler(reader, writer, self._options, session)
+        await ft.serve()

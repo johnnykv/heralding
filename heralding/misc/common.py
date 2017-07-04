@@ -7,9 +7,11 @@ from Crypto.PublicKey import RSA
 logger = logging.getLogger(__name__)
 
 
-def on_unhandled_greenlet_exception(dead_greenlet):
-    logger.error('Stopping because {0} died: {1}'.format(dead_greenlet, dead_greenlet.exception))
-    sys.exit(1)
+def on_unhandled_task_exception(task):
+    if task.exception():
+        raise task.exception()
+        logger.error('Stopping because {0} died: {1}'.format(task, task.exception()))
+        sys.exit(1)
 
 
 def generate_self_signed_cert(cert_country, cert_state, cert_organization, cert_locality, cert_organizational_unit,

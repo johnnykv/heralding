@@ -14,24 +14,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import gevent
-import gevent.monkey
-
-gevent.monkey.patch_all()
-
+import asyncio
 import logging
 import logging.handlers
-import os, pwd, grp, yaml, platform, sys
-from gevent import Greenlet
+import os, pwd, grp, yaml, sys
 from argparse import ArgumentParser
 
 import heralding
 import heralding.honeypot
 import heralding.reporting.reporting_relay
-from heralding.misc.common import on_unhandled_greenlet_exception
+from heralding.misc.common import on_unhandled_task_exception
 
 logger = logging.getLogger()
-
 
 def setup_logging(logfile, verbose):
     """
@@ -117,14 +111,19 @@ if __name__ == '__main__':
     with open(config_file, "r") as _file:
         config = yaml.safe_load(_file.read())
 
+    event_loop = asyncio.get_event_loop()
+
     # startup reporting relay
-    reporting_relay_greenlet = heralding.reporting.reporting_relay.ReportingRelay()
-    reporting_relay_greenlet.link_exception(on_unhandled_greenlet_exception)
-    reporting_relay_greenlet.start()
+    reporting_relay = heralding.reporting.reporting_relay.ReportingRelay()
+    event_loop.run_until_complete(reporting_relay.create_queue())
+    reporting_relay_task = asyncio.ensure_future(reporting_relay.start())
+    reporting_relay_task.add_done_callback(on_unhandled_task_exception)
 
-    honeypot = heralding.honeypot.Honeypot(config)
-    drone_greenlet = Greenlet.spawn(honeypot.start)
-    honeypot.blokUntilReadyForDroppingPrivs()
-    drop_privileges()
+    honeypot = heralding.honeypot.Honeypot(config, event_loop)
+    asyncio.ensure_future(honeypot.start())
 
-    gevent.wait([drone_greenlet, ])
+    # drop_privileges()
+    try:
+        event_loop.run_forever()
+    finally:
+        event_loop.stop()

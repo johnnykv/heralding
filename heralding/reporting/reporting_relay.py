@@ -13,13 +13,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import zmq
+import asyncio
 import logging
-
-import gevent
-import gevent.lock
-import gevent.queue
-import zmq.green as zmq
-from gevent import Greenlet
 
 import heralding.misc
 from heralding.misc.socket_names import SocketNames
@@ -27,45 +23,49 @@ from heralding.misc.socket_names import SocketNames
 logger = logging.getLogger(__name__)
 
 
-class ReportingRelay(Greenlet):
+class ReportingRelay:
     _incommingLogQueue = None
-    _incommingLogQueueLock = gevent.lock.BoundedSemaphore()
-
+    _incommingLogQueueLock = asyncio.BoundedSemaphore()
+    counter = 0
     def __init__(self):
-        super().__init__()
-
         # we are singleton
-        ReportingRelay._incommingLogQueueLock.acquire()
-        assert ReportingRelay._incommingLogQueue is None
-        ReportingRelay._incommingLogQueue = gevent.queue.Queue(10000)
-        ReportingRelay._incommingLogQueueLock.release()
-
         self.enabled = True
 
         context = heralding.misc.zmq_context
         self.internalReportingPublisher = context.socket(zmq.PUB)
 
+    # TODO: Figure out what method to use
+    async def create_queue(self):
+        await ReportingRelay._incommingLogQueueLock.acquire()
+        assert ReportingRelay._incommingLogQueue is None
+        ReportingRelay._incommingLogQueue = asyncio.Queue(10000)
+        ReportingRelay._incommingLogQueueLock.release()
+
+
     @staticmethod
-    def queueLogData(data):
+    async def queueLogData(data):
         assert ReportingRelay._incommingLogQueue is not None
-        ReportingRelay._incommingLogQueue.put(data)
+        ReportingRelay.counter += 1
+        print(ReportingRelay.counter)
+        await ReportingRelay._incommingLogQueue.put(data)
 
     @staticmethod
     def getQueueSize():
         if ReportingRelay._incommingLogQueue is not None:
-            return len(ReportingRelay._incommingLogQueue)
+            return ReportingRelay._incommingLogQueue.qsize()
         else:
             return 0
 
-    def _run(self):
-
+    async def start(self):
         self.internalReportingPublisher.bind(SocketNames.INTERNAL_REPORTING.value)
 
         while self.enabled or ReportingRelay.getQueueSize() > 0:
             try:
-                data = ReportingRelay._incommingLogQueue.get(timeout=0.5)
+                data = await asyncio.wait_for(ReportingRelay._incommingLogQueue.get(), timeout=0.5)
                 self.internalReportingPublisher.send_pyobj(data)
-            except gevent.queue.Empty:
+            except asyncio.TimeoutError:
+                pass
+            except asyncio.QueueEmpty:
                 pass
 
         # None signals 'going down' to listeners
@@ -73,7 +73,7 @@ class ReportingRelay(Greenlet):
         self.internalReportingPublisher.close()
 
         # None is also used to signal we are all done
-        ReportingRelay._incommingLogQueueLock.acquire()
+        await ReportingRelay._incommingLogQueueLock.acquire()
         ReportingRelay._incommingLogQueue = None
         ReportingRelay._incommingLogQueueLock.release()
 

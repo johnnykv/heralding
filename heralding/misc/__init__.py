@@ -1,3 +1,5 @@
-import zmq.green as zmq
+import zmq.asyncio as zmqa
 
-zmq_context = zmq.Context()
+zmqa.install()
+
+zmq_context = zmqa.Context()

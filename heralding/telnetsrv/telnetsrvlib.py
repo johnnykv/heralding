@@ -1,5 +1,6 @@
 # license: LGPL
 # Thanks a lot to the author of original telnetsrvlib - Ian Epperson (https://github.com/ianepperson)!
+# Original repository - https://github.com/ianepperson/telnetsrvlib
 
 import socket
 import curses

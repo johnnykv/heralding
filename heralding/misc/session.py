@@ -55,7 +55,7 @@ class Session:
     def is_connected(self):
         return self.connected
 
-    def add_auth_attempt(self, _type, **kwargs):
+    async def add_auth_attempt(self, _type, **kwargs):
         self.login_attempts += 1
         entry = {'timestamp': datetime.utcnow(),
                  'session_id': self.id,
@@ -73,7 +73,7 @@ class Session:
         if 'password' in kwargs:
             entry['password'] = kwargs['password']
 
-        ReportingRelay.queueLogData(entry)
+        await ReportingRelay.queueLogData(entry)
         self.activity()
         logger.debug('{0} authentication attempt from {1}:{2}. Credentials: {3}'.format(self.protocol, self.source_ip,
                                                                                         self.source_port,
