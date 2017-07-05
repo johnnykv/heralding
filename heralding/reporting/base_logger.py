@@ -15,11 +15,9 @@
 
 import logging
 
-import asyncio
-import gevent.event
 import zmq
 import zmq.asyncio as zmqa
-from gevent import Greenlet
+import asyncio
 
 import heralding.misc
 from heralding.misc.socket_names import SocketNames
@@ -30,7 +28,6 @@ logger = logging.getLogger(__name__)
 class BaseLogger:
     def __init__(self):
         self.enabled = True
-        self.Ready = asyncio.Event()
 
     async def start(self):
         context = heralding.misc.zmq_context
@@ -38,13 +35,13 @@ class BaseLogger:
         internal_reporting_socket = context.socket(zmq.SUB)
         internal_reporting_socket.connect(SocketNames.INTERNAL_REPORTING.value)
         internal_reporting_socket.setsockopt(zmq.SUBSCRIBE, b'')
+        sample_sock = (internal_reporting_socket, zmq.POLLIN)
 
         poller = zmqa.Poller()
         poller.register(internal_reporting_socket, zmq.POLLIN)
-        self.Ready.set()
         while self.enabled:
             socks = await poller.poll(500)
-            if socks and internal_reporting_socket in socks[0] and socks[0][1] == zmq.POLLIN:
+            if socks and socks[0] == sample_sock:
                 data = await internal_reporting_socket.recv_pyobj()
                 # if None is received, this means that ReportingRelay is going down
                 if not data:

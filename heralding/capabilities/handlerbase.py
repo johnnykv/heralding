@@ -15,11 +15,9 @@
 
 import socket
 import logging
-
-from gevent.timeout import Timeout
+import asyncio
 
 from heralding.misc.session import Session
-import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +26,7 @@ class HandlerBase:
     MAX_GLOBAL_SESSIONS = 800
     global_sessions = 0
 
-    def __init__(self, options):
+    def __init__(self, options, loop):
         """
         Base class that all capabilities must inherit from.
 
@@ -38,6 +36,7 @@ class HandlerBase:
         self.options = options
         self.sessions = {}
         self.users = {}
+        self.loop = loop
 
         self.port = int(options['port'])
         if 'timeout' in options:
@@ -67,25 +66,30 @@ class HandlerBase:
         HandlerBase.global_sessions -= 1
 
     async def execute_capability(self, reader, writer, session):
-        address = None  # NOQA
-        gsocket = None  # NOQA
+        reader = None  # NOQA
+        writer = None  # NOQA
         session = None  # NOQA
         raise Exception("Must be implemented by child")
 
     async def handle_session(self, reader, writer):
+        print(3)
+        address = writer.get_extra_info('peername')
         if HandlerBase.global_sessions > HandlerBase.MAX_GLOBAL_SESSIONS:
             protocol = self.__class__.__name__.lower()
             logger.warning(
                 'Got {0} session on port {1} from {2}:{3}, but not handling it because the global session limit has '
-                'been reached'.format(protocol, self.port, address[0], address[1]))
+                'been reached'.format(protocol, self.port, *address))
         else:
-            session = self.create_session(('127.0.0.1', 1000))
+            session = self.create_session(address)
             try:
-                await asyncio.wait_for(self.execute_capability(reader, writer, session), timeout=30)
+                await asyncio.wait_for(self.execute_capability(reader, writer, session),
+                                       timeout=self.timeout, loop=self.loop)
             except socket.error as err:
                 logger.debug('Unexpected end of session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
             except asyncio.TimeoutError:
                 logger.debug('Session timed out. ({0})'.format(session.id))
+            except UnicodeDecodeError:
+                pass
             finally:
                 self.close_session(session)
                 writer.close()

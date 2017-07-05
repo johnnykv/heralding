@@ -85,5 +85,7 @@ class Http(HandlerBase):
         super().__init__(options)
         self._options = options
 
-    def execute_capability(self, address, gsocket, session):
+    def execute_capability(self, reader, writer, session):
+        gsocket = writer.get_extra_info('socket')
+        address = writer.get_extra_info('peername')
         self.HandlerClass(gsocket, address, None, httpsession=session, options=self._options)

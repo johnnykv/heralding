@@ -9,7 +9,6 @@ logger = logging.getLogger(__name__)
 
 def on_unhandled_task_exception(task):
     if task.exception():
-        raise task.exception()
         logger.error('Stopping because {0} died: {1}'.format(task, task.exception()))
         sys.exit(1)
 

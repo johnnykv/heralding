@@ -19,7 +19,6 @@ import sys
 import logging
 import asyncio
 
-import time
 import heralding.capabilities.handlerbase
 from heralding.reporting.file_logger import FileLogger
 from heralding.reporting.syslog_logger import SyslogLogger
@@ -39,7 +38,6 @@ class Honeypot:
         """
         assert config is not None
         self.loop = loop
-        # self.readyForDroppingPrivs = asyncio.Event()
         self.config = config
         self._servers = []
         self._tasks = []
@@ -54,11 +52,12 @@ class Honeypot:
                 logger.warning('Could not request public ip from ipify, error: {0}'.format(ex))
             await asyncio.sleep(3600)
 
-    async def start(self):
+    def start(self):
         """ Starts services. """
 
         if 'public_ip_as_destination_ip' in self.config and self.config['public_ip_as_destination_ip'] is True:
-            self._tasks.append(asyncio.ensure_future(self._record_and_lookup_public_ip()))
+            _record_and_lookup_public_ip_task = asyncio.ensure_future(self._record_and_lookup_public_ip())
+            self._tasks.append(_record_and_lookup_public_ip_task)
 
         # start activity logging
         if 'activity_logging' in self.config:
@@ -71,7 +70,6 @@ class Honeypot:
 
             if 'syslog' in self.config['activity_logging'] and self.config['activity_logging']['syslog']['enabled']:
                 sys_logger = SyslogLogger()
-                sys_logger = asyncio.ensure_future(sys_logger.start())
                 sys_logger_task = asyncio.ensure_future(sys_logger.start())
                 sys_logger_task.add_done_callback(on_unhandled_task_exception)
                 self._tasks.append(sys_logger_task)
@@ -86,7 +84,7 @@ class Honeypot:
                 # carve out the options for this specific service
                 options = self.config['capabilities'][cap_name]
                 # capabilities are only allowed to append to the session list
-                cap = c(options)
+                cap = c(options, self.loop)
 
                 try:
                     # # Convention: All capability names which end in 's' will be wrapped in ssl.
@@ -98,9 +96,8 @@ class Honeypot:
                                                            loop=self.loop, ssl=ssl_context)
                     else:
                         server_coro = asyncio.start_server(cap.handle_session, '0.0.0.0', port, loop=self.loop)
-                        server = self.loop.run_until_complete(server_coro)
-                        # server = StreamServer(('0.0.0.0', port), cap.handle_session)
 
+                    server = self.loop.run_until_complete(server_coro)
                     logger.debug('Adding {0} capability with options: {1}'.format(cap_name, options))
                     self._servers.append(server)
                 except Exception as ex:
@@ -110,23 +107,17 @@ class Honeypot:
                 else:
                     logger.info('Started {0} capability listening on port {1}'.format(c.__name__, port))
 
-        # self.readyForDroppingPrivs.set()
-
-        # await asyncio.wait([*self._servers, *self._tasks])
-
     def stop(self):
         """Stops services"""
 
         for s in self._servers:
-            s.stop()
+            s.close()
+            self.loop.run_until_complete(s.wait_closed())
 
-        for g in self._greenlets:
-            g.kill()
+        for t in self._tasks:
+            t.cancel()
 
-        logger.info('All workers stopped.')
-
-    def blokUntilReadyForDroppingPrivs(self):
-        self.readyForDroppingPrivs.wait()
+        logger.info('All tasks stopped.')
 
     def create_cert_if_not_exists(self, cap_name, pem_file):
         if not os.path.isfile(pem_file):
@@ -148,7 +139,8 @@ class Honeypot:
                 _pem_file.write(cert)
                 _pem_file.write(key)
 
-    def create_ssl_context(self, pem_file):
+    @staticmethod
+    def create_ssl_context(pem_file):
         ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
         ssl_context.check_hostname = False
         ssl_context.load_cert_chain(pem_file)

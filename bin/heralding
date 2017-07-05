@@ -27,6 +27,7 @@ from heralding.misc.common import on_unhandled_task_exception
 
 logger = logging.getLogger()
 
+
 def setup_logging(logfile, verbose):
     """
         Sets up logging to the logfiles/console.
@@ -111,19 +112,23 @@ if __name__ == '__main__':
     with open(config_file, "r") as _file:
         config = yaml.safe_load(_file.read())
 
-    event_loop = asyncio.get_event_loop()
+    loop = asyncio.get_event_loop()
 
     # startup reporting relay
-    reporting_relay = heralding.reporting.reporting_relay.ReportingRelay()
-    event_loop.run_until_complete(reporting_relay.create_queue())
+    reporting_relay = heralding.reporting.reporting_relay.ReportingRelay(loop)
+    loop.run_until_complete(reporting_relay.create_queue())
     reporting_relay_task = asyncio.ensure_future(reporting_relay.start())
     reporting_relay_task.add_done_callback(on_unhandled_task_exception)
 
-    honeypot = heralding.honeypot.Honeypot(config, event_loop)
-    asyncio.ensure_future(honeypot.start())
+    honeypot = heralding.honeypot.Honeypot(config, loop)
+    honeypot.start()
 
-    # drop_privileges()
+    drop_privileges()
     try:
-        event_loop.run_forever()
+        loop.run_forever()
+    except KeyboardInterrupt:
+        pass
     finally:
-        event_loop.stop()
+        honeypot.stop()
+        # loop.run_until_complete(reporting_relay.stop())
+        loop.stop()

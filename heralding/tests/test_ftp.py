@@ -13,45 +13,56 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import gevent
-import gevent.monkey
-gevent.monkey.patch_all()  # NOQA
-
+import asyncio
 import unittest
 
 import ftplib
 from ftplib import FTP
-from gevent.server import StreamServer
 
 from heralding.capabilities import ftp
 from heralding.reporting.reporting_relay import ReportingRelay
 
+import concurrent.futures as cf
 
 class FtpTests(unittest.TestCase):
     def setUp(self):
-        self.reportingRelay = ReportingRelay()
-        self.reportingRelay.start()
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(None)
+
+        # self.reportingRelay = ReportingRelay(self.loop)
+        # self.loop.run_until_complete(self.reportingRelay.create_queue())
 
     def tearDown(self):
-        self.reportingRelay.stop()
+        # self.loop.run_until_complete(self.reportingRelay.stop())
+        # self.fut.cancel()
+        # self.server.close()
+        # self.loop.run_until_complete(self.server.wait_closed())
+        # self.loop.close()
+        pass
 
     def test_login(self):
         """Testing different login combinations"""
+        def callb(self, ftp_client):
+            # await asyncio.sleep(1, loop=self.loop)
+            ftp_client.connect('127.0.0.1', 8888, 1)
+            # expect perm exception
+            try:
+                ftp_client.login('james', 'bond')
+                response = ftp_client.getresp()  # NOQA
+            except ftplib.error_perm:
+                pass
 
+        ftp_client = FTP()
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test Banner', 'users': {'test': 'test'},
                    'protocol_specific_data': {'max_attempts': 3, 'banner': 'test banner', 'syst_type': 'Test Type'}}
 
-        ftp_capability = ftp.ftp(options)
-        srv = StreamServer(('0.0.0.0', 0), ftp_capability.handle_session)
-        srv.start()
+        ftp_capability = ftp.ftp(options, self.loop)
 
-        ftp_client = FTP()
-        ftp_client.connect('127.0.0.1', srv.server_port, 1)
+        server_coro = asyncio.start_server(ftp_capability.handle_session, '0.0.0.0', 8888, loop=self.loop)
+        # self.fut = asyncio.ensure_future(self.reportingRelay.start(), loop=self.loop)
+        self.loop.run_until_complete(server_coro)
+        self.loop.run_until_complete(asyncio.ensure_future(self.loop.run_in_executor(None, callb, self, ftp_client), loop=self.loop))
 
-        # expect perm exception
-        try:
-            ftp_client.login('james', 'bond')
-            response = ftp_client.getresp()  # NOQA
-        except ftplib.error_perm:
-            pass
-        srv.stop()
+
+
+

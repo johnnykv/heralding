@@ -26,8 +26,8 @@ class Pop3(HandlerBase):
     max_tries = 10
     cmds = {}
 
-    def __init__(self, options, ):
-        super().__init__(options)
+    def __init__(self, options, loop):
+        super().__init__(options, loop)
         Pop3.max_tries = int(self.options['protocol_specific_data']['max_attempts'])
 
     async def execute_capability(self, reader, writer, session):

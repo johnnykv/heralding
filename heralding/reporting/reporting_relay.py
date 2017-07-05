@@ -25,28 +25,29 @@ logger = logging.getLogger(__name__)
 
 class ReportingRelay:
     _incommingLogQueue = None
-    _incommingLogQueueLock = asyncio.BoundedSemaphore()
-    counter = 0
-    def __init__(self):
+    count=1
+
+    def __init__(self, loop):
         # we are singleton
+        self.loop = loop
         self.enabled = True
+        # self.Ready = asyncio.Event(loop=self.loop)
+        ReportingRelay._incommingLogQueueLock = asyncio.BoundedSemaphore(loop=self.loop)
 
         context = heralding.misc.zmq_context
-        self.internalReportingPublisher = context.socket(zmq.PUB)
+        self.internalReportingPublisher = context.socket(zmq.PUB, io_loop=self.loop)
 
-    # TODO: Figure out what method to use
     async def create_queue(self):
         await ReportingRelay._incommingLogQueueLock.acquire()
         assert ReportingRelay._incommingLogQueue is None
-        ReportingRelay._incommingLogQueue = asyncio.Queue(10000)
+        ReportingRelay._incommingLogQueue = asyncio.Queue(10000, loop=self.loop)
         ReportingRelay._incommingLogQueueLock.release()
-
 
     @staticmethod
     async def queueLogData(data):
         assert ReportingRelay._incommingLogQueue is not None
-        ReportingRelay.counter += 1
-        print(ReportingRelay.counter)
+        ReportingRelay.count += 1
+        print(ReportingRelay.count)
         await ReportingRelay._incommingLogQueue.put(data)
 
     @staticmethod
@@ -58,14 +59,12 @@ class ReportingRelay:
 
     async def start(self):
         self.internalReportingPublisher.bind(SocketNames.INTERNAL_REPORTING.value)
-
         while self.enabled or ReportingRelay.getQueueSize() > 0:
             try:
-                data = await asyncio.wait_for(ReportingRelay._incommingLogQueue.get(), timeout=0.5)
+                data = await asyncio.wait_for(ReportingRelay._incommingLogQueue.get(),
+                                              timeout=0.5, loop=self.loop)
                 self.internalReportingPublisher.send_pyobj(data)
             except asyncio.TimeoutError:
-                pass
-            except asyncio.QueueEmpty:
                 pass
 
         # None signals 'going down' to listeners
@@ -77,13 +76,13 @@ class ReportingRelay:
         ReportingRelay._incommingLogQueue = None
         ReportingRelay._incommingLogQueueLock.release()
 
-    def stop(self):
+    async def stop(self):
         self.enabled = False
         while True:
-            ReportingRelay._incommingLogQueueLock.acquire()
+            await ReportingRelay._incommingLogQueueLock.acquire()
             if ReportingRelay._incommingLogQueue is not None:
                 ReportingRelay._incommingLogQueueLock.release()
-                gevent.sleep(0.1)
+                asyncio.sleep(0.1)
             else:
                 ReportingRelay._incommingLogQueueLock.release()
                 break
