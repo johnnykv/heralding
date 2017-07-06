@@ -33,10 +33,10 @@ class HandlerBase:
         :param sessions: a dictionary of Session objects.
         :param options: a dictionary of configuration options.
         """
+        self.loop = loop
         self.options = options
         self.sessions = {}
         self.users = {}
-        self.loop = loop
 
         self.port = int(options['port'])
         if 'timeout' in options:
@@ -72,7 +72,6 @@ class HandlerBase:
         raise Exception("Must be implemented by child")
 
     async def handle_session(self, reader, writer):
-        print(3)
         address = writer.get_extra_info('peername')
         if HandlerBase.global_sessions > HandlerBase.MAX_GLOBAL_SESSIONS:
             protocol = self.__class__.__name__.lower()
@@ -84,13 +83,13 @@ class HandlerBase:
             try:
                 await asyncio.wait_for(self.execute_capability(reader, writer, session),
                                        timeout=self.timeout, loop=self.loop)
-            except socket.error as err:
-                logger.debug('Unexpected end of session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
             except asyncio.TimeoutError:
                 logger.debug('Session timed out. ({0})'.format(session.id))
             except UnicodeDecodeError:
                 pass
             finally:
                 self.close_session(session)
-                writer.close()
+                if not self.loop.is_closed():
+                    writer.close()
+                    writer.transport.abort()
 

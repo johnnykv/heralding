@@ -40,10 +40,11 @@ class Pop3(HandlerBase):
         state = 'AUTHORIZATION'
         while state != '' and session.connected:
             raw_msg = await reader.readline()
-            await asyncio.sleep(0)
+            raw_msg_str = str(raw_msg, 'utf-8')
 
             session.activity()
-            cmd_msg = str(raw_msg, 'utf-8').rstrip().split(' ', 1)
+
+            cmd_msg = raw_msg_str.rstrip().split(' ', 1)
             if len(cmd_msg) == 0:
                 continue
             elif len(cmd_msg) == 1:
@@ -59,7 +60,7 @@ class Pop3(HandlerBase):
                 self.send_message(session, writer, '-ERR Unknown command')
             else:
                 func_to_call = getattr(self, 'cmd_{0}'.format(cmd), None)
-                if func_to_call == self.cmd_pass:
+                if asyncio.iscoroutine(func_to_call):
                     return_value = await func_to_call(session, reader, writer, msg)
                 else:
                     return_value = func_to_call(session, reader, writer, msg)

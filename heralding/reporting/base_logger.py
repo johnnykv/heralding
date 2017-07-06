@@ -17,7 +17,6 @@ import logging
 
 import zmq
 import zmq.asyncio as zmqa
-import asyncio
 
 import heralding.misc
 from heralding.misc.socket_names import SocketNames

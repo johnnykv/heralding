@@ -130,5 +130,6 @@ if __name__ == '__main__':
         pass
     finally:
         honeypot.stop()
-        # loop.run_until_complete(reporting_relay.stop())
+        for task in asyncio.Task.all_tasks():
+            task.cancel()
         loop.stop()

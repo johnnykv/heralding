@@ -25,13 +25,12 @@ logger = logging.getLogger(__name__)
 
 class ReportingRelay:
     _incommingLogQueue = None
-    count=1
 
     def __init__(self, loop):
         # we are singleton
         self.loop = loop
         self.enabled = True
-        # self.Ready = asyncio.Event(loop=self.loop)
+
         ReportingRelay._incommingLogQueueLock = asyncio.BoundedSemaphore(loop=self.loop)
 
         context = heralding.misc.zmq_context
@@ -46,8 +45,6 @@ class ReportingRelay:
     @staticmethod
     async def queueLogData(data):
         assert ReportingRelay._incommingLogQueue is not None
-        ReportingRelay.count += 1
-        print(ReportingRelay.count)
         await ReportingRelay._incommingLogQueue.put(data)
 
     @staticmethod
@@ -58,13 +55,15 @@ class ReportingRelay:
             return 0
 
     async def start(self):
+
         self.internalReportingPublisher.bind(SocketNames.INTERNAL_REPORTING.value)
+
         while self.enabled or ReportingRelay.getQueueSize() > 0:
             try:
                 data = await asyncio.wait_for(ReportingRelay._incommingLogQueue.get(),
                                               timeout=0.5, loop=self.loop)
-                self.internalReportingPublisher.send_pyobj(data)
-            except asyncio.TimeoutError:
+                await self.internalReportingPublisher.send_pyobj(data)
+            except (asyncio.TimeoutError, RuntimeError):
                 pass
 
         # None signals 'going down' to listeners
@@ -86,3 +85,4 @@ class ReportingRelay:
             else:
                 ReportingRelay._incommingLogQueueLock.release()
                 break
+

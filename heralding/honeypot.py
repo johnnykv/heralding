@@ -56,21 +56,24 @@ class Honeypot:
         """ Starts services. """
 
         if 'public_ip_as_destination_ip' in self.config and self.config['public_ip_as_destination_ip'] is True:
-            _record_and_lookup_public_ip_task = asyncio.ensure_future(self._record_and_lookup_public_ip())
+            _record_and_lookup_public_ip_task = asyncio.ensure_future(self._record_and_lookup_public_ip(),
+                                                                      loop=self.loop)
             self._tasks.append(_record_and_lookup_public_ip_task)
 
         # start activity logging
         if 'activity_logging' in self.config:
             if 'file' in self.config['activity_logging'] and self.config['activity_logging']['file']['enabled']:
-                logFile = self.config['activity_logging']['file']['filename']
-                file_logger = FileLogger(logFile)
-                file_logger_task = asyncio.ensure_future(file_logger.start())
+                log_file = self.config['activity_logging']['file']['filename']
+                file_logger = FileLogger(log_file)
+                file_logger_task = asyncio.ensure_future(file_logger.start(),
+                                                         loop=self.loop)
                 file_logger_task.add_done_callback(on_unhandled_task_exception)
                 self._tasks.append(file_logger_task)
 
             if 'syslog' in self.config['activity_logging'] and self.config['activity_logging']['syslog']['enabled']:
                 sys_logger = SyslogLogger()
-                sys_logger_task = asyncio.ensure_future(sys_logger.start())
+                sys_logger_task = asyncio.ensure_future(sys_logger.start(),
+                                                        loop=self.loop)
                 sys_logger_task.add_done_callback(on_unhandled_task_exception)
                 self._tasks.append(sys_logger_task)
 

@@ -43,10 +43,10 @@ class Imap(HandlerBase):
 
         state = "Not Authenticated"
         while state != 'Logout' and session.connected:
-            raw_msg = await reader.read(512)
-            await asyncio.sleep(0)
+            raw_msg = await reader.readline()
+            raw_msg_str = str(raw_msg, 'utf-8')
 
-            cmd_msg = str(raw_msg, 'utf-8').rstrip().split(' ', 2)
+            cmd_msg = raw_msg_str.rstrip().split(' ', 2)
             if len(cmd_msg) == 0:
                 continue
             elif len(cmd_msg) == 1:
@@ -67,7 +67,7 @@ class Imap(HandlerBase):
             else:
                 func_to_call = getattr(self, 'cmd_{0}'.format(cmd), None)
                 if func_to_call:
-                    if func_to_call==self.cmd_login or func_to_call==self.cmd_authenticate:
+                    if asyncio.iscoroutinefunction(func_to_call):
                         return_value = await func_to_call(session, reader, writer, tag, args)
                     else:
                         return_value = func_to_call(session, reader, writer, tag, args)

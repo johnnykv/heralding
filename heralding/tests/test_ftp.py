@@ -15,6 +15,9 @@
 
 import asyncio
 import unittest
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 import ftplib
 from ftplib import FTP
@@ -22,28 +25,29 @@ from ftplib import FTP
 from heralding.capabilities import ftp
 from heralding.reporting.reporting_relay import ReportingRelay
 
-import concurrent.futures as cf
 
 class FtpTests(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(None)
 
-        # self.reportingRelay = ReportingRelay(self.loop)
-        # self.loop.run_until_complete(self.reportingRelay.create_queue())
+        self.reportingRelay = ReportingRelay(self.loop)
+        self.loop.run_until_complete(self.reportingRelay.create_queue())
+        self.reportingRelay = asyncio.ensure_future(self.reportingRelay.start(), loop=self.loop)
 
     def tearDown(self):
-        # self.loop.run_until_complete(self.reportingRelay.stop())
-        # self.fut.cancel()
-        # self.server.close()
-        # self.loop.run_until_complete(self.server.wait_closed())
-        # self.loop.close()
-        pass
+        self.server.close()
+        self.loop.run_until_complete(self.server.wait_closed())
+
+        all_pending_tasks = asyncio.Task.all_tasks(loop=self.loop)
+        for task in all_pending_tasks:
+            task.cancel()
+        self.loop.close()
 
     def test_login(self):
         """Testing different login combinations"""
-        def callb(self, ftp_client):
-            # await asyncio.sleep(1, loop=self.loop)
+
+        def ftp_login(ftp_client):
             ftp_client.connect('127.0.0.1', 8888, 1)
             # expect perm exception
             try:
@@ -59,10 +63,7 @@ class FtpTests(unittest.TestCase):
         ftp_capability = ftp.ftp(options, self.loop)
 
         server_coro = asyncio.start_server(ftp_capability.handle_session, '0.0.0.0', 8888, loop=self.loop)
-        # self.fut = asyncio.ensure_future(self.reportingRelay.start(), loop=self.loop)
-        self.loop.run_until_complete(server_coro)
-        self.loop.run_until_complete(asyncio.ensure_future(self.loop.run_in_executor(None, callb, self, ftp_client), loop=self.loop))
+        self.server = self.loop.run_until_complete(server_coro)
 
-
-
-
+        ftp_task = asyncio.ensure_future(self.loop.run_in_executor(None, ftp_login, ftp_client), loop=self.loop)
+        self.loop.run_until_complete(ftp_task)
