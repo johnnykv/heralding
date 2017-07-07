@@ -67,14 +67,14 @@ class Honeypot:
                 file_logger = FileLogger(log_file)
                 file_logger_task = asyncio.ensure_future(file_logger.start(),
                                                          loop=self.loop)
-                file_logger_task.add_done_callback(on_unhandled_task_exception)
+                # file_logger_task.add_done_callback(on_unhandled_task_exception)
                 self._tasks.append(file_logger_task)
 
             if 'syslog' in self.config['activity_logging'] and self.config['activity_logging']['syslog']['enabled']:
                 sys_logger = SyslogLogger()
                 sys_logger_task = asyncio.ensure_future(sys_logger.start(),
                                                         loop=self.loop)
-                sys_logger_task.add_done_callback(on_unhandled_task_exception)
+                # sys_logger_task.add_done_callback(on_unhandled_task_exception)
                 self._tasks.append(sys_logger_task)
 
         for c in heralding.capabilities.handlerbase.HandlerBase.__subclasses__():

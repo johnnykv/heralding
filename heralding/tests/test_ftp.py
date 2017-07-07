@@ -17,10 +17,11 @@ import asyncio
 import unittest
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
 
 import ftplib
 from ftplib import FTP
+from contextlib import suppress
 
 from heralding.capabilities import ftp
 from heralding.reporting.reporting_relay import ReportingRelay
@@ -42,6 +43,10 @@ class FtpTests(unittest.TestCase):
         all_pending_tasks = asyncio.Task.all_tasks(loop=self.loop)
         for task in all_pending_tasks:
             task.cancel()
+            # Now we should await task to execute it's cancellation.
+            # Cancelled task raises asyncio.CancelledError that we can suppress:
+            with suppress(asyncio.CancelledError):
+                self.loop.run_until_complete(task)
         self.loop.close()
 
     def test_login(self):

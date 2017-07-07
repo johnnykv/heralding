@@ -91,7 +91,7 @@ capabilities:
       banner: "SSH-2.0-OpenSSH_6.6.1p1 Ubuntu-2ubuntu2.8"
 
   http:
-    enabled: false
+    enabled: true
     port: 80
     timeout: 30
     protocol_specific_data:

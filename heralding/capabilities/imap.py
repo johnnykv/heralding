@@ -43,7 +43,12 @@ class Imap(HandlerBase):
 
         state = "Not Authenticated"
         while state != 'Logout' and session.connected:
-            raw_msg = await reader.readline()
+            try:
+                raw_msg = await reader.readline()
+                await asyncio.sleep(0)
+            except (BrokenPipeError, ConnectionResetError):
+                session.end_session()
+                break
             raw_msg_str = str(raw_msg, 'utf-8')
 
             cmd_msg = raw_msg_str.rstrip().split(' ', 2)

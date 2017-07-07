@@ -36,6 +36,7 @@ class ReportingRelay:
         context = heralding.misc.zmq_context
         self.internalReportingPublisher = context.socket(zmq.PUB, io_loop=self.loop)
 
+
     async def create_queue(self):
         await ReportingRelay._incommingLogQueueLock.acquire()
         assert ReportingRelay._incommingLogQueue is None
@@ -43,9 +44,9 @@ class ReportingRelay:
         ReportingRelay._incommingLogQueueLock.release()
 
     @staticmethod
-    async def queueLogData(data):
+    def queueLogData(data):
         assert ReportingRelay._incommingLogQueue is not None
-        await ReportingRelay._incommingLogQueue.put(data)
+        ReportingRelay._incommingLogQueue.put(data)
 
     @staticmethod
     def getQueueSize():

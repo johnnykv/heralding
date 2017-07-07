@@ -29,17 +29,23 @@ class Pop3(HandlerBase):
     def __init__(self, options, loop):
         super().__init__(options, loop)
         Pop3.max_tries = int(self.options['protocol_specific_data']['max_attempts'])
+        print("init pop3")
 
     async def execute_capability(self, reader, writer, session):
         await self._handle_session(session, reader, writer)
 
     async def _handle_session(self, session, reader, writer):
-
+        print("handle session")
         self.send_message(session, writer, '+OK POP3 server ready')
 
         state = 'AUTHORIZATION'
         while state != '' and session.connected:
-            raw_msg = await reader.readline()
+            try:
+                raw_msg = await reader.readline()
+                await asyncio.sleep(0)
+            except (BrokenPipeError, ConnectionResetError):
+                session.end_session()
+                break
             raw_msg_str = str(raw_msg, 'utf-8')
 
             session.activity()
@@ -60,7 +66,7 @@ class Pop3(HandlerBase):
                 self.send_message(session, writer, '-ERR Unknown command')
             else:
                 func_to_call = getattr(self, 'cmd_{0}'.format(cmd), None)
-                if asyncio.iscoroutine(func_to_call):
+                if asyncio.iscoroutinefunction(func_to_call):
                     return_value = await func_to_call(session, reader, writer, msg)
                 else:
                     return_value = func_to_call(session, reader, writer, msg)

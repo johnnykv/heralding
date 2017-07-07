@@ -38,6 +38,7 @@ class HandlerBase:
         self.sessions = {}
         self.users = {}
 
+        print("init handlerbase")
         self.port = int(options['port'])
         if 'timeout' in options:
             self.timeout = options['timeout']
@@ -87,6 +88,8 @@ class HandlerBase:
                 logger.debug('Session timed out. ({0})'.format(session.id))
             except UnicodeDecodeError:
                 pass
+            except Exception:
+                raise
             finally:
                 self.close_session(session)
                 if not self.loop.is_closed():

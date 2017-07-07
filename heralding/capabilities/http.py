@@ -25,6 +25,7 @@ import logging
 from http.server import BaseHTTPRequestHandler
 
 from heralding.capabilities.handlerbase import HandlerBase
+import functools
 
 logger = logging.getLogger(__name__)
 
@@ -81,11 +82,11 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
 class Http(HandlerBase):
     HandlerClass = BeeHTTPHandler
 
-    def __init__(self, options):
-        super().__init__(options)
+    def __init__(self, options, loop):
+        super().__init__(options, loop)
         self._options = options
 
-    def execute_capability(self, reader, writer, session):
+    async def execute_capability(self, reader, writer, session):
         gsocket = writer.get_extra_info('socket')
         address = writer.get_extra_info('peername')
-        self.HandlerClass(gsocket, address, None, httpsession=session, options=self._options)
+        await self.loop.run_in_executor(None, functools.partial(self.HandlerClass, gsocket, address, None, httpsession=session, options=self._options))
