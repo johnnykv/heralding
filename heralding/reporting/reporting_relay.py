@@ -44,9 +44,9 @@ class ReportingRelay:
         ReportingRelay._incommingLogQueueLock.release()
 
     @staticmethod
-    def queueLogData(data):
+    async def queueLogData(data):
         assert ReportingRelay._incommingLogQueue is not None
-        ReportingRelay._incommingLogQueue.put(data)
+        await ReportingRelay._incommingLogQueue.put(data)
 
     @staticmethod
     def getQueueSize():

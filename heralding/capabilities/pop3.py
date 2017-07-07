@@ -29,13 +29,11 @@ class Pop3(HandlerBase):
     def __init__(self, options, loop):
         super().__init__(options, loop)
         Pop3.max_tries = int(self.options['protocol_specific_data']['max_attempts'])
-        print("init pop3")
 
     async def execute_capability(self, reader, writer, session):
         await self._handle_session(session, reader, writer)
 
     async def _handle_session(self, session, reader, writer):
-        print("handle session")
         self.send_message(session, writer, '+OK POP3 server ready')
 
         state = 'AUTHORIZATION'

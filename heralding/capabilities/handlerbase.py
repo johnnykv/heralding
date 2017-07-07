@@ -38,7 +38,6 @@ class HandlerBase:
         self.sessions = {}
         self.users = {}
 
-        print("init handlerbase")
         self.port = int(options['port'])
         if 'timeout' in options:
             self.timeout = options['timeout']
