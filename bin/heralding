@@ -24,7 +24,6 @@ import heralding
 import heralding.honeypot
 import heralding.reporting.reporting_relay
 from heralding.misc.common import on_unhandled_task_exception
-from contextlib import suppress
 
 logger = logging.getLogger()
 
@@ -61,9 +60,11 @@ def setup_logging(logfile, verbose):
     file_log.setLevel(loglevel)
     root_logger.addHandler(file_log)
 
+
 def break_if_python_not_supported():
-    if sys.version_info[0:2] < (3,5):
+    if sys.version_info[0:2] < (3, 5):
         raise Exception("Wrong python version! Your Python interpreter must be 3.5.0 or above!")
+
 
 class LogFilter(logging.Filter):
     def filter(self, rec):
@@ -119,7 +120,7 @@ if __name__ == '__main__':
     reporting_relay = heralding.reporting.reporting_relay.ReportingRelay(loop)
     loop.run_until_complete(reporting_relay.create_queue())
     reporting_relay_task = asyncio.ensure_future(reporting_relay.start())
-    # reporting_relay_task.add_done_callback(on_unhandled_task_exception)
+    reporting_relay_task.add_done_callback(on_unhandled_task_exception)
 
     honeypot = heralding.honeypot.Honeypot(config, loop)
     honeypot.start()
@@ -131,15 +132,8 @@ if __name__ == '__main__':
         pass
     finally:
         honeypot.stop()
-        pending = asyncio.Task.all_tasks()
-        for task in pending:
-            task.cancel()
-            # Now we should await task to execute it's cancellation.
-            # Cancelled task raises asyncio.CancelledError that we can suppress:
-            with suppress(asyncio.CancelledError):
-                loop.run_until_complete(task)
         loop.close()
-        pending = asyncio.Task.all_tasks()
+        # pending = asyncio.Task.all_tasks()
         # for task in asyncio.Task.all_tasks():
         #     task.cancel()
 

@@ -13,7 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import socket
 import logging
 import asyncio
 
@@ -87,8 +86,6 @@ class HandlerBase:
                 logger.debug('Session timed out. ({0})'.format(session.id))
             except UnicodeDecodeError:
                 pass
-            except Exception:
-                raise
             finally:
                 self.close_session(session)
                 if not self.loop.is_closed():

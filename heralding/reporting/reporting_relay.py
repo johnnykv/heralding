@@ -56,7 +56,6 @@ class ReportingRelay:
             return 0
 
     async def start(self):
-
         self.internalReportingPublisher.bind(SocketNames.INTERNAL_REPORTING.value)
 
         while self.enabled or ReportingRelay.getQueueSize() > 0:
@@ -64,11 +63,12 @@ class ReportingRelay:
                 data = await asyncio.wait_for(ReportingRelay._incommingLogQueue.get(),
                                               timeout=0.5, loop=self.loop)
                 await self.internalReportingPublisher.send_pyobj(data)
+            # We catch RuntimeError for successful testing.
             except (asyncio.TimeoutError, RuntimeError):
                 pass
 
         # None signals 'going down' to listeners
-        self.internalReportingPublisher.send_pyobj(None)
+        await self.internalReportingPublisher.send_pyobj(None)
         self.internalReportingPublisher.close()
 
         # None is also used to signal we are all done

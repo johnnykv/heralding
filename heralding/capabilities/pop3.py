@@ -38,6 +38,8 @@ class Pop3(HandlerBase):
 
         state = 'AUTHORIZATION'
         while state != '' and session.connected:
+            # An exception is raised inside await reader.readline() in case of
+            # sudden connection reset. await.sleep(0) helps to take it out.
             try:
                 raw_msg = await reader.readline()
                 await asyncio.sleep(0)
