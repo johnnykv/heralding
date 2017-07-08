@@ -56,6 +56,7 @@ class ReportingRelay:
             return 0
 
     async def start(self):
+
         self.internalReportingPublisher.bind(SocketNames.INTERNAL_REPORTING.value)
 
         while self.enabled or ReportingRelay.getQueueSize() > 0:
@@ -76,14 +77,5 @@ class ReportingRelay:
         ReportingRelay._incommingLogQueue = None
         ReportingRelay._incommingLogQueueLock.release()
 
-    async def stop(self):
+    def stop(self):
         self.enabled = False
-        while True:
-            await ReportingRelay._incommingLogQueueLock.acquire()
-            if ReportingRelay._incommingLogQueue is not None:
-                ReportingRelay._incommingLogQueueLock.release()
-                asyncio.sleep(0.1)
-            else:
-                ReportingRelay._incommingLogQueueLock.release()
-                break
-

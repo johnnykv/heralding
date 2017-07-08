@@ -131,9 +131,8 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         pass
     finally:
+        reporting_relay.stop()
         honeypot.stop()
+        # We give tasks a time to be finished.
+        loop.run_until_complete(asyncio.sleep(0.5))
         loop.close()
-        # pending = asyncio.Task.all_tasks()
-        # for task in asyncio.Task.all_tasks():
-        #     task.cancel()
-

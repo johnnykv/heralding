@@ -18,6 +18,7 @@ import ssl
 import sys
 import logging
 import asyncio
+from contextlib import suppress
 
 import heralding.capabilities.handlerbase
 from heralding.reporting.file_logger import FileLogger
@@ -119,6 +120,8 @@ class Honeypot:
 
         for t in self._tasks:
             t.cancel()
+            with suppress(asyncio.CancelledError):
+                self.loop.run_until_complete(t)
 
         logger.info('All tasks stopped.')
 

@@ -3,15 +3,18 @@ import logging
 
 from OpenSSL import crypto
 from Crypto.PublicKey import RSA
+import asyncio
+from contextlib import suppress
 
 logger = logging.getLogger(__name__)
 
 
 def on_unhandled_task_exception(task):
-    task_exc = task.exception()
-    if task_exc:
-        logger.error('Stopping because {0} died: {1}'.format(task, task_exc))
-        sys.exit(1)
+    if not task.cancelled():
+        task_exc = task.exception()
+        if task_exc:
+            logger.error('Stopping because {0} died: {1}'.format(task, task_exc))
+            sys.exit(1)
 
 
 def generate_self_signed_cert(cert_country, cert_state, cert_organization, cert_locality, cert_organizational_unit,

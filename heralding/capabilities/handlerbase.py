@@ -90,5 +90,3 @@ class HandlerBase:
                 self.close_session(session)
                 if not self.loop.is_closed():
                     writer.close()
-                    writer.transport.abort()
-
