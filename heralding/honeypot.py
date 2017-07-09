@@ -18,7 +18,6 @@ import ssl
 import sys
 import logging
 import asyncio
-from contextlib import suppress
 
 import heralding.capabilities.handlerbase
 from heralding.reporting.file_logger import FileLogger
@@ -66,20 +65,15 @@ class Honeypot:
             if 'file' in self.config['activity_logging'] and self.config['activity_logging']['file']['enabled']:
                 log_file = self.config['activity_logging']['file']['filename']
                 file_logger = FileLogger(log_file)
-                file_logger_task = asyncio.ensure_future(file_logger.start(),
-                                                         loop=self.loop)
+                file_logger_task = self.loop.run_in_executor(None, file_logger.start)
                 file_logger_task.add_done_callback(on_unhandled_task_exception)
-                self._tasks.append(file_logger_task)
 
             if 'syslog' in self.config['activity_logging'] and self.config['activity_logging']['syslog']['enabled']:
                 sys_logger = SyslogLogger()
-                sys_logger_task = asyncio.ensure_future(sys_logger.start(),
-                                                        loop=self.loop)
+                sys_logger_task = self.loop.run_in_executor(None, sys_logger.start)
                 sys_logger_task.add_done_callback(on_unhandled_task_exception)
-                self._tasks.append(sys_logger_task)
 
         for c in heralding.capabilities.handlerbase.HandlerBase.__subclasses__():
-
             cap_name = c.__name__.lower()
             if cap_name in self.config['capabilities']:
                 if not self.config['capabilities'][cap_name]['enabled']:
@@ -114,14 +108,16 @@ class Honeypot:
     def stop(self):
         """Stops services"""
 
-        for s in self._servers:
-            s.close()
-            self.loop.run_until_complete(s.wait_closed())
+        for server in self._servers:
+            server.close()
+            self.loop.run_until_complete(server.wait_closed())
 
-        for t in self._tasks:
-            t.cancel()
-            with suppress(asyncio.CancelledError):
-                self.loop.run_until_complete(t)
+        for task in self._tasks:
+            task.cancel()
+            try:
+                self.loop.run_until_complete(task)
+            except asyncio.CancelledError:
+                pass
 
         logger.info('All tasks stopped.')
 

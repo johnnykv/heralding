@@ -66,10 +66,7 @@ class Pop3(HandlerBase):
                 self.send_message(session, writer, '-ERR Unknown command')
             else:
                 func_to_call = getattr(self, 'cmd_{0}'.format(cmd), None)
-                if asyncio.iscoroutinefunction(func_to_call):
-                    return_value = await func_to_call(session, reader, writer, msg)
-                else:
-                    return_value = func_to_call(session, reader, writer, msg)
+                return_value = func_to_call(session, reader, writer, msg)
                 # state changers!
                 if state == 'AUTHORIZATION' or cmd == 'quit':
                     state = return_value
@@ -92,11 +89,11 @@ class Pop3(HandlerBase):
         self.send_message(session, writer, '+OK User accepted')
         return 'AUTHORIZATION'
 
-    async def cmd_pass(self, session, reader, writer, msg):
+    def cmd_pass(self, session, reader, writer, msg):
         if 'USER' not in session.vdata:
             self.send_message(session, writer, '-ERR No username given.')
         else:
-            await session.add_auth_attempt('plaintext', username=session.vdata['USER'], password=msg)
+            session.add_auth_attempt('plaintext', username=session.vdata['USER'], password=msg)
             self.send_message(session, writer, "-ERR Authentication failed.")
 
         if 'USER' in session.vdata:

@@ -79,22 +79,22 @@ class FtpHandler:
                         if cmd not in unauth_cmds:
                             self.respond('503 Login with USER first.')
                             continue
-                    if asyncio.iscoroutinefunction(meth):
-                        await meth(args)
-                    else:
-                        meth(args)
+                    # if asyncio.iscoroutinefunction(meth):
+                    #     await meth(args)
+                    # else:
+                    meth(args)
                     self.state = cmd
 
     def do_USER(self, arg):
         self.user = arg
         self.respond('331 Now specify the Password.')
 
-    async def do_PASS(self, arg):
+    def do_PASS(self, arg):
         if self.state != 'USER':
             self.respond('503 Login with USER first.')
             return
         passwd = arg
-        await self.session.add_auth_attempt('plaintext', username=self.user, password=passwd)
+        self.session.add_auth_attempt('plaintext', username=self.user, password=passwd)
         self.respond('530 Authentication Failed.')
         if self.session.get_number_of_login_attempts() >= self.max_loggins:
             self.stop()

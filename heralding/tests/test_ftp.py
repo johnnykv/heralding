@@ -15,9 +15,6 @@
 
 import asyncio
 import unittest
-import logging
-
-# logging.basicConfig(level=logging.DEBUG)
 
 import ftplib
 from ftplib import FTP
@@ -32,36 +29,32 @@ class FtpTests(unittest.TestCase):
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(None)
 
-        self.reportingRelay = ReportingRelay(self.loop)
-        self.loop.run_until_complete(self.reportingRelay.create_queue())
-        self.reportingRelay = asyncio.ensure_future(self.reportingRelay.start(), loop=self.loop)
+        self.reporting_relay = ReportingRelay()
+        self.loop.run_in_executor(None, self.reporting_relay.start)
 
     def tearDown(self):
+        self.reporting_relay.stop()
+        # We give reporting_relay a chance to be finished
+        self.loop.run_until_complete(asyncio.sleep(0.5, loop=self.loop))
+
         self.server.close()
         self.loop.run_until_complete(self.server.wait_closed())
 
-        all_pending_tasks = asyncio.Task.all_tasks(loop=self.loop)
-        for task in all_pending_tasks:
-            task.cancel()
-            # Now we should await task to execute it's cancellation.
-            # Cancelled task raises asyncio.CancelledError that we can suppress:
-            with suppress(asyncio.CancelledError):
-                self.loop.run_until_complete(task)
         self.loop.close()
 
     def test_login(self):
         """Testing different login combinations"""
 
-        def ftp_login(ftp_client):
+        def ftp_login():
+            ftp_client = FTP()
             ftp_client.connect('127.0.0.1', 8888, 1)
             # expect perm exception
             try:
                 ftp_client.login('james', 'bond')
                 response = ftp_client.getresp()  # NOQA
             except ftplib.error_perm:
-                pass
+                ftp_client.quit()
 
-        ftp_client = FTP()
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test Banner', 'users': {'test': 'test'},
                    'protocol_specific_data': {'max_attempts': 3, 'banner': 'test banner', 'syst_type': 'Test Type'}}
 
@@ -70,5 +63,5 @@ class FtpTests(unittest.TestCase):
         server_coro = asyncio.start_server(ftp_capability.handle_session, '0.0.0.0', 8888, loop=self.loop)
         self.server = self.loop.run_until_complete(server_coro)
 
-        ftp_task = asyncio.ensure_future(self.loop.run_in_executor(None, ftp_login, ftp_client), loop=self.loop)
+        ftp_task = self.loop.run_in_executor(None, ftp_login)
         self.loop.run_until_complete(ftp_task)

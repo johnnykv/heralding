@@ -1,6 +1,3 @@
-import zmq.asyncio as zmqa
+import zmq
 
-zmqa.install()
-
-import asyncio
-zmq_context = zmqa.Context()
+zmq_context = zmq.Context()

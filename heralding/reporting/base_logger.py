@@ -13,10 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import logging
-
 import zmq
-import zmq.asyncio as zmqa
+import logging
 
 import heralding.misc
 from heralding.misc.socket_names import SocketNames
@@ -28,7 +26,7 @@ class BaseLogger:
     def __init__(self):
         self.enabled = True
 
-    async def start(self):
+    def start(self):
         context = heralding.misc.zmq_context
 
         internal_reporting_socket = context.socket(zmq.SUB)
@@ -36,12 +34,12 @@ class BaseLogger:
         internal_reporting_socket.setsockopt(zmq.SUBSCRIBE, b'')
         sample_sock = (internal_reporting_socket, zmq.POLLIN)
 
-        poller = zmqa.Poller()
+        poller = zmq.Poller()
         poller.register(internal_reporting_socket, zmq.POLLIN)
         while self.enabled:
-            socks = await poller.poll(500)
-            if socks and socks[0] == sample_sock:
-                data = await internal_reporting_socket.recv_pyobj()
+            socks = dict(poller.poll(500))
+            if internal_reporting_socket in socks and socks[internal_reporting_socket] == zmq.POLLIN:
+                data = internal_reporting_socket.recv_pyobj()
                 # if None is received, this means that ReportingRelay is going down
                 if not data:
                     self.stop()

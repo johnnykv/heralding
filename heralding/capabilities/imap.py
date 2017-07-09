@@ -104,7 +104,7 @@ class Imap(HandlerBase):
                 if success and credentials.count('\x00') == 2:
                     raw_msg_dec = str(base64.b64decode(raw_msg), 'utf-8')
                     _, user, password = raw_msg_dec.split('\x00')
-                    await session.add_auth_attempt('plaintext', username=user, password=password)
+                    session.add_auth_attempt('plaintext', username=user, password=password)
                     self.send_message(session, writer, tag + ' NO Authentication failed')
                 else:
                     self.send_message(session, writer, tag + ' BAD invalid command')
@@ -118,7 +118,7 @@ class Imap(HandlerBase):
         self.send_message(session, writer, tag + ' OK CAPABILITY completed')
         return 'Not Authenticated'
 
-    async def cmd_login(self, session, reader, writer, tag, args):
+    def cmd_login(self, session, reader, writer, tag, args):
         if args:
             user_cred = args.split(' ', 1)
         else:
@@ -134,7 +134,7 @@ class Imap(HandlerBase):
             user = self.strip_quotes(user_cred[0])
             password = self.strip_quotes(user_cred[1])
 
-        await session.add_auth_attempt('plaintext', username=user, password=password)
+        session.add_auth_attempt('plaintext', username=user, password=password)
         self.send_message(session, writer, tag + ' NO Authentication failed')
         self.stop_if_too_many_attempts(session)
         return 'Not Authenticated'

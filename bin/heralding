@@ -117,9 +117,8 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
 
     # startup reporting relay
-    reporting_relay = heralding.reporting.reporting_relay.ReportingRelay(loop)
-    loop.run_until_complete(reporting_relay.create_queue())
-    reporting_relay_task = asyncio.ensure_future(reporting_relay.start())
+    reporting_relay = heralding.reporting.reporting_relay.ReportingRelay()
+    reporting_relay_task = loop.run_in_executor(None, reporting_relay.start)
     reporting_relay_task.add_done_callback(on_unhandled_task_exception)
 
     honeypot = heralding.honeypot.Honeypot(config, loop)
@@ -133,6 +132,6 @@ if __name__ == '__main__':
     finally:
         reporting_relay.stop()
         honeypot.stop()
-        # We give tasks a time to be finished.
+        # We give reporting_relay a chance to be finished.
         loop.run_until_complete(asyncio.sleep(0.5))
         loop.close()

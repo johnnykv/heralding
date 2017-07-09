@@ -25,21 +25,18 @@ import logging
 from http.server import BaseHTTPRequestHandler
 
 from heralding.capabilities.handlerbase import HandlerBase
-import functools
 
 logger = logging.getLogger(__name__)
 
 
 class BeeHTTPHandler(BaseHTTPRequestHandler):
-    def __init__(self, request, reader, writer, client_address, server, httpsession, options):
+    def __init__(self, request, client_address, server, httpsession, options):
 
         # Had to call parent initializer later, because the methods used
         # in BaseHTTPRequestHandler.__init__() call handle_one_request()
         # which calls the do_* methods here. If _banner, _session and _options
         # are not set, we get a bunch of errors (Undefined reference blah blah)
 
-        self.reader = reader
-        self.writer = writer
         self._options = options
         if 'banner' in self._options:
             self._banner = self._options['banner']
@@ -48,11 +45,6 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
         self._session = httpsession
         super().__init__(request, client_address, server)
         self._session.end_session()
-
-    def flush_headers(self):
-        if hasattr(self, '_headers_buffer'):
-            self.writer.write(b"".join(self._headers_buffer))
-            self._headers_buffer = []
 
     def do_HEAD(self):
         self.send_response(200)
@@ -77,8 +69,8 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
             self._session.add_auth_attempt('plaintext', username=uname, password=pwd)
             self.do_AUTHHEAD()
             headers_bytes = bytes(self.headers['Authorization'], 'utf-8')
-            self.writer.write(headers_bytes)
-            self.writer.write(b'not authenticated')
+            self.wfile.write(headers_bytes)
+            self.wfile.write(b'not authenticated')
         self.request.close()
 
     # Disable logging provided by BaseHTTPServer
@@ -89,11 +81,9 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
 class Http(HandlerBase):
     HandlerClass = BeeHTTPHandler
 
-    def __init__(self, options, loop):
-        super().__init__(options, loop)
+    def __init__(self, options):
+        super().__init__(options)
         self._options = options
 
-    async def execute_capability(self, reader, writer, session):
-        gsocket = writer.get_extra_info('socket')
-        address = writer.get_extra_info('peername')
-        await self.loop.run_in_executor(None, functools.partial(self.HandlerClass, gsocket, reader, writer, address, None, httpsession=session, options=self._options))
+    def execute_capability(self, address, gsocket, session):
+        self.HandlerClass(gsocket, address, None, httpsession=session, options=self._options)
