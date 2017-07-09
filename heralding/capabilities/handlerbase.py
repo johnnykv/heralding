@@ -84,6 +84,8 @@ class HandlerBase:
                                        timeout=self.timeout, loop=self.loop)
             except asyncio.TimeoutError:
                 logger.debug('Session timed out. ({0})'.format(session.id))
+            except BrokenPipeError as err:
+                logger.debug('Unexpected end of session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
             except UnicodeDecodeError:
                 pass
             finally:

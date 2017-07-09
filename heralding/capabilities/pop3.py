@@ -34,18 +34,16 @@ class Pop3(HandlerBase):
         await self._handle_session(session, reader, writer)
 
     async def _handle_session(self, session, reader, writer):
-        self.send_message(session, writer, '+OK POP3 server ready')
+        self.send_message(writer, '+OK POP3 server ready')
 
         state = 'AUTHORIZATION'
         while state != '' and session.connected:
             # An exception is raised inside await reader.readline() in case of
             # sudden connection reset. await.sleep(0) helps to take it out.
-            try:
-                raw_msg = await reader.readline()
-                await asyncio.sleep(0)
-            except (BrokenPipeError, ConnectionResetError):
-                session.end_session()
-                break
+
+            raw_msg = await reader.readline()
+            await asyncio.sleep(0)
+
             raw_msg_str = str(raw_msg, 'utf-8')
 
             session.activity()
@@ -63,7 +61,7 @@ class Pop3(HandlerBase):
             cmd = cmd.lower()
 
             if cmd not in ['user', 'pass', 'quit', 'noop']:
-                self.send_message(session, writer, '-ERR Unknown command')
+                self.send_message(writer, '-ERR Unknown command')
             else:
                 func_to_call = getattr(self, 'cmd_{0}'.format(cmd), None)
                 return_value = func_to_call(session, reader, writer, msg)
@@ -86,7 +84,7 @@ class Pop3(HandlerBase):
     # or: "-ERR No username given."
     def cmd_user(self, session, reader, writer, msg):
         session.vdata['USER'] = msg
-        self.send_message(session, writer, '+OK User accepted')
+        self.send_message(writer, '+OK User accepted')
         return 'AUTHORIZATION'
 
     def cmd_pass(self, session, reader, writer, msg):
@@ -94,23 +92,20 @@ class Pop3(HandlerBase):
             self.send_message(session, writer, '-ERR No username given.')
         else:
             session.add_auth_attempt('plaintext', username=session.vdata['USER'], password=msg)
-            self.send_message(session, writer, "-ERR Authentication failed.")
+            self.send_message(writer, "-ERR Authentication failed.")
 
         if 'USER' in session.vdata:
             del session.vdata['USER']
         return 'AUTHORIZATION'
 
     def cmd_noop(self, session, reader, writer, msg):
-        self.send_message(session, writer, '+OK')
+        self.send_message(writer, '+OK')
 
     def cmd_quit(self, session, reader, writer, msg):
-        self.send_message(session, writer, '+OK Logging out')
+        self.send_message(writer, '+OK Logging out')
         return ''
 
     @staticmethod
-    def send_message(session, writer, msg):
-        try:
-            message_bytes = bytes(msg + "\n", 'utf-8')
-            writer.write(message_bytes)
-        except socket.error:
-            session.end_session()
+    def send_message(writer, msg):
+        message_bytes = bytes(msg + "\n", 'utf-8')
+        writer.write(message_bytes)

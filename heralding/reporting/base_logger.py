@@ -32,7 +32,6 @@ class BaseLogger:
         internal_reporting_socket = context.socket(zmq.SUB)
         internal_reporting_socket.connect(SocketNames.INTERNAL_REPORTING.value)
         internal_reporting_socket.setsockopt(zmq.SUBSCRIBE, b'')
-        sample_sock = (internal_reporting_socket, zmq.POLLIN)
 
         poller = zmq.Poller()
         poller.register(internal_reporting_socket, zmq.POLLIN)

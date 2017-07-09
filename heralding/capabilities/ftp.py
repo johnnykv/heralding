@@ -21,8 +21,6 @@
 # display, publicly perform, sublicense, relicense, and distribute [the] Contributions
 # and such derivative works.
 
-
-import asyncio
 import logging
 
 from heralding.capabilities.handlerbase import HandlerBase
@@ -79,9 +77,6 @@ class FtpHandler:
                         if cmd not in unauth_cmds:
                             self.respond('503 Login with USER first.')
                             continue
-                    # if asyncio.iscoroutinefunction(meth):
-                    #     await meth(args)
-                    # else:
                     meth(args)
                     self.state = cmd
 

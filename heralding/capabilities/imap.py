@@ -45,12 +45,10 @@ class Imap(HandlerBase):
         while state != 'Logout' and session.connected:
             # An exception is raised inside await reader.readline() in case of
             # sudden connection reset. await.sleep(0) helps to take it out.
-            try:
-                raw_msg = await reader.readline()
-                await asyncio.sleep(0)
-            except (BrokenPipeError, ConnectionResetError):
-                session.end_session()
-                break
+
+            raw_msg = await reader.readline()
+            await asyncio.sleep(0)
+
             raw_msg_str = str(raw_msg, 'utf-8')
 
             cmd_msg = raw_msg_str.rstrip().split(' ', 2)

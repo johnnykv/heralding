@@ -3,8 +3,6 @@ import logging
 
 from OpenSSL import crypto
 from Crypto.PublicKey import RSA
-import asyncio
-from contextlib import suppress
 
 logger = logging.getLogger(__name__)
 
