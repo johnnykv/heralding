@@ -13,10 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import asyncio
 import unittest
-
-import gevent
-from gevent.server import StreamServer
 
 from heralding.capabilities.pop3 import Pop3
 from heralding.reporting.reporting_relay import ReportingRelay
@@ -24,62 +22,58 @@ from heralding.reporting.reporting_relay import ReportingRelay
 
 class Pop3Tests(unittest.TestCase):
     def setUp(self):
-        self.reportingRelay = ReportingRelay()
-        self.reportingRelay.start()
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(None)
+
+        self.reporting_relay = ReportingRelay()
+        self.reporting_relay_task = self.loop.run_in_executor(None, self.reporting_relay.start)
 
     def tearDown(self):
-        self.reportingRelay.stop()
+        self.reporting_relay.stop()
+        # We give reporting_relay a chance to be finished
+        self.loop.run_until_complete(self.reporting_relay_task)
 
-    def test_initial_session(self):
-        """Tests if the basic parts of the session is filled correctly"""
+        self.server.close()
+        self.loop.run_until_complete(self.server.wait_closed())
 
-        options = {'port': 110, 'protocol_specific_data': {'max_attempts': 3}}
-        sut = Pop3(options)
-
-        # dont really care about the socket at this point (None...)
-        # TODO: mock the socket!
-        try:
-            sut.handle_session(None, ['192.168.1.200', 12000])
-        except AttributeError:
-            # because socket is not set
-            pass
-
-            # TODO: Bind to SERVER_RELAY and assert that we get messages as expected
-            # self.assertEqual(0, len(sut.sessions))
-            # session = sut.sessions.values()[0]
-            # self.assertEqual('pop3', session.protocol)
-            # self.assertEquals('192.168.1.200', session.source_ip)
-            # self.assertEqual(12000, session.source_port)
+        pending = asyncio.Task.all_tasks(loop=self.loop)
+        for task in pending:
+            task.cancel()
+            try:
+                self.loop.run_until_complete(task)
+            except asyncio.CancelledError:
+                pass
+            
+        self.loop.close()
 
     def test_login(self):
         """Testing different login combinations"""
+        async def pop3_login():
+            login_sequences = [
+                # invalid login, invalid password
+                (('USER wakkwakk', b'+OK User accepted'), ('PASS wakkwakk', b'-ERR Authentication failed.')),
+                # PASS without user
+                (('PASS bond', b'-ERR No username given.'),),
+                # Try to run a TRANSACITON state command in AUTHORIZATION state
+                (('RETR', b'-ERR Unknown command'),),
+            ]
+            for sequence in login_sequences:
+                reader, writer = await asyncio.open_connection('127.0.0.1', 8888,
+                                                               loop=self.loop)
+                # skip banner
+                await reader.readline()
 
-        login_sequences = [
-            # invalid login, invalid password
-            (('USER wakkwakk', '+OK User accepted'), ('PASS wakkwakk', '-ERR Authentication failed.')),
-            # PASS without user
-            (('PASS bond', '-ERR No username given.'),),
-            # Try to run a TRANSACITON state command in AUTHORIZATION state
-            (('RETR', '-ERR Unknown command'),),
-        ]
+                for pair in sequence:
+                    writer.write(bytes(pair[0] + "\r\n", 'utf-8'))
+                    response = await reader.readline()
+                    self.assertEqual(response.rstrip(), pair[1])
 
         options = {'port': 110, 'protocol_specific_data': {'max_attempts': 3}, 'users': {'james': 'bond'}}
-        sut = Pop3(options)
+        sut = Pop3(options, self.loop)
 
-        server = StreamServer(('127.0.0.1', 0), sut.handle_session)
-        server.start()
+        server_coro = asyncio.start_server(sut.handle_session, '0.0.0.0', 8888, loop=self.loop)
+        self.server = self.loop.run_until_complete(server_coro)
 
-        for sequence in login_sequences:
-            client = gevent.socket.create_connection(('127.0.0.1', server.server_port))
+        self.loop.run_until_complete(pop3_login())
 
-            fileobj = client.makefile()
 
-            # skip banner
-            fileobj.readline()
-
-            for pair in sequence:
-                client.sendall(bytes(pair[0] + "\r\n", 'utf-8'))
-                response = fileobj.readline().rstrip()
-                self.assertEqual(response, pair[1])
-
-        server.stop()

@@ -21,7 +21,6 @@
 # display, publicly perform, sublicense, relicense, and distribute [the] Contributions
 # and such derivative works.
 
-
 import logging
 
 from heralding.capabilities.handlerbase import HandlerBase
@@ -34,12 +33,13 @@ TERMINATOR = '\r\n'
 class FtpHandler:
     """Handles a single FTP connection"""
 
-    def __init__(self, conn, session, options):
+    def __init__(self, reader, writer, options, session):
         self.banner = options['protocol_specific_data']['banner']
         self.max_loggins = int(options['protocol_specific_data']['max_attempts'])
         self.syst_type = options['protocol_specific_data']['syst_type']
         self.authenticated = False
-        self.conn = conn
+        self.writer = writer
+        self.reader = reader
         self.serve_flag = True
         self.session = session
         self.respond('220 ' + self.banner)
@@ -47,15 +47,13 @@ class FtpHandler:
         self.state = None
         self.user = None
 
-        self.serve()
-
-    def getcmd(self):
-        cmd = self.conn.recv(512)
+    async def getcmd(self):
+        cmd = await self.reader.readline()
         return str(cmd, 'utf-8')
 
-    def serve(self):
+    async def serve(self):
         while self.serve_flag:
-            resp = self.getcmd()
+            resp = await self.getcmd()
             if not resp:
                 self.stop()
                 break
@@ -107,16 +105,17 @@ class FtpHandler:
     def respond(self, msg):
         msg += TERMINATOR
         msg_bytes = bytes(msg, 'utf-8')
-        self.conn.send(msg_bytes)
+        self.writer.write(msg_bytes)
 
     def stop(self):
         self.session.end_session()
 
 
 class ftp(HandlerBase):
-    def __init__(self, options):
-        super().__init__(options)
+    def __init__(self, options, loop):
+        super().__init__(options, loop)
         self._options = options
 
-    def execute_capability(self, address, gsocket, session):
-        FtpHandler(gsocket, session, self._options)
+    async def execute_capability(self, reader, writer, session):
+        ftp_cap = FtpHandler(reader, writer, self._options, session)
+        await ftp_cap.serve()

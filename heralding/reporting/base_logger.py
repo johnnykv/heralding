@@ -13,11 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import zmq
 import logging
-
-import gevent.event
-import zmq.green as zmq
-from gevent import Greenlet
 
 import heralding.misc
 from heralding.misc.socket_names import SocketNames
@@ -25,13 +22,11 @@ from heralding.misc.socket_names import SocketNames
 logger = logging.getLogger(__name__)
 
 
-class BaseLogger(Greenlet):
+class BaseLogger:
     def __init__(self):
-        super().__init__()
         self.enabled = True
-        self.Ready = gevent.event.Event()
 
-    def _run(self):
+    def start(self):
         context = heralding.misc.zmq_context
 
         internal_reporting_socket = context.socket(zmq.SUB)
@@ -40,7 +35,6 @@ class BaseLogger(Greenlet):
 
         poller = zmq.Poller()
         poller.register(internal_reporting_socket, zmq.POLLIN)
-        self.Ready.set()
         while self.enabled:
             socks = dict(poller.poll(500))
             if internal_reporting_socket in socks and socks[internal_reporting_socket] == zmq.POLLIN:
