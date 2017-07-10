@@ -26,15 +26,16 @@ class Pop3Tests(unittest.TestCase):
         asyncio.set_event_loop(None)
 
         self.reporting_relay = ReportingRelay()
-        self.loop.run_in_executor(None, self.reporting_relay.start)
+        self.reporting_relay_task = self.loop.run_in_executor(None, self.reporting_relay.start)
 
     def tearDown(self):
         self.reporting_relay.stop()
         # We give reporting_relay a chance to be finished
-        self.loop.run_until_complete(asyncio.sleep(1, loop=self.loop))
+        self.loop.run_until_complete(self.reporting_relay_task)
 
         self.server.close()
         self.loop.run_until_complete(self.server.wait_closed())
+
         pending = asyncio.Task.all_tasks(loop=self.loop)
         for task in pending:
             task.cancel()
@@ -42,6 +43,7 @@ class Pop3Tests(unittest.TestCase):
                 self.loop.run_until_complete(task)
             except asyncio.CancelledError:
                 pass
+            
         self.loop.close()
 
     def test_login(self):

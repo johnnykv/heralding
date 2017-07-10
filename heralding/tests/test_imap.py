@@ -29,12 +29,12 @@ class ImapTests(unittest.TestCase):
         asyncio.set_event_loop(None)
 
         self.reporting_relay = ReportingRelay()
-        self.loop.run_in_executor(None, self.reporting_relay.start)
+        self.reporting_relay_task = self.loop.run_in_executor(None, self.reporting_relay.start)
 
     def tearDown(self):
         self.reporting_relay.stop()
         # We give reporting_relay a chance to be finished
-        self.loop.run_until_complete(asyncio.sleep(0.5, loop=self.loop))
+        self.loop.run_until_complete(self.reporting_relay_task)
 
         self.server.close()
         self.loop.run_until_complete(self.server.wait_closed())

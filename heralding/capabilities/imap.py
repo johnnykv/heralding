@@ -13,13 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import socket
 import base64
 import logging
+import asyncio
 import binascii
 
 from heralding.capabilities.handlerbase import HandlerBase
-import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +38,7 @@ class Imap(HandlerBase):
         await self._handle_session(session, reader, writer)
 
     async def _handle_session(self, session, reader, writer,):
-        self.send_message(session, writer, self.banner)
+        self.send_message(writer, self.banner)
 
         state = "Not Authenticated"
         while state != 'Logout' and session.connected:
@@ -55,7 +54,7 @@ class Imap(HandlerBase):
             if len(cmd_msg) == 0:
                 continue
             elif len(cmd_msg) == 1:
-                self.send_message(session, writer, "* BAD invalid command")
+                self.send_message(writer, "* BAD invalid command")
                 continue
             elif len(cmd_msg) == 2:
                 tag = cmd_msg[0]
@@ -68,7 +67,7 @@ class Imap(HandlerBase):
 
             cmd = cmd.lower()
             if cmd not in self.available_commands:
-                self.send_message(session, writer, tag + " BAD invalid command")
+                self.send_message(writer, tag + " BAD invalid command")
             else:
                 func_to_call = getattr(self, 'cmd_{0}'.format(cmd), None)
                 if func_to_call:
@@ -78,7 +77,7 @@ class Imap(HandlerBase):
                         return_value = func_to_call(session, reader, writer, tag, args)
                     state = return_value
                 else:
-                    self.send_message(session, writer, tag + " BAD invalid command")
+                    self.send_message(writer, tag + " BAD invalid command")
         session.end_session()
 
     async def cmd_authenticate(self, session, reader, writer, tag, args):
@@ -86,12 +85,12 @@ class Imap(HandlerBase):
         if len(mechanism) == 1:
             auth_mechanism = mechanism[0].lower()
         else:
-            self.send_message(session, writer, tag + ' BAD invalid command')
+            self.send_message(writer, tag + ' BAD invalid command')
             return "Not Authenticated"
 
         if auth_mechanism in self.available_mechanisms:
             # the space after '+' is needed according to RFC
-            self.send_message(session, writer, '+ ')
+            self.send_message(writer, '+ ')
             raw_msg = await reader.read(512)
 
             if auth_mechanism == 'plain':
@@ -103,24 +102,24 @@ class Imap(HandlerBase):
                     raw_msg_dec = str(base64.b64decode(raw_msg), 'utf-8')
                     _, user, password = raw_msg_dec.split('\x00')
                     session.add_auth_attempt('plaintext', username=user, password=password)
-                    self.send_message(session, writer, tag + ' NO Authentication failed')
+                    self.send_message(writer, tag + ' NO Authentication failed')
                 else:
-                    self.send_message(session, writer, tag + ' BAD invalid command')
+                    self.send_message(writer, tag + ' BAD invalid command')
         else:
-            self.send_message(session, writer, tag + ' BAD invalid command')
+            self.send_message(writer, tag + ' BAD invalid command')
         self.stop_if_too_many_attempts(session)
         return 'Not Authenticated'
 
     def cmd_capability(self, session, reader, writer, tag, args):
-        self.send_message(session, writer, '* CAPABILITY IMAP4rev1 AUTH=PLAIN')
-        self.send_message(session, writer, tag + ' OK CAPABILITY completed')
+        self.send_message(writer, '* CAPABILITY IMAP4rev1 AUTH=PLAIN')
+        self.send_message(writer, tag + ' OK CAPABILITY completed')
         return 'Not Authenticated'
 
     def cmd_login(self, session, reader, writer, tag, args):
         if args:
             user_cred = args.split(' ', 1)
         else:
-            self.send_message(session, writer, tag + ' BAD invalid command')
+            self.send_message(writer, tag + ' BAD invalid command')
             return 'Not Authenticated'
 
         # Delete first and last quote,
@@ -133,17 +132,17 @@ class Imap(HandlerBase):
             password = self.strip_quotes(user_cred[1])
 
         session.add_auth_attempt('plaintext', username=user, password=password)
-        self.send_message(session, writer, tag + ' NO Authentication failed')
+        self.send_message(writer, tag + ' NO Authentication failed')
         self.stop_if_too_many_attempts(session)
         return 'Not Authenticated'
 
     def cmd_logout(self, session, reader, writer, tag, args):
-        self.send_message(session, writer, '* BYE IMAP4rev1 Server logging out')
-        self.send_message(session, writer, tag + ' OK LOGOUT completed')
+        self.send_message(writer, '* BYE IMAP4rev1 Server logging out')
+        self.send_message(writer, tag + ' OK LOGOUT completed')
         return 'Logout'
 
     def cmd_noop(self, session, reader, writer, tag, args):
-        self.send_message(session, writer, tag + ' OK NOOP completed')
+        self.send_message(writer, tag + ' OK NOOP completed')
         return 'Not Authenticated'
 
     def stop_if_too_many_attempts(self, session):
@@ -151,12 +150,9 @@ class Imap(HandlerBase):
             session.end_session()
 
     @staticmethod
-    def send_message(session, writer, msg):
-        try:
-            message_bytes = bytes(msg + CRLF, 'utf-8')
-            writer.write(message_bytes)
-        except socket.error:
-            session.end_session()
+    def send_message(writer, msg):
+        message_bytes = bytes(msg + CRLF, 'utf-8')
+        writer.write(message_bytes)
 
     @staticmethod
     def try_b64decode(b64_str, session):

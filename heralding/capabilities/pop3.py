@@ -13,9 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import logging
-import socket
 import asyncio
+import logging
 
 from heralding.capabilities.handlerbase import HandlerBase
 
@@ -47,7 +46,6 @@ class Pop3(HandlerBase):
             raw_msg_str = str(raw_msg, 'utf-8')
 
             session.activity()
-
             cmd_msg = raw_msg_str.rstrip().split(' ', 1)
             if len(cmd_msg) == 0:
                 continue
@@ -89,7 +87,7 @@ class Pop3(HandlerBase):
 
     def cmd_pass(self, session, reader, writer, msg):
         if 'USER' not in session.vdata:
-            self.send_message(session, writer, '-ERR No username given.')
+            self.send_message(writer, '-ERR No username given.')
         else:
             session.add_auth_attempt('plaintext', username=session.vdata['USER'], password=msg)
             self.send_message(writer, "-ERR Authentication failed.")
