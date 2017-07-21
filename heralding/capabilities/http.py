@@ -22,29 +22,23 @@
 
 import base64
 import logging
-from http.server import BaseHTTPRequestHandler
 
 from heralding.capabilities.handlerbase import HandlerBase
+from heralding.libs.http.aioserver import AsyncBaseHTTPRequestHandler
 
 logger = logging.getLogger(__name__)
 
 
-class BeeHTTPHandler(BaseHTTPRequestHandler):
-    def __init__(self, request, client_address, server, httpsession, options):
-
-        # Had to call parent initializer later, because the methods used
-        # in BaseHTTPRequestHandler.__init__() call handle_one_request()
-        # which calls the do_* methods here. If _banner, _session and _options
-        # are not set, we get a bunch of errors (Undefined reference blah blah)
-
+class BeeHTTPHandler(AsyncBaseHTTPRequestHandler):
+    def __init__(self, reader, writer, httpsession, options):
         self._options = options
         if 'banner' in self._options:
             self._banner = self._options['banner']
         else:
             self._banner = 'Microsoft-IIS/5.0'
         self._session = httpsession
-        super().__init__(request, client_address, server)
-        self._session.end_session()
+        address = writer.get_extra_info('address')
+        super().__init__(reader, writer, address)
 
     def do_HEAD(self):
         self.send_response(200)
@@ -71,7 +65,6 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
             headers_bytes = bytes(self.headers['Authorization'], 'utf-8')
             self.wfile.write(headers_bytes)
             self.wfile.write(b'not authenticated')
-        self.request.close()
 
     # Disable logging provided by BaseHTTPServer
     def log_message(self, format_, *args):
@@ -79,11 +72,11 @@ class BeeHTTPHandler(BaseHTTPRequestHandler):
 
 
 class Http(HandlerBase):
-    HandlerClass = BeeHTTPHandler
-
-    def __init__(self, options):
-        super().__init__(options)
+    def __init__(self, options, loop):
+        super().__init__(options, loop)
         self._options = options
 
-    def execute_capability(self, address, gsocket, session):
-        self.HandlerClass(gsocket, address, None, httpsession=session, options=self._options)
+    async def execute_capability(self, reader, writer, session):
+        http_cap = BeeHTTPHandler(reader, writer, httpsession=session, options=self._options)
+        await http_cap.run()
+        session.end_session()

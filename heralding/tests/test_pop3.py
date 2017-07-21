@@ -17,6 +17,7 @@ import asyncio
 import unittest
 
 from heralding.capabilities.pop3 import Pop3
+from heralding.misc.common import cancel_all_pending_tasks
 from heralding.reporting.reporting_relay import ReportingRelay
 
 
@@ -36,13 +37,7 @@ class Pop3Tests(unittest.TestCase):
         self.server.close()
         self.loop.run_until_complete(self.server.wait_closed())
 
-        pending = asyncio.Task.all_tasks(loop=self.loop)
-        for task in pending:
-            task.cancel()
-            try:
-                self.loop.run_until_complete(task)
-            except asyncio.CancelledError:
-                pass
+        cancel_all_pending_tasks(self.loop)
             
         self.loop.close()
 

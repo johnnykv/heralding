@@ -20,10 +20,9 @@ import os.path
 from Crypto.PublicKey import RSA
 from paramiko import RSAKey
 from paramiko.ssh_exception import SSHException
-from heralding.telnetsrv.paramiko_ssh import SSHHandler
+# from heralding.libs.telnetsrv.paramiko_ssh import SSHHandler
 
 from heralding.capabilities.handlerbase import HandlerBase
-from heralding.capabilities.shared.shell import Commands
 
 logger = logging.getLogger(__name__)
 
@@ -47,12 +46,12 @@ class SSH(HandlerBase):
         SshWrapper(address, None, gsocket, session, self.options, self.key)
 
 
-class BeeTelnetHandler(Commands):
+class BeeTelnetHandler(object): # Commands
     def __init__(self, request, client_address, server, session):
         super().__init__(request, client_address, server, session)
 
 
-class SshWrapper(SSHHandler):
+class SshWrapper(object): # SSHHandler here.
     # reusing telnetsrv stuff
     telnet_handler = BeeTelnetHandler
 

@@ -13,43 +13,49 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import curses
 import logging
 
+
 from heralding.capabilities.handlerbase import HandlerBase
-from heralding.capabilities.shared.shell import Commands
+from heralding.libs.telnetsrv.telnetsrvlib import TelnetHandlerBase
 
 logger = logging.getLogger(__name__)
 
 
 class Telnet(HandlerBase):
-    def __init__(self, options):
-        super().__init__(options)
+    def __init__(self, options, loop):
+        super().__init__(options, loop)
         TelnetWrapper.max_tries = int(self.options['protocol_specific_data']['max_attempts'])
 
-    def execute_capability(self, address, gsocket, session):
-        TelnetWrapper(address, None, gsocket, session)
+    async def execute_capability(self, reader, writer, session):
+        telnet_cap = TelnetWrapper(reader, writer, session, self.loop)
+        await telnet_cap.run()
 
 
-class TelnetWrapper(Commands):
+class TelnetWrapper(TelnetHandlerBase):
     """
     Wraps the telnetsrv module to fit the Honeypot architecture.
     """
     PROMPT = b'$ '
+    max_tries = 3
+    TERM = 'ansi'
 
-    def __init__(self, client_address, server, _socket, session):
-        self.session = session
+    authNeedUser = True
+    authNeedPass = True
+
+    def __init__(self, reader, writer, session, loop):
         self.auth_count = 0
         self.username = None
-        self.sock = _socket
-        request = TelnetWrapper.false_request()
-        request._sock = _socket
-        super().__init__(request, client_address, server, self.session)
+        self.session = session
+        address = writer.get_extra_info('address')
+        super().__init__(reader, writer, address, loop)
 
-    def authentication_ok(self):
+    async def authentication_ok(self):
         while self.auth_count < TelnetWrapper.max_tries:
-            username = self.readline(prompt=b"Username: ", use_history=False)
-            password = self.readline(echo=False, prompt=b"Password: ", use_history=False)
+            username = await self.readline(prompt=b"Username: ", use_history=False)
+            password = await self.readline(echo=False, prompt=b"Password: ", use_history=False)
             self.session.add_auth_attempt(_type='plaintext', username=str(username, 'utf-8'),
                                           password=str(password, 'utf-8'))
             if self.DOECHO:

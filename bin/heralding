@@ -19,7 +19,6 @@ import logging
 import logging.handlers
 import os, pwd, grp, yaml, sys
 from argparse import ArgumentParser
-import paramiko
 
 import heralding
 import heralding.honeypot
@@ -35,9 +34,6 @@ def setup_logging(logfile, verbose):
     :param logfile: Path of the file to write logs to.
     :param verbose: If True, enables verbose logging.
     """
-
-    logging.getLogger("paramiko").setLevel(logging.ERROR)
-
     root_logger = logging.getLogger()
 
     default_formatter = logging.Formatter('%(asctime)-15s (%(name)s) %(message)s')

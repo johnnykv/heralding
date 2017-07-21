@@ -19,10 +19,10 @@ import sys
 import logging
 import asyncio
 
+import heralding.misc.common as common
 import heralding.capabilities.handlerbase
 from heralding.reporting.file_logger import FileLogger
 from heralding.reporting.syslog_logger import SyslogLogger
-from heralding.misc.common import on_unhandled_task_exception, generate_self_signed_cert
 
 from ipify import get_ip
 
@@ -40,7 +40,6 @@ class Honeypot:
         self.loop = loop
         self.config = config
         self._servers = []
-        self._tasks = []
 
     async def _record_and_lookup_public_ip(self):
         while True:
@@ -56,9 +55,7 @@ class Honeypot:
         """ Starts services. """
 
         if 'public_ip_as_destination_ip' in self.config and self.config['public_ip_as_destination_ip'] is True:
-            _record_and_lookup_public_ip_task = asyncio.ensure_future(self._record_and_lookup_public_ip(),
-                                                                      loop=self.loop)
-            self._tasks.append(_record_and_lookup_public_ip_task)
+            asyncio.ensure_future(self._record_and_lookup_public_ip(), loop=self.loop)
 
         # start activity logging
         if 'activity_logging' in self.config:
@@ -66,12 +63,12 @@ class Honeypot:
                 log_file = self.config['activity_logging']['file']['filename']
                 file_logger = FileLogger(log_file)
                 file_logger_task = self.loop.run_in_executor(None, file_logger.start)
-                file_logger_task.add_done_callback(on_unhandled_task_exception)
+                file_logger_task.add_done_callback(common.on_unhandled_task_exception)
 
             if 'syslog' in self.config['activity_logging'] and self.config['activity_logging']['syslog']['enabled']:
                 sys_logger = SyslogLogger()
                 sys_logger_task = self.loop.run_in_executor(None, sys_logger.start)
-                sys_logger_task.add_done_callback(on_unhandled_task_exception)
+                sys_logger_task.add_done_callback(common.on_unhandled_task_exception)
 
         for c in heralding.capabilities.handlerbase.HandlerBase.__subclasses__():
             cap_name = c.__name__.lower()
@@ -112,12 +109,7 @@ class Honeypot:
             server.close()
             self.loop.run_until_complete(server.wait_closed())
 
-        for task in self._tasks:
-            task.cancel()
-            try:
-                self.loop.run_until_complete(task)
-            except asyncio.CancelledError:
-                pass
+        common.cancel_all_pending_tasks(self.loop)
 
         logger.info('All tasks stopped.')
 
@@ -135,8 +127,8 @@ class Honeypot:
             valid_days = int(cert_dict['valid_days'])
             serial_number = int(cert_dict['serial_number'])
 
-            cert, key = generate_self_signed_cert(cert_country, cert_state, cert_org, cert_locality, cert_org_unit,
-                                                  cert_cn, valid_days, serial_number)
+            cert, key = common.generate_self_signed_cert(cert_country, cert_state, cert_org, cert_locality,
+                                                         cert_org_unit, cert_cn, valid_days, serial_number)
             with open(pem_file, 'wb') as _pem_file:
                 _pem_file.write(cert)
                 _pem_file.write(key)

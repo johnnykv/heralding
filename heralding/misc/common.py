@@ -1,5 +1,6 @@
 import sys
 import logging
+import asyncio
 
 from OpenSSL import crypto
 from Crypto.PublicKey import RSA
@@ -13,6 +14,16 @@ def on_unhandled_task_exception(task):
         if task_exc:
             logger.error('Stopping because {0} died: {1}'.format(task, task_exc))
             sys.exit(1)
+
+
+def cancel_all_pending_tasks(loop):
+    pending = asyncio.Task.all_tasks(loop=loop)
+    for task in pending:
+        task.cancel()
+        try:
+            loop.run_until_complete(task)
+        except asyncio.CancelledError:
+            pass
 
 
 def generate_self_signed_cert(cert_country, cert_state, cert_organization, cert_locality, cert_organizational_unit,
