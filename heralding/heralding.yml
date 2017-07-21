@@ -23,7 +23,7 @@ capabilities:
       syst_type: "Windows-NT"
 
   telnet:
-    enabled: true
+    enabled: false
     port: 23
     timeout: 30
     protocol_specific_data:
@@ -84,21 +84,21 @@ capabilities:
         serial_number: 0
 
   ssh:
-    enabled: true
+    enabled: false
     port: 22
     timeout: 30
     protocol_specific_data:
       banner: "SSH-2.0-OpenSSH_6.6.1p1 Ubuntu-2ubuntu2.8"
 
   http:
-    enabled: true
+    enabled: false
     port: 80
     timeout: 30
     protocol_specific_data:
       banner: ""
 
   https:
-    enabled: true
+    enabled: false
     port: 443
     timeout: 30
     protocol_specific_data:
@@ -117,7 +117,7 @@ capabilities:
         serial_number: 0
 
   smtp:
-    enabled: true
+    enabled: false
     port: 25
     timeout: 30
     protocol_specific_data:

@@ -14,21 +14,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import gevent
-import gevent.monkey
-
-gevent.monkey.patch_all()
-
+import asyncio
 import logging
 import logging.handlers
-import os, pwd, grp, yaml, platform, sys
-from gevent import Greenlet
+import os, pwd, grp, yaml, sys
 from argparse import ArgumentParser
+import paramiko
 
 import heralding
 import heralding.honeypot
 import heralding.reporting.reporting_relay
-from heralding.misc.common import on_unhandled_greenlet_exception
+from heralding.misc.common import on_unhandled_task_exception
 
 logger = logging.getLogger()
 
@@ -39,6 +35,9 @@ def setup_logging(logfile, verbose):
     :param logfile: Path of the file to write logs to.
     :param verbose: If True, enables verbose logging.
     """
+
+    logging.getLogger("paramiko").setLevel(logging.ERROR)
+
     root_logger = logging.getLogger()
 
     default_formatter = logging.Formatter('%(asctime)-15s (%(name)s) %(message)s')
@@ -65,9 +64,11 @@ def setup_logging(logfile, verbose):
     file_log.setLevel(loglevel)
     root_logger.addHandler(file_log)
 
+
 def break_if_python_not_supported():
-    if sys.version_info[0:2] < (3,5):
+    if sys.version_info[0:2] < (3, 5):
         raise Exception("Wrong python version! Your Python interpreter must be 3.5.0 or above!")
+
 
 class LogFilter(logging.Filter):
     def filter(self, rec):
@@ -117,14 +118,24 @@ if __name__ == '__main__':
     with open(config_file, "r") as _file:
         config = yaml.safe_load(_file.read())
 
+    loop = asyncio.get_event_loop()
+
     # startup reporting relay
-    reporting_relay_greenlet = heralding.reporting.reporting_relay.ReportingRelay()
-    reporting_relay_greenlet.link_exception(on_unhandled_greenlet_exception)
-    reporting_relay_greenlet.start()
+    reporting_relay = heralding.reporting.reporting_relay.ReportingRelay()
+    reporting_relay_task = loop.run_in_executor(None, reporting_relay.start)
+    reporting_relay_task.add_done_callback(on_unhandled_task_exception)
 
-    honeypot = heralding.honeypot.Honeypot(config)
-    drone_greenlet = Greenlet.spawn(honeypot.start)
-    honeypot.blokUntilReadyForDroppingPrivs()
+    honeypot = heralding.honeypot.Honeypot(config, loop)
+    honeypot.start()
+
     drop_privileges()
-
-    gevent.wait([drone_greenlet, ])
+    try:
+        loop.run_forever()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        reporting_relay.stop()
+        honeypot.stop()
+        # We give reporting_relay a chance to be finished.
+        loop.run_until_complete(asyncio.sleep(0.5))
+        loop.close()

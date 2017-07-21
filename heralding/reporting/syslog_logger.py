@@ -15,6 +15,7 @@
 
 import syslog
 import logging
+
 from heralding.reporting.base_logger import BaseLogger
 
 logger = logging.getLogger(__name__)
