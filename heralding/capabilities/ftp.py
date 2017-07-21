@@ -22,7 +22,7 @@
 # and such derivative works.
 
 import logging
-
+import asyncio
 from heralding.capabilities.handlerbase import HandlerBase
 
 logger = logging.getLogger(__name__)
@@ -114,6 +114,7 @@ class FtpHandler:
 class ftp(HandlerBase):
     def __init__(self, options, loop):
         super().__init__(options, loop)
+        self.loop = loop
         self._options = options
 
     async def execute_capability(self, reader, writer, session):

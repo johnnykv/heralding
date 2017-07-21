@@ -22,16 +22,11 @@
 # and such derivative works.
 
 
-import asynchat
-import asyncore
-import base64
+
 import logging
-import mailbox
-import random
-import smtpd
-import time
-import binascii
-from smtpd import NEWLINE
+from base64 import b64decode
+
+from aiosmtpd.smtp import SMTP, MISSING, syntax
 
 from heralding.capabilities.handlerbase import HandlerBase
 
@@ -39,250 +34,76 @@ EMPTYSTRING = ""
 logger = logging.getLogger(__name__)
 
 
-class SMTPChannel(smtpd.SMTPChannel):
-    def __init__(self, smtp_server, newsocket, fromaddr,
-                 smtp_map=None, session=None, opts=None):
-        self.options = opts
-        # A sad hack because SMTPChannel doesn't
-        # allow custom banners, and sends it's own through its
-        # __init__() method. When the initflag is False,
-        # the push() method is effectively disabled, so the
-        # superclass banner is not sent.
-        self._initflag = False
-        self.banner = self.options['protocol_specific_data']['banner']
-
-        # States
-        self.login_pass_authenticating = False
-        self.login_uname_authenticating = False
-        self.plain_authenticating = False
-        self.cram_authenticating = False
-
-        self.username = None
-        self.password = None
-        self.digest = None
-
-        self.sent_cram_challenge = None
+class SMTPHandler(SMTP):
+    def __init__(self, reader, writer, options, session):
+        super().__init__(None)
+        self.transport = writer
+        self._writer = writer
+        self._reader = reader
         self.session = session
-        self.options = opts
+        self.session.extended_smtp = None
+        self.session.host_name = None
+        self.max_tries = int(options['protocol_specific_data']['max_attempts'])
+        self.banner = options['protocol_specific_data']['banner']
 
-        super().__init__(smtp_server, newsocket, fromaddr)
-        asynchat.async_chat.__init__(self, newsocket, map=smtp_map)
+    @syntax('HELO hostname')
+    async def smtp_EHLO(self, hostname):
+        await super().smtp_EHLO(hostname)
+        await self.push('250-AUTH PLAIN')
 
-        # Now we set the initflag, so that push() will work again.
-        # And we push.
-        self._initflag = True
-        self.push("220 {0}".format(self.banner))
-
-    def push(self, msg):
-        # Only send data after superclass initialization
-        if self._initflag:
-            transmit_msg = msg + '\r\n'
-            transmit_msg_bytes = bytes(transmit_msg, 'utf-8')
-            asynchat.async_chat.push(self, transmit_msg_bytes)
-
-    def close_quit(self):
-        self.close_when_done()
-        self.handle_close()
-
-    def smtp_QUIT(self, arg):
-        self.push('221 Bye')
-        self.close_when_done()
-        self.close_quit()
-
-    def collect_incoming_data(self, data):
-        self.received_lines.append(data)
-
-    def smtp_EHLO(self, arg):
+    @syntax("AUTH [METHOD]")
+    async def smtp_AUTH(self, arg):
+        if not self.session.host_name:
+            await self.push('503 Error: send EHLO first')
+            return
         if not arg:
-            self.push('501 Syntax: HELO/EHLO hostname')
+            await self.push('500 Not enough value')
             return
-        if self.seen_greeting:
-            self.push('503 Duplicate HELO/EHLO')
-        else:
-            self.push('250-{0} Hello {1}'.format(self.banner, arg))
-            self.push('250-AUTH PLAIN LOGIN CRAM-MD5')
-            self.push('250 EHLO')
-
-    def try_b64decode(self, arg):
-        try:
-            result = base64.b64decode(arg)
-            return True, str(result, 'utf-8', 'ignore')
-        except TypeError:
-            logger.warning('Error decoding base64: {0} ({1})'.format(binascii.hexlify(arg), self.session.id))
-            return False, ''
-
-    def smtp_AUTH(self, arg):
-        if (self.plain_authenticating and self.login_pass_authenticating and
-                self.cram_authenticating):
-            self.push('503 Bad sequence of commands')
-            self.close_quit()
-
-        if self.cram_authenticating:
-            self.cram_authenticating = False
-            success, cred = self.try_b64decode(arg)
-            if self.sent_cram_challenge is None or not success or ' ' not in cred:
-                self.push('451 Internal confusion')
-                return
-            self.username, self.digest = cred.split()
-            self.session.add_auth_attempt('cram_md5', username=self.username, digest=self.digest,
-                                          challenge=self.sent_cram_challenge)
-            self.push('535 authentication failed')
-            self.close_quit()
-
-        elif self.login_uname_authenticating:
-            self.login_uname_authenticating = False
-            success, self.username = self.try_b64decode(arg)
-            if success:
-                self.push('334 ' + str(base64.b64encode(b'Password:'), 'utf-8'))
-                self.login_pass_authenticating = True
+        args = arg.split(' ')
+        if len(args) > 2:
+            await self.push('500 Too many values')
             return
-
-        elif self.login_pass_authenticating:
-            self.login_pass_authenticating = False
-            success, self.password = self.try_b64decode(arg)
-            if success:
-                self.session.add_auth_attempt('plaintext', username=self.username, password=self.password)
-
-            self.push('535 authentication failed')
-            self.close_quit()
-
-        elif self.plain_authenticating:
-            self.plain_authenticating = False
-            # Our arg will ideally be the username/password
-            success, credentials = self.try_b64decode(arg)
-            if success and '\x00' in credentials:
-                arg_decoded = str(base64.b64decode(arg), 'utf-8')
-                _, self.username, self.password = arg_decoded.split('\x00')
-                self.session.add_auth_attempt('plaintext', username=self.username, password=self.password)
-            self.push('535 authentication failed')
-            self.close_quit()
-
-        elif 'PLAIN' in arg:
-            self.plain_authenticating = True
-            try:
-                _, param = arg.split()
-            except ValueError:
-                # We need to get the credentials now since client has not sent
-                # them. The space after the 334 is important as said in the RFC
-                self.push("334 ")
+        status = await self._call_handler_hook('AUTH', args)
+        if status is MISSING:
+            method = args[0]
+            if method != 'PLAIN':
+                await self.push('500 PLAIN method or die')
                 return
-            success, credentials = self.try_b64decode(arg)
-            if success and '\x00' in credentials:
-                param_decoded = str(base64.b64decode(param), 'utf-8')
-                _, self.username, self.password = param_decoded.split('\x00')
-                self.session.add_auth_attempt('plaintext', username=self.username, password=self.password)
-            self.push('535 authentication failed')
-            self.close_quit()
-
-        elif 'LOGIN' in arg:
-            param = arg.split()
-            if len(param) > 1:
-                self.username = str(base64.b64decode(param[1]), 'utf-8')
-                self.push('334 ' + str(base64.b64encode(b'Password:'), 'utf-8'))
-                self.login_pass_authenticating = True
-                return
+            blob = None
+            if len(args) == 1:
+                await self.push('334 ')  # wait client login/password
+                line = await self._reader.readline()
+                blob = line.strip()
+                if blob.decode() == '*':
+                    await self.push("501 Auth aborted")
+                    return
             else:
-                self.push('334 ' + str(base64.b64encode(b'Username:'), 'utf-8'))
-                self.login_uname_authenticating = True
-                return
+                blob = args[1].encode()
 
-        elif 'CRAM-MD5' in arg:
-            self.cram_authenticating = True
-            r = random.randint(5000, 20000)
-            t = int(time.time())
-
-            # challenge is of the form '<24609.1047914046@awesome.host.com>'
-            self.sent_cram_challenge = "<" + str(r) + "." + str(t) + "@" + self.fqdn + ">"
-            cram_challenge_bytes = bytes(self.sent_cram_challenge, 'utf-8')
-            self.push("334 " + str(base64.b64encode(cram_challenge_bytes), 'utf-8'))
-            return
-
-    # This code is taken directly from the underlying smtpd.SMTPChannel
-    # support for AUTH is added.
-    def found_terminator(self):
-        line = EMPTYSTRING.join(str(self.received_lines[0], 'utf-8'))
-        self.received_lines = []
-        if self.smtp_state == self.COMMAND:
-            if not line:
-                self.push('500 Error: bad syntax')
-                return
-            method = None
-            i = line.find(' ')
-
-            if (self.login_uname_authenticating or
-                    self.login_pass_authenticating or
-                    self.plain_authenticating or
-                    self.cram_authenticating):
-                # If we are in an authenticating state, call the
-                # method smtp_AUTH.
-                arg = line.strip()
-                command = 'AUTH'
-            elif i < 0:
-                command = line.upper()
-                arg = None
+            if blob == b'=':
+                login = None
+                password = None
             else:
-                command = line[:i].upper()
-                arg = line[i+1:].strip()
-            # White list of operations that are allowed prior to AUTH.
-            if command not in ['AUTH', 'EHLO', 'HELO', 'NOOP', 'RSET', 'QUIT']:
-                self.push('530 Authentication required')
-                self.close_quit()
-                return
-
-            method = getattr(self, 'smtp_' + command, None)
-            if not method:
-                self.push('502 Error: command "{0}" not implemented'.format(command))
-                return
-            method(arg)
-            return
-        else:
-            if self.smtp_state != self.DATA:
-                self.push('451 Internal confusion')
-                return
-                # Remove extraneous carriage returns and de-transparency according
-            # to RFC 821, Section 4.5.2.
-            data = []
-            for text in line.split('\r\n'):
-                if text and text[0] == '.':
-                    data.append(text[1:])
-                else:
-                    data.append(text)
-            self.received_data = NEWLINE.join(data)
-            status = self.smtp_server.process_message(
-                self.peer,
-                self.mailfrom,
-                self.rcpttos,
-                self.received_data
-            )
-            self.rcpttos = []
-            self.mailfrom = None
-            self.smtp_state = self.COMMAND
-            self.set_terminator('\r\n')
-            if not status:
-                self.push('250 Ok')
-            else:
-                self.push(status)
-
-
-class DummySMTPServer:
-    def __init__(self):
-        self.mboxpath = None
-
-    def process_message(self, peer, mailfrom, rcpttos, data):
-        logging.info('Got new mail, peer ({0}), from ({1}), to ({2})'.format(peer, mailfrom, rcpttos))
-        if self.mboxpath is not None:
-            mbox = mailbox.mbox(self.mboxpath, create=True)
-            mbox.add(data)
+                try:
+                    loginpassword = b64decode(blob, validate=True)
+                except Exception:
+                    await self.push("501 Can't decode base64")
+                    return
+                try:
+                    _, login, password = loginpassword.split(b"\x00")
+                except ValueError:  # not enough args
+                    await self.push("500 Can't split auth value")
+                    return
+                self.session.add_auth_attempt('PLAIN', username=str(login, 'utf-8'), password=str(password, 'utf-8'))
+                status = '535 Authentication credentials invalid'
+        await self.push(status)
 
 
 class smtp(HandlerBase):
-    def __init__(self, options):
-        super().__init__(options)
+    def __init__(self, options, loop):
+        super().__init__(options, loop)
         self._options = options
 
-    def execute_capability(self, address, gsocket, session):
-        local_map = {}
-        server = DummySMTPServer()
-        SMTPChannel(server, gsocket, address, session=session,
-                    smtp_map=local_map, opts=self._options)
-        asyncore.loop(map=local_map)
+    async def execute_capability(self, reader, writer, session):
+        smtp_cap = SMTPHandler(reader, writer, self._options, session)
+        await smtp_cap._handle_client()
