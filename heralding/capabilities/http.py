@@ -29,7 +29,7 @@ from heralding.libs.http.aioserver import AsyncBaseHTTPRequestHandler
 logger = logging.getLogger(__name__)
 
 
-class BeeHTTPHandler(AsyncBaseHTTPRequestHandler):
+class HTTPHandler(AsyncBaseHTTPRequestHandler):
     def __init__(self, reader, writer, httpsession, options):
         self._options = options
         if 'banner' in self._options:
@@ -77,6 +77,6 @@ class Http(HandlerBase):
         self._options = options
 
     async def execute_capability(self, reader, writer, session):
-        http_cap = BeeHTTPHandler(reader, writer, httpsession=session, options=self._options)
+        http_cap = HTTPHandler(reader, writer, httpsession=session, options=self._options)
         await http_cap.run()
         session.end_session()

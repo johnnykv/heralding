@@ -26,7 +26,7 @@
 import logging
 from base64 import b64decode
 
-from aiosmtpd.smtp import SMTP, syntax, MISSING
+from aiosmtpd.smtp import SMTP, MISSING, syntax
 
 from heralding.capabilities.handlerbase import HandlerBase
 
@@ -43,9 +43,10 @@ class SMTPHandler(SMTP):
         self.session = session
         self.session.extended_smtp = None
         self.session.host_name = None
-        # self.max_tries = int(options['protocol_specific_data']['max_attempts'])
+        self.max_tries = int(options['protocol_specific_data']['max_attempts'])
         self.banner = options['protocol_specific_data']['banner']
 
+    @syntax('HELO hostname')
     async def smtp_EHLO(self, hostname):
         await super().smtp_EHLO(hostname)
         await self.push('250-AUTH PLAIN')
@@ -102,7 +103,6 @@ class smtp(HandlerBase):
     def __init__(self, options, loop):
         super().__init__(options, loop)
         self._options = options
-        self.loop = loop
 
     async def execute_capability(self, reader, writer, session):
         smtp_cap = SMTPHandler(reader, writer, self._options, session)
