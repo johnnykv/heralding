@@ -79,7 +79,6 @@ class HandlerBase:
                 'been reached'.format(protocol, self.port, *address))
         else:
             session = self.create_session(address)
-            session.peer = address
             try:
                 await asyncio.wait_for(self.execute_capability(reader, writer, session),
                                        timeout=self.timeout, loop=self.loop)
