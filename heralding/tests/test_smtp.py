@@ -81,6 +81,7 @@ class SmtpTests(unittest.TestCase):
             smtp_ = smtplib.SMTP('127.0.0.1', 8888, local_hostname='localhost', timeout=15)
             _, resp = smtp_.docmd('AUTH', 'CRAM-MD5')
             code, resp = smtp_.docmd(encode_cram_md5(resp, b'test', b'test'))
+            smtp_.quit()
             # For now, the server's going to return a 535 code.
             self.assertEqual(code, 535)
 
@@ -102,6 +103,7 @@ class SmtpTests(unittest.TestCase):
             smtp_ = smtplib.SMTP('127.0.0.1', 8888, local_hostname='localhost', timeout=15)
             arg = bytes('\0{0}\0{1}'.format('test', 'test'), 'utf-8')
             code, resp = smtp_.docmd('AUTH', 'PLAIN ' + str(base64.b64encode(arg), 'utf-8'))
+            smtp_.quit()
             self.assertEqual(code, 535)
 
         options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'Test'},
@@ -124,6 +126,7 @@ class SmtpTests(unittest.TestCase):
             smtp_.docmd('AUTH', 'LOGIN')
             smtp_.docmd(str(base64.b64encode(b'test'), 'utf-8'))
             code, resp = smtp_.docmd(str(base64.b64encode(b'test'), 'utf-8'))
+            smtp_.quit()
             self.assertEqual(code, 535)
 
         options = {'enabled': 'True', 'port': 0, 'protocol_specific_data': {'banner': 'Test'},
