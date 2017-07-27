@@ -122,3 +122,4 @@ capabilities:
     timeout: 30
     protocol_specific_data:
       banner: "Microsoft ESMTP MAIL service ready"
+      fqdn: ""

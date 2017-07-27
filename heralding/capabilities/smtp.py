@@ -34,10 +34,13 @@ from aiosmtpd.smtp import SMTP, MISSING, syntax
 from heralding.capabilities.handlerbase import HandlerBase
 
 log = logging.getLogger(__name__)
+log.setLevel(logging.WARNING)  # Disable internal aiosmtpd logger
 aiosmtpd.smtp.log = log
 
 
 class SMTPHandler(SMTP):
+    fqdn = ''
+
     def __init__(self, reader, writer, session, options, loop):
         self.banner = options['protocol_specific_data']['banner']
         super().__init__(None, hostname=self.banner, loop=loop)
@@ -46,7 +49,6 @@ class SMTPHandler(SMTP):
         self._reader = reader
         self._writer = writer
         self.transport = writer
-        self.fqdn = socket.getfqdn()
 
         self._set_rset_state()
         self.session = session
@@ -63,97 +65,6 @@ class SMTPHandler(SMTP):
             await self._writer.drain()
         except ConnectionResetError:
             self.stop()
-
-    async def _handle_client(self):
-        log.debug('%r handling connection', self.session.peer)
-        await self.push('220 {} {}'.format(self.hostname, self.__ident__))
-        while self.transport is not None:   # pragma: nobranch
-            # XXX Put the line limit stuff into the StreamReader?
-            try:
-                try:
-                    line = await self._reader.readline()
-                except ConnectionResetError:
-                    self.transport.close()
-                    break
-                log.debug('_handle_client readline: %s', line)
-                # XXX this rstrip may not completely preserve old behavior.
-                line = line.rstrip(b'\r\n')
-                log.debug('%r Data: %s', self.session.peer, line)
-                if not line:
-                    await self.push('500 Error: bad syntax')
-                    continue
-                i = line.find(b' ')
-                # Decode to string only the command name part, which must be
-                # ASCII as per RFC.  If there is an argument, it is decoded to
-                # UTF-8/surrogateescape so that non-UTF-8 data can be
-                # re-encoded back to the original bytes when the SMTP command
-                # is handled.
-                if i < 0:
-                    command = line.upper().decode(encoding='ascii')
-                    arg = None
-                else:
-                    command = line[:i].upper().decode(encoding='ascii')
-                    arg = line[i+1:].strip()
-                    # Remote SMTP servers can send us UTF-8 content despite
-                    # whether they've declared to do so or not.  Some old
-                    # servers can send 8-bit data.  Use surrogateescape so
-                    # that the fidelity of the decoding is preserved, and the
-                    # original bytes can be retrieved.
-                    if self.enable_SMTPUTF8:
-                        arg = str(
-                            arg, encoding='utf-8', errors='surrogateescape')
-                    else:
-                        try:
-                            arg = str(arg, encoding='ascii', errors='strict')
-                        except UnicodeDecodeError:
-                            # This happens if enable_SMTPUTF8 is false, meaning
-                            # that the server explicitly does not want to
-                            # accept non-ASCII, but the client ignores that and
-                            # sends non-ASCII anyway.
-                            await self.push('500 Error: strict ASCII mode')
-                            # Should we await self.handle_exception()?
-                            continue
-                max_sz = (self.command_size_limits[command]
-                          if self.session.extended_smtp
-                          else self.command_size_limit)
-                if len(line) > max_sz:
-                    await self.push('500 Error: line too long')
-                    continue
-                if not self._tls_handshake_okay and command != 'QUIT':
-                    await self.push(
-                        '554 Command refused due to lack of security')
-                    continue
-                if (self.require_starttls
-                        and not self._tls_protocol
-                        and command not in ['EHLO', 'STARTTLS', 'QUIT']):
-                    # RFC3207 part 4
-                    await self.push('530 Must issue a STARTTLS command first')
-                    continue
-                method = getattr(self, 'smtp_' + command, None)
-                if method is None:
-                    await self.push(
-                        '500 Error: command "%s" not recognized' % command)
-                    continue
-                await method(arg)
-            except asyncio.CancelledError:
-                # The connection got reset during the DATA command.
-                # XXX If handler method raises ConnectionResetError, we should
-                # verify that it was actually self._reader that was reset.
-                log.debug('Connection lost during _handle_client()')
-                self._writer.close()
-                raise
-            except Exception as error:
-                try:
-                    status = await self.handle_exception(error)
-                    await self.push(status)
-                except Exception as error:
-                    try:
-                        log.exception('Exception in handle_exception()')
-                        status = '500 Error: ({}) {}'.format(
-                            error.__class__.__name__, str(error))
-                    except Exception:
-                        status = '500 Error: Cannot describe error'
-                    await self.push(status)
 
     @syntax("AUTH mechanism [initial-response]")
     async def smtp_AUTH(self, arg):
@@ -246,15 +157,6 @@ class SMTPHandler(SMTP):
             await self.push('221 Bye' if status is MISSING else status)
             self.stop()
 
-    async def readline(self):
-        line = b''
-        try:
-            line = await self._reader.readline()
-        except ConnectionResetError:
-            self.stop()
-        else:
-            return line
-
     def stop(self):
         self.transport.close()
         self.transport = None
@@ -267,5 +169,18 @@ class smtp(HandlerBase):
         self._options = options
 
     async def execute_capability(self, reader, writer, session):
+        asyncio.ensure_future(self.setfqdn(), loop=self.loop)
+
         smtp_cap = SMTPHandler(reader, writer, session, self._options, self.loop)
-        await smtp_cap._handle_client()
+        task = asyncio.ensure_future(smtp_cap._handle_client(), loop=self.loop)
+
+        await task
+
+    async def setfqdn(self):
+        if 'fqdn' in self._options['protocol_specific_data'] and self._options['protocol_specific_data']['fqdn']:
+            SMTPHandler.fqdn = self._options['protocol_specific_data']['fqdn']
+        else:
+            while True:
+                fqdn = await self.loop.run_in_executor(None, socket.getfqdn)
+                SMTPHandler.fqdn = fqdn
+                await asyncio.sleep(1800, loop=self.loop)
