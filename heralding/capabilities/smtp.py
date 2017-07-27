@@ -157,6 +157,15 @@ class SMTPHandler(SMTP):
             await self.push('221 Bye' if status is MISSING else status)
             self.stop()
 
+    async def readline(self):
+        line = b''
+        try:
+            line = await self._reader.readline()
+        except ConnectionResetError:
+            self.stop()
+        else:
+            return line
+
     def stop(self):
         self.transport.close()
         self.transport = None
