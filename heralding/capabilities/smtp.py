@@ -69,7 +69,7 @@ class SMTPHandler(SMTP):
     @syntax("AUTH mechanism [initial-response]")
     async def smtp_AUTH(self, arg):
         if not arg:
-            await self.push('500 Not enough value')
+            await self.push('500 Not enough values')
             return
         args = arg.split()
         if len(args) > 2:
@@ -127,7 +127,7 @@ class SMTPHandler(SMTP):
             t = int(time.time())
 
             # challenge is of the form '<24609.1047914046@awesome.host.com>'
-            self.sent_cram_challenge = "<" + str(r) + "." + str(t) + "@" + self.fqdn + ">"
+            self.sent_cram_challenge = "<" + str(r) + "." + str(t) + "@" + SMTPHandler.fqdn + ">"
             cram_challenge_bytes = bytes(self.sent_cram_challenge, 'utf-8')
             await self.push("334 " + str(base64.b64encode(cram_challenge_bytes), 'utf-8'))
 
@@ -140,7 +140,7 @@ class SMTPHandler(SMTP):
                 return
             username, digest = credentials.split()
             self.session.add_auth_attempt('cram_md5', username=username, password=digest,
-                                           challenge=self.sent_cram_challenge)
+                                          challenge=self.sent_cram_challenge)
             await self.push('535 authentication failed')
         else:
             await self.push('500 incorrect AUTH mechanism')
