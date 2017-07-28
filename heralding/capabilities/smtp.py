@@ -21,89 +21,175 @@
 # display, publicly perform, sublicense, relicense, and distribute [the] Contributions
 # and such derivative works.
 
-
-
+import time
+import random
+import base64
+import socket
+import asyncio
 import logging
-from base64 import b64decode
+import aiosmtpd
 
 from aiosmtpd.smtp import SMTP, MISSING, syntax
 
 from heralding.capabilities.handlerbase import HandlerBase
 
-EMPTYSTRING = ""
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
+log.setLevel(logging.WARNING)  # Disable internal aiosmtpd logger
+aiosmtpd.smtp.log = log
 
 
 class SMTPHandler(SMTP):
-    def __init__(self, reader, writer, options, session):
-        super().__init__(None)
-        self.transport = writer
-        self._writer = writer
+    fqdn = ''
+
+    def __init__(self, reader, writer, session, options, loop):
+        self.banner = options['protocol_specific_data']['banner']
+        super().__init__(None, hostname=self.banner, loop=loop)
+        # Reset standard banner.
+        self.__ident__ = ""
         self._reader = reader
+        self._writer = writer
+        self.transport = writer
+
+        self._set_rset_state()
         self.session = session
+        self.session.peer = self.transport.get_extra_info('peername')
         self.session.extended_smtp = None
         self.session.host_name = None
-        self.max_tries = int(options['protocol_specific_data']['max_attempts'])
-        self.banner = options['protocol_specific_data']['banner']
 
-    @syntax('HELO hostname')
-    async def smtp_EHLO(self, hostname):
-        await super().smtp_EHLO(hostname)
-        await self.push('250-AUTH PLAIN')
+    async def push(self, status):
+        response = bytes(
+            status + '\r\n', 'utf-8' if self.enable_SMTPUTF8 else 'ascii')
+        self._writer.write(response)
+        log.debug(response)
+        try:
+            await self._writer.drain()
+        except ConnectionResetError:
+            self.stop()
 
-    @syntax("AUTH [METHOD]")
+    @syntax("AUTH mechanism [initial-response]")
     async def smtp_AUTH(self, arg):
-        if not self.session.host_name:
-            await self.push('503 Error: send EHLO first')
-            return
         if not arg:
-            await self.push('500 Not enough value')
+            await self.push('500 Not enough values')
             return
-        args = arg.split(' ')
+        args = arg.split()
         if len(args) > 2:
             await self.push('500 Too many values')
             return
-        status = await self._call_handler_hook('AUTH', args)
-        if status is MISSING:
-            method = args[0]
-            if method != 'PLAIN':
-                await self.push('500 PLAIN method or die')
-                return
-            blob = None
+        mechanism = args[0]
+        if mechanism == 'PLAIN':
             if len(args) == 1:
-                await self.push('334 ')  # wait client login/password
-                line = await self._reader.readline()
-                blob = line.strip()
-                if blob.decode() == '*':
-                    await self.push("501 Auth aborted")
+                await self.push('334 ')  # wait for client login/password
+                line = await self.readline()
+                if not line:
                     return
+                blob = line.strip()
             else:
                 blob = args[1].encode()
 
-            if blob == b'=':
-                login = None
-                password = None
+            try:
+                loginpassword = base64.b64decode(blob)
+            except Exception:
+                await self.push("501 Can't decode base64")
+                return
+            try:
+                _, login, password = loginpassword.split(b"\x00")
+            except ValueError:  # not enough args
+                await self.push("500 Can't split auth value")
+                return
+            self.session.add_auth_attempt('PLAIN', username=str(login, 'utf-8'),
+                                          password=str(password, 'utf-8'))
+        elif mechanism == 'LOGIN':
+            if len(args) > 1:
+                username = str(base64.b64decode(args[1]), 'utf-8')
+                await self.push('334 ' + str(base64.b64encode(b'Password:'), 'utf-8'))
+
+                password_bytes = await self.readline()
+                if not password_bytes:
+                    return
+                password = str(base64.b64decode(password_bytes), 'utf-8')
+                self.session.add_auth_attempt('LOGIN', username=username, password=password)
             else:
-                try:
-                    loginpassword = b64decode(blob, validate=True)
-                except Exception:
-                    await self.push("501 Can't decode base64")
+                await self.push('334 ' + str(base64.b64encode(b'Username:'), 'utf-8'))
+
+                username_bytes = await self.readline()
+                if not username_bytes:
                     return
-                try:
-                    _, login, password = loginpassword.split(b"\x00")
-                except ValueError:  # not enough args
-                    await self.push("500 Can't split auth value")
+
+                await self.push('334 ' + str(base64.b64encode(b'Password:'), 'utf-8'))
+
+                password_bytes = await self.readline()
+                if not password_bytes:
                     return
-                self.session.add_auth_attempt('PLAIN', username=str(login, 'utf-8'), password=str(password, 'utf-8'))
-                status = '535 Authentication credentials invalid'
+                self.session.add_auth_attempt('LOGIN', username=str(base64.b64decode(username_bytes), 'utf-8'),
+                                               password=str(base64.b64decode(password_bytes), 'utf-8'))
+        elif mechanism == 'CRAM-MD5':
+            r = random.randint(5000, 20000)
+            t = int(time.time())
+
+            # challenge is of the form '<24609.1047914046@awesome.host.com>'
+            self.sent_cram_challenge = "<" + str(r) + "." + str(t) + "@" + SMTPHandler.fqdn + ">"
+            cram_challenge_bytes = bytes(self.sent_cram_challenge, 'utf-8')
+            await self.push("334 " + str(base64.b64encode(cram_challenge_bytes), 'utf-8'))
+
+            credentials_bytes = await self.readline()
+            if not credentials_bytes:
+                return
+            credentials = str(base64.b64decode(credentials_bytes), 'utf-8')
+            if self.sent_cram_challenge is None or ' ' not in credentials:
+                await self.push('451 Internal confusion')
+                return
+            username, digest = credentials.split()
+            self.session.add_auth_attempt('cram_md5', username=username, password=digest,
+                                          challenge=self.sent_cram_challenge)
+            await self.push('535 authentication failed')
+        else:
+            await self.push('500 incorrect AUTH mechanism')
+            return
+        status = '535 authentication failed'
         await self.push(status)
+
+    @syntax('QUIT')
+    async def smtp_QUIT(self, arg):
+        if arg:
+            await self.push('501 Syntax: QUIT')
+        else:
+            status = await self._call_handler_hook('QUIT')
+            await self.push('221 Bye' if status is MISSING else status)
+            self.stop()
+
+    async def readline(self):
+        line = b''
+        try:
+            line = await self._reader.readline()
+        except ConnectionResetError:
+            self.stop()
+        else:
+            return line
+
+    def stop(self):
+        self.transport.close()
+        self.transport = None
 
 
 class smtp(HandlerBase):
     def __init__(self, options, loop):
         super().__init__(options, loop)
+        self.loop = loop
         self._options = options
 
     async def execute_capability(self, reader, writer, session):
-        smtp_cap = SMTPHandler(reader, writer, self._options, session)
-        await smtp_cap._handle_client()
+        asyncio.ensure_future(self.setfqdn(), loop=self.loop)
+
+        smtp_cap = SMTPHandler(reader, writer, session, self._options, self.loop)
+        task = asyncio.ensure_future(smtp_cap._handle_client(), loop=self.loop)
+
+        await task
+
+    async def setfqdn(self):
+        if 'fqdn' in self._options['protocol_specific_data'] and self._options['protocol_specific_data']['fqdn']:
+            SMTPHandler.fqdn = self._options['protocol_specific_data']['fqdn']
+        else:
+            while True:
+                fqdn = await self.loop.run_in_executor(None, socket.getfqdn)
+                SMTPHandler.fqdn = fqdn
+                await asyncio.sleep(1800, loop=self.loop)

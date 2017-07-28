@@ -122,3 +122,5 @@ capabilities:
     timeout: 30
     protocol_specific_data:
       banner: "Microsoft ESMTP MAIL service ready"
+      # If the fqdn option is commented out or empty, then fqdn of the host will be used...
+      fqdn: ""
