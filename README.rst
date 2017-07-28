@@ -80,3 +80,8 @@ And finally start the honeypot:
   cd tmp
   sudo heralding
   
+
+
+.. image:: https://api.codacy.com/project/badge/Grade/cd64aa20bce5474ba565fa3691710773
+   :alt: Codacy Badge
+   :target: https://www.codacy.com/app/johnnykv/heralding?utm_source=github.com&utm_medium=referral&utm_content=johnnykv/heralding&utm_campaign=badger
