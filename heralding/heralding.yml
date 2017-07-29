@@ -84,7 +84,7 @@ capabilities:
         serial_number: 0
 
   ssh:
-    enabled: false
+    enabled: true
     port: 22
     timeout: 30
     protocol_specific_data:

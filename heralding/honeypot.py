@@ -21,8 +21,11 @@ import asyncio
 
 import heralding.misc.common as common
 import heralding.capabilities.handlerbase
+
 from heralding.reporting.file_logger import FileLogger
 from heralding.reporting.syslog_logger import SyslogLogger
+
+import asyncssh
 
 from ipify import get_ip
 
@@ -79,8 +82,8 @@ class Honeypot:
                 # carve out the options for this specific service
                 options = self.config['capabilities'][cap_name]
                 # capabilities are only allowed to append to the session list
-                cap = c(options, self.loop)
-
+                if cap_name != 'ssh':
+                    cap = c(options, self.loop)
                 try:
                     # # Convention: All capability names which end in 's' will be wrapped in ssl.
                     if cap_name.endswith('s'):
@@ -89,6 +92,18 @@ class Honeypot:
                         ssl_context = self.create_ssl_context(pem_file)
                         server_coro = asyncio.start_server(cap.handle_session, '0.0.0.0', port,
                                                            loop=self.loop, ssl=ssl_context)
+                    elif cap_name == 'ssh':
+                        ssh_c = c
+                        ssh_options = options
+                        if 'timeout' in ssh_options:
+                            timeout = ssh_options['timeout']
+                        else:
+                            timeout = 30
+                        ssh_key_file = 'ssh.key'
+                        ssh_c.generate_ssh_key(ssh_key_file)
+                        server_coro = asyncssh.create_server(lambda: ssh_c(ssh_options, self.loop), '0.0.0.0', 22,
+                                                             server_host_keys=['ssh.key'],
+                                                             login_timeout=timeout, loop=self.loop)
                     else:
                         server_coro = asyncio.start_server(cap.handle_session, '0.0.0.0', port, loop=self.loop)
 
