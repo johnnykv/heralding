@@ -21,8 +21,11 @@ import asyncio
 
 import heralding.misc.common as common
 import heralding.capabilities.handlerbase
+
 from heralding.reporting.file_logger import FileLogger
 from heralding.reporting.syslog_logger import SyslogLogger
+
+import asyncssh
 
 from ipify import get_ip
 
@@ -89,6 +92,21 @@ class Honeypot:
                         ssl_context = self.create_ssl_context(pem_file)
                         server_coro = asyncio.start_server(cap.handle_session, '0.0.0.0', port,
                                                            loop=self.loop, ssl=ssl_context)
+                    elif cap_name == 'ssh':
+                        # Since user-defined classes and dicts are mutable, we have
+                        # to save ssh class and ssh options somewhere.
+                        SshClass = c
+                        ssh_options = options
+
+                        ssh_key_file = 'ssh.key'
+                        SshClass.generate_ssh_key(ssh_key_file)
+
+                        banner = ssh_options['protocol_specific_data']['banner']
+                        SshClass.change_server_banner(banner)
+
+                        server_coro = asyncssh.create_server(lambda: SshClass(ssh_options, self.loop),
+                                                             '0.0.0.0', port, server_host_keys=[ssh_key_file],
+                                                             login_timeout=cap.timeout, loop=self.loop)
                     else:
                         server_coro = asyncio.start_server(cap.handle_session, '0.0.0.0', port, loop=self.loop)
 
