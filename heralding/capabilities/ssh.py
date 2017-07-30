@@ -12,9 +12,11 @@ logger = logging.getLogger(__name__)
 
 
 def change_server_banner(banner):
+    """_send version code was copied from asyncssh.connection in order to change
+    internal local variable 'version', providing custom banner."""
 
     @functools.wraps(asyncssh.connection.SSHConnection._send_version)
-    def send_version(self):
+    def _send_version(self):
         """Start the SSH handshake"""
 
         version = bytes(banner, 'utf-8')
@@ -28,15 +30,15 @@ def change_server_banner(banner):
 
         self._send(version + b'\r\n')
 
-    asyncssh.connection.SSHConnection._send_version = send_version
-
+    asyncssh.connection.SSHConnection._send_version = _send_version
 
 
 class SSH(asyncssh.SSHServer, HandlerBase):
     def __init__(self, options, loop):
         asyncssh.SSHServer.__init__(self)
         HandlerBase.__init__(self, options, loop)
-        banner = self.options['protocol_specific_data']['banner']
+        
+        banner = options['protocol_specific_data']['banner']
         change_server_banner(banner)
 
     def connection_made(self, conn):
