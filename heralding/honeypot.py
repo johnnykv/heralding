@@ -95,14 +95,18 @@ class Honeypot:
                     elif cap_name == 'ssh':
                         # Since user-defined classes and dicts are mutable, we have
                         # to save ssh class and ssh options somewhere.
-                        ssh_c = c
+                        SshClass = c
                         ssh_options = options
                         timeout = cap.timeout
 
                         ssh_key_file = 'ssh.key'
-                        ssh_c.generate_ssh_key(ssh_key_file)
-                        server_coro = asyncssh.create_server(lambda: ssh_c(ssh_options, self.loop), '0.0.0.0',
-                                                             22, server_host_keys=['ssh.key'],
+                        SshClass.generate_ssh_key(ssh_key_file)
+
+                        banner = ssh_options['protocol_specific_data']['banner']
+                        SshClass.change_server_banner(banner)
+
+                        server_coro = asyncssh.create_server(lambda: SshClass(ssh_options, self.loop),
+                                                             '0.0.0.0', 22, server_host_keys=['ssh.key'],
                                                              login_timeout=timeout, loop=self.loop)
                     else:
                         server_coro = asyncio.start_server(cap.handle_session, '0.0.0.0', port, loop=self.loop)

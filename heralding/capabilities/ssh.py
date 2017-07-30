@@ -11,35 +11,10 @@ from Crypto.PublicKey import RSA
 logger = logging.getLogger(__name__)
 
 
-def change_server_banner(banner):
-    """_send version code was copied from asyncssh.connection in order to change
-    internal local variable 'version', providing custom banner."""
-
-    @functools.wraps(asyncssh.connection.SSHConnection._send_version)
-    def _send_version(self):
-        """Start the SSH handshake"""
-
-        version = bytes(banner, 'utf-8')
-
-        if self.is_client():
-            self._client_version = version
-            self._extra.update(client_version=version.decode('ascii'))
-        else:
-            self._server_version = version
-            self._extra.update(server_version=version.decode('ascii'))
-
-        self._send(version + b'\r\n')
-
-    asyncssh.connection.SSHConnection._send_version = _send_version
-
-
 class SSH(asyncssh.SSHServer, HandlerBase):
     def __init__(self, options, loop):
         asyncssh.SSHServer.__init__(self)
         HandlerBase.__init__(self, options, loop)
-        
-        banner = options['protocol_specific_data']['banner']
-        change_server_banner(banner)
 
     def connection_made(self, conn):
         self.address = conn.get_extra_info('peername')
@@ -71,6 +46,28 @@ class SSH(asyncssh.SSHServer, HandlerBase):
                 'been reached'.format(protocol, self.port, *self.address))
         else:
             self.session = self.create_session(self.address)
+
+    @staticmethod
+    def change_server_banner(banner):
+        """_send version code was copied from asyncssh.connection in order to change
+        internal local variable 'version', providing custom banner."""
+
+        @functools.wraps(asyncssh.connection.SSHConnection._send_version)
+        def _send_version(self):
+            """Start the SSH handshake"""
+
+            version = bytes(banner, 'utf-8')
+
+            if self.is_client():
+                self._client_version = version
+                self._extra.update(client_version=version.decode('ascii'))
+            else:
+                self._server_version = version
+                self._extra.update(server_version=version.decode('ascii'))
+
+            self._send(version + b'\r\n')
+
+        asyncssh.connection.SSHConnection._send_version = _send_version
 
     @staticmethod
     def generate_ssh_key(ssh_key_file):
