@@ -1,20 +1,43 @@
 import os
 import sys
 import logging
+import functools
 
 from heralding.capabilities.handlerbase import HandlerBase
 
 import asyncssh
-
 from Crypto.PublicKey import RSA
 
 logger = logging.getLogger(__name__)
+
+
+def change_server_banner(banner):
+
+    @functools.wraps(asyncssh.connection.SSHConnection._send_version)
+    def send_version(self):
+        """Start the SSH handshake"""
+
+        version = bytes(banner, 'utf-8')
+
+        if self.is_client():
+            self._client_version = version
+            self._extra.update(client_version=version.decode('ascii'))
+        else:
+            self._server_version = version
+            self._extra.update(server_version=version.decode('ascii'))
+
+        self._send(version + b'\r\n')
+
+    asyncssh.connection.SSHConnection._send_version = send_version
+
 
 
 class SSH(asyncssh.SSHServer, HandlerBase):
     def __init__(self, options, loop):
         asyncssh.SSHServer.__init__(self)
         HandlerBase.__init__(self, options, loop)
+        banner = self.options['protocol_specific_data']['banner']
+        change_server_banner(banner)
 
     def connection_made(self, conn):
         self.address = conn.get_extra_info('peername')

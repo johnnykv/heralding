@@ -13,7 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import asyncio
 import logging
 
 from heralding.capabilities.handlerbase import HandlerBase
@@ -41,7 +40,8 @@ class Pop3(HandlerBase):
             # sudden connection reset. await.sleep(0) helps to take it out.
 
             raw_msg = await reader.readline()
-            await asyncio.sleep(0)
+            if not raw_msg:
+                break
 
             raw_msg_str = str(raw_msg, 'utf-8')
 

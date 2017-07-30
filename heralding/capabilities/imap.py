@@ -46,7 +46,8 @@ class Imap(HandlerBase):
             # sudden connection reset. await.sleep(0) helps to take it out.
 
             raw_msg = await reader.readline()
-            await asyncio.sleep(0)
+            if not raw_msg:
+                break
 
             raw_msg_str = str(raw_msg, 'utf-8')
 
