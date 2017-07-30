@@ -1,9 +1,8 @@
 pycrypto>=2.6.0
 ecdsa
 nose
-gevent>=1.0
 aiosmtpd
-paramiko
+asyncssh
 pyOpenSSL
 Enum34
 pyaml
