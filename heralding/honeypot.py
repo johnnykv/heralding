@@ -97,7 +97,6 @@ class Honeypot:
                         # to save ssh class and ssh options somewhere.
                         SshClass = c
                         ssh_options = options
-                        timeout = cap.timeout
 
                         ssh_key_file = 'ssh.key'
                         SshClass.generate_ssh_key(ssh_key_file)
@@ -106,8 +105,8 @@ class Honeypot:
                         SshClass.change_server_banner(banner)
 
                         server_coro = asyncssh.create_server(lambda: SshClass(ssh_options, self.loop),
-                                                             '0.0.0.0', 22, server_host_keys=['ssh.key'],
-                                                             login_timeout=timeout, loop=self.loop)
+                                                             '0.0.0.0', port, server_host_keys=[ssh_key_file],
+                                                             login_timeout=cap.timeout, loop=self.loop)
                     else:
                         server_coro = asyncio.start_server(cap.handle_session, '0.0.0.0', port, loop=self.loop)
 

@@ -21,6 +21,7 @@ from heralding.reporting.reporting_relay import ReportingRelay
 
 import asyncssh
 
+
 class SshTests(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.new_event_loop()
@@ -42,9 +43,10 @@ class SshTests(unittest.TestCase):
     def test_basic_login(self):
         ssh_key_file = 'ssh.key'
         SSH.generate_ssh_key(ssh_key_file)
+
         options = {'enabled': 'True', 'port': 8888}
         server_coro = asyncssh.create_server(lambda: SSH(options, self.loop), '0.0.0.0', 8888,
-                                             server_host_keys=['ssh.key'], loop=self.loop)
+                                             server_host_keys=[ssh_key_file], loop=self.loop)
         self.server = self.loop.run_until_complete(server_coro)
 
         run_client = asyncssh.connect('localhost', username='johnny', password='secretpw',

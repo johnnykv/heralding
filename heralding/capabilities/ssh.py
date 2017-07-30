@@ -49,7 +49,7 @@ class SSH(asyncssh.SSHServer, HandlerBase):
 
     @staticmethod
     def change_server_banner(banner):
-        """_send version code was copied from asyncssh.connection in order to change
+        """_send_version code was copied from asyncssh.connection in order to change
         internal local variable 'version', providing custom banner."""
 
         @functools.wraps(asyncssh.connection.SSHConnection._send_version)
