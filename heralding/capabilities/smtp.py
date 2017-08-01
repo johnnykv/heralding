@@ -27,15 +27,12 @@ import base64
 import socket
 import asyncio
 import logging
-import aiosmtpd
 
 from aiosmtpd.smtp import SMTP, MISSING, syntax
 
 from heralding.capabilities.handlerbase import HandlerBase
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.WARNING)  # Disable internal aiosmtpd logger
-aiosmtpd.smtp.log = log
 
 
 class SMTPHandler(SMTP):
@@ -139,7 +136,7 @@ class SMTPHandler(SMTP):
                 await self.push('451 Internal confusion')
                 return
             username, digest = credentials.split()
-            self.session.add_auth_attempt('cram_md5', username=username, password=digest,
+            self.session.add_auth_attempt('cram-md5', username=username, password=digest,
                                           challenge=self.sent_cram_challenge)
             await self.push('535 authentication failed')
         else:
