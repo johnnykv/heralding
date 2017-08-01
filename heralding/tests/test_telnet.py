@@ -61,8 +61,9 @@ class TelnetTests(unittest.TestCase):
             self.assertTrue(reply.endswith(b'Password: '))
 
             client.write(b'somepass' + b'\r\n')
-            reply = client.read_until(b'Invalid username/password', 5)
-            self.assertTrue(b'Invalid username/password' in reply)
+            reply = client.read_until(b'\n', 5)
+            self.assertTrue(b'\n' in reply)
+            client.close()
 
         options = {'enabled': 'True', 'port': 2503, 'protocol_specific_data': {'max_attempts': 3},
                    'users': {'test': 'test'}}

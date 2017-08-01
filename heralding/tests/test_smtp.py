@@ -21,10 +21,9 @@
 
 import hmac
 import base64
-import smtplib
 import asyncio
+import smtplib
 import unittest
-import socket
 
 from heralding.capabilities import smtp
 from heralding.reporting.reporting_relay import ReportingRelay

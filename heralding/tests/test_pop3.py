@@ -38,7 +38,7 @@ class Pop3Tests(unittest.TestCase):
         self.loop.run_until_complete(self.server.wait_closed())
 
         cancel_all_pending_tasks(self.loop)
-            
+
         self.loop.close()
 
     def test_login(self):
@@ -70,5 +70,3 @@ class Pop3Tests(unittest.TestCase):
         self.server = self.loop.run_until_complete(server_coro)
 
         self.loop.run_until_complete(pop3_login())
-
-

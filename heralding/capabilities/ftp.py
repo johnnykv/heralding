@@ -22,7 +22,7 @@
 # and such derivative works.
 
 import logging
-import asyncio
+
 from heralding.capabilities.handlerbase import HandlerBase
 
 logger = logging.getLogger(__name__)
