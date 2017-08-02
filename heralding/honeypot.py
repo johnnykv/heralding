@@ -95,8 +95,8 @@ class Honeypot:
                     elif cap_name == 'ssh':
                         # Since user-defined classes and dicts are mutable, we have
                         # to save ssh class and ssh options somewhere.
-                        SshClass = c
                         ssh_options = options
+                        SshClass = c
 
                         ssh_key_file = 'ssh.key'
                         SshClass.generate_ssh_key(ssh_key_file)
@@ -116,6 +116,7 @@ class Honeypot:
                 except Exception as ex:
                     error_message = "Could not start {0} server on port {1}. Error: {2}".format(c.__name__, port, ex)
                     logger.error(error_message)
+                    common.cancel_all_pending_tasks(self.loop)
                     sys.exit(error_message)
                 else:
                     logger.info('Started {0} capability listening on port {1}'.format(c.__name__, port))

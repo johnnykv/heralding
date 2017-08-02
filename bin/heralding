@@ -131,8 +131,8 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         pass
     finally:
-        reporting_relay.stop()
         honeypot.stop()
+        reporting_relay.stop()
         # We give reporting_relay a chance to be finished.
         loop.run_until_complete(asyncio.sleep(0.5))
         loop.close()

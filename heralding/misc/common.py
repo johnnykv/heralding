@@ -1,3 +1,18 @@
+# Copyright (C) 2017 Johnny Vestergaard <jkv@unixcluster.dk>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import sys
 import logging
 import asyncio
@@ -13,10 +28,13 @@ def on_unhandled_task_exception(task):
         task_exc = task.exception()
         if task_exc:
             logger.error('Stopping because {0} died: {1}'.format(task, task_exc))
+            cancel_all_pending_tasks()
             sys.exit(1)
 
 
-def cancel_all_pending_tasks(loop):
+def cancel_all_pending_tasks(loop=None):
+    if loop is None:
+        loop = asyncio.get_event_loop()
     pending = asyncio.Task.all_tasks(loop=loop)
     for task in pending:
         task.cancel()

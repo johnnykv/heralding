@@ -65,7 +65,7 @@ class Session:
                  'destination_ip': heralding.honeypot.Honeypot.public_ip,
                  'destination_port': self.destination_port,
                  'protocol': self.protocol,
-                 'auth_mechanism': _type,
+                 'auth_mech': _type,
                  'username': None,
                  'password': None
                  }

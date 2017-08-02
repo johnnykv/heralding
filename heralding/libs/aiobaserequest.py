@@ -1,4 +1,7 @@
 # We need this in order to reduce the number of third-party modules.
+# It is a part of code from socketserver, that adjusted to work with
+# asyncio in our specific case.
+
 
 class AsyncBaseRequestHandler:
     """Asynchronous analogue of socketserver.BaseRequestHandler."""
