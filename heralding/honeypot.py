@@ -43,6 +43,7 @@ class Honeypot:
         self.loop = loop
         self.config = config
         self._servers = []
+        self._loggers = []
 
     async def _record_and_lookup_public_ip(self):
         while True:
@@ -67,11 +68,13 @@ class Honeypot:
                 file_logger = FileLogger(log_file)
                 file_logger_task = self.loop.run_in_executor(None, file_logger.start)
                 file_logger_task.add_done_callback(common.on_unhandled_task_exception)
+                self._loggers.append(file_logger)
 
             if 'syslog' in self.config['activity_logging'] and self.config['activity_logging']['syslog']['enabled']:
                 sys_logger = SyslogLogger()
                 sys_logger_task = self.loop.run_in_executor(None, sys_logger.start)
                 sys_logger_task.add_done_callback(common.on_unhandled_task_exception)
+                self._loggers.append(sys_logger)
 
         for c in heralding.capabilities.handlerbase.HandlerBase.__subclasses__():
             cap_name = c.__name__.lower()
@@ -127,6 +130,9 @@ class Honeypot:
         for server in self._servers:
             server.close()
             self.loop.run_until_complete(server.wait_closed())
+
+        for l in self._loggers:
+            l.stop()
 
         common.cancel_all_pending_tasks(self.loop)
 

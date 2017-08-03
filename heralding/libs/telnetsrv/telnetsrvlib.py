@@ -130,7 +130,7 @@ class TelnetHandlerBase(AsyncBaseRequestHandler):
         for k in self.WILLACK.keys():
             self.sendcommand(self.WILLACK[k], k)
 
-        asyncio.ensure_future(self.inputcooker(), loop=self.loop)
+        self.inputcooker_task = asyncio.ensure_future(self.inputcooker(), loop=self.loop)
 
     def finish(self):
         """End this session"""
@@ -451,6 +451,12 @@ class TelnetHandlerBase(AsyncBaseRequestHandler):
     async def handle(self):
         """The actual service to which the user has connected."""
         await self.authentication_ok()
+        
+        self.inputcooker_task.cancel()
+        try:
+            await self.inputcooker_task
+        except asyncio.CancelledError:
+            pass
 
 
 def convert_to_bytes(c):

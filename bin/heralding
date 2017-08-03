@@ -116,7 +116,6 @@ if __name__ == '__main__':
         config = yaml.safe_load(_file.read())
 
     loop = asyncio.get_event_loop()
-
     # startup reporting relay
     reporting_relay = heralding.reporting.reporting_relay.ReportingRelay()
     reporting_relay_task = loop.run_in_executor(None, reporting_relay.start)

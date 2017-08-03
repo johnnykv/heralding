@@ -175,12 +175,18 @@ class smtp(HandlerBase):
         self._options = options
 
     async def execute_capability(self, reader, writer, session):
-        asyncio.ensure_future(self.setfqdn(), loop=self.loop)
+        fqdn_task = asyncio.ensure_future(self.setfqdn(), loop=self.loop)
 
         smtp_cap = SMTPHandler(reader, writer, session, self._options, self.loop)
         task = asyncio.ensure_future(smtp_cap._handle_client(), loop=self.loop)
 
         await task
+
+        fqdn_task.cancel()
+        try:
+            await fqdn_task
+        except asyncio.CancelledError:
+            pass
 
     async def setfqdn(self):
         if 'fqdn' in self._options['protocol_specific_data'] and self._options['protocol_specific_data']['fqdn']:

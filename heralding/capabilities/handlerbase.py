@@ -29,8 +29,8 @@ class HandlerBase:
         """
         Base class that all capabilities must inherit from.
 
-        :param sessions: a dictionary of Session objects.
         :param options: a dictionary of configuration options.
+
         """
         self.loop = loop
         self.options = options
@@ -86,7 +86,7 @@ class HandlerBase:
                 logger.debug('Session timed out. ({0})'.format(session.id))
             except (BrokenPipeError, ConnectionError) as err:
                 logger.debug('Unexpected end of session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
-            except UnicodeDecodeError:
+            except (UnicodeDecodeError, KeyboardInterrupt):
                 pass
             finally:
                 self.close_session(session)
