@@ -24,7 +24,7 @@ class SSH(asyncssh.SSHServer, HandlerBase):
     def connection_lost(self, exc):
         self.close_session(self.session)
         if exc:
-            logger.debug('SSH connection error: ' + str(exc), file=sys.stderr)
+            logger.debug('SSH connection error: ' + str(exc))
         else:
             logger.debug('SSH connection closed.')
 

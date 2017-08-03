@@ -87,6 +87,7 @@ class HandlerBase:
             except (BrokenPipeError, ConnectionError) as err:
                 logger.debug('Unexpected end of session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
             except (UnicodeDecodeError, KeyboardInterrupt):
+                print('\nabc\n')
                 pass
             finally:
                 self.close_session(session)

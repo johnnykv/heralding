@@ -37,6 +37,13 @@ def cancel_all_pending_tasks(loop=None):
         loop = asyncio.get_event_loop()
     pending = asyncio.Task.all_tasks(loop=loop)
     for task in pending:
+        try:
+            exc = task.exception()
+        except:
+            exc = None
+
+        if exc:
+            continue
         task.cancel()
         try:
             loop.run_until_complete(task)
