@@ -37,7 +37,7 @@ class Pop3Tests(unittest.TestCase):
         self.server.close()
         self.loop.run_until_complete(self.server.wait_closed())
 
-        cancel_all_pending_tasks(self.loop)
+        self.loop.run_until_complete(cancel_all_pending_tasks(self.loop))
 
         self.loop.close()
 

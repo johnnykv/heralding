@@ -118,26 +118,26 @@ class SMTPHandler(SMTP):
                 if not password_bytes:
                     return
                 self.session.add_auth_attempt('LOGIN', username=str(base64.b64decode(username_bytes), 'utf-8'),
-                                               password=str(base64.b64decode(password_bytes), 'utf-8'))
+                                              password=str(base64.b64decode(password_bytes), 'utf-8'))
         elif mechanism == 'CRAM-MD5':
             r = random.randint(5000, 20000)
             t = int(time.time())
 
             # challenge is of the form '<24609.1047914046@awesome.host.com>'
-            self.sent_cram_challenge = "<" + str(r) + "." + str(t) + "@" + SMTPHandler.fqdn + ">"
-            cram_challenge_bytes = bytes(self.sent_cram_challenge, 'utf-8')
+            sent_cram_challenge = "<" + str(r) + "." + str(t) + "@" + SMTPHandler.fqdn + ">"
+            cram_challenge_bytes = bytes(sent_cram_challenge, 'utf-8')
             await self.push("334 " + str(base64.b64encode(cram_challenge_bytes), 'utf-8'))
 
             credentials_bytes = await self.readline()
             if not credentials_bytes:
                 return
             credentials = str(base64.b64decode(credentials_bytes), 'utf-8')
-            if self.sent_cram_challenge is None or ' ' not in credentials:
+            if sent_cram_challenge is None or ' ' not in credentials:
                 await self.push('451 Internal confusion')
                 return
             username, digest = credentials.split()
-            self.session.add_auth_attempt('cram-md5', username=username, password=digest,
-                                          challenge=self.sent_cram_challenge)
+            self.session.add_auth_attempt('cram_md5', username=username, digest=digest,
+                                          challenge=sent_cram_challenge)
             await self.push('535 authentication failed')
         else:
             await self.push('500 incorrect AUTH mechanism')
@@ -178,9 +178,9 @@ class smtp(HandlerBase):
         fqdn_task = asyncio.ensure_future(self.setfqdn(), loop=self.loop)
 
         smtp_cap = SMTPHandler(reader, writer, session, self._options, self.loop)
-        task = asyncio.ensure_future(smtp_cap._handle_client(), loop=self.loop)
+        smtp_task = asyncio.ensure_future(smtp_cap._handle_client(), loop=self.loop)
 
-        await task
+        await smtp_task
 
         fqdn_task.cancel()
         try:

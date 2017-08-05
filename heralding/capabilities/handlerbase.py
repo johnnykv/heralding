@@ -13,8 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import logging
 import asyncio
+import logging
 
 from heralding.misc.session import Session
 
@@ -87,7 +87,6 @@ class HandlerBase:
             except (BrokenPipeError, ConnectionError) as err:
                 logger.debug('Unexpected end of session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
             except (UnicodeDecodeError, KeyboardInterrupt):
-                print('\nabc\n')
                 pass
             finally:
                 self.close_session(session)

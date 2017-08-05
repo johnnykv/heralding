@@ -66,14 +66,14 @@ class Honeypot:
             if 'file' in self.config['activity_logging'] and self.config['activity_logging']['file']['enabled']:
                 log_file = self.config['activity_logging']['file']['filename']
                 file_logger = FileLogger(log_file)
-                file_logger_task = self.loop.run_in_executor(None, file_logger.start)
-                file_logger_task.add_done_callback(common.on_unhandled_task_exception)
+                self.file_logger_task = self.loop.run_in_executor(None, file_logger.start)
+                self.file_logger_task.add_done_callback(common.on_unhandled_task_exception)
                 self._loggers.append(file_logger)
 
             if 'syslog' in self.config['activity_logging'] and self.config['activity_logging']['syslog']['enabled']:
                 sys_logger = SyslogLogger()
-                sys_logger_task = self.loop.run_in_executor(None, sys_logger.start)
-                sys_logger_task.add_done_callback(common.on_unhandled_task_exception)
+                self.sys_logger_task = self.loop.run_in_executor(None, sys_logger.start)
+                self.sys_logger_task.add_done_callback(common.on_unhandled_task_exception)
                 self._loggers.append(sys_logger)
 
         for c in heralding.capabilities.handlerbase.HandlerBase.__subclasses__():
@@ -96,7 +96,7 @@ class Honeypot:
                         server_coro = asyncio.start_server(cap.handle_session, '0.0.0.0', port,
                                                            loop=self.loop, ssl=ssl_context)
                     elif cap_name == 'ssh':
-                        # Since user-defined classes and dicts are mutable, we have
+                        # Since dicts and user-defined classes are mutable, we have
                         # to save ssh class and ssh options somewhere.
                         ssh_options = options
                         SshClass = c
@@ -119,7 +119,8 @@ class Honeypot:
                 except Exception as ex:
                     error_message = "Could not start {0} server on port {1}. Error: {2}".format(c.__name__, port, ex)
                     logger.error(error_message)
-                    common.cancel_all_pending_tasks(self.loop)
+                    task_killer = common.cancel_all_pending_tasks(self.loop)
+                    self.loop.run_until_complete(task_killer)
                     sys.exit(error_message)
                 else:
                     logger.info('Started {0} capability listening on port {1}'.format(c.__name__, port))
@@ -134,7 +135,8 @@ class Honeypot:
         for l in self._loggers:
             l.stop()
 
-        common.cancel_all_pending_tasks(self.loop)
+        task_killer = common.cancel_all_pending_tasks(self.loop)
+        self.loop.run_until_complete(task_killer)
 
         logger.info('All tasks stopped.')
 

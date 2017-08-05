@@ -356,7 +356,11 @@ class TelnetHandlerBase(AsyncBaseRequestHandler):
             ret = self.rawq[0]
             self.rawq = self.rawq[1:]
             return bytes([ret]) if ret else b''
-        ret = await self.reader.read(20)
+        try:
+            ret = await self.reader.read(20)
+        except BrokenPipeError:
+            ret = b''
+
         self.eof = not (ret)
         self.rawq = self.rawq + ret
         if self.eof:
