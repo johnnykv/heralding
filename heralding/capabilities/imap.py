@@ -15,7 +15,6 @@
 
 import base64
 import logging
-import asyncio
 import binascii
 
 from heralding.capabilities.handlerbase import HandlerBase

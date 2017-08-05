@@ -49,10 +49,10 @@ class SshTests(unittest.TestCase):
                                              server_host_keys=[ssh_key_file], loop=self.loop)
         self.server = self.loop.run_until_complete(server_coro)
 
-        run_client = asyncssh.connect('localhost', username='johnny', password='secretpw',
-                                      known_hosts=None, loop=self.loop)
+        run_client = asyncssh.connect('localhost', port=8888, username='johnny',
+                                      password='secretpw', known_hosts=None, loop=self.loop)
 
         try:
             self.loop.run_until_complete(run_client)
         except (OSError, asyncssh.Error) as exc:
-            print('SSH connection failed: ' + str(exc))
+            print('SSH connection failed: ', str(exc))

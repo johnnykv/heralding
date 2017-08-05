@@ -361,7 +361,7 @@ class TelnetHandlerBase(AsyncBaseRequestHandler):
         except BrokenPipeError:
             ret = b''
 
-        self.eof = not (ret)
+        self.eof = not ret
         self.rawq = self.rawq + ret
         if self.eof:
             raise EOFError
@@ -400,7 +400,7 @@ class TelnetHandlerBase(AsyncBaseRequestHandler):
                     if cb == IAC:
                         self.iacseq += cb
                         continue
-                    elif cb == bytes([13]) and not (self.sb):
+                    elif cb == bytes([13]) and not self.sb:
                         c2b = await self._inputcooker_getc()
                         if c2b == theNULL or c2b == b'':
                             cb = bytes([10])
