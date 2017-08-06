@@ -65,7 +65,6 @@ class Session:
                  'destination_ip': heralding.honeypot.Honeypot.public_ip,
                  'destination_port': self.destination_port,
                  'protocol': self.protocol,
-                 'auth_mech': _type,
                  'username': None,
                  'password': None
                  }
@@ -76,9 +75,9 @@ class Session:
 
         ReportingRelay.queueLogData(entry)
         self.activity()
-        logger.debug('{0} authentication attempt from {1}:{2}. Credentials: {3}'.format(self.protocol, self.source_ip,
-                                                                                        self.source_port,
-                                                                                        json.dumps(kwargs)))
+        logger.debug('{0} authentication attempt from {1}:{2}. Auth mechanism: {3}. '
+                     'Credentials: {4}'.format(self.protocol, self.source_ip,
+                                               self.source_port, _type, json.dumps(kwargs)))
 
     def end_session(self):
         if not self.session_ended:
