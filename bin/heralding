@@ -71,7 +71,7 @@ class LogFilter(logging.Filter):
 
 
 def break_if_python_not_supported():
-    if sys.version_info[0:3] < (3, 5, 2):
+    if sys.version_info[0:2] < (3, 5):
         raise Exception("Wrong python version! Your Python interpreter must be 3.5.0 or above!")
 
 

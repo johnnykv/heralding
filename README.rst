@@ -17,7 +17,7 @@ About
 Sometimes you just want a simple honeypot that collects credentials, nothing more. Heralding is that honeypot!
 Currently the following protocols are supported: ftp, telnet, ssh, http, https, pop3, pop3s, imap, imaps and smtp.
 
-**You need Python 3.5.2 or higher.**
+**You need Python 3.5.0 or higher.**
 
 Starting the honeypot
 -----------------------
