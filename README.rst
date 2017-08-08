@@ -17,13 +17,15 @@ About
 Sometimes you just want a simple honeypot that collects credentials, nothing more. Heralding is that honeypot!
 Currently the following protocols are supported: ftp, telnet, ssh, http, https, pop3, pop3s, imap, imaps and smtp.
 
+**You need Python 3.5.0 or higher.**
+
 Starting the honeypot
 -----------------------
 
 .. code-block:: shell
 
   $ sudo heralding
-  2017-05-14 21:55:55,948 (root) Initializing Heralding version 0.1.17
+  2017-05-14 21:55:55,948 (root) Initializing Heralding version 0.2.0
   2017-05-14 21:55:55,968 (root) Using default config file: "/home/kajoj/heralding/bin/heralding/heralding.yml", if you want to customize values please copy this file to the current working directory
   2017-05-14 21:55:55,998 (heralding.reporting.file_logger) File logger started, using file: heralding_activity.log
   2017-05-14 21:55:55,999 (heralding.honeypot) Started Telnet capability listening on port 23

@@ -61,17 +61,18 @@ def setup_logging(logfile, verbose):
     root_logger.addHandler(file_log)
 
 
-def break_if_python_not_supported():
-    if sys.version_info[0:2] < (3, 5):
-        raise Exception("Wrong python version! Your Python interpreter must be 3.5.0 or above!")
-
-
 class LogFilter(logging.Filter):
     def filter(self, rec):
-        if rec.name == 'paramiko.transport':
+        """Disabling internal aiosmtpd logger"""
+        if rec.name == 'mail.log':
             return False
         else:
             return True
+
+
+def break_if_python_not_supported():
+    if sys.version_info[0:2] < (3, 5):
+        raise Exception("Wrong python version! Your Python interpreter must be 3.5.0 or above!")
 
 
 def drop_privileges(uid_name='nobody', gid_name='nogroup'):
@@ -115,7 +116,6 @@ if __name__ == '__main__':
         config = yaml.safe_load(_file.read())
 
     loop = asyncio.get_event_loop()
-
     # startup reporting relay
     reporting_relay = heralding.reporting.reporting_relay.ReportingRelay()
     reporting_relay_task = loop.run_in_executor(None, reporting_relay.start)
@@ -130,8 +130,8 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         pass
     finally:
-        reporting_relay.stop()
         honeypot.stop()
+        reporting_relay.stop()
         # We give reporting_relay a chance to be finished.
         loop.run_until_complete(asyncio.sleep(0.5))
         loop.close()

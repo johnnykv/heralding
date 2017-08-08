@@ -60,8 +60,6 @@ class TelnetWrapper(TelnetHandlerBase):
                                           password=str(password, 'utf-8'))
             if self.DOECHO:
                 self.write(b"\n")
-            # comment next line, if you want to collect credentials from Medusa bruteforcer
-            self.writeline(b'Invalid username/password\n')
             self.auth_count += 1
         self.writeline(b'Username: ')  # It fixes a problem with Hydra bruteforcer.
         return False

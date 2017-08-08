@@ -22,7 +22,7 @@
 # and such derivative works.
 
 import logging
-import asyncio
+
 from heralding.capabilities.handlerbase import HandlerBase
 
 logger = logging.getLogger(__name__)
@@ -42,16 +42,20 @@ class FtpHandler:
         self.reader = reader
         self.serve_flag = True
         self.session = session
-        self.respond('220 ' + self.banner)
 
         self.state = None
         self.user = None
 
     async def getcmd(self):
-        cmd = await self.reader.readline()
+        try:
+            cmd = await self.reader.readline()
+        except ConnectionResetError:
+            cmd = b''
         return str(cmd, 'utf-8')
 
     async def serve(self):
+        await self.respond('220 ' + self.banner)
+
         while self.serve_flag:
             resp = await self.getcmd()
             if not resp:
@@ -71,41 +75,42 @@ class FtpHandler:
                 unauth_cmds = ['USER', 'PASS', 'QUIT', 'SYST']
                 meth = getattr(self, 'do_' + cmd, None)
                 if not meth:
-                    self.respond('500 Unknown Command.')
+                    await self.respond('500 Unknown Command.')
                 else:
                     if not self.authenticated:
                         if cmd not in unauth_cmds:
-                            self.respond('503 Login with USER first.')
+                            await self.respond('503 Login with USER first.')
                             continue
-                    meth(args)
+                    await meth(args)
                     self.state = cmd
 
-    def do_USER(self, arg):
+    async def do_USER(self, arg):
         self.user = arg
-        self.respond('331 Now specify the Password.')
+        await self.respond('331 Now specify the Password.')
 
-    def do_PASS(self, arg):
+    async def do_PASS(self, arg):
         if self.state != 'USER':
-            self.respond('503 Login with USER first.')
+            await self.respond('503 Login with USER first.')
             return
         passwd = arg
         self.session.add_auth_attempt('plaintext', username=self.user, password=passwd)
-        self.respond('530 Authentication Failed.')
+        await self.respond('530 Authentication Failed.')
         if self.session.get_number_of_login_attempts() >= self.max_loggins:
             self.stop()
 
-    def do_SYST(self, arg):
-        self.respond('215 {0}'.format(self.syst_type))
+    async def do_SYST(self, arg):
+        await self.respond('215 {0}'.format(self.syst_type))
 
-    def do_QUIT(self, arg):
-        self.respond('221 Bye.')
+    async def do_QUIT(self, arg):
+        await self.respond('221 Bye.')
         self.serve_flag = False
         self.stop()
 
-    def respond(self, msg):
+    async def respond(self, msg):
         msg += TERMINATOR
         msg_bytes = bytes(msg, 'utf-8')
         self.writer.write(msg_bytes)
+        await self.writer.drain()
 
     def stop(self):
         self.session.end_session()
@@ -114,7 +119,6 @@ class FtpHandler:
 class ftp(HandlerBase):
     def __init__(self, options, loop):
         super().__init__(options, loop)
-        self.loop = loop
         self._options = options
 
     async def execute_capability(self, reader, writer, session):

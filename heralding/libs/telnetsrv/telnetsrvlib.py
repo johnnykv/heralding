@@ -130,7 +130,7 @@ class TelnetHandlerBase(AsyncBaseRequestHandler):
         for k in self.WILLACK.keys():
             self.sendcommand(self.WILLACK[k], k)
 
-        asyncio.ensure_future(self.inputcooker(), loop=self.loop)
+        self.inputcooker_task = asyncio.ensure_future(self.inputcooker(), loop=self.loop)
 
     def finish(self):
         """End this session"""
@@ -356,8 +356,12 @@ class TelnetHandlerBase(AsyncBaseRequestHandler):
             ret = self.rawq[0]
             self.rawq = self.rawq[1:]
             return bytes([ret]) if ret else b''
-        ret = await self.reader.read(20)
-        self.eof = not (ret)
+        try:
+            ret = await self.reader.read(20)
+        except BrokenPipeError:
+            ret = b''
+
+        self.eof = not ret
         self.rawq = self.rawq + ret
         if self.eof:
             raise EOFError
@@ -396,7 +400,7 @@ class TelnetHandlerBase(AsyncBaseRequestHandler):
                     if cb == IAC:
                         self.iacseq += cb
                         continue
-                    elif cb == bytes([13]) and not (self.sb):
+                    elif cb == bytes([13]) and not self.sb:
                         c2b = await self._inputcooker_getc()
                         if c2b == theNULL or c2b == b'':
                             cb = bytes([10])
@@ -451,6 +455,12 @@ class TelnetHandlerBase(AsyncBaseRequestHandler):
     async def handle(self):
         """The actual service to which the user has connected."""
         await self.authentication_ok()
+        
+        self.inputcooker_task.cancel()
+        try:
+            await self.inputcooker_task
+        except asyncio.CancelledError:
+            pass
 
 
 def convert_to_bytes(c):

@@ -49,7 +49,6 @@ class ReportingRelay:
             return 0
 
     def start(self):
-
         self.internalReportingPublisher.bind(SocketNames.INTERNAL_REPORTING.value)
 
         while self.enabled or ReportingRelay.getQueueSize() > 0:

@@ -39,7 +39,8 @@ class TelnetTests(unittest.TestCase):
         self.server.close()
         self.loop.run_until_complete(self.server.wait_closed())
 
-        cancel_all_pending_tasks(self.loop)
+        task_killer = cancel_all_pending_tasks(self.loop)
+        self.loop.run_until_complete(task_killer)
 
         self.loop.close()
 
@@ -53,6 +54,7 @@ class TelnetTests(unittest.TestCase):
             # this disables all command negotiation.
             client.set_option_negotiation_callback(self.cb)
             # Expect username as first output
+
             reply = client.read_until(b'Username: ', 1)
             self.assertEqual(b'Username: ', reply)
 
@@ -61,12 +63,13 @@ class TelnetTests(unittest.TestCase):
             self.assertTrue(reply.endswith(b'Password: '))
 
             client.write(b'somepass' + b'\r\n')
-            reply = client.read_until(b'Invalid username/password', 5)
-            self.assertTrue(b'Invalid username/password' in reply)
+            reply = client.read_until(b'\n', 5)
+            self.assertTrue(b'\n' in reply)
+
+            client.close()
 
         options = {'enabled': 'True', 'port': 2503, 'protocol_specific_data': {'max_attempts': 3},
                    'users': {'test': 'test'}}
-
         telnet_cap = telnet.Telnet(options, self.loop)
 
         server_coro = asyncio.start_server(telnet_cap.handle_session, '0.0.0.0', 2503, loop=self.loop)
