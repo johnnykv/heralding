@@ -14,7 +14,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import socket
 
 from heralding.capabilities.handlerbase import HandlerBase
 
@@ -25,28 +24,31 @@ class Pop3(HandlerBase):
     max_tries = 10
     cmds = {}
 
-    def __init__(self, options, ):
-        super().__init__(options)
+    def __init__(self, options, loop):
+        super().__init__(options, loop)
         Pop3.max_tries = int(self.options['protocol_specific_data']['max_attempts'])
 
-    def execute_capability(self, address, gsocket, session):
-        self._handle_session(session, gsocket)
+    async def execute_capability(self, reader, writer, session):
+        await self._handle_session(session, reader, writer)
 
-    def _handle_session(self, session, gsocket):
-        fileobj = gsocket.makefile()
-
-        self.send_message(session, gsocket, '+OK POP3 server ready')
+    async def _handle_session(self, session, reader, writer):
+        await self.send_message(writer, '+OK POP3 server ready')
 
         state = 'AUTHORIZATION'
         while state != '' and session.connected:
+            # An exception is raised inside await reader.readline() in case of
+            # sudden connection reset.
             try:
-                raw_msg = fileobj.readline()
-            except socket.error:
-                session.end_session()
+                raw_msg = await reader.readline()
+            except ConnectionResetError:
+                break
+            if not raw_msg:
                 break
 
+            raw_msg_str = str(raw_msg, 'utf-8')
+
             session.activity()
-            cmd_msg = raw_msg.rstrip().split(' ', 1)
+            cmd_msg = raw_msg_str.rstrip().split(' ', 1)
             if len(cmd_msg) == 0:
                 continue
             elif len(cmd_msg) == 1:
@@ -59,10 +61,10 @@ class Pop3(HandlerBase):
             cmd = cmd.lower()
 
             if cmd not in ['user', 'pass', 'quit', 'noop']:
-                self.send_message(session, gsocket, '-ERR Unknown command')
+                await self.send_message(writer, '-ERR Unknown command')
             else:
                 func_to_call = getattr(self, 'cmd_{0}'.format(cmd), None)
-                return_value = func_to_call(session, gsocket, msg)
+                return_value = await func_to_call(session, reader, writer, msg)
                 # state changers!
                 if state == 'AUTHORIZATION' or cmd == 'quit':
                     state = return_value
@@ -80,33 +82,31 @@ class Pop3(HandlerBase):
     # +OK Pass accepted
     # or: "-ERR Authentication failed."
     # or: "-ERR No username given."
-    def cmd_user(self, session, gsocket, msg):
+    async def cmd_user(self, session, reader, writer, msg):
         session.vdata['USER'] = msg
-        self.send_message(session, gsocket, '+OK User accepted')
+        await self.send_message(writer, '+OK User accepted')
         return 'AUTHORIZATION'
 
-    def cmd_pass(self, session, gsocket, msg):
+    async def cmd_pass(self, session, reader, writer, msg):
         if 'USER' not in session.vdata:
-            self.send_message(session, gsocket, '-ERR No username given.')
+            await self.send_message(writer, '-ERR No username given.')
         else:
             session.add_auth_attempt('plaintext', username=session.vdata['USER'], password=msg)
-            self.send_message(session, gsocket, "-ERR Authentication failed.")
+            await self.send_message(writer, "-ERR Authentication failed.")
 
         if 'USER' in session.vdata:
             del session.vdata['USER']
         return 'AUTHORIZATION'
 
-    def cmd_noop(self, session, gsocket, msg):
-        self.send_message(session, gsocket, '+OK')
+    async def cmd_noop(self, session, reader, writer, msg):
+        await self.send_message(writer, '+OK')
 
-    def cmd_quit(self, session, gsocket, msg):
-        self.send_message(session, gsocket, '+OK Logging out')
+    async def cmd_quit(self, session, reader, writer, msg):
+        await self.send_message(writer, '+OK Logging out')
         return ''
 
     @staticmethod
-    def send_message(session, gsocket, msg):
-        try:
-            message_bytes = bytes(msg + "\n", 'utf-8')
-            gsocket.sendall(message_bytes)
-        except socket.error:
-            session.end_session()
+    async def send_message(writer, msg):
+        message_bytes = bytes(msg + "\n", 'utf-8')
+        writer.write(message_bytes)
+        await writer.drain()

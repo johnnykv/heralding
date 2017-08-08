@@ -13,36 +13,49 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import gevent
-import gevent.monkey
-
-gevent.monkey.patch_all()  # NOQA
-from gevent.server import StreamServer
-
+import asyncio
 import unittest
 
-from paramiko import SSHClient, AutoAddPolicy, AuthenticationException
-from heralding.reporting.reporting_relay import ReportingRelay
 from heralding.capabilities.ssh import SSH
+from heralding.reporting.reporting_relay import ReportingRelay
+
+import asyncssh
 
 
 class SshTests(unittest.TestCase):
     def setUp(self):
-        self.reportingRelay = ReportingRelay()
-        self.reportingRelay.start()
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(None)
+
+        self.reporting_relay = ReportingRelay()
+        self.reporting_relay_task = self.loop.run_in_executor(None, self.reporting_relay.start)
 
     def tearDown(self):
-        self.reportingRelay.stop()
+        self.reporting_relay.stop()
+        # We give reporting_relay a chance to be finished
+        self.loop.run_until_complete(self.reporting_relay_task)
+
+        self.server.close()
+        self.loop.run_until_complete(self.server.wait_closed())
+
+        self.loop.close()
 
     def test_basic_login(self):
-        options = {'port': 0}
-        sut = SSH(options)
-        server = StreamServer(('127.0.0.1', 0), sut.handle_session)
-        server.start()
+        async def run_client():
+            async with asyncssh.connect('localhost', port=8888, 
+                                        username='johnny', password='secretpw',
+                                        known_hosts=None, loop=self.loop) as conn:
+                pass
+        
+        ssh_key_file = 'ssh.key'
+        SSH.generate_ssh_key(ssh_key_file)
 
-        client = SSHClient()
-        client.set_missing_host_key_policy(AutoAddPolicy())
-        with self.assertRaises(AuthenticationException):
-            client.connect('127.0.0.1', server.server_port, 'someuser', 'somepassword')
-
-        server.stop()
+        options = {'enabled': 'True', 'port': 8888}
+        server_coro = asyncssh.create_server(lambda: SSH(options, self.loop), '0.0.0.0', 8888,
+                                             server_host_keys=['ssh.key'], loop=self.loop)
+        self.server = self.loop.run_until_complete(server_coro)
+        
+        try:
+            self.loop.run_until_complete(run_client())
+        except asyncssh.Error as err:
+            pass
