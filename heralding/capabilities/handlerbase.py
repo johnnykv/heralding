@@ -13,10 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import socket
+import asyncio
 import logging
-
-from gevent.timeout import Timeout
 
 from heralding.misc.session import Session
 
@@ -27,13 +25,14 @@ class HandlerBase:
     MAX_GLOBAL_SESSIONS = 800
     global_sessions = 0
 
-    def __init__(self, options):
+    def __init__(self, options, loop):
         """
         Base class that all capabilities must inherit from.
 
-        :param sessions: a dictionary of Session objects.
         :param options: a dictionary of configuration options.
+
         """
+        self.loop = loop
         self.options = options
         self.sessions = {}
         self.users = {}
@@ -65,27 +64,31 @@ class HandlerBase:
             assert False
         HandlerBase.global_sessions -= 1
 
-    def execute_capability(self, address, gsocket, session):
-        address = None  # NOQA
-        gsocket = None  # NOQA
+    async def execute_capability(self, reader, writer, session):
+        reader = None  # NOQA
+        writer = None  # NOQA
         session = None  # NOQA
         raise Exception("Must be implemented by child")
 
-    def handle_session(self, gsocket, address):
+    async def handle_session(self, reader, writer):
+        address = writer.get_extra_info('peername')
         if HandlerBase.global_sessions > HandlerBase.MAX_GLOBAL_SESSIONS:
             protocol = self.__class__.__name__.lower()
             logger.warning(
                 'Got {0} session on port {1} from {2}:{3}, but not handling it because the global session limit has '
-                'been reached'.format(protocol, self.port, address[0], address[1]))
+                'been reached'.format(protocol, self.port, *address))
         else:
             session = self.create_session(address)
             try:
-                with Timeout(self.timeout):
-                    self.execute_capability(address, gsocket, session)
-            except socket.error as err:
-                logger.debug('Unexpected end of session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
-            except Timeout:
+                await asyncio.wait_for(self.execute_capability(reader, writer, session),
+                                       timeout=self.timeout, loop=self.loop)
+            except asyncio.TimeoutError:
                 logger.debug('Session timed out. ({0})'.format(session.id))
+            except (BrokenPipeError, ConnectionError) as err:
+                logger.debug('Unexpected end of session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
+            except (UnicodeDecodeError, KeyboardInterrupt):
+                pass
             finally:
                 self.close_session(session)
-                gsocket.close()
+                if not self.loop.is_closed():
+                    writer.close()

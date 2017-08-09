@@ -17,53 +17,35 @@ import os
 import ssl
 import sys
 import logging
+import asyncio
 
-import gevent
-import gevent.event
-from gevent import Greenlet
-from gevent.server import StreamServer
-
+import heralding.misc.common as common
 import heralding.capabilities.handlerbase
+
 from heralding.reporting.file_logger import FileLogger
 from heralding.reporting.syslog_logger import SyslogLogger
-from heralding.misc.common import on_unhandled_greenlet_exception, generate_self_signed_cert
+
+import asyncssh
 
 from ipify import get_ip
 
 logger = logging.getLogger(__name__)
 
 
-class SSLStreamServer(StreamServer):
-    """StreamServer class, but with handling of 'NO_SHARED_CIPHER' error."""
-
-    def wrap_socket_and_handle(self, client_socket, address):
-        try:
-            return super().wrap_socket_and_handle(client_socket, address)
-        except ssl.SSLError as err:
-            if err.reason == "NO_SHARED_CIPHER":
-                target_port = self.server_port
-                client_address = "{0}:{1}".format(*address)
-                error_message = "{0} tried to connect {1} port, " \
-                                "but no supported ciphers were found!".format(client_address, target_port)
-                logger.error(error_message)
-            else:
-                raise ssl.SSLError(err)
-
-
 class Honeypot:
     public_ip = ''
 
-    def __init__(self, config):
+    def __init__(self, config, loop):
         """
         :param config: configuration dictionary.
         """
         assert config is not None
-        self.readyForDroppingPrivs = gevent.event.Event()
+        self.loop = loop
         self.config = config
         self._servers = []
-        self._greenlets = []
+        self._loggers = []
 
-    def _record_and_lookup_public_ip(self):
+    async def _record_and_lookup_public_ip(self):
         while True:
             try:
                 Honeypot.public_ip = get_ip()
@@ -71,28 +53,30 @@ class Honeypot:
             except Exception as ex:
                 Honeypot.public_ip = ''
                 logger.warning('Could not request public ip from ipify, error: {0}'.format(ex))
-            gevent.sleep(3600)
+            await asyncio.sleep(3600)
 
     def start(self):
         """ Starts services. """
 
         if 'public_ip_as_destination_ip' in self.config and self.config['public_ip_as_destination_ip'] is True:
-            self._greenlets.append(gevent.spawn(self._record_and_lookup_public_ip))
+            asyncio.ensure_future(self._record_and_lookup_public_ip(), loop=self.loop)
 
         # start activity logging
         if 'activity_logging' in self.config:
             if 'file' in self.config['activity_logging'] and self.config['activity_logging']['file']['enabled']:
-                logFile = self.config['activity_logging']['file']['filename']
-                greenlet = FileLogger(logFile)
-                greenlet.link_exception(on_unhandled_greenlet_exception)
-                greenlet.start()
+                log_file = self.config['activity_logging']['file']['filename']
+                file_logger = FileLogger(log_file)
+                self.file_logger_task = self.loop.run_in_executor(None, file_logger.start)
+                self.file_logger_task.add_done_callback(common.on_unhandled_task_exception)
+                self._loggers.append(file_logger)
+
             if 'syslog' in self.config['activity_logging'] and self.config['activity_logging']['syslog']['enabled']:
-                greenlet = SyslogLogger()
-                greenlet.link_exception(on_unhandled_greenlet_exception)
-                greenlet.start()
+                sys_logger = SyslogLogger()
+                self.sys_logger_task = self.loop.run_in_executor(None, sys_logger.start)
+                self.sys_logger_task.add_done_callback(common.on_unhandled_task_exception)
+                self._loggers.append(sys_logger)
 
         for c in heralding.capabilities.handlerbase.HandlerBase.__subclasses__():
-
             cap_name = c.__name__.lower()
             if cap_name in self.config['capabilities']:
                 if not self.config['capabilities'][cap_name]['enabled']:
@@ -101,45 +85,60 @@ class Honeypot:
                 # carve out the options for this specific service
                 options = self.config['capabilities'][cap_name]
                 # capabilities are only allowed to append to the session list
-                cap = c(options)
+                cap = c(options, self.loop)
 
                 try:
-                    # Convention: All capability names which end in 's' will be wrapped in ssl.
+                    # # Convention: All capability names which end in 's' will be wrapped in ssl.
                     if cap_name.endswith('s'):
                         pem_file = '{0}.pem'.format(cap_name)
                         self.create_cert_if_not_exists(cap_name, pem_file)
-                        server = SSLStreamServer(('0.0.0.0', port), cap.handle_session,
-                                                  keyfile=pem_file, certfile=pem_file)
-                    else:
-                        server = StreamServer(('0.0.0.0', port), cap.handle_session)
+                        ssl_context = self.create_ssl_context(pem_file)
+                        server_coro = asyncio.start_server(cap.handle_session, '0.0.0.0', port,
+                                                           loop=self.loop, ssl=ssl_context)
+                    elif cap_name == 'ssh':
+                        # Since dicts and user-defined classes are mutable, we have
+                        # to save ssh class and ssh options somewhere.
+                        ssh_options = options
+                        SshClass = c
 
+                        ssh_key_file = 'ssh.key'
+                        SshClass.generate_ssh_key(ssh_key_file)
+
+                        banner = ssh_options['protocol_specific_data']['banner']
+                        SshClass.change_server_banner(banner)
+
+                        server_coro = asyncssh.create_server(lambda: SshClass(ssh_options, self.loop),
+                                                             '0.0.0.0', port, server_host_keys=[ssh_key_file],
+                                                             login_timeout=cap.timeout, loop=self.loop)
+                    else:
+                        server_coro = asyncio.start_server(cap.handle_session, '0.0.0.0', port, loop=self.loop)
+
+                    server = self.loop.run_until_complete(server_coro)
                     logger.debug('Adding {0} capability with options: {1}'.format(cap_name, options))
                     self._servers.append(server)
-                    server_greenlet = Greenlet(server.start())
-                    self._greenlets.append(server_greenlet)
                 except Exception as ex:
                     error_message = "Could not start {0} server on port {1}. Error: {2}".format(c.__name__, port, ex)
                     logger.error(error_message)
+                    task_killer = common.cancel_all_pending_tasks(self.loop)
+                    self.loop.run_until_complete(task_killer)
                     sys.exit(error_message)
                 else:
                     logger.info('Started {0} capability listening on port {1}'.format(c.__name__, port))
 
-        self.readyForDroppingPrivs.set()
-        gevent.joinall(self._greenlets)
-
     def stop(self):
         """Stops services"""
 
-        for s in self._servers:
-            s.stop()
+        for server in self._servers:
+            server.close()
+            self.loop.run_until_complete(server.wait_closed())
 
-        for g in self._greenlets:
-            g.kill()
+        for l in self._loggers:
+            l.stop()
 
-        logger.info('All workers stopped.')
+        task_killer = common.cancel_all_pending_tasks(self.loop)
+        self.loop.run_until_complete(task_killer)
 
-    def blokUntilReadyForDroppingPrivs(self):
-        self.readyForDroppingPrivs.wait()
+        logger.info('All tasks stopped.')
 
     def create_cert_if_not_exists(self, cap_name, pem_file):
         if not os.path.isfile(pem_file):
@@ -155,8 +154,15 @@ class Honeypot:
             valid_days = int(cert_dict['valid_days'])
             serial_number = int(cert_dict['serial_number'])
 
-            cert, key = generate_self_signed_cert(cert_country, cert_state, cert_org, cert_locality, cert_org_unit,
-                                                  cert_cn, valid_days, serial_number)
+            cert, key = common.generate_self_signed_cert(cert_country, cert_state, cert_org, cert_locality,
+                                                         cert_org_unit, cert_cn, valid_days, serial_number)
             with open(pem_file, 'wb') as _pem_file:
                 _pem_file.write(cert)
                 _pem_file.write(key)
+
+    @staticmethod
+    def create_ssl_context(pem_file):
+        ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        ssl_context.check_hostname = False
+        ssl_context.load_cert_chain(pem_file)
+        return ssl_context

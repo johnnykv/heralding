@@ -19,38 +19,48 @@
 # display, publicly perform, sublicense, relicense, and distribute [the] Contributions
 # and such derivative works.
 
-import gevent.monkey
-gevent.monkey.patch_all()  # NOQA
-
-from gevent.server import StreamServer
+import asyncio
+import unittest
 
 from heralding.capabilities import http
 from heralding.reporting.reporting_relay import ReportingRelay
 
-import unittest
 import http.client as httpclient
 
 
 class HttpTests(unittest.TestCase):
     def setUp(self):
-        self.reportingRelay = ReportingRelay()
-        self.reportingRelay.start()
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(None)
+
+        self.reporting_relay = ReportingRelay()
+        self.reporting_relay_task = self.loop.run_in_executor(None, self.reporting_relay.start)
 
     def tearDown(self):
-        self.reportingRelay.stop()
+        self.reporting_relay.stop()
+        # We give reporting_relay a chance to be finished
+        self.loop.run_until_complete(self.reporting_relay_task)
+
+        self.server.close()
+        self.loop.run_until_complete(self.server.wait_closed())
+
+        self.loop.close()
 
     def test_connection(self):
         """ Tests if the capability is up, and sending
             HTTP 401 (Unauthorized) headers.
         """
+        def http_request():
+            client = httpclient.HTTPConnection('127.0.0.1', 8888)
+            client.request('GET', '/')
+            response = client.getresponse()
+            self.assertEqual(response.status, 401)
 
-        options = {'enabled': 'True', 'port': 0, 'users': {'test': 'test'}}
-        cap = http.Http(options)
-        srv = StreamServer(('0.0.0.0', 0), cap.handle_session)
-        srv.start()
+        options = {'enabled': 'True', 'port': 8888, 'users': {'test': 'test'}}
+        http_cap = http.Http(options, self.loop)
 
-        client = httpclient.HTTPConnection('127.0.0.1', srv.server_port)
-        client.request('GET', '/')
-        response = client.getresponse()
-        self.assertEqual(response.status, 401)
-        srv.stop()
+        server_coro = asyncio.start_server(http_cap.handle_session, '0.0.0.0', 8888, loop=self.loop)
+        self.server = self.loop.run_until_complete(server_coro)
+
+        http_task = self.loop.run_in_executor(None, http_request)
+        self.loop.run_until_complete(http_task)

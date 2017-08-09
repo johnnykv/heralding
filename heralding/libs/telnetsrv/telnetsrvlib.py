@@ -1,13 +1,16 @@
 # license: LGPL
 # Thanks a lot to the author of original telnetsrvlib - Ian Epperson (https://github.com/ianepperson)!
+# Original repository - https://github.com/ianepperson/telnetsrvlib
+# We need this in order to reduce the number of third-party modules.
+# This code is adjusted to work with asyncio in our specific case.
 
-import socket
 import curses
 import logging
-import socketserver
+import asyncio
 import curses.ascii
 import curses.has_key
 
+from heralding.libs.aiobaserequest import AsyncBaseRequestHandler
 
 log = logging.getLogger(__name__)
 
@@ -46,15 +49,8 @@ IS = bytes([0])
 SEND = bytes([1])
 
 
-class TelnetHandlerBase(socketserver.BaseRequestHandler):
+class TelnetHandlerBase(AsyncBaseRequestHandler):
     """A telnet server based on the client in telnetlib"""
-
-    # Several methods are not fully defined in this class, and are
-    # very specific to either a threaded or green implementation.
-    # These methods are noted as #abstracmethods to ensure they are
-    # properly made concrete.
-    # (abc doesn't like the BaseRequestHandler - sigh)
-    # __metaclass__ = ABCMeta
 
     # What I am prepared to do?
     DOACK = {
@@ -96,7 +92,7 @@ class TelnetHandlerBase(socketserver.BaseRequestHandler):
 
     # --------------------------- Environment Setup ----------------------------
 
-    def __init__(self, request, client_address, server):
+    def __init__(self, reader, writer, client_address, loop):
         """Constructor.
 
         When called without arguments, create an unconnected instance.
@@ -104,26 +100,23 @@ class TelnetHandlerBase(socketserver.BaseRequestHandler):
         number is optional.
         """
         # Am I doing the echoing?
+        self.loop = loop
         self.DOECHO = True
         # What opts have I sent DO/DONT for and what did I send?
         self.DOOPTS = {}
         # What opts have I sent WILL/WONT for and what did I send?
         self.WILLOPTS = {}
-
+        self.reader = reader
+        self.writer = writer
         # What commands does this CLI support
-        self.sock = None  # TCP socket
         self.rawq = b''  # Raw input string
         self.sbdataq = b''  # Sub-Neg string
         self.eof = 0  # Has EOF been reached?
         self.iacseq = b''  # Buffer for IAC sequence.
         self.sb = 0  # Flag for SB and SE sequence.
         self.history = []  # Command history
-
-        socketserver.BaseRequestHandler.__init__(self, request, client_address, server)
-
-    class false_request:
-        def __init__(self):
-            self.sock = None
+        self.cookedq = asyncio.Queue(loop=self.loop)
+        super().__init__(reader, writer, client_address)
 
     def setterm(self, term):
         """Set the curses structures for this terminal"""
@@ -131,24 +124,17 @@ class TelnetHandlerBase(socketserver.BaseRequestHandler):
 
     def setup(self):
         """Connect incoming connection to a telnet session"""
-        try:
-            self.TERM = self.request.term
-        except:
-            pass
         self.setterm(self.TERM)
-        self.sock = self.request._sock
         for k in self.DOACK.keys():
             self.sendcommand(self.DOACK[k], k)
         for k in self.WILLACK.keys():
             self.sendcommand(self.WILLACK[k], k)
 
+        self.inputcooker_task = asyncio.ensure_future(self.inputcooker(), loop=self.loop)
+
     def finish(self):
         """End this session"""
         log.debug("Session disconnected.")
-        try:
-            self.sock.shutdown(socket.SHUT_RDWR)
-        except:
-            pass
         self.session_end()
 
     def session_start(self):
@@ -160,7 +146,7 @@ class TelnetHandlerBase(socketserver.BaseRequestHandler):
     # ------------------------- Telnet Options Engine --------------------------
 
     def sendcommand(self, cmd, opt=None):
-        "Send a telnet command (IAC)"
+        """Send a telnet command (IAC)"""
         if cmd in [DO, DONT]:
             if opt not in self.DOOPTS:
                 self.DOOPTS[opt] = None
@@ -192,7 +178,7 @@ class TelnetHandlerBase(socketserver.BaseRequestHandler):
     _current_line = b''
     _current_prompt = b''
 
-    def ansi_to_curses(self, char):
+    async def ansi_to_curses(self, char):
         """Handles reading ANSI escape sequences"""
         # ANSI sequences are:
         # ESC [ <key>
@@ -200,10 +186,10 @@ class TelnetHandlerBase(socketserver.BaseRequestHandler):
         if char != 27:     # ESC = bytes([27])
             return char
         # If we see [, read another char
-        if convert_to_bytes(self.getc(block=True)) != ANSI_START_SEQ:
+        if convert_to_bytes(await self.getc()) != ANSI_START_SEQ:
             self._readline_echo(BELL, True)
             return 0   # theNull = bytes([0])
-        key = convert_to_bytes(self.getc(block=True))
+        key = convert_to_bytes(await self.getc())
         # Translate the key to curses
         try:
             return ANSI_KEY_TO_CURSES[key]
@@ -221,7 +207,7 @@ class TelnetHandlerBase(socketserver.BaseRequestHandler):
         char_count = len(line) - insptr
         self.write(self.CODES['CSRLEFT'] * char_count)
 
-    def readline(self, echo=None, prompt=b'', use_history=True):
+    async def readline(self, echo=None, prompt=b'', use_history=True):
         """Return a line of bytes, including the terminating LF
            If echo is true always echo, if echo is false never echo
            If echo is None follow the negotiated setting.
@@ -242,8 +228,8 @@ class TelnetHandlerBase(socketserver.BaseRequestHandler):
         self._current_line = b''
 
         while True:
-            c = self.getc(block=True)
-            c = self.ansi_to_curses(c)
+            c = await self.getc()
+            c = await self.ansi_to_curses(c)
             cb = convert_to_bytes(c)
 
             if cb == theNULL:
@@ -251,14 +237,14 @@ class TelnetHandlerBase(socketserver.BaseRequestHandler):
 
             elif c == curses.KEY_LEFT:
                 if insptr > 0:
-                    insptr = insptr - 1
+                    insptr -= 1
                     self._readline_echo(self.CODES['CSRLEFT'], echo)
                 else:
                     self._readline_echo(BELL, echo)
                 continue
             elif c == curses.KEY_RIGHT:
                 if insptr < len(line):
-                    insptr = insptr + 1
+                    insptr += 1
                     self._readline_echo(self.CODES['CSRRIGHT'], echo)
                 else:
                     self._readline_echo(BELL, echo)
@@ -269,13 +255,13 @@ class TelnetHandlerBase(socketserver.BaseRequestHandler):
                     continue
                 if c == curses.KEY_UP:
                     if histptr > 0:
-                        histptr = histptr - 1
+                        histptr -= 1
                     else:
                         self._readline_echo(BELL, echo)
                         continue
                 elif c == curses.KEY_DOWN:
                     if histptr < len(self.history):
-                        histptr = histptr + 1
+                        histptr += 1
                     else:
                         self._readline_echo(BELL, echo)
                         continue
@@ -312,7 +298,7 @@ class TelnetHandlerBase(socketserver.BaseRequestHandler):
             elif c == curses.KEY_BACKSPACE or cb == bytes([127]) or cb == bytes([8]):
                 if insptr > 0:
                     self._readline_echo(self.CODES['CSRLEFT'] + self.CODES['DEL'], echo)
-                    insptr = insptr - 1
+                    insptr -= 1
                     del line[insptr]
                 else:
                     self._readline_echo(BELL, echo)
@@ -333,27 +319,28 @@ class TelnetHandlerBase(socketserver.BaseRequestHandler):
                 else:
                     self._readline_echo(cb, echo)
             line[insptr:insptr] = cb
-            insptr = insptr + len(cb)
+            insptr += len(cb)
             if self._readline_do_echo(echo):
                 self._current_line = line
 
-    # abstractmethod
-    def getc(self, block=True):
+    async def getc(self):
         """Return one character from the input queue"""
-        # This is very different between green threads and real threads.
-        raise NotImplementedError("Please Implement the getc method")
+        try:
+            return await self.cookedq.get()
+        except asyncio.QueueEmpty:
+            return b''
 
     # --------------------------- Output Functions -----------------------------
 
     def write(self, data_bytes):
-        """Send a packet to the socket. This function cooks output."""
+        """Send a packet. This function cooks output."""
         data_bytes = data_bytes.replace(IAC, IAC + IAC)
         data_bytes = data_bytes.replace(bytes([10]), bytes([13]) + bytes([10]))
         self.writecooked(data_bytes)
 
     def writecooked(self, data_bytes):
         """Put data directly into the output queue (bypass output cooker)"""
-        self.sock.sendall(data_bytes)
+        self.writer.write(data_bytes)
 
     def writeline(self, data_bytes):
         """Send a packet with line ending."""
@@ -361,65 +348,60 @@ class TelnetHandlerBase(socketserver.BaseRequestHandler):
         self.write(data_bytes + bytes([10]))
 
     # ------------------------------- Input Cooker -----------------------------
-    def _inputcooker_getc(self, block=True):
-        """Get one character from the raw queue. Optionally blocking.
+    async def _inputcooker_getc(self):
+        """Get one character from the raw queue.
         Raise EOFError on end of stream. SHOULD ONLY BE CALLED FROM THE
         INPUT COOKER."""
         if self.rawq:
             ret = self.rawq[0]
             self.rawq = self.rawq[1:]
             return bytes([ret]) if ret else b''
-        if not block:
-            if not self.inputcooker_socket_ready():
-                return b''
-        ret = self.sock.recv(20)
-        self.eof = not (ret)
-        # if isinstance(ret, bytes):
-        #   ret = bytes([ret])
+        try:
+            ret = await self.reader.read(20)
+        except BrokenPipeError:
+            ret = b''
+
+        self.eof = not ret
         self.rawq = self.rawq + ret
         if self.eof:
             raise EOFError
-        return self._inputcooker_getc(block)
-
-    # abstractmethod
-    def inputcooker_socket_ready(self):
-        """Indicate that the socket is ready to be read"""
-        # Either use a green select or a real select
-        # return select([self.sock.fileno()], [], [], 0) != ([], [], [])
-        raise NotImplementedError("Please Implement the inputcooker_socket_ready method")
+        return await self._inputcooker_getc()
 
     def _inputcooker_ungetc(self, char):
         """Put characters back onto the head of the rawq. SHOULD ONLY
         BE CALLED FROM THE INPUT COOKER."""
         self.rawq = char + self.rawq
 
-    def _inputcooker_store(self, char):
+    async def _inputcooker_store(self, char):
         """Put the cooked data in the correct queue"""
         if self.sb:
             self.sbdataq = self.sbdataq + char
         else:
-            self.inputcooker_store_queue(char)
+            await self.inputcooker_store_queue(char)
 
-    # abstractmethod
-    def inputcooker_store_queue(self, char):
-        """Put the cooked data in the output queue (possible locking needed)"""
-        raise NotImplementedError("Please Implement the inputcooker_store_queue method")
+    async def inputcooker_store_queue(self, char):
+        """Put the cooked data in the input queue (no locking needed)"""
+        if isinstance(char, list) or isinstance(char, tuple) \
+                or isinstance(char, str) or isinstance(char, bytes):
+            for v in char:
+                await self.cookedq.put(v)
+        else:
+            await self.cookedq.put(char)
 
-    def inputcooker(self):
+    async def inputcooker(self):
         """Input Cooker - Transfer from raw queue to cooked queue.
 
-        Set self.eof when connection is closed.  Don't block unless in
-        the midst of an IAC sequence.
+        Set self.eof when connection is closed.
         """
         try:
             while True:
-                cb = self._inputcooker_getc()
+                cb = await self._inputcooker_getc()
                 if not self.iacseq:
                     if cb == IAC:
                         self.iacseq += cb
                         continue
-                    elif cb == bytes([13]) and not (self.sb):
-                        c2b = self._inputcooker_getc(block=False)
+                    elif cb == bytes([13]) and not self.sb:
+                        c2b = await self._inputcooker_getc()
                         if c2b == theNULL or c2b == b'':
                             cb = bytes([10])
                         elif c2b == bytes([10]):
@@ -437,12 +419,12 @@ class TelnetHandlerBase(socketserver.BaseRequestHandler):
                                 if codes == keyseq:
                                     cb = self.ESCSEQ[keyseq]
                                     break
-                                codes = codes + self._inputcooker_getc()
+                                codes = codes + await self._inputcooker_getc()
                             if codes == keyseq:
                                 break
                             self._inputcooker_ungetc(codes[1:])
                             codes = codes[0]
-                    self._inputcooker_store(cb)
+                    await self._inputcooker_store(cb)
                 elif len(self.iacseq) == 1:
                     # IAC: IAC CMD [OPTION only for WILL/WONT/DO/DONT]
                     if cb in (DO, DONT, WILL, WONT):
@@ -450,7 +432,7 @@ class TelnetHandlerBase(socketserver.BaseRequestHandler):
                         continue
                     self.iacseq = b''
                     if cb == IAC:
-                        self._inputcooker_store(cb)
+                        await self._inputcooker_store(cb)
                     else:
                         if cb == SB:  # SB ... SE start.
                             self.sb = 1
@@ -461,18 +443,24 @@ class TelnetHandlerBase(socketserver.BaseRequestHandler):
                         # the sbdataq
                 elif len(self.iacseq) == 2:
                     self.iacseq = b''
-        except (EOFError, socket.error):
+        except EOFError:
             pass
 
-    def authentication_ok(self):
-        """Checks the authentication and sets the username of the currently connected terminal.  Returns True or False"""
+    async def authentication_ok(self):
+        """Checks the authentication and sets the username of the currently connected terminal. Returns True or False"""
         raise NotImplementedError("Please Implement the authentication_ok method")
 
     # ----------------------- Command Line Processor Engine --------------------
 
-    def handle(self):
+    async def handle(self):
         """The actual service to which the user has connected."""
-        self.authentication_ok()
+        await self.authentication_ok()
+        
+        self.inputcooker_task.cancel()
+        try:
+            await self.inputcooker_task
+        except asyncio.CancelledError:
+            pass
 
 
 def convert_to_bytes(c):
