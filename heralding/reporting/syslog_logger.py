@@ -15,6 +15,7 @@
 
 import syslog
 import logging
+
 from heralding.reporting.base_logger import BaseLogger
 
 logger = logging.getLogger(__name__)
@@ -25,8 +26,8 @@ class SyslogLogger(BaseLogger):
         super().__init__()
         logger.debug('Syslog logger started')
 
-
     def handle_log_data(self, data):
-        message = "Authentication from {0}:{1}, with username: {2} and password: {3}.".format(
-        data['source_ip'], data['source_port'], data['username'], data['password'])
+        message = "Authentication from {0}:{1}, with username: {2} " \
+                  "and password: {3}.".format(data['source_ip'], data['source_port'],
+                                              data['username'], data['password'])
         syslog.syslog(syslog.LOG_ALERT, message)

@@ -1,4 +1,4 @@
-Heralding |travis badge| |landscape badge| |version badge|
+Heralding |travis badge| |landscape badge| |version badge| |codacy badge|
 =======================
 
 .. |travis badge| image:: https://img.shields.io/travis/johnnykv/heralding/master.svg
@@ -6,6 +6,8 @@ Heralding |travis badge| |landscape badge| |version badge|
 .. |landscape badge| image:: https://landscape.io/github/johnnykv/heralding/master/landscape.png
    :target: https://landscape.io/github/johnnykv/heralding/
    :alt: Code Health
+.. |codacy badge| image:: https://api.codacy.com/project/badge/Grade/cd64aa20bce5474ba565fa3691710773 
+   :target: https://www.codacy.com/app/johnnykv/heralding?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=johnnykv/heralding&amp;utm_campaign=Badge_Grade
 .. |version badge| image:: https://img.shields.io/pypi/v/heralding.svg
    :target: https://pypi.python.org/pypi/Heralding/
 
@@ -15,13 +17,15 @@ About
 Sometimes you just want a simple honeypot that collects credentials, nothing more. Heralding is that honeypot!
 Currently the following protocols are supported: ftp, telnet, ssh, http, https, pop3, pop3s, imap, imaps and smtp.
 
+**You need Python 3.5.0 or higher.**
+
 Starting the honeypot
 -----------------------
 
 .. code-block:: shell
 
   $ sudo heralding
-  2017-05-14 21:55:55,948 (root) Initializing Heralding version 0.1.17
+  2017-05-14 21:55:55,948 (root) Initializing Heralding version 0.2.0
   2017-05-14 21:55:55,968 (root) Using default config file: "/home/kajoj/heralding/bin/heralding/heralding.yml", if you want to customize values please copy this file to the current working directory
   2017-05-14 21:55:55,998 (heralding.reporting.file_logger) File logger started, using file: heralding_activity.log
   2017-05-14 21:55:55,999 (heralding.honeypot) Started Telnet capability listening on port 23
