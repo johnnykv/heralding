@@ -37,6 +37,7 @@ async def cancel_all_pending_tasks(loop=None):
     if loop is None:
         loop = asyncio.get_event_loop()
     pending = asyncio.Task.all_tasks(loop=loop)
+    pending.remove(asyncio.Task.current_task(loop=loop))
     for task in pending:
         # We give task only 1 second to die.
         task.cancel()
