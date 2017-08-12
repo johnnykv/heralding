@@ -42,11 +42,11 @@ class SshTests(unittest.TestCase):
 
     def test_basic_login(self):
         async def run_client():
-            async with asyncssh.connect('localhost', port=8888, 
+            async with asyncssh.connect('localhost', port=8888,
                                         username='johnny', password='secretpw',
-                                        known_hosts=None, loop=self.loop) as conn:
+                                        known_hosts=None, loop=self.loop) as _:
                 pass
-        
+
         ssh_key_file = 'ssh.key'
         SSH.generate_ssh_key(ssh_key_file)
 
@@ -57,5 +57,5 @@ class SshTests(unittest.TestCase):
         
         try:
             self.loop.run_until_complete(run_client())
-        except asyncssh.Error as err:
+        except asyncssh.Error:
             pass
