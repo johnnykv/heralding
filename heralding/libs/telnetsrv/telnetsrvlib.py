@@ -193,7 +193,7 @@ class TelnetHandlerBase(AsyncBaseRequestHandler):
         # Translate the key to curses
         try:
             return ANSI_KEY_TO_CURSES[key]
-        except:
+        except KeyError:
             self._readline_echo(BELL, True)
             return 0
 
@@ -268,7 +268,7 @@ class TelnetHandlerBase(AsyncBaseRequestHandler):
                 line = []
                 if histptr < len(self.history):
                     line.extend(self.history[histptr])
-                for char in range(insptr):
+                for _ in range(insptr):
                     self._readline_echo(self.CODES['CSRLEFT'], echo)
                 self._readline_echo(self.CODES['DEOL'], echo)
                 self._readline_echo(b''.join(line), echo)
@@ -455,7 +455,6 @@ class TelnetHandlerBase(AsyncBaseRequestHandler):
     async def handle(self):
         """The actual service to which the user has connected."""
         await self.authentication_ok()
-        
         self.inputcooker_task.cancel()
         try:
             await self.inputcooker_task

@@ -50,7 +50,7 @@ class FtpTests(unittest.TestCase):
             # expect perm exception
             try:
                 ftp_client.login('james', 'bond')
-                response = ftp_client.getresp()  # NOQA
+                _ = ftp_client.getresp()  # NOQA
             except ftplib.error_perm:
                 ftp_client.quit()
 

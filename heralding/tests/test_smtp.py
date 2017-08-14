@@ -101,7 +101,7 @@ class SmtpTests(unittest.TestCase):
         def smtp_auth_plain_reject():
             smtp_ = smtplib.SMTP('127.0.0.1', 8888, local_hostname='localhost', timeout=15)
             arg = bytes('\0{0}\0{1}'.format('test', 'test'), 'utf-8')
-            code, resp = smtp_.docmd('AUTH', 'PLAIN ' + str(base64.b64encode(arg), 'utf-8'))
+            code, _ = smtp_.docmd('AUTH', 'PLAIN ' + str(base64.b64encode(arg), 'utf-8'))
             smtp_.quit()
             self.assertEqual(code, 535)
 
@@ -124,7 +124,7 @@ class SmtpTests(unittest.TestCase):
             smtp_ = smtplib.SMTP('127.0.0.1', 8888, local_hostname='localhost', timeout=15)
             smtp_.docmd('AUTH', 'LOGIN')
             smtp_.docmd(str(base64.b64encode(b'test'), 'utf-8'))
-            code, resp = smtp_.docmd(str(base64.b64encode(b'test'), 'utf-8'))
+            code, _ = smtp_.docmd(str(base64.b64encode(b'test'), 'utf-8'))
             smtp_.quit()
             self.assertEqual(code, 535)
 
