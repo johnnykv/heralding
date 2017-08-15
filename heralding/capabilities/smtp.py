@@ -63,6 +63,16 @@ class SMTPHandler(SMTP):
         except ConnectionResetError:
             self.stop()
 
+    @syntax('EHLO hostname')
+    async def smtp_EHLO(self, hostname):
+        if not hostname:
+            await self.push('501 Syntax: EHLO hostname')
+            return
+        self._set_rset_state()
+        await self.push('250-{0} Hello {1}'.format(self.hostname, hostname))
+        await self.push('250-AUTH PLAIN LOGIN CRAM-MD5')
+        await self.push('250 EHLO')
+
     @syntax("AUTH mechanism [initial-response]")
     async def smtp_AUTH(self, arg):
         if not arg:
@@ -136,8 +146,8 @@ class SMTPHandler(SMTP):
                 await self.push('451 Internal confusion')
                 return
             username, digest = credentials.split()
-            self.session.add_auth_attempt('cram_md5', username=username, digest=digest,
-                                          challenge=sent_cram_challenge)
+            self.session.add_auth_attempt('cram_md5', passw_recovered=False, username=username,
+                                          digest=digest, challenge=sent_cram_challenge)
             await self.push('535 authentication failed')
         else:
             await self.push('500 incorrect AUTH mechanism')

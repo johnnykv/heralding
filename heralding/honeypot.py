@@ -41,6 +41,7 @@ class Honeypot:
         """
         assert config is not None
         self.loop = loop
+        self.SshClass = None
         self.config = config
         self._servers = []
         self._loggers = []
@@ -100,6 +101,7 @@ class Honeypot:
                         # to save ssh class and ssh options somewhere.
                         ssh_options = options
                         SshClass = c
+                        self.SshClass = SshClass
 
                         ssh_key_file = 'ssh.key'
                         SshClass.generate_ssh_key(ssh_key_file)
@@ -127,6 +129,10 @@ class Honeypot:
 
     def stop(self):
         """Stops services"""
+        if self.config['capabilities']['ssh']['enabled']:
+           for conn in self.SshClass.connections_list:
+               conn.close()
+               self.loop.run_until_complete(conn.wait_closed())
 
         for server in self._servers:
             server.close()
@@ -138,7 +144,7 @@ class Honeypot:
         task_killer = common.cancel_all_pending_tasks(self.loop)
         self.loop.run_until_complete(task_killer)
 
-        logger.info('All tasks stopped.')
+        logger.info('All tasks were stopped.')
 
     def create_cert_if_not_exists(self, cap_name, pem_file):
         if not os.path.isfile(pem_file):

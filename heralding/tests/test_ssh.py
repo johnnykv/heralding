@@ -54,7 +54,7 @@ class SshTests(unittest.TestCase):
         server_coro = asyncssh.create_server(lambda: SSH(options, self.loop), '0.0.0.0', 8888,
                                              server_host_keys=['ssh.key'], loop=self.loop)
         self.server = self.loop.run_until_complete(server_coro)
-        
+
         try:
             self.loop.run_until_complete(run_client())
         except asyncssh.Error:
