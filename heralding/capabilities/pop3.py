@@ -109,4 +109,8 @@ class Pop3(HandlerBase):
     async def send_message(writer, msg):
         message_bytes = bytes(msg + "\n", 'utf-8')
         writer.write(message_bytes)
-        await writer.drain()
+        # We need this to get rid of ConnectionResetError after nmap scanning
+        try:
+            await writer.drain()
+        except ConnectionResetError:
+            pass

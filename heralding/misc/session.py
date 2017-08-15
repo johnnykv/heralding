@@ -55,7 +55,7 @@ class Session:
     def is_connected(self):
         return self.connected
 
-    def add_auth_attempt(self, _type, **kwargs):
+    def add_auth_attempt(self, _type, passw_recovered=True, **kwargs):
         self.login_attempts += 1
         entry = {'timestamp': datetime.utcnow(),
                  'session_id': self.id,
@@ -65,8 +65,9 @@ class Session:
                  'destination_ip': heralding.honeypot.Honeypot.public_ip,
                  'destination_port': self.destination_port,
                  'protocol': self.protocol,
+                 'passw_recovered': passw_recovered,
                  'username': None,
-                 'password': None
+                 'password': None,
                  }
         if 'username' in kwargs:
             entry['username'] = kwargs['username']

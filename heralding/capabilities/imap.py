@@ -152,7 +152,11 @@ class Imap(HandlerBase):
     async def send_message(writer, msg):
         message_bytes = bytes(msg + CRLF, 'utf-8')
         writer.write(message_bytes)
-        await writer.drain()
+        # We need this to get rid of ConnectionResetError after nmap scanning
+        try:
+            await writer.drain()
+        except ConnectionResetError:
+            pass
 
     @staticmethod
     def try_b64decode(b64_str, session):

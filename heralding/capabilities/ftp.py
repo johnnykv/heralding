@@ -110,7 +110,11 @@ class FtpHandler:
         msg += TERMINATOR
         msg_bytes = bytes(msg, 'utf-8')
         self.writer.write(msg_bytes)
-        await self.writer.drain()
+        # We need this to get rid of ConnectionResetError after nmap scanning
+        try:
+            await self.writer.drain()
+        except ConnectionResetError:
+            pass
 
     def stop(self):
         self.session.end_session()
