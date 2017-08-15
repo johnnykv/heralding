@@ -47,10 +47,7 @@ class FtpHandler:
         self.user = None
 
     async def getcmd(self):
-        try:
-            cmd = await self.reader.readline()
-        except ConnectionResetError:
-            cmd = b''
+        cmd = await self.reader.readline()
         return str(cmd, 'utf-8')
 
     async def serve(self):
@@ -110,11 +107,7 @@ class FtpHandler:
         msg += TERMINATOR
         msg_bytes = bytes(msg, 'utf-8')
         self.writer.write(msg_bytes)
-        # We need this to get rid of ConnectionResetError after nmap scanning
-        try:
-            await self.writer.drain()
-        except ConnectionResetError:
-            pass
+        await self.writer.drain()
 
     def stop(self):
         self.session.end_session()

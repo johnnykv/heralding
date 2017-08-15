@@ -43,10 +43,7 @@ class Imap(HandlerBase):
         while state != 'Logout' and session.connected:
             # An exception is raised inside await reader.readline() in case of
             # sudden connection reset.
-            try:
-                raw_msg = await reader.readline()
-            except ConnectionResetError:
-                break
+            raw_msg = await reader.readline()
             if not raw_msg:
                 break
 
@@ -152,11 +149,7 @@ class Imap(HandlerBase):
     async def send_message(writer, msg):
         message_bytes = bytes(msg + CRLF, 'utf-8')
         writer.write(message_bytes)
-        # We need this to get rid of ConnectionResetError after nmap scanning
-        try:
-            await writer.drain()
-        except ConnectionResetError:
-            pass
+        await writer.drain()
 
     @staticmethod
     def try_b64decode(b64_str, session):

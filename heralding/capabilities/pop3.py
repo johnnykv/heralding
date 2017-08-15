@@ -36,12 +36,7 @@ class Pop3(HandlerBase):
 
         state = 'AUTHORIZATION'
         while state != '' and session.connected:
-            # An exception is raised inside await reader.readline() in case of
-            # sudden connection reset.
-            try:
-                raw_msg = await reader.readline()
-            except ConnectionResetError:
-                break
+            raw_msg = await reader.readline()
             if not raw_msg:
                 break
 
@@ -109,8 +104,4 @@ class Pop3(HandlerBase):
     async def send_message(writer, msg):
         message_bytes = bytes(msg + "\n", 'utf-8')
         writer.write(message_bytes)
-        # We need this to get rid of ConnectionResetError after nmap scanning
-        try:
-            await writer.drain()
-        except ConnectionResetError:
-            pass
+        await writer.drain()
