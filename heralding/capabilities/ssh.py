@@ -26,11 +26,14 @@ logger = logging.getLogger(__name__)
 
 
 class SSH(asyncssh.SSHServer, HandlerBase):
+    connections_list = []
+
     def __init__(self, options, loop):
         asyncssh.SSHServer.__init__(self)
         HandlerBase.__init__(self, options, loop)
 
     def connection_made(self, conn):
+        SSH.connections_list.append(conn)
         self.address = conn.get_extra_info('peername')
         self.handle_connection()
         logger.debug('SSH connection received from %s.' % conn.get_extra_info('peername')[0])

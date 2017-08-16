@@ -47,10 +47,7 @@ class FtpHandler:
         self.user = None
 
     async def getcmd(self):
-        try:
-            cmd = await self.reader.readline()
-        except ConnectionResetError:
-            cmd = b''
+        cmd = await self.reader.readline()
         return str(cmd, 'utf-8')
 
     async def serve(self):
