@@ -146,7 +146,7 @@ class SMTPHandler(SMTP):
                 await self.push('451 Internal confusion')
                 return
             username, digest = credentials.split()
-            self.session.add_auth_attempt('cram_md5', username=username,
+            self.session.add_auth_attempt('cram_md5', passw_recovered=False, username=username,
                                           digest=digest, challenge=sent_cram_challenge)
             await self.push('535 authentication failed')
         else:
