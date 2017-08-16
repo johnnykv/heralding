@@ -28,8 +28,6 @@ def on_unhandled_task_exception(task):
         task_exc = task.exception()
         if task_exc:
             logger.error('Stopping because {0} died: {1}'.format(task, task_exc))
-            loop = asyncio.get_event_loop()
-            loop.run_until_complete(cancel_all_pending_tasks())
             sys.exit(1)
 
 
@@ -43,7 +41,7 @@ async def cancel_all_pending_tasks(loop=None):
         task.cancel()
         try:
             await asyncio.wait_for(task, timeout=1, loop=loop)
-        except (asyncio.CancelledError, KeyboardInterrupt):
+        except (asyncio.CancelledError, KeyboardInterrupt, ConnectionResetError):
             pass
 
 

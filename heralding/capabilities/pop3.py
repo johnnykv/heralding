@@ -36,12 +36,7 @@ class Pop3(HandlerBase):
 
         state = 'AUTHORIZATION'
         while state != '' and session.connected:
-            # An exception is raised inside await reader.readline() in case of
-            # sudden connection reset.
-            try:
-                raw_msg = await reader.readline()
-            except ConnectionResetError:
-                break
+            raw_msg = await reader.readline()
             if not raw_msg:
                 break
 
