@@ -66,7 +66,7 @@ class Session:
                  'destination_port': self.destination_port,
                  'protocol': self.protocol,
                  'username': None,
-                 'password': None,
+                 'password': None
                  }
         if 'username' in kwargs:
             entry['username'] = kwargs['username']
