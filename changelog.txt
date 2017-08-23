@@ -1,4 +1,8 @@
-0.2.0 (2016-06-23)
+0.2.1 (2017-08-23)
+ - Gevent replaced with asyncio
+ - Various fixes
+
+0.2.0 (2017-06-23)
  - Heralding converted to Python 3 
 
 0.1.17 (2017-06-20):
