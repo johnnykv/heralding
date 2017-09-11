@@ -55,6 +55,11 @@ capabilities:
         valid_days: 365
         serial_number: 0
 
+  postgre:
+    enabled: true
+    port: 5432
+    timeout: 30
+ 
   imap:
     enabled: true
     port: 143
