@@ -1,4 +1,3 @@
-import asyncio
 import struct
 import logging
 
