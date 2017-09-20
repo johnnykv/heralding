@@ -59,6 +59,8 @@ Viewing the collected data
 Installing Heralding
 ---------------------
 
+For step by step instructions on how to install and run heralding in a Python virtual environment using Ubuntu, see this `guide <https://github.com/johnnykv/heralding/blob/master/INSTALL.md>`_. Otherwise, the basic installation instructions are below.
+
 To install the latest stable (well, semi-stable) version, use pip:
 
 .. code-block:: shell
