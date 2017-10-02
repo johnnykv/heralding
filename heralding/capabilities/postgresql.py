@@ -6,7 +6,7 @@ from heralding.capabilities.handlerbase import HandlerBase
 logger = logging.getLogger(__name__)
 
 
-class Postgre(HandlerBase):
+class PostgreSQL(HandlerBase):
     async def execute_capability(self, reader, writer, session):
         await self._handle_session(session, reader, writer)
 

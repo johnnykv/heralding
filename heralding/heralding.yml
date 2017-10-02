@@ -55,7 +55,7 @@ capabilities:
         valid_days: 365
         serial_number: 0
 
-  postgre:
+  postgresql:
     enabled: true
     port: 5432
     timeout: 30
