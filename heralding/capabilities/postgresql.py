@@ -8,51 +8,45 @@ logger = logging.getLogger(__name__)
 
 class PostgreSQL(HandlerBase):
     async def execute_capability(self, reader, writer, session):
-        await self._handle_session(session, reader, writer)
+        try:
+            await self._handle_session(session, reader, writer)
+        except struct.error as exc:
+            logger.debug('PostgreSQL connection error: %s', exc)
+            session.end_session()
 
     async def _handle_session(self, session, reader, writer):
         # Read (we blindly assume) SSL request and deny it
-        await self.read_msg(reader, writer)
-        writer.write('N'.encode('ascii'))
+        await read_msg(reader, writer)
+
+        writer.write(b'N')
 
         session.activity()
 
         # Read login details
-        data = await self.read_msg(reader, writer)
-        login_dict = self.parse_dict(data)
+        data = await read_msg(reader, writer)
+        login_dict = parse_dict(data)
 
         # Request plain text password login
-        password_request = ['R'.encode('ascii'), 8, 3]
+        password_request = [b'R', 8, 3]
         writer.write(struct.pack('>c I I', *password_request))
         await writer.drain()
 
         # Read password
-        data = await self.read_msg(reader, writer)
-        password = self.parse_str(data)
+        data = await read_msg(reader, writer)
+        password = parse_str(data)
         username = login_dict['user']
         session.add_auth_attempt('plaintext', username=username, password=password)
 
         # Report login failure
-        writer.write('E'.encode('ascii'))
+        writer.write(b'E')
         fail = [
-            'SFATAL'.encode('ascii'),
-            b'\x00',
-            'C28P01'.encode('ascii'),
-            b'\x00',
+            b'SFATAL\x00C28P01\x00',
             'Mpassword authentication failed for user "{}"'.format(username).encode('utf-8'),
-            b'\x00',
-            'Fauth.c'.encode('ascii'),
-            b'\x00',
-            'L288'.encode('ascii'),
-            b'\x00',
-            'Rauth_failed'.encode('ascii'),
-            b'\x00',
-            b'\x00',
+            b'\x00Fauth.c\x00L288\x00Rauth_failed\x00\x00',
         ]
-        length = 0
-        for f in fail:
-            length += len(f)
-        writer.write(struct.pack('>I', length+4))
+
+        length = sum([len(f) for f in fail])
+        writer.write(struct.pack('>I', length + 4))
         for f in fail:
             writer.write(f)
 
@@ -60,44 +54,47 @@ class PostgreSQL(HandlerBase):
 
         session.end_session()
 
-    async def read_msg(self, reader, writer):
-        i = await reader.read(4)
-        length = struct.unpack('>I', i)[0]
-        data = await reader.read(length)
-        return data
 
-    def parse_dict(self, data):
-        dct = {}
-        mode = 'pad'
-        key = []
-        value = []
+async def read_msg(reader, writer):
+    i = await reader.read(4)
+    length = struct.unpack('>I', i)[0]
+    data = await reader.read(length)
+    return data
 
-        for c in struct.iter_unpack('c', data):
-            c = c[0]
 
-            if mode == 'pad':
-                if c in (bytes([0]), bytes([3])):
-                    continue
-                else:
-                    mode = 'key'
+def parse_dict(data):
+    dct = {}
+    mode = 'pad'
+    key = []
+    value = []
 
-            if mode == 'key':
-                if c == bytes([0]):
-                    mode = 'value'
-                else:
-                    key.append(c.decode())
+    for c in struct.iter_unpack('c', data):
+        c = c[0]
 
-            elif mode == 'value':
-                if c == bytes([0]):
-                    dct[''.join(key)] = ''.join(value)
-                    key = []
-                    value = []
-                    mode = 'pad'
-                else:
-                    value.append(c.decode())
+        if mode == 'pad':
+            if c in (bytes([0]), bytes([3])):
+                continue
+            else:
+                mode = 'key'
 
-        return dct
+        if mode == 'key':
+            if c == bytes([0]):
+                mode = 'value'
+            else:
+                key.append(c.decode())
 
-    def parse_str(self, data):
-        data_array = bytearray(data)
-        return data_array[1:-1].decode('utf-8')
+        elif mode == 'value':
+            if c == bytes([0]):
+                dct[''.join(key)] = ''.join(value)
+                key = []
+                value = []
+                mode = 'pad'
+            else:
+                value.append(c.decode())
+
+    return dct
+
+
+def parse_str(data):
+    data_array = bytearray(data)
+    return data_array[1:-1].decode('utf-8')
