@@ -17,6 +17,7 @@ setup(
     description='Credentials catching honeypot.',
     test_suite='nose.collector',
     install_requires=open('requirements.txt').read(),
+    tests_require=open('requirements-test.txt').read(),
     package_data={
         "heralding": ["heralding.yml"],
     },
