@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys
+import os
 import logging
 import asyncio
 
@@ -28,7 +28,7 @@ def on_unhandled_task_exception(task):
         task_exc = task.exception()
         if task_exc:
             logger.error('Stopping because {0} died: {1}'.format(task, task_exc))
-            sys.exit(1)
+            os._exit(1)
 
 
 async def cancel_all_pending_tasks(loop=None):

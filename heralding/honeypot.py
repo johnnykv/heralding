@@ -24,6 +24,7 @@ import heralding.capabilities.handlerbase
 
 from heralding.reporting.file_logger import FileLogger
 from heralding.reporting.syslog_logger import SyslogLogger
+from heralding.reporting.hpfeeds_logger import HpFeedsLogger
 
 import asyncssh
 
@@ -76,6 +77,17 @@ class Honeypot:
                 self.sys_logger_task = self.loop.run_in_executor(None, sys_logger.start)
                 self.sys_logger_task.add_done_callback(common.on_unhandled_task_exception)
                 self._loggers.append(sys_logger)
+
+            if 'hpfeeds' in self.config['activity_logging'] and self.config['activity_logging']['hpfeeds']['enabled']:
+                channel = self.config['activity_logging']['hpfeeds']['channel']
+                host = self.config['activity_logging']['hpfeeds']['host']
+                port = self.config['activity_logging']['hpfeeds']['port']
+                ident = self.config['activity_logging']['hpfeeds']['ident']
+                secret = self.config['activity_logging']['hpfeeds']['secret']
+                hpfeeds_logger = HpFeedsLogger(channel, host, port, ident, secret)
+                self.hpfeeds_logger_task = self.loop.run_in_executor(None, hpfeeds_logger.start)
+                self.hpfeeds_logger_task.add_done_callback(common.on_unhandled_task_exception)
+
 
         for c in heralding.capabilities.handlerbase.HandlerBase.__subclasses__():
             cap_name = c.__name__.lower()
