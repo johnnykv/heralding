@@ -7,3 +7,4 @@ Enum34
 pyaml
 ipify
 pyzmq
+psycopg2
