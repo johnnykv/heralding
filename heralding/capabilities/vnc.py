@@ -13,12 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""
-
-
-Once the protocol version has been decided, the server and client must agree on the type of security to be used on the connection.
-"""
-
 import os
 import logging
 

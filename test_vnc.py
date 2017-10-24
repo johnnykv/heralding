@@ -41,29 +41,25 @@ class VncTests(unittest.TestCase):
 
     def test_vnc_authentication(self):
         async def vnc_auth():
-            reader, writer = await asyncio.open_connection('127.0.0.1', 8888,
+            reader, writer = await asyncio.open_connection('127.0.0.1', 8883,
                                                            loop=self.loop)
-            # server rfb version
-            _ = await reader.readline()
+            server_rfb_version = await reader.readline()
             writer.write(RFB_VERSION)
 
-            # available auth methods
-            _ = await reader.read(1024)
+            auth_methods = await reader.read(1024)
             writer.write(VNC_AUTH)
 
-            # challenge
-            _ = await reader.read(1024)
-            # Pretending, that we encrypt received challenge with DES and send back the result.
+            challenge = await reader.read(1024)
+            # As if we encrypt received challenge with DES and send back the result.
             client_response = os.urandom(16)
             writer.write(client_response)
 
-            # security result
-            _ = await reader.read(1024)
+            security_result = await reader.read(1024)
 
-        options = {'enabled': 'True', 'port': 8888, 'timeout': 30}
+        options = {'enabled': 'True', 'port': 8883, 'timeout': 30}
         capability = Vnc(options, self.loop)
 
-        server_coro = asyncio.start_server(capability.handle_session, '0.0.0.0', 8888, loop=self.loop)
+        server_coro = asyncio.start_server(capability.handle_session, '0.0.0.0', 8883, loop=self.loop)
         self.server = self.loop.run_until_complete(server_coro)
 
         self.loop.run_until_complete(vnc_auth())
