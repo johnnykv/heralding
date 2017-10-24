@@ -13,6 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+
+
+Once the protocol version has been decided, the server and client must agree on the type of security to be used on the connection.
+"""
+
 import os
 import logging
 
@@ -20,7 +26,7 @@ from heralding.capabilities.handlerbase import HandlerBase
 
 # VNC constants
 RFB_VERSION = b'RFB 003.007\n'
-SUPPORTED_AUTH_METHODS = b'\x01\x02'
+AUTH_METHODS = b'\x01\x02'
 VNC_AUTH = b'\x02'
 AUTH_FAILED = b'\x00\x00\x00\x01'
 
@@ -32,22 +38,22 @@ class Vnc(HandlerBase):
         super().__init__(options, loop)
 
     async def execute_capability(self, reader, writer, session):
-        await self._handle_session(session, reader, writer)
+        await self._handle_session(reader, writer, session)
 
-    async def _handle_session(self, session, reader, writer):
+    async def _handle_session(self, reader, writer, session):
         writer.write(RFB_VERSION)
         client_version = await reader.read(1024)
 
-        if client_version and client_version == RFB_VERSION:
+        if client_version == RFB_VERSION:
             await self.security_handshake(reader, writer, session)
         else:
             session.end_session()
 
     async def security_handshake(self, reader, writer, session):
-        writer.write(SUPPORTED_AUTH_METHODS)
+        writer.write(AUTH_METHODS)
         sec_method = await reader.read(1024)
 
-        if sec_method and sec_method == VNC_AUTH:
+        if sec_method == VNC_AUTH:
             await self.do_vnc_authentication(reader, writer, session)
         else:
             session.end_session()
@@ -55,10 +61,10 @@ class Vnc(HandlerBase):
     async def do_vnc_authentication(self, reader, writer, session):
         challenge = os.urandom(16)
         writer.write(challenge)
-        client_response_ = await reader.read(1024)
 
-        # session.add_auth_attempt('des_challenge', response=client_response_)
+        client_response = await reader.read(1024)
+        session.add_auth_attempt('des_challenge', response=client_response,
+                                 challenge=challenge)
 
-        print('challenge: {}; response: {}\n'.format(challenge, client_response_))
         writer.write(AUTH_FAILED)
         session.end_session()
