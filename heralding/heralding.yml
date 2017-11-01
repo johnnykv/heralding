@@ -142,3 +142,8 @@ capabilities:
       banner: "Microsoft ESMTP MAIL service ready"
       # If the fqdn option is commented out or empty, then fqdn of the host will be used
       fqdn: ""
+
+  vnc:
+    enabled: true
+    port: 5900
+    timeout: 30
