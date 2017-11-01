@@ -13,7 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import json
 import uuid
 import logging
 from datetime import datetime
@@ -55,7 +54,7 @@ class Session:
     def is_connected(self):
         return self.connected
 
-    def add_auth_attempt(self, _type, passw_recovered=True, **kwargs):
+    def add_auth_attempt(self, _type, pass_recovered=True, **kwargs):
         self.login_attempts += 1
         entry = {'timestamp': datetime.utcnow(),
                  'session_id': self.id,
@@ -65,7 +64,7 @@ class Session:
                  'destination_ip': heralding.honeypot.Honeypot.public_ip,
                  'destination_port': self.destination_port,
                  'protocol': self.protocol,
-                 'passw_recovered': passw_recovered,
+                 'pass_recovered': pass_recovered,
                  'username': None,
                  'password': None
                  }
@@ -78,7 +77,7 @@ class Session:
         self.activity()
         logger.debug('{0} authentication attempt from {1}:{2}. Auth mechanism: {3}. '
                      'Credentials: {4}'.format(self.protocol, self.source_ip,
-                                               self.source_port, _type, json.dumps(kwargs)))
+                                               self.source_port, _type, kwargs))
 
     def end_session(self):
         if not self.session_ended:
