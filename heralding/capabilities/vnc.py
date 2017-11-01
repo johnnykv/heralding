@@ -57,7 +57,7 @@ class Vnc(HandlerBase):
         writer.write(challenge)
 
         client_response = await reader.read(1024)
-        session.add_auth_attempt('des_challenge', passw_recovered=False,
+        session.add_auth_attempt('des_challenge', pass_recovered=False,
                                  response=client_response, challenge=challenge)
 
         writer.write(AUTH_FAILED)
