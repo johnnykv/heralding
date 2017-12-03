@@ -1,5 +1,5 @@
 recursive-include heralding *
 include ez_setup.py
 include requirements.txt
-requirements-test.txt
+include requirements-test.txt
 prune *.pyc
