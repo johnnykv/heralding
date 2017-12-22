@@ -12,7 +12,7 @@ About
 -----
 
 Sometimes you just want a simple honeypot that collects credentials, nothing more. Heralding is that honeypot!
-Currently the following protocols are supported: ftp, telnet, ssh, http, https, pop3, pop3s, imap, imaps and smtp.
+Currently the following protocols are supported: ftp, telnet, ssh, http, https, pop3, pop3s, imap, imaps, smtp and postgresql.
 
 **You need Python 3.5.0 or higher.**
 
@@ -58,6 +58,8 @@ Viewing the collected data
 
 Installing Heralding
 ---------------------
+
+For step by step instructions on how to install and run heralding in a Python virtual environment using Ubuntu, see this `guide <https://github.com/johnnykv/heralding/blob/master/INSTALL.md>`_. Otherwise, the basic installation instructions are below.
 
 To install the latest stable (well, semi-stable) version, use pip:
 

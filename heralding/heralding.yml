@@ -10,6 +10,14 @@ activity_logging:
   syslog:
     enabled: false
 
+  hpfeeds:
+    enabled: false
+    channel: "heralding.events"
+    host: 
+    port: 20000
+    ident:
+    secret:
+
 
 # protocols to enable
 capabilities:
@@ -55,6 +63,11 @@ capabilities:
         valid_days: 365
         serial_number: 0
 
+  postgresql:
+    enabled: true
+    port: 5432
+    timeout: 30
+ 
   imap:
     enabled: true
     port: 143
