@@ -89,6 +89,8 @@ class Honeypot:
                 self.hpfeeds_logger_task.add_done_callback(common.on_unhandled_task_exception)
 
 
+        bind_host = self.config['bind_host']
+
         for c in heralding.capabilities.handlerbase.HandlerBase.__subclasses__():
             cap_name = c.__name__.lower()
             if cap_name in self.config['capabilities']:
@@ -106,7 +108,7 @@ class Honeypot:
                         pem_file = '{0}.pem'.format(cap_name)
                         self.create_cert_if_not_exists(cap_name, pem_file)
                         ssl_context = self.create_ssl_context(pem_file)
-                        server_coro = asyncio.start_server(cap.handle_session, '0.0.0.0', port,
+                        server_coro = asyncio.start_server(cap.handle_session, bind_host, port,
                                                            loop=self.loop, ssl=ssl_context)
                     elif cap_name == 'ssh':
                         # Since dicts and user-defined classes are mutable, we have
@@ -122,10 +124,10 @@ class Honeypot:
                         SshClass.change_server_banner(banner)
 
                         server_coro = asyncssh.create_server(lambda: SshClass(ssh_options, self.loop),
-                                                             '0.0.0.0', port, server_host_keys=[ssh_key_file],
+                                                             bind_host, port, server_host_keys=[ssh_key_file],
                                                              login_timeout=cap.timeout, loop=self.loop)
                     else:
-                        server_coro = asyncio.start_server(cap.handle_session, '0.0.0.0', port, loop=self.loop)
+                        server_coro = asyncio.start_server(cap.handle_session, bind_host, port, loop=self.loop)
 
                     server = self.loop.run_until_complete(server_coro)
                     logger.debug('Adding {0} capability with options: {1}'.format(cap_name, options))
