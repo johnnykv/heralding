@@ -1,6 +1,9 @@
 # will request and log the public ip every hours from ipify
 public_ip_as_destination_ip: false
 
+# ip address to listen on
+bind_host: 0.0.0.0
+
 # logging of credentials
 activity_logging:
   file:
