@@ -20,7 +20,6 @@ Starting the honeypot
 -----------------------
 
 .. code-block:: shell
-
   $ sudo heralding
   2017-05-14 21:55:55,948 (root) Initializing Heralding version 0.2.0
   2017-05-14 21:55:55,968 (root) Using default config file: "/home/kajoj/heralding/bin/heralding/heralding.yml", if you want to customize values please copy this file to the current working directory
@@ -40,9 +39,25 @@ Starting the honeypot
 Viewing the collected data
 --------------------------
 
-.. code-block:: shell
+Heralding logs relevant data in two files, log_session.csv and log_auth.csv.
 
-  $ tail -f heralding_activity.log
+**log_session.csv**
+
+This log file contains log entries for all connections to the honeypot. The data includes timestamp, duration, IP information and the number of authentication attempts. Be aware that the log entry for an specific session will appear in the log fil **after** the session has ended. 
+
+   $ tail log_session.csv
+   timestamp,duration,session_id,source_ip,source_port,destination_ip,destination_port,protocol,auth_attempts
+   2017-12-26 20:38:19.683713,16,0841e3aa-241b-4da0-b85e-e5a5524cc836,127.0.0.1,53161,,23,telnet,3
+   2017-12-26 22:17:33.140742,6,d20c30c1-6765-4ab5-9144-a8be02385018,127.0.0.1,55149,,21,ftp,1
+   2017-12-26 22:17:48.088281,0,e0f50505-af93-4234-b82c-5477d8d88546,127.0.0.1,55151,,22,ssh,0
+   2017-12-26 22:18:06.284689,0,6c7d653f-d02d-4717-9973-d9b2e4a41d24,127.0.0.1,55153,,22,ssh,0
+   2017-12-26 22:18:13.043327,30,f3af2c8c-b63f-4873-ac7f-28c73b9e3e92,127.0.0.1,55155,,22,ssh,3
+
+**log_auth.csv**
+
+This log file contains information for all authentication attempts where it was possible to log a username and plaintext password. Log entries will appear in this file as soon as the password has been transmitted.
+
+  $ tail log_auth.csv
   timestamp,auth_id,auth_type,session_id,source_ip,source_port,destination_port,protocol,username,password
   2016-03-12 20:35:02.258198,192.168.2.129,51551,23,telnet,bond,james
   2016-03-12 20:35:09.658593,192.168.2.129,51551,23,telnet,clark,P@SSw0rd123

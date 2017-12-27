@@ -4,11 +4,12 @@ public_ip_as_destination_ip: false
 # ip address to listen on
 bind_host: 0.0.0.0
 
-# logging of credentials
+# logging of sessions and authentication attempts 
 activity_logging:
   file:
     enabled: true
-    filename: "heralding_activity.log"
+    session_log_file: "log_session.csv"
+    authentication_log_file: "log_auth.csv"
 
   syslog:
     enabled: false

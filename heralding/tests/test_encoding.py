@@ -23,26 +23,28 @@ from heralding.reporting.file_logger import FileLogger
 class EncodingTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        log_filename = "test_csv.log"
-        cls.flogger = FileLogger(log_filename)
+        cls.auth_log_filename = "test_auth_log.log"
+        cls.session_log_filename = "test_session_log.log"
+        cls.flogger = FileLogger(cls.session_log_filename, cls.auth_log_filename)
 
     def test_ascii(self):
         test_login = test_password = "girls_like_python".encode('ascii')
         test_data = {'username': test_login, 'password': test_password}
-        self.flogger.handle_log_data(test_data)
+        self.flogger.handle_auth_log(test_data)
 
     def test_unicode(self):
         # word 'python' in russian spelling
         test_login = test_password = "пайтон"
         test_data = {'username': test_login, 'password': test_password}
-        self.flogger.handle_log_data(test_data)
+        self.flogger.handle_auth_log(test_data)
 
     def test_invalid_utf(self):
         test_login = test_password = "пайт\x80он"
         test_data = {'username': test_login, 'password': test_password}
-        self.flogger.handle_log_data(test_data)
+        self.flogger.handle_auth_log(test_data)
 
     @classmethod
     def tearDownClass(cls):
-        cls.flogger.fileHandler.close()
-        os.remove("test_csv.log")
+        cls.flogger.auth_log_filehandler.close()
+        os.remove(cls.auth_log_filename)
+        os.remove(cls.session_log_filename)

@@ -42,9 +42,11 @@ class BaseLogger:
                 # if None is received, this means that ReportingRelay is going down
                 if not data:
                     self.stop()
-                else:
-                    assert isinstance(data, dict)
-                    self.handle_log_data(data)
+                elif data['message_type'] == 'auth':
+                    self.handle_auth_log(data['content'])
+                elif data['message_type'] == 'session_end':
+                    self.handle_session_log(data['content'])
+        
         internal_reporting_socket.close()
         # at this point we know no more data will arrive.
         self.loggerStopped()
@@ -52,10 +54,14 @@ class BaseLogger:
     def stop(self):
         self.enabled = False
 
-    def handle_log_data(self, data):
+    def handle_auth_log(self, data):
         # should be handled in child class
-        raise NotImplementedError("Please implement this method")
+        pass
 
+    def handle_session_log(self, data):
+        # implement if needed
+        pass
+        
     # called after we are sure no more data is received
     # override this to close filesockets, etc.
     def loggerStopped(self):

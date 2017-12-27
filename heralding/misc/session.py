@@ -38,8 +38,6 @@ class Session:
         self.session_ended = False
 
         self.connected = True
-        self.authenticated = False
-        self.users = users
 
         # for session specific volatile data (will not get logged)
         self.vdata = {}
@@ -73,13 +71,28 @@ class Session:
         if 'password' in kwargs:
             entry['password'] = kwargs['password']
 
-        ReportingRelay.queueLogData(entry)
+        ReportingRelay.logAuthAttempt(entry)
+
         self.activity()
-        logger.debug('{0} authentication attempt from {1}:{2}. Auth mechanism: {3}. '
-                     'Credentials: {4}'.format(self.protocol, self.source_ip,
-                                               self.source_port, _type, json.dumps(kwargs)))
+        logger.debug('{0} authentication attempt from {1}:{2}. Auth mechanism: {3}, session id {4} '
+                     'Credentials: {5}'.format(self.protocol, self.source_ip,
+                                               self.source_port, _type, self.id, json.dumps(kwargs)))
 
     def end_session(self):
         if not self.session_ended:
             self.session_ended = True
             self.connected = False
+
+            entry = {'timestamp': self.timestamp,
+                     'duration': (int)((datetime.utcnow() - self.timestamp).total_seconds()),
+                     'session_id': self.id,
+                     'source_ip': self.source_ip,
+                     'source_port': self.source_port,
+                     'destination_ip': heralding.honeypot.Honeypot.public_ip,
+                     'destination_port': self.destination_port,
+                     'protocol': self.protocol,
+                     'auth_attempts': self.get_number_of_login_attempts()
+                     }
+
+            ReportingRelay.logSessionEnded(entry)
+            logger.debug('Session with session id {0} ended'.format(self.id))

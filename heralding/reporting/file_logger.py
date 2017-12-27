@@ -23,30 +23,50 @@ logger = logging.getLogger(__name__)
 
 
 class FileLogger(BaseLogger):
-    def __init__(self, logFile):
+    def __init__(self, session_logfile, auth_logfile):
         super().__init__()
 
-        if not os.path.isfile(logFile):
-            self.fileHandler = open(logFile, 'w')
-        else:
-            self.fileHandler = open(logFile, 'a')
+        auth_field_names = ['timestamp', 'auth_id', 'session_id', 'source_ip', 'source_port', 'destination_ip',
+                            'destination_port', 'protocol', 'username', 'password']
+        self.auth_log_filehandler, self.auth_log_writer = self.setup_file(
+            auth_logfile, auth_field_names)
 
-        fieldNames = ['timestamp', 'auth_id', 'session_id', 'source_ip', 'source_port', 'destination_ip',
-                      'destination_port', 'protocol', 'username', 'password']
-        self.csvWriter = csv.DictWriter(self.fileHandler, fieldnames=fieldNames, extrasaction='ignore')
+        session_field_names = ['timestamp', 'duration', 'session_id', 'source_ip', 'source_port', 'destination_ip',
+                               'destination_port', 'protocol', 'auth_attempts']
+        self.session_log_filehandler, self.session_log_writer = self.setup_file(
+            session_logfile, session_field_names)
+
+        logger.info('File logger started, using files: {0} and {1}'.format(
+            auth_logfile, session_logfile))
+
+    def setup_file(self, filename, field_names):
+        handler = writer = None
+
+        if not os.path.isfile(filename):
+            handler = open(filename, 'w')
+        else:
+            handler = open(filename, 'a')
+
+        writer = csv.DictWriter(
+            handler, fieldnames=field_names, extrasaction='ignore')
 
         # empty file, write csv header
-        if os.path.getsize(logFile) == 0:
-            self.csvWriter.writeheader()
-            self.fileHandler.flush()
+        if os.path.getsize(filename) == 0:
+            writer.writeheader()
+            handler.flush()
 
-        logger.info('File logger started, using file: {0}'.format(logFile))
+        return handler, writer
 
     def loggerStopped(self):
-        self.fileHandler.flush()
-        self.fileHandler.close()
+        self.auth_log_filehandler.flush()
+        self.auth_log_filehandler.close()
 
-    def handle_log_data(self, data):
-        self.csvWriter.writerow(data)
+    def handle_auth_log(self, data):
+        self.auth_log_writer.writerow(data)
         # meh
-        self.fileHandler.flush()
+        self.auth_log_filehandler.flush()
+
+    def handle_session_log(self, data):
+        self.session_log_writer.writerow(data)
+        # double meh
+        self.session_log_filehandler.flush()
