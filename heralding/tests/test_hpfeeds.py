@@ -29,5 +29,5 @@ class FtpTests(unittest.TestCase):
         ident = "atzqøl"
         secret = "toosecret"
 
-        hpfeeds_logger = HpFeedsLogger(session_channel, auth_channel, host, port, ident, secret)
+        HpFeedsLogger(session_channel, auth_channel, host, port, ident, secret)
 
