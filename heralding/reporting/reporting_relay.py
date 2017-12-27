@@ -16,7 +16,6 @@
 import zmq
 import queue
 import logging
-import time
 
 import heralding.misc
 from heralding.misc.socket_names import SocketNames

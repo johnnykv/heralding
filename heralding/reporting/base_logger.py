@@ -46,7 +46,6 @@ class BaseLogger:
                     self.handle_auth_log(data['content'])
                 elif data['message_type'] == 'session_end':
                     self.handle_session_log(data['content'])
-        
         internal_reporting_socket.close()
         # at this point we know no more data will arrive.
         self.loggerStopped()

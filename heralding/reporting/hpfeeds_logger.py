@@ -38,7 +38,7 @@ class HpFeedsLogger(BaseLogger):
             self._initial_connection_happend = True
             logger.info('HpFeeds logger connected to {0}:{1}.'.format(host, port))
         # after we established that we can connect enter the subscribe and enter the polling loop
-        super(BaseLogger).start()
+        super(HpFeedsLogger, self).start()
 
     def loggerStopped(self):
         self.stop()
