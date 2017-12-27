@@ -21,9 +21,10 @@ logger = logging.getLogger(__name__)
 
 
 class HpFeedsLogger(BaseLogger):
-    def __init__(self, channel, host, port, ident, secret):
+    def __init__(self, session_channel, auth_channel, host, port, ident, secret):
         super().__init__()
-        self.channel = channel
+        self.session_channel = session_channel
+        self.auth_channel = auth_channel
         self.host = host
         self.port = port
         self.ident = ident
@@ -43,6 +44,10 @@ class HpFeedsLogger(BaseLogger):
         self.stop()
         self.close()
 
-    def handle_log_data(self, data):
+    def handle_auth_log(self, data):
         if self._initial_connection_happend:
             self.hp_connection.publish(self.channel, data)
+
+    def handle_session_log(self, data):
+        if self._initial_connection_happend:
+            self.hp_connection.publish(self.session_channel, data)

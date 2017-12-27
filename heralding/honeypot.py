@@ -80,12 +80,13 @@ class Honeypot:
                 self._loggers.append(sys_logger)
 
             if 'hpfeeds' in self.config['activity_logging'] and self.config['activity_logging']['hpfeeds']['enabled']:
-                channel = self.config['activity_logging']['hpfeeds']['channel']
+                session_channel = self.config['activity_logging']['hpfeeds']['session_channel']
+                auth_channel = self.config['activity_logging']['hpfeeds']['auth_channel']
                 host = self.config['activity_logging']['hpfeeds']['host']
                 port = self.config['activity_logging']['hpfeeds']['port']
                 ident = self.config['activity_logging']['hpfeeds']['ident']
                 secret = self.config['activity_logging']['hpfeeds']['secret']
-                hpfeeds_logger = HpFeedsLogger(channel, host, port, ident, secret)
+                hpfeeds_logger = HpFeedsLogger(session_channel, auth_channel, host, port, ident, secret)
                 self.hpfeeds_logger_task = self.loop.run_in_executor(None, hpfeeds_logger.start)
                 self.hpfeeds_logger_task.add_done_callback(common.on_unhandled_task_exception)
 

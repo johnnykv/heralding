@@ -16,7 +16,8 @@ activity_logging:
 
   hpfeeds:
     enabled: false
-    channel: "heralding.events"
+    session_channel: "heralding.session"
+    auth_channel: "heralding.auth"
     host: 
     port: 20000
     ident:
