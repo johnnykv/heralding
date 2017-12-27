@@ -62,9 +62,12 @@ class FileLogger(BaseLogger):
         self.auth_log_filehandler.close()
 
     def handle_auth_log(self, data):
-        self.auth_log_writer.writerow(data)
-        # meh
-        self.auth_log_filehandler.flush()
+        # for now this logger only handles authentication attempts where we are able
+        # to log both username and password
+        if 'username' in data and 'password' in data:
+            self.auth_log_writer.writerow(data)
+            # meh
+            self.auth_log_filehandler.flush()
 
     def handle_session_log(self, data):
         self.session_log_writer.writerow(data)

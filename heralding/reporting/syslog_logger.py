@@ -27,7 +27,10 @@ class SyslogLogger(BaseLogger):
         logger.debug('Syslog logger started')
 
     def handle_auth_log(self, data):
-        message = "Authentication from {0}:{1}, with username: {2} " \
-                  "and password: {3}.".format(data['source_ip'], data['source_port'],
-                                              data['username'], data['password'])
-        syslog.syslog(syslog.LOG_ALERT, message)
+        # for now this logger only handles authentication attempts where we are able
+        # to log both username and password
+        if 'username' in data and 'password' in data:
+            message = "Authentication from {0}:{1}, with username: {2} " \
+                    "and password: {3}.".format(data['source_ip'], data['source_port'],
+                                                data['username'], data['password'])
+            syslog.syslog(syslog.LOG_ALERT, message)
