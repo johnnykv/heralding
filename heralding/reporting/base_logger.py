@@ -60,7 +60,7 @@ class BaseLogger:
     def handle_session_log(self, data):
         # implement if needed
         pass
-        
+
     # called after we are sure no more data is received
     # override this to close filesockets, etc.
     def loggerStopped(self):

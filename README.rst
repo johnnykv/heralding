@@ -21,20 +21,22 @@ Starting the honeypot
 
 .. code-block:: shell
   $ sudo heralding
-  2017-05-14 21:55:55,948 (root) Initializing Heralding version 0.2.0
-  2017-05-14 21:55:55,968 (root) Using default config file: "/home/kajoj/heralding/bin/heralding/heralding.yml", if you want to customize values please copy this file to the current working directory
-  2017-05-14 21:55:55,998 (heralding.reporting.file_logger) File logger started, using file: heralding_activity.log
-  2017-05-14 21:55:55,999 (heralding.honeypot) Started Telnet capability listening on port 23
-  2017-05-14 21:55:55,999 (heralding.honeypot) Started Http capability listening on port 80
-  2017-05-14 21:55:55,999 (heralding.honeypot) Started Pop3 capability listening on port 110
-  2017-05-14 21:55:56,000 (heralding.honeypot) Started https capability listening on port 443
-  2017-05-14 21:55:56,000 (heralding.honeypot) Started Imap capability listening on port 143
-  2017-05-14 21:55:56,000 (heralding.honeypot) Started ftp capability listening on port 21
-  2017-05-14 21:55:56,000 (heralding.honeypot) Started Imaps capability listening on port 993
-  2017-05-14 21:55:56,001 (heralding.honeypot) Started Pop3S capability listening on port 995
-  2017-05-14 21:55:56,116 (heralding.honeypot) Started SSH capability listening on port 22
-  2017-05-14 21:55:56,117 (heralding.honeypot) Started smtp capability listening on port 25
-  2017-05-14 21:55:56,118 (root) Privileges dropped, running as nobody/nogroup.
+  2017-12-28 21:03:35,273 (root) Initializing Heralding version 1.0.0
+  2017-12-28 21:03:35,273 (root) Using default config file: "/Users/jkv/repos/heralding/heralding/heralding.yml", if you want to customize values please copy this file to the current working directory
+  2017-12-28 21:03:35,298 (heralding.reporting.file_logger) File logger started, using files: log_auth.csv and log_session.csv
+  2017-12-28 21:03:35,298 (heralding.honeypot) Started ftp capability listening on port 21
+  2017-12-28 21:03:35,299 (heralding.honeypot) Started Http capability listening on port 80
+  2017-12-28 21:03:35,300 (heralding.honeypot) Started https capability listening on port 443
+  2017-12-28 21:03:35,300 (heralding.honeypot) Started Imap capability listening on port 143
+  2017-12-28 21:03:35,301 (heralding.honeypot) Started Imaps capability listening on port 993
+  2017-12-28 21:03:35,301 (heralding.honeypot) Started Pop3 capability listening on port 110
+  2017-12-28 21:03:35,302 (heralding.honeypot) Started Pop3S capability listening on port 995
+  2017-12-28 21:03:35,302 (heralding.honeypot) Started PostgreSQL capability listening on port 5432
+  2017-12-28 21:03:35,302 (heralding.honeypot) Started smtp capability listening on port 25
+  2017-12-28 21:03:35,304 (heralding.honeypot) Started SSH capability listening on port 22
+  2017-12-28 21:03:35,304 (heralding.honeypot) Started Telnet capability listening on port 23
+  2017-12-28 21:03:35,304 (heralding.honeypot) Started Vnc capability listening on port 5900
+  2017-12-28 21:03:35,308 (root) Privileges dropped, running as nobody/nogroup.
 
 Viewing the collected data
 --------------------------
@@ -43,7 +45,7 @@ Heralding logs relevant data in two files, log_session.csv and log_auth.csv.
 
 **log_session.csv**
 
-This log file contains log entries for all connections to the honeypot. The data includes timestamp, duration, IP information and the number of authentication attempts. Be aware that the log entry for an specific session will appear in the log fil **after** the session has ended. 
+This log file contains entries for all connections to the honeypot. The data includes timestamp, duration, IP information and the number of authentication attempts. Be aware that the log entry for a specific session will appear in the log fil **after** the session has ended. 
 
    $ tail log_session.csv
    timestamp,duration,session_id,source_ip,source_port,destination_ip,destination_port,protocol,auth_attempts
