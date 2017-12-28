@@ -43,9 +43,9 @@ class FileLogger(BaseLogger):
         handler = writer = None
 
         if not os.path.isfile(filename):
-            handler = open(filename, 'w')
+            handler = open(filename, 'w', encoding='utf-8')
         else:
-            handler = open(filename, 'a')
+            handler = open(filename, 'a', encoding='utf-8')
 
         writer = csv.DictWriter(
             handler, fieldnames=field_names, extrasaction='ignore')
