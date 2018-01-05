@@ -25,6 +25,7 @@ import heralding.capabilities.handlerbase
 from heralding.reporting.file_logger import FileLogger
 from heralding.reporting.syslog_logger import SyslogLogger
 from heralding.reporting.hpfeeds_logger import HpFeedsLogger
+from heralding.reporting.curiosum_integration import CuriosumIntegration
 
 import asyncssh
 
@@ -89,6 +90,11 @@ class Honeypot:
                 hpfeeds_logger = HpFeedsLogger(session_channel, auth_channel, host, port, ident, secret)
                 self.hpfeeds_logger_task = self.loop.run_in_executor(None, hpfeeds_logger.start)
                 self.hpfeeds_logger_task.add_done_callback(common.on_unhandled_task_exception)
+
+            # TMP TMP TESTING
+            curiosum_integration = CuriosumIntegration()
+            self.hpfeeds_logger_task = self.loop.run_in_executor(None, curiosum_integration.start)
+            self.hpfeeds_logger_task.add_done_callback(common.on_unhandled_task_exception)
 
 
         bind_host = self.config['bind_host']
