@@ -17,6 +17,7 @@ import heralding.misc
 
 import logging
 import zmq
+import json
 
 from heralding.reporting.base_logger import BaseLogger
 
@@ -24,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 class CuriosumIntegration(BaseLogger):
-    def __init__(self, zmq_socket='ipc://zmq-socket'):
+    def __init__(self, zmq_socket='tcp://*:23400'):
         super(CuriosumIntegration, self).__init__()
 
         context = heralding.misc.zmq_context
@@ -38,9 +39,10 @@ class CuriosumIntegration(BaseLogger):
         pass
 
     def handle_session_log(self, data):
+        print("SENDING!!!")
         message = {
-            'SessionID': data['session_id'],
+            'SessionID': str(data['session_id']),
             'DstPort': data['destination_port'],
             'SrcIP': data['source_ip'],
             'SrcPort': data['source_port']}
-        self.socket.send_string('{0} {1}'.format('session_ended', data))
+        self.socket.send_string('{0} {1}'.format('session_ended', json.dumps(message)))
