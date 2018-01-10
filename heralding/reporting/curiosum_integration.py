@@ -39,7 +39,6 @@ class CuriosumIntegration(BaseLogger):
         pass
 
     def handle_session_log(self, data):
-        print("SENDING!!!")
         message = {
             'SessionID': str(data['session_id']),
             'DstPort': data['destination_port'],

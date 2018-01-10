@@ -41,7 +41,7 @@ class ReportingRelay:
         ReportingRelay._logQueue.put({'message_type': 'auth',
                                         'content': data})
     @staticmethod
-    def logSessionEnded(data):
+    def logSessionInfo(data):
         if ReportingRelay._logQueue is not None:
             ReportingRelay._logQueue.put({'message_type': 'session_info',
                                         'content': data})

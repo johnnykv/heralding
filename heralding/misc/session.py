@@ -43,6 +43,13 @@ class Session:
         self.vdata = {}
 
         self.last_activity = datetime.utcnow()
+        self.log_start_session()
+
+    def log_start_session(self):
+        self.connected = False
+        entry = self.get_session_info(False)
+        ReportingRelay.logSessionInfo(entry)
+
 
     def activity(self):
         self.last_activity = datetime.utcnow()
@@ -98,5 +105,5 @@ class Session:
             self.connected = False
             entry = self.get_session_info(True)
 
-            ReportingRelay.logSessionEnded(entry)
+            ReportingRelay.logSessionInfo(entry)
             logger.debug('Session with session id {0} ended'.format(self.id))
