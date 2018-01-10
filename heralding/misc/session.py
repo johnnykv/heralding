@@ -78,12 +78,8 @@ class Session:
                      'Credentials: {5}'.format(self.protocol, self.source_ip,
                                                self.source_port, _type, self.id, json.dumps(kwargs)))
 
-    def end_session(self):
-        if not self.session_ended:
-            self.session_ended = True
-            self.connected = False
-
-            entry = {'timestamp': self.timestamp,
+    def get_session_info(self, session_ended):
+        entry = {'timestamp': self.timestamp,
                      'duration': (int)((datetime.utcnow() - self.timestamp).total_seconds()),
                      'session_id': self.id,
                      'source_ip': self.source_ip,
@@ -91,8 +87,16 @@ class Session:
                      'destination_ip': heralding.honeypot.Honeypot.public_ip,
                      'destination_port': self.destination_port,
                      'protocol': self.protocol,
-                     'auth_attempts': self.get_number_of_login_attempts()
+                     'auth_attempts': self.get_number_of_login_attempts(),
+                     'session_ended': session_ended
                      }
+        return entry
+
+    def end_session(self):
+        if not self.session_ended:
+            self.session_ended = True
+            self.connected = False
+            entry = self.get_session_info(True)
 
             ReportingRelay.logSessionEnded(entry)
             logger.debug('Session with session id {0} ended'.format(self.id))

@@ -44,5 +44,6 @@ class CuriosumIntegration(BaseLogger):
             'SessionID': str(data['session_id']),
             'DstPort': data['destination_port'],
             'SrcIP': data['source_ip'],
-            'SrcPort': data['source_port']}
+            'SrcPort': data['source_port'],
+            'SessionEnded': data['session_ended']}
         self.socket.send_string('{0} {1}'.format('session_ended', json.dumps(message)))

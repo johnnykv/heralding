@@ -70,6 +70,7 @@ class FileLogger(BaseLogger):
             self.auth_log_filehandler.flush()
 
     def handle_session_log(self, data):
-        self.session_log_writer.writerow(data)
-        # double meh
-        self.session_log_filehandler.flush()
+        if data['session_ended']:
+            self.session_log_writer.writerow(data)
+            # double meh
+            self.session_log_filehandler.flush()
