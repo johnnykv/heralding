@@ -46,6 +46,8 @@ class BaseLogger:
                     self.handle_auth_log(data['content'])
                 elif data['message_type'] == 'session_info':
                     self.handle_session_log(data['content'])
+                elif data['message_type'] == 'listen_ports':
+                    self.handle_listen_ports(data['content'])
         internal_reporting_socket.close()
         # at this point we know no more data will arrive.
         self.loggerStopped()
@@ -58,6 +60,10 @@ class BaseLogger:
         pass
 
     def handle_session_log(self, data):
+        # implement if needed
+        pass
+
+    def handle_listen_ports(self, data):
         # implement if needed
         pass
 

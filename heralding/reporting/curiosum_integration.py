@@ -35,9 +35,6 @@ class CuriosumIntegration(BaseLogger):
     def loggerStopped(self):
         self.socket.close()
 
-    def handle_auth_log(self, data):
-        pass
-
     def handle_session_log(self, data):
         message = {
             'SessionID': str(data['session_id']),
@@ -46,3 +43,7 @@ class CuriosumIntegration(BaseLogger):
             'SrcPort': data['source_port'],
             'SessionEnded': data['session_ended']}
         self.socket.send_string('{0} {1}'.format('session_ended', json.dumps(message)))
+
+    def handle_listen_ports(self, data): 
+        # TODO: This message should be sent every 5 second to handle restarts of curiosum 
+        self.socket.send_string('{0} {1}'.format('listen_ports', json.dumps(data)))

@@ -45,6 +45,11 @@ class ReportingRelay:
         if ReportingRelay._logQueue is not None:
             ReportingRelay._logQueue.put({'message_type': 'session_info',
                                         'content': data})
+    @staticmethod
+    def logListenPorts(data):
+        if ReportingRelay._logQueue is not None:
+            ReportingRelay._logQueue.put({'message_type': 'listen_ports',
+                                        'content': data})
 
     def start(self):
         self.internalReportingPublisher.bind(SocketNames.INTERNAL_REPORTING.value)
