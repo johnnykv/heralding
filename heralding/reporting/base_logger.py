@@ -37,6 +37,7 @@ class BaseLogger:
         poller.register(internal_reporting_socket, zmq.POLLIN)
         while self.enabled:
             socks = dict(poller.poll(500))
+            self._execute_regulary()
             if internal_reporting_socket in socks and socks[internal_reporting_socket] == zmq.POLLIN:
                 data = internal_reporting_socket.recv_pyobj()
                 # if None is received, this means that ReportingRelay is going down
@@ -65,6 +66,10 @@ class BaseLogger:
 
     def handle_listen_ports(self, data):
         # implement if needed
+        pass
+
+    def _execute_regulary(self):
+        # if implemented this method will get called regulary
         pass
 
     # called after we are sure no more data is received

@@ -16,8 +16,10 @@
 import heralding.misc
 
 import logging
+import asyncio
 import zmq
 import json
+from datetime import datetime
 
 from heralding.reporting.base_logger import BaseLogger
 
@@ -31,9 +33,18 @@ class CuriosumIntegration(BaseLogger):
         context = heralding.misc.zmq_context
         self.socket = context.socket(zmq.PUSH)
         self.socket.bind(zmq_socket)
+        self.listen_ports = []
+        self.last_listen_ports_transmit = datetime.now()
 
     def loggerStopped(self):
         self.socket.close()
+
+    def _no_block_send(self, topic, data):
+        try:
+            self.socket.send_string('{0} {1}'.format(topic, json.dumps(data)), zmq.NOBLOCK)
+        except:
+            pass
+
 
     def handle_session_log(self, data):
         message = {
@@ -42,8 +53,13 @@ class CuriosumIntegration(BaseLogger):
             'SrcIP': data['source_ip'],
             'SrcPort': data['source_port'],
             'SessionEnded': data['session_ended']}
-        self.socket.send_string('{0} {1}'.format('session_ended', json.dumps(message)))
+        self._no_block_send('session_ended', message)
 
-    def handle_listen_ports(self, data): 
-        # TODO: This message should be sent every 5 second to handle restarts of curiosum 
-        self.socket.send_string('{0} {1}'.format('listen_ports', json.dumps(data)))
+    def _execute_regulary(self):
+        if ((datetime.now() - self.last_listen_ports_transmit).total_seconds() > 5):
+            self._no_block_send('listen_ports', self.listen_ports)
+            self.last_listen_ports_transmit = datetime.now()
+
+
+    def handle_listen_ports(self, data):
+        self.listen_ports = data
