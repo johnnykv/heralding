@@ -22,9 +22,11 @@ import asyncio
 import heralding.misc.common as common
 import heralding.capabilities.handlerbase
 
+from heralding.reporting.reporting_relay import ReportingRelay
 from heralding.reporting.file_logger import FileLogger
 from heralding.reporting.syslog_logger import SyslogLogger
 from heralding.reporting.hpfeeds_logger import HpFeedsLogger
+from heralding.reporting.curiosum_integration import CuriosumIntegration
 
 import asyncssh
 
@@ -90,15 +92,21 @@ class Honeypot:
                 self.hpfeeds_logger_task = self.loop.run_in_executor(None, hpfeeds_logger.start)
                 self.hpfeeds_logger_task.add_done_callback(common.on_unhandled_task_exception)
 
+            # TMP TMP TESTING
+            curiosum_integration = CuriosumIntegration()
+            self.hpfeeds_logger_task = self.loop.run_in_executor(None, curiosum_integration.start)
+            self.hpfeeds_logger_task.add_done_callback(common.on_unhandled_task_exception)
+
 
         bind_host = self.config['bind_host']
-
+        listen_ports = []
         for c in heralding.capabilities.handlerbase.HandlerBase.__subclasses__():
             cap_name = c.__name__.lower()
             if cap_name in self.config['capabilities']:
                 if not self.config['capabilities'][cap_name]['enabled']:
                     continue
                 port = self.config['capabilities'][cap_name]['port']
+                listen_ports.append(port)
                 # carve out the options for this specific service
                 options = self.config['capabilities'][cap_name]
                 # capabilities are only allowed to append to the session list
@@ -142,6 +150,7 @@ class Honeypot:
                     sys.exit(error_message)
                 else:
                     logger.info('Started {0} capability listening on port {1}'.format(c.__name__, port))
+        ReportingRelay.logListenPorts(listen_ports)
 
     def stop(self):
         """Stops services"""

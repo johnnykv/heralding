@@ -37,6 +37,7 @@ class BaseLogger:
         poller.register(internal_reporting_socket, zmq.POLLIN)
         while self.enabled:
             socks = dict(poller.poll(500))
+            self._execute_regulary()
             if internal_reporting_socket in socks and socks[internal_reporting_socket] == zmq.POLLIN:
                 data = internal_reporting_socket.recv_pyobj()
                 # if None is received, this means that ReportingRelay is going down
@@ -44,8 +45,10 @@ class BaseLogger:
                     self.stop()
                 elif data['message_type'] == 'auth':
                     self.handle_auth_log(data['content'])
-                elif data['message_type'] == 'session_end':
+                elif data['message_type'] == 'session_info':
                     self.handle_session_log(data['content'])
+                elif data['message_type'] == 'listen_ports':
+                    self.handle_listen_ports(data['content'])
         internal_reporting_socket.close()
         # at this point we know no more data will arrive.
         self.loggerStopped()
@@ -59,6 +62,14 @@ class BaseLogger:
 
     def handle_session_log(self, data):
         # implement if needed
+        pass
+
+    def handle_listen_ports(self, data):
+        # implement if needed
+        pass
+
+    def _execute_regulary(self):
+        # if implemented this method will get called regulary
         pass
 
     # called after we are sure no more data is received
