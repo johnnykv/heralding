@@ -92,10 +92,11 @@ class Honeypot:
                 self.hpfeeds_logger_task = self.loop.run_in_executor(None, hpfeeds_logger.start)
                 self.hpfeeds_logger_task.add_done_callback(common.on_unhandled_task_exception)
 
-            # TMP TMP TESTING
-            curiosum_integration = CuriosumIntegration()
-            self.hpfeeds_logger_task = self.loop.run_in_executor(None, curiosum_integration.start)
-            self.hpfeeds_logger_task.add_done_callback(common.on_unhandled_task_exception)
+            if 'curiosum' in self.config['activity_logging'] and self.config['activity_logging']['curiosum']['enabled']:
+                port = self.config['activity_logging']['curiosum']['port']
+                curiosum_integration = CuriosumIntegration(port)
+                self.hpfeeds_logger_task = self.loop.run_in_executor(None, curiosum_integration.start)
+                self.hpfeeds_logger_task.add_done_callback(common.on_unhandled_task_exception)
 
 
         bind_host = self.config['bind_host']

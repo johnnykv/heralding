@@ -23,6 +23,9 @@ activity_logging:
     ident:
     secret:
 
+  curiosum:
+    enabled: false
+    port: 23400
 
 # protocols to enable
 capabilities:

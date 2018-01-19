@@ -27,8 +27,10 @@ logger = logging.getLogger(__name__)
 
 
 class CuriosumIntegration(BaseLogger):
-    def __init__(self, zmq_socket='tcp://*:23400'):
+    def __init__(self, port):
         super(CuriosumIntegration, self).__init__()
+
+        zmq_socket='tcp://127.0.0.1:{0}'.format(port)
 
         context = heralding.misc.zmq_context
         self.socket = context.socket(zmq.PUSH)
@@ -36,6 +38,7 @@ class CuriosumIntegration(BaseLogger):
         self.listen_ports = []
         self.last_listen_ports_transmit = datetime.now()
 
+        logger.info('Curiosum logger started using files: {0}'.format(zmq_socket))
     def loggerStopped(self):
         self.socket.close()
 
