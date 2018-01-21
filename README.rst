@@ -90,7 +90,7 @@ Simple way to do this on a Debian-based OS is:
 .. code-block:: shell
 
   sudo apt-get install python-pip python-dev build-essential libssl-dev libffi-dev
-  sudo pip install -r requirements.txt
+  sudo pip install -r requirements.txtri
   
 And finally start the honeypot:
   
@@ -99,4 +99,11 @@ And finally start the honeypot:
   mkdir tmp
   cd tmp
   sudo heralding
+  
+Pcaps
+-----
+
+Want a seperate pcap for each heralding session? Sure, take a look at the Curisoum_ project. Make sure to enable Curisoum in Heralding.yml!
+
+.. _Curisoum: https://github.com/johnnykv/curiosum
   
