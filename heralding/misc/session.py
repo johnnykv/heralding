@@ -46,7 +46,6 @@ class Session:
         self.log_start_session()
 
     def log_start_session(self):
-        self.connected = False
         entry = self.get_session_info(False)
         ReportingRelay.logSessionInfo(entry)
 
