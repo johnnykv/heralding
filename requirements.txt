@@ -3,7 +3,6 @@ nose
 aiosmtpd
 asyncssh
 pyOpenSSL
-Enum34
 pyaml
 ipify
 pyzmq
