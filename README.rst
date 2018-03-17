@@ -20,6 +20,7 @@ Starting the honeypot
 -----------------------
 
 .. code-block:: shell
+
   $ sudo heralding
   2017-12-28 21:03:35,273 (root) Initializing Heralding version 1.0.0
   2017-12-28 21:03:35,273 (root) Using default config file: "/Users/jkv/repos/heralding/heralding/heralding.yml", if you want to customize values please copy this file to the current working directory
@@ -37,6 +38,7 @@ Starting the honeypot
   2017-12-28 21:03:35,304 (heralding.honeypot) Started Telnet capability listening on port 23
   2017-12-28 21:03:35,304 (heralding.honeypot) Started Vnc capability listening on port 5900
   2017-12-28 21:03:35,308 (root) Privileges dropped, running as nobody/nogroup.
+
 
 Viewing the collected data
 --------------------------
