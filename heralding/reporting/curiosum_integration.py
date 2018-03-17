@@ -16,7 +16,6 @@
 import heralding.misc
 
 import logging
-import asyncio
 import zmq
 import json
 from datetime import datetime
@@ -30,7 +29,7 @@ class CuriosumIntegration(BaseLogger):
     def __init__(self, port):
         super(CuriosumIntegration, self).__init__()
 
-        zmq_socket='tcp://127.0.0.1:{0}'.format(port)
+        zmq_socket = 'tcp://127.0.0.1:{0}'.format(port)
 
         context = heralding.misc.zmq_context
         self.socket = context.socket(zmq.PUSH)
@@ -38,16 +37,18 @@ class CuriosumIntegration(BaseLogger):
         self.listen_ports = []
         self.last_listen_ports_transmit = datetime.now()
 
-        logger.info('Curiosum logger started using files: {0}'.format(zmq_socket))
+        logger.info(
+            'Curiosum logger started using files: %s', zmq_socket)
+
     def loggerStopped(self):
         self.socket.close()
 
     def _no_block_send(self, topic, data):
         try:
-            self.socket.send_string('{0} {1}'.format(topic, json.dumps(data)), zmq.NOBLOCK)
-        except:
-            pass
-
+            self.socket.send_string('{0} {1}'.format(
+                topic, json.dumps(data)), zmq.NOBLOCK)
+        except zmq.ZMQError as e:
+            logger.warning('Error while sending: %s', e)
 
     def handle_session_log(self, data):
         message = {
@@ -62,7 +63,6 @@ class CuriosumIntegration(BaseLogger):
         if ((datetime.now() - self.last_listen_ports_transmit).total_seconds() > 5):
             self._no_block_send('listen_ports', self.listen_ports)
             self.last_listen_ports_transmit = datetime.now()
-
 
     def handle_listen_ports(self, data):
         self.listen_ports = data

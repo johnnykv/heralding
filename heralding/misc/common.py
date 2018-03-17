@@ -27,7 +27,7 @@ def on_unhandled_task_exception(task):
     if not task.cancelled():
         task_exc = task.exception()
         if task_exc:
-            logger.error('Stopping because {0} died: {1}'.format(task, task_exc))
+            logger.error('Stopping because %s died: %s', task, task_exc)
             os._exit(1)
 
 

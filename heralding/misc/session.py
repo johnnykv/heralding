@@ -80,9 +80,9 @@ class Session:
         ReportingRelay.logAuthAttempt(entry)
 
         self.activity()
-        logger.debug('{0} authentication attempt from {1}:{2}. Auth mechanism: {3}, session id {4} '
-                     'Credentials: {5}'.format(self.protocol, self.source_ip,
-                                               self.source_port, _type, self.id, json.dumps(kwargs)))
+        logger.debug('%s authentication attempt from %s:%s. Auth mechanism: %s, session id %s '
+                     'Credentials: %s', self.protocol, self.source_ip,
+                                               self.source_port, _type, self.id, json.dumps(kwargs))
 
     def get_session_info(self, session_ended):
         entry = {'timestamp': self.timestamp,
@@ -105,4 +105,4 @@ class Session:
             entry = self.get_session_info(True)
 
             ReportingRelay.logSessionInfo(entry)
-            logger.debug('Session with session id {0} ended'.format(self.id))
+            logger.debug('Session with session id %s ended', self.id)

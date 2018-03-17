@@ -36,8 +36,7 @@ class FileLogger(BaseLogger):
         self.session_log_filehandler, self.session_log_writer = self.setup_file(
             session_logfile, session_field_names)
 
-        logger.info('File logger started, using files: {0} and {1}'.format(
-            auth_logfile, session_logfile))
+        logger.info('File logger started, using files: %s and %s', auth_logfile, session_logfile)
 
     def setup_file(self, filename, field_names):
         handler = writer = None

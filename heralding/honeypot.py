@@ -53,10 +53,10 @@ class Honeypot:
         while True:
             try:
                 Honeypot.public_ip = get_ip()
-                logger.warning('Found public ip: {0}'.format(Honeypot.public_ip))
+                logger.warning('Found public ip: %s', Honeypot.public_ip)
             except Exception as ex:
                 Honeypot.public_ip = ''
-                logger.warning('Could not request public ip from ipify, error: {0}'.format(ex))
+                logger.warning('Could not request public ip from ipify, error: %s', ex)
             await asyncio.sleep(3600)
 
     def start(self):
@@ -141,16 +141,15 @@ class Honeypot:
                         server_coro = asyncio.start_server(cap.handle_session, bind_host, port, loop=self.loop)
 
                     server = self.loop.run_until_complete(server_coro)
-                    logger.debug('Adding {0} capability with options: {1}'.format(cap_name, options))
+                    logger.debug('Adding %s capability with options: %s', cap_name, options)
                     self._servers.append(server)
                 except Exception as ex:
                     error_message = "Could not start {0} server on port {1}. Error: {2}".format(c.__name__, port, ex)
                     logger.error(error_message)
-                    task_killer = common.cancel_all_pending_tasks(self.loop)
-                    self.loop.run_until_complete(task_killer)
+                    self.loop.run_until_complete(common.cancel_all_pending_tasks(self.loop))
                     sys.exit(error_message)
                 else:
-                    logger.info('Started {0} capability listening on port {1}'.format(c.__name__, port))
+                    logger.info('Started %s capability listening on port %s',c.__name__, port)
         ReportingRelay.logListenPorts(listen_ports)
 
     def stop(self):
@@ -167,14 +166,13 @@ class Honeypot:
         for l in self._loggers:
             l.stop()
 
-        task_killer = common.cancel_all_pending_tasks(self.loop)
-        self.loop.run_until_complete(task_killer)
+        self.loop.run_until_complete(common.cancel_all_pending_tasks(self.loop))
 
         logger.info('All tasks were stopped.')
 
     def create_cert_if_not_exists(self, cap_name, pem_file):
         if not os.path.isfile(pem_file):
-            logger.debug('Generating certificate and key: {0}'.format(pem_file))
+            logger.debug('Generating certificate and key: %s', pem_file)
 
             cert_dict = self.config['capabilities'][cap_name]['protocol_specific_data']['cert']
             cert_cn = cert_dict['common_name']

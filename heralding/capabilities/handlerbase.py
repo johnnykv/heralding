@@ -50,13 +50,15 @@ class HandlerBase:
         HandlerBase.global_sessions += 1
         session.destination_port = self.port
         logger.debug(
-            'Accepted {0} session on port {1} from {2}:{3}. ({4})'.format(protocol, self.port, address[0],
-                                                                          address[1], str(session.id)))
-        logger.debug('Size of session list for {0}: {1}'.format(protocol, len(self.sessions)))
+            'Accepted %s session on port %s from %s:%s. (%s)', protocol, self.port, address[
+                0],
+            address[1], str(session.id))
+        logger.debug('Size of session list for %s: %s',
+                     protocol, len(self.sessions))
         return session
 
     def close_session(self, session):
-        logger.debug('Closing session. ({0})'.format(str(session.id)))
+        logger.debug('Closing session. (%s)', str(session.id))
         session.end_session()
         if session.id in self.sessions:
             del self.sessions[session.id]
@@ -75,17 +77,18 @@ class HandlerBase:
         if HandlerBase.global_sessions > HandlerBase.MAX_GLOBAL_SESSIONS:
             protocol = self.__class__.__name__.lower()
             logger.warning(
-                'Got {0} session on port {1} from {2}:{3}, but not handling it because the global session limit has '
-                'been reached'.format(protocol, self.port, *address))
+                'Got %s session on port %s from %s:%s, but not handling it because the global session limit has '
+                'been reached', protocol, self.port, *address)
         else:
             session = self.create_session(address)
             try:
                 await asyncio.wait_for(self.execute_capability(reader, writer, session),
                                        timeout=self.timeout, loop=self.loop)
             except asyncio.TimeoutError:
-                logger.debug('Session timed out. ({0})'.format(session.id))
+                logger.debug('Session timed out. (%s)', session.id)
             except (BrokenPipeError, ConnectionError) as err:
-                logger.debug('Unexpected end of session: {0}, errno: {1}. ({2})'.format(err, err.errno, session.id))
+                logger.debug('Unexpected end of session: %s, errno: %s. (%s)',
+                             err, err.errno, session.id)
             except (UnicodeDecodeError, KeyboardInterrupt):
                 pass
             finally:
