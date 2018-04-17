@@ -39,17 +39,19 @@ class ReportingRelay:
     @staticmethod
     def logAuthAttempt(data):
         ReportingRelay._logQueue.put({'message_type': 'auth',
-                                        'content': data})
+                                      'content': data})
+
     @staticmethod
     def logSessionInfo(data):
         if ReportingRelay._logQueue is not None:
             ReportingRelay._logQueue.put({'message_type': 'session_info',
-                                        'content': data})
+                                          'content': data})
+
     @staticmethod
     def logListenPorts(data):
         if ReportingRelay._logQueue is not None:
             ReportingRelay._logQueue.put({'message_type': 'listen_ports',
-                                        'content': data})
+                                          'content': data})
 
     def start(self):
         self.internalReportingPublisher.bind(SocketNames.INTERNAL_REPORTING.value)

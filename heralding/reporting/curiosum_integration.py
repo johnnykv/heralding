@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 class CuriosumIntegration(BaseLogger):
     def __init__(self, port):
-        super(CuriosumIntegration, self).__init__()
+        super().__init__()
 
         zmq_socket = 'tcp://127.0.0.1:{0}'.format(port)
 
@@ -60,7 +60,7 @@ class CuriosumIntegration(BaseLogger):
         self._no_block_send('session_ended', message)
 
     def _execute_regulary(self):
-        if ((datetime.now() - self.last_listen_ports_transmit).total_seconds() > 5):
+        if (datetime.now() - self.last_listen_ports_transmit).total_seconds() > 5:
             self._no_block_send('listen_ports', self.listen_ports)
             self.last_listen_ports_transmit = datetime.now()
 

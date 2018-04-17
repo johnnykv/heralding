@@ -49,7 +49,6 @@ class Session:
         entry = self.get_session_info(False)
         ReportingRelay.logSessionInfo(entry)
 
-
     def activity(self):
         self.last_activity = datetime.utcnow()
 
@@ -82,20 +81,20 @@ class Session:
         self.activity()
         logger.debug('%s authentication attempt from %s:%s. Auth mechanism: %s, session id %s '
                      'Credentials: %s', self.protocol, self.source_ip,
-                                               self.source_port, _type, self.id, json.dumps(kwargs))
+                     self.source_port, _type, self.id, json.dumps(kwargs))
 
     def get_session_info(self, session_ended):
         entry = {'timestamp': self.timestamp,
-                     'duration': (int)((datetime.utcnow() - self.timestamp).total_seconds()),
-                     'session_id': self.id,
-                     'source_ip': self.source_ip,
-                     'source_port': self.source_port,
-                     'destination_ip': heralding.honeypot.Honeypot.public_ip,
-                     'destination_port': self.destination_port,
-                     'protocol': self.protocol,
-                     'auth_attempts': self.get_number_of_login_attempts(),
-                     'session_ended': session_ended
-                     }
+                 'duration': int((datetime.utcnow() - self.timestamp).total_seconds()),
+                 'session_id': self.id,
+                 'source_ip': self.source_ip,
+                 'source_port': self.source_port,
+                 'destination_ip': heralding.honeypot.Honeypot.public_ip,
+                 'destination_port': self.destination_port,
+                 'protocol': self.protocol,
+                 'auth_attempts': self.get_number_of_login_attempts(),
+                 'session_ended': session_ended
+                 }
         return entry
 
     def end_session(self):

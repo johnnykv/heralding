@@ -98,7 +98,6 @@ class Honeypot:
                 self.hpfeeds_logger_task = self.loop.run_in_executor(None, curiosum_integration.start)
                 self.hpfeeds_logger_task.add_done_callback(common.on_unhandled_task_exception)
 
-
         bind_host = self.config['bind_host']
         listen_ports = []
         for c in heralding.capabilities.handlerbase.HandlerBase.__subclasses__():
@@ -149,15 +148,15 @@ class Honeypot:
                     self.loop.run_until_complete(common.cancel_all_pending_tasks(self.loop))
                     sys.exit(error_message)
                 else:
-                    logger.info('Started %s capability listening on port %s',c.__name__, port)
+                    logger.info('Started %s capability listening on port %s', c.__name__, port)
         ReportingRelay.logListenPorts(listen_ports)
 
     def stop(self):
         """Stops services"""
         if self.config['capabilities']['ssh']['enabled']:
-           for conn in self.SshClass.connections_list:
-               conn.close()
-               self.loop.run_until_complete(conn.wait_closed())
+            for conn in self.SshClass.connections_list:
+                conn.close()
+                self.loop.run_until_complete(conn.wait_closed())
 
         for server in self._servers:
             server.close()
