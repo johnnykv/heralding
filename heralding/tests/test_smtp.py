@@ -66,7 +66,6 @@ class SmtpTests(unittest.TestCase):
         smtp_task = self.loop.run_in_executor(None, smtp_connection)
         self.loop.run_until_complete(smtp_task)
 
-
     def test_AUTH_CRAM_MD5_reject(self):
         """ Makes sure the server rejects all invalid login attempts that use the
             CRAM-MD5 Authentication method.
@@ -94,7 +93,6 @@ class SmtpTests(unittest.TestCase):
         smtp_task = self.loop.run_in_executor(None, smtp_auth_cram_md5)
         self.loop.run_until_complete(smtp_task)
 
-
     def test_AUTH_PLAIN_reject(self):
         """ Makes sure the server rejects all invalid login attempts that use the PLAIN Authentication method.
         """
@@ -115,7 +113,6 @@ class SmtpTests(unittest.TestCase):
 
         smtp_task = self.loop.run_in_executor(None, smtp_auth_plain_reject)
         self.loop.run_until_complete(smtp_task)
-
 
     def test_AUTH_LOGIN_reject(self):
         """ Makes sure the server rejects all invalid login attempts that use the LOGIN Authentication method.
