@@ -35,7 +35,7 @@ class Socks5(HandlerBase):
         if len(greeting) > 2:
             await self.try_authenticate(reader, writer, session, greeting)
         else:
-            logger.debug("Incorrect client greeting string.")
+            logger.debug("Incorrect client greeting string: %r" % greeting)
         session.end_session()
 
     async def try_authenticate(self, reader, writer, session, greeting):
@@ -46,7 +46,7 @@ class Socks5(HandlerBase):
             else:
                 writer.write(SOCKS_VERSION + SOCKS_FAIL)
         else:
-            logger.debug("Wrong socks version.")
+            logger.debug("Wrong socks version: %r" % version)
 
     async def do_authenticate(self, reader, writer, session):
         writer.write(SOCKS_VERSION + AUTH_METHOD)
@@ -58,7 +58,7 @@ class Socks5(HandlerBase):
                                      password=password.decode())
             writer.write(AUTH_METHOD + SOCKS_FAIL)
         else:
-            logger.debug("Wrong authentication data.")
+            logger.debug("Wrong authentication data: %r" % auth_data)
 
     @staticmethod
     def unpack_msg(data):
