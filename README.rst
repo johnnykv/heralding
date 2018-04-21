@@ -12,7 +12,7 @@ About
 -----
 
 Sometimes you just want a simple honeypot that collects credentials, nothing more. Heralding is that honeypot!
-Currently the following protocols are supported: ftp, telnet, ssh, http, https, pop3, pop3s, imap, imaps, smtp and postgresql.
+Currently the following protocols are supported: ftp, telnet, ssh, http, https, pop3, pop3s, imap, imaps, smtp, vnc, postgresql and socks5.
 
 **You need Python 3.5.0 or higher.**
 
@@ -108,4 +108,3 @@ Pcaps
 Want a seperate pcap for each heralding session? Sure, take a look at the Curisoum_ project. Make sure to enable Curisoum in Heralding.yml!
 
 .. _Curisoum: https://github.com/johnnykv/curiosum
-  
