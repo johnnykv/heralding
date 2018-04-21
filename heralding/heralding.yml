@@ -75,7 +75,7 @@ capabilities:
     enabled: true
     port: 5432
     timeout: 30
- 
+
   imap:
     enabled: true
     port: 143
@@ -149,4 +149,9 @@ capabilities:
   vnc:
     enabled: true
     port: 5900
+    timeout: 30
+
+  socks5:
+    enabled: true
+    port: 1080
     timeout: 30

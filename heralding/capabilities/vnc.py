@@ -29,9 +29,6 @@ logger = logging.getLogger(__name__)
 
 
 class Vnc(HandlerBase):
-    def __init__(self, options, loop):
-        super().__init__(options, loop)
-
     async def execute_capability(self, reader, writer, session):
         await self._handle_session(reader, writer, session)
 

@@ -30,4 +30,3 @@ class FtpTests(unittest.TestCase):
         secret = "toosecret"
 
         HpFeedsLogger(session_channel, auth_channel, host, port, ident, secret)
-
