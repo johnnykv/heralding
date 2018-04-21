@@ -49,4 +49,5 @@ beeswarm.cfg
 docs/_build
 .noseids
 admin_passwd_hash
-https.pem
+*.pem
+*.csv
