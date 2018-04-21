@@ -54,7 +54,8 @@ class Socks5(HandlerBase):
         await writer.drain()
         # 513 - max bytes number for username/password auth according to RFC 1929
         auth_data = await reader.read(513)
-        if len(auth_data) > 4:
+        print(auth_data)
+        if len(auth_data) > 2:
             username, password = self.unpack_auth(auth_data)
             session.add_auth_attempt('plaintext', username=username.decode(),
                                      password=password.decode())
@@ -74,6 +75,10 @@ class Socks5(HandlerBase):
     def unpack_auth(auth_data):
         ulen = auth_data[1]
         username = auth_data[2:2+ulen]
-        plen = auth_data[2+ulen:2+ulen+1][0]
-        password = auth_data[-plen:]
+        password_part = auth_data[2+ulen:]
+        if password_part:
+            plen = password_part[0]
+            password = auth_data[-plen:]
+        else:
+            password = b""
         return username, password
