@@ -1,3 +1,8 @@
+1.0.1 (2018-04-21)
+- Socks5 capability added (#72)
+- Added feature that allows pcap recording of session (Curiosum integration)
+- Various minor fixes and improvements
+
 1.0.0 (2017-12-28)
 - Added VNC support (#68)
 - New logging scheme (log_session.csv and log_auth.csv)
