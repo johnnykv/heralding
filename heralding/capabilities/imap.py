@@ -157,8 +157,7 @@ class Imap(HandlerBase):
             result = base64.b64decode(b64_str)
             return True, str(result, 'utf-8')
         except binascii.Error:
-            logger.warning('Error decoding base64: {0} '
-                           '({1})', binascii.hexlify(b64_str), session.id)
+            logger.warning('Error decoding base64: {0} ({1})'.format(binascii.hexlify(b64_str), session.id))
             return False, ''
 
     @staticmethod
