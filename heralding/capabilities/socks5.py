@@ -45,11 +45,13 @@ class Socks5(HandlerBase):
                 await self.do_authenticate(reader, writer, session)
             else:
                 writer.write(SOCKS_VERSION + SOCKS_FAIL)
+                await writer.drain()
         else:
             logger.debug("Wrong socks version: %r" % version)
 
     async def do_authenticate(self, reader, writer, session):
         writer.write(SOCKS_VERSION + AUTH_METHOD)
+        await writer.drain()
         # 513 - max bytes number for username/password auth according to RFC 1929
         auth_data = await reader.read(513)
         if len(auth_data) > 4:
@@ -57,6 +59,7 @@ class Socks5(HandlerBase):
             session.add_auth_attempt('plaintext', username=username.decode(),
                                      password=password.decode())
             writer.write(AUTH_METHOD + SOCKS_FAIL)
+            await writer.drain()
         else:
             logger.debug("Wrong authentication data: %r" % auth_data)
 
