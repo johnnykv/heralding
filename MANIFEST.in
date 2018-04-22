@@ -1,5 +1,0 @@
-recursive-include heralding *
-include ez_setup.py
-include requirements.txt
-include requirements-test.txt
-prune *.pyc
