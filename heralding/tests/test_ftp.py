@@ -13,15 +13,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import asyncio
-import unittest
-
 import ftplib
 from ftplib import FTP
 
 from heralding.capabilities import ftp
 from heralding.tests.common import BaseCapabilityTests
-from heralding.reporting.reporting_relay import ReportingRelay
 
 
 class FtpTests(BaseCapabilityTests):
@@ -40,4 +36,4 @@ class FtpTests(BaseCapabilityTests):
 
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test Banner', 'users': {'test': 'test'},
                    'protocol_specific_data': {'max_attempts': 3, 'banner': 'test banner', 'syst_type': 'Test Type'}}
-        self.capability_test(ftp.ftp, ftp_login, options)
+        self.capability_check(ftp.ftp, ftp_login, options)

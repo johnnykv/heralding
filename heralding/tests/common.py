@@ -39,7 +39,7 @@ class BaseCapabilityTests(unittest.TestCase):
 
         self.loop.close()
 
-    def capability_test(self, capability_class, authfunc, options):
+    def capability_check(self, capability_class, authfunc, options):
         capability = capability_class(options, self.loop)
 
         server_coro = asyncio.start_server(capability.handle_session, '127.0.0.1',
