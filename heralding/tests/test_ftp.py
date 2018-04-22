@@ -20,27 +20,11 @@ import ftplib
 from ftplib import FTP
 
 from heralding.capabilities import ftp
+from heralding.tests.common import BaseCapabilityTests
 from heralding.reporting.reporting_relay import ReportingRelay
 
 
-class FtpTests(unittest.TestCase):
-    def setUp(self):
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(None)
-
-        self.reporting_relay = ReportingRelay()
-        self.reporting_relay_task = self.loop.run_in_executor(None, self.reporting_relay.start)
-
-    def tearDown(self):
-        self.reporting_relay.stop()
-        # We give reporting_relay a chance to be finished
-        self.loop.run_until_complete(self.reporting_relay_task)
-
-        self.server.close()
-        self.loop.run_until_complete(self.server.wait_closed())
-
-        self.loop.close()
-
+class FtpTests(BaseCapabilityTests):
     def test_login(self):
         """Testing different login combinations"""
 
@@ -56,11 +40,4 @@ class FtpTests(unittest.TestCase):
 
         options = {'enabled': 'True', 'port': 0, 'banner': 'Test Banner', 'users': {'test': 'test'},
                    'protocol_specific_data': {'max_attempts': 3, 'banner': 'test banner', 'syst_type': 'Test Type'}}
-
-        ftp_capability = ftp.ftp(options, self.loop)
-
-        server_coro = asyncio.start_server(ftp_capability.handle_session, '0.0.0.0', 8888, loop=self.loop)
-        self.server = self.loop.run_until_complete(server_coro)
-
-        ftp_task = self.loop.run_in_executor(None, ftp_login)
-        self.loop.run_until_complete(ftp_task)
+        self.capability_test(ftp.ftp, ftp_login, options)
