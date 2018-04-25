@@ -22,22 +22,23 @@ Starting the honeypot
 .. code-block:: shell
 
   $ sudo heralding
-  2017-12-28 21:03:35,273 (root) Initializing Heralding version 1.0.0
-  2017-12-28 21:03:35,273 (root) Using default config file: "/Users/jkv/repos/heralding/heralding/heralding.yml", if you want to customize values please copy this file to the current working directory
-  2017-12-28 21:03:35,298 (heralding.reporting.file_logger) File logger started, using files: log_auth.csv and log_session.csv
-  2017-12-28 21:03:35,298 (heralding.honeypot) Started ftp capability listening on port 21
-  2017-12-28 21:03:35,299 (heralding.honeypot) Started Http capability listening on port 80
-  2017-12-28 21:03:35,300 (heralding.honeypot) Started https capability listening on port 443
-  2017-12-28 21:03:35,300 (heralding.honeypot) Started Imap capability listening on port 143
-  2017-12-28 21:03:35,301 (heralding.honeypot) Started Imaps capability listening on port 993
-  2017-12-28 21:03:35,301 (heralding.honeypot) Started Pop3 capability listening on port 110
-  2017-12-28 21:03:35,302 (heralding.honeypot) Started Pop3S capability listening on port 995
-  2017-12-28 21:03:35,302 (heralding.honeypot) Started PostgreSQL capability listening on port 5432
-  2017-12-28 21:03:35,302 (heralding.honeypot) Started smtp capability listening on port 25
-  2017-12-28 21:03:35,304 (heralding.honeypot) Started SSH capability listening on port 22
-  2017-12-28 21:03:35,304 (heralding.honeypot) Started Telnet capability listening on port 23
-  2017-12-28 21:03:35,304 (heralding.honeypot) Started Vnc capability listening on port 5900
-  2017-12-28 21:03:35,308 (root) Privileges dropped, running as nobody/nogroup.
+   2018-04-25 20:34:37,186 (root) Initializing Heralding version 1.0.0
+   2018-04-25 20:34:37,206 (heralding.reporting.file_logger) File logger started, using files: log_auth.csv and log_session.csv
+   2018-04-25 20:34:37,207 (heralding.honeypot) Started Vnc capability listening on port 5900
+   2018-04-25 20:34:37,207 (heralding.honeypot) Started Http capability listening on port 80
+   2018-04-25 20:34:37,208 (heralding.honeypot) Started https capability listening on port 443
+   2018-04-25 20:34:37,208 (heralding.honeypot) Started ftp capability listening on port 21
+   2018-04-25 20:34:37,209 (heralding.honeypot) Started Pop3 capability listening on port 110
+   2018-04-25 20:34:37,209 (heralding.honeypot) Started Pop3S capability listening on port 995
+   2018-04-25 20:34:37,210 (heralding.honeypot) Started Imap capability listening on port 143
+   2018-04-25 20:34:37,210 (heralding.honeypot) Started smtp capability listening on port 25
+   2018-04-25 20:34:37,210 (heralding.honeypot) Started PostgreSQL capability listening on port 5432
+   2018-04-25 20:34:37,210 (heralding.honeypot) Started Telnet capability listening on port 23
+   2018-04-25 20:34:37,212 (root) Creating SSH server on 0.0.0.0, port 22
+   2018-04-25 20:34:37,212 (heralding.honeypot) Started SSH capability listening on port 22
+   2018-04-25 20:34:37,213 (heralding.honeypot) Started Socks5 capability listening on port 1080
+   2018-04-25 20:34:37,214 (heralding.honeypot) Started Imaps capability listening on port 993
+   2018-04-25 20:34:37,215 (root) Privileges dropped, running as nobody/nogroup.
 
 
 Viewing the collected data
