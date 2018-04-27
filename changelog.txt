@@ -1,4 +1,4 @@
-1.0.1 (2018-04-21)
+1.0.1 (2018-04-27)
 - Socks5 capability added (#72)
 - Added feature that allows pcap recording of session (Curiosum integration)
 - Various minor fixes and improvements
