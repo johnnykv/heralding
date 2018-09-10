@@ -1,3 +1,6 @@
+1.0.2 (2018-09-10)
+- HPFeeds issue fixed (#86, #87)
+
 1.0.1 (2018-04-27)
 - Socks5 capability added (#72)
 - Added feature that allows pcap recording of session (Curiosum integration)
