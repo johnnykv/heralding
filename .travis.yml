@@ -19,9 +19,9 @@ deploy:
   provider: pypi
   user: Johnny.Vestergaard
   password:
-    secure: liTY6AbvlYX6BcIkir1HPAVkhaLZxRAtcfeSx2Bda76gzbFgAoPnDL7e4RRQ+DtKbsWZp7VeeTIj8XtsS65ctdpVf9hH9V5za7C1N7Ad7nPRqVqxBpJHtRQUT2JmoTn5N0nG1KAt8TNez90lsT8Xe67EbSpWveqDwoSys5LzI/Fx4OjbqbPf3XBYDuM9yojw3USr/In+WgNDQaJpOLe9gPMmkUviTqSLejb1Sb+4T78WxwwmuuN3fC1kXYoKIjFOEdGgfF567JpUDMJ42C011H3MvhV6rhaffYmA77rxPFYAPf2NxD+zxZfEanlUfbSineXqOKmCmMwsBXjpeDqf6zz0Ud6o0y+5YozElOyYni/nBCpI97RSF88NQgbpRZ26OwwvJJz/dIfeK2WeI1nIc+bc1Mw9xJaox8oFaYqkjQMIxRxkhF+A0iFiZ8JEoWqrCawWA3BUlbaictXc6CmYsRLPcVa38hRufeBpX99yHUPjEuHCfJn3v3eU7P6wWUUjDS5JxuaEHe0C6/Ky4Qg2271B+jUDbHD76DDS5uoOKOqHCuSef6pfwxoDG1337legD3LbQr9VCWntZliT84DRKWiG4RsWyYsEunSXnXqmGpvegsvVNaxDm+ZnzNCwi8kBa16zDU65LM2n98jszMjh9w1IekTlJoF0hmh3QvAXcc8=
+    secure: dJNWYkbaKTl6zCvtSq8YCNAJCnd+vs36/5dBojBqpf1xuUQgodPTBYJuiEJYODq4O7DIuepyo4K982gd6TnGRf5YaR+DdbFCD+mIt7WKRbuFm64Typwgcdw4kaqdwIMtDoTn4XZK3u5RHOuCs30+Ly8pSN+j19p/vqMqypVN6nNYcBp8eANmWjmAAijFSC58yqs+sD2SSadh2Z4GWb5c4+KwqakL3g1vY56po+QUNLBOgcJ/wXTZ9QJbjWh+i9K2vzQD8sun0W4Hh/ztQdLeCUEOrxZPiFu1nQSjVeV0OAj55/ihXC09zjSUmgNLi20J3KGQ4cM81eG22bQj9M39ROz+HiRjT3U0aIgo3HShBTQpRylKAEW+mHo7NrRtNIKoVLI8Mw3utovlnyZcG9NBV02RROKlzUqJ8XgDbXZz8/Yzxt7bvNl5f28z4gl1ozst+OYYkcpAdJGSGbLv73s7ZIILblU0M0ifSGMeTcNCccqDWhKknEh8ccIRSZRmeK5RIQdjGUVMLYnIoq7uqXIwqk8ilEoUxhWXUIqTcnymY5QjsR6b6T1groVSC16HIPYY/52ii/V5uZ3EoRLsQyDoeDojs5e50HSUx54OwRvm+y9himeI6G7CsUDS+lDtTJYvckeE2QDKQLAQcBH9HN1F8gkm+WIf1pimld4c8dKXTHQ=
   on:
     tags: true
     distributions: sdist bdist_wheel
     repo: johnnykv/heralding
-    condition: $TRAVIS_TAG =~ ^Release_[0-9]+[.][0-9]+[.][0-9]+
+    condition: "$TRAVIS_TAG =~ ^Release_[0-9]+[.][0-9]+[.][0-9]+"
