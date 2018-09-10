@@ -51,3 +51,6 @@ docs/_build
 admin_passwd_hash
 *.pem
 *.csv
+
+venv/*
+heralding/heralding.yml
