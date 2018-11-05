@@ -45,11 +45,9 @@ class HandlerBase:
 
     def create_session(self, address, dest_address):
         protocol = self.__class__.__name__.lower()
-        session = Session(address[0], address[1], protocol, self.users)
+        session = Session(address[0], address[1], protocol, self.users, dest_address[1], dest_address[0])
         self.sessions[session.id] = session
         HandlerBase.global_sessions += 1
-        session.destination_ip = dest_address[0]
-        session.destination_port = dest_address[1]
         logger.debug(
             'Accepted %s session on %s:%s from %s:%s. (%s)',
                 protocol, dest_address[0], dest_address[1], address[0],
