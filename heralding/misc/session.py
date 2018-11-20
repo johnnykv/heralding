@@ -25,13 +25,16 @@ logger = logging.getLogger(__name__)
 
 
 class Session:
-    def __init__(self, source_ip, source_port, protocol, users, destination_port=None, destination_ip=None):
+    def __init__(self, source_ip, source_port, protocol, users, destination_port=None, destination_ip=''):
 
         self.id = uuid.uuid4()
         self.source_ip = source_ip
         self.source_port = source_port
         self.protocol = protocol
-        self.destination_ip = destination_ip
+        if heralding.honeypot.Honeypot.public_ip:
+            self.destination_ip = heralding.honeypot.Honeypot.public_ip
+        else:
+            self.destination_ip = destination_ip
         self.destination_port = destination_port
         self.timestamp = datetime.utcnow()
         self.login_attempts = 0
@@ -65,7 +68,7 @@ class Session:
                  'auth_id': uuid.uuid4(),
                  'source_ip': self.source_ip,
                  'source_port': self.source_port,
-                 'destination_ip': heralding.honeypot.Honeypot.public_ip,
+                 'destination_ip': self.destination_ip,
                  'destination_port': self.destination_port,
                  'protocol': self.protocol,
                  'username': None,
@@ -89,7 +92,7 @@ class Session:
                  'session_id': self.id,
                  'source_ip': self.source_ip,
                  'source_port': self.source_port,
-                 'destination_ip': heralding.honeypot.Honeypot.public_ip,
+                 'destination_ip': self.destination_ip,
                  'destination_port': self.destination_port,
                  'protocol': self.protocol,
                  'auth_attempts': self.get_number_of_login_attempts(),

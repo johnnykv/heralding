@@ -43,15 +43,14 @@ class HandlerBase:
         else:
             self.timeout = 30
 
-    def create_session(self, address):
+    def create_session(self, address, dest_address):
         protocol = self.__class__.__name__.lower()
-        session = Session(address[0], address[1], protocol, self.users)
+        session = Session(address[0], address[1], protocol, self.users, dest_address[1], dest_address[0])
         self.sessions[session.id] = session
         HandlerBase.global_sessions += 1
-        session.destination_port = self.port
         logger.debug(
-            'Accepted %s session on port %s from %s:%s. (%s)', protocol, self.port, address[
-                0],
+            'Accepted %s session on %s:%s from %s:%s. (%s)',
+                protocol, dest_address[0], dest_address[1], address[0],
             address[1], str(session.id))
         logger.debug('Size of session list for %s: %s',
                      protocol, len(self.sessions))
@@ -74,13 +73,15 @@ class HandlerBase:
 
     async def handle_session(self, reader, writer):
         address = writer.get_extra_info('peername')
+        dest_address = writer.get_extra_info('sockname')
+
         if HandlerBase.global_sessions > HandlerBase.MAX_GLOBAL_SESSIONS:
             protocol = self.__class__.__name__.lower()
             logger.warning(
                 'Got %s session on port %s from %s:%s, but not handling it because the global session limit has '
                 'been reached', protocol, self.port, *address)
         else:
-            session = self.create_session(address)
+            session = self.create_session(address, dest_address)
             try:
                 await asyncio.wait_for(self.execute_capability(reader, writer, session),
                                        timeout=self.timeout, loop=self.loop)
