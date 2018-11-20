@@ -1,3 +1,6 @@
+1.0.3 (2018-11-20)
+- Get destination ip from socket (#88)
+
 1.0.2 (2018-09-10)
 - HPFeeds issue fixed (#86, #87)
 
