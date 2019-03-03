@@ -100,6 +100,14 @@ class Session:
                  }
         return entry
 
+    def add_stat_log(self, User_Agent, System_Version):
+        user_agent_list = {
+                    'User_Agent' : User_Agent,
+                    'System_Version' : System_Version
+                }
+
+        ReportingRelay.logStatInfo(user_agent_list)
+
     def end_session(self):
         if not self.session_ended:
             self.session_ended = True

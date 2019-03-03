@@ -4,12 +4,13 @@ public_ip_as_destination_ip: false
 # ip address to listen on
 bind_host: 0.0.0.0
 
-# logging of sessions and authentication attempts 
+# logging of sessions and authentication attempts
 activity_logging:
   file:
     enabled: true
     session_log_file: "log_session.csv"
     authentication_log_file: "log_auth.csv"
+    stat_log_file: "log_stat.csv"
 
   syslog:
     enabled: false
@@ -18,7 +19,8 @@ activity_logging:
     enabled: false
     session_channel: "heralding.session"
     auth_channel: "heralding.auth"
-    host: 
+    stat_channel : "herlading.stat"
+    host:
     port: 20000
     ident:
     secret:

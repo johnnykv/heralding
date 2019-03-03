@@ -27,14 +27,7 @@ from heralding.capabilities.handlerbase import HandlerBase
 from heralding.libs.http.aioserver import AsyncBaseHTTPRequestHandler
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
-file_handler = logging.FileHandler('statistics.log')
-file_handler.setLevel(logging.DEBUG)
-
-formatter = logging.Formatter('%(asctime)s:%(name)s:%(message)s:')
-file_handler.setFormatter(formatter)
-logger.addHandler(file_handler)
 
 class HTTPHandler(AsyncBaseHTTPRequestHandler):
     def __init__(self, reader, writer, httpsession, options):
@@ -72,13 +65,8 @@ class HTTPHandler(AsyncBaseHTTPRequestHandler):
             headers_bytes = bytes(self.headers['Authorization'], 'utf-8')
             self.wfile.write(headers_bytes)
             self.wfile.write(b'not authenticated')
-
-        logger.debug(self.headers['User-Agent'])
-        logger.debug(self.sys_version)
-        logger.debug(self.server_version)
-
-
-    # Disable logging provided by BaseHTTPServer
+            self._session.add_stat_log(self.headers['User-Agent'], self.headers['Referer'])
+            # Disable logging provided by BaseHTTPServer
     def log_message(self, format_, *args):
         pass
 

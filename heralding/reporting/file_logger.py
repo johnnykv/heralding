@@ -16,6 +16,7 @@
 import os
 import csv
 import logging
+import json
 
 from heralding.reporting.base_logger import BaseLogger
 
@@ -23,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class FileLogger(BaseLogger):
-    def __init__(self, session_logfile, auth_logfile):
+    def __init__(self, session_logfile, auth_logfile, stat_logfile):
         super().__init__()
 
         auth_field_names = ['timestamp', 'auth_id', 'session_id', 'source_ip', 'source_port', 'destination_ip',
@@ -36,7 +37,9 @@ class FileLogger(BaseLogger):
         self.session_log_filehandler, self.session_log_writer = self.setup_file(
             session_logfile, session_field_names)
 
-        logger.info('File logger started, using files: %s and %s', auth_logfile, session_logfile)
+        stat_field_names = ['User-Agent', 'System_Version']
+        self.stat_log_filehandler, self.stat_log_writer = self.setup_file(stat_logfile, stat_field_names)
+        logger.info('File logger started, using files: %s, %s and %s', auth_logfile, session_logfile, stat_logfile)
 
     def setup_file(self, filename, field_names):
         handler = writer = None
@@ -63,7 +66,9 @@ class FileLogger(BaseLogger):
     def handle_auth_log(self, data):
         # for now this logger only handles authentication attempts where we are able
         # to log both username and password
+        logging.error('Inside handle_auth_log function!')
         if 'username' in data and 'password' in data:
+            logger.error('The data of data in handle_auth_log is %s', type(data))
             self.auth_log_writer.writerow(data)
             # meh
             self.auth_log_filehandler.flush()
@@ -72,4 +77,11 @@ class FileLogger(BaseLogger):
         if data['session_ended']:
             self.session_log_writer.writerow(data)
             # double meh
+            self.session_log_filehandler.flush()
+
+    def handle_stat_log(self, data):
+        #logging.error('Inside handle_stat_log function!')
+        if 'User_Agent' in data and 'System_Version' in data:
+            logger.error(type(data))
+            self.stat_log_writer.writerow(data)
             self.session_log_filehandler.flush()
