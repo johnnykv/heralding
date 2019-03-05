@@ -18,6 +18,7 @@ import logging
 import functools
 
 from heralding.capabilities.handlerbase import HandlerBase
+from heralding.reporting.aux_data_fields import AuxiliaryData
 
 import asyncssh
 from Crypto.PublicKey import RSA
@@ -40,6 +41,10 @@ class SSH(asyncssh.SSHServer, HandlerBase):
         logger.debug('SSH connection received from %s.' % conn.get_extra_info('peername')[0])
 
     def connection_lost(self, exc):
+        # log auxiliary info
+        aux_data = self.get_auxiliary_info()
+        self.session.add_auxiliary_info(aux_data)
+
         self.close_session(self.session)
         if exc:
             logger.debug('SSH connection error: ' + str(exc))
@@ -64,6 +69,13 @@ class SSH(asyncssh.SSHServer, HandlerBase):
                 'been reached'.format(protocol, self.port, *self.address))
         else:
             self.session = self.create_session(self.address, self.dest_address)
+
+    def get_auxiliary_info(self):
+        conn = self.connections_list[-1]
+        data_fields = AuxiliaryData.get_data_fields('ssh')
+        data = {i:conn.get_extra_info(i) for i in data_fields}
+        logger.debug("Auxiliary info: %s" % str(data))
+        return data
 
     @staticmethod
     def change_server_banner(banner):
