@@ -13,18 +13,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
 class AuxiliaryData:
     fields = {
-        'ssh':['client_version','recv_cipher','recv_mac']
+        'ssh': ['client_version', 'recv_cipher', 'recv_mac']
     }
 
     @staticmethod
     def get_logfile_name(protocol_name):
         return ('aux_'+protocol_name+'.log')
-        
+
     @staticmethod
     def get_filelog_fields(protocol_name):
-        default_fields = ['timestamp','session_id','protocol']
+        default_fields = ['timestamp', 'session_id', 'protocol']
         protocol_fields = AuxiliaryData.fields.get(protocol_name)
         return default_fields+protocol_fields
 

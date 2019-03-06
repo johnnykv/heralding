@@ -100,7 +100,7 @@ class Session:
                  }
         return entry
 
-    def add_auxiliary_info(self,aux_data):
+    def add_auxiliary_info(self, aux_data):
         entry = {'timestamp': self.timestamp,
                  'session_id': self.id,
                  'protocol': self.protocol

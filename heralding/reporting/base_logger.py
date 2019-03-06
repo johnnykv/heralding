@@ -70,7 +70,7 @@ class BaseLogger:
         # implement if needed
         pass
 
-    def handle_auxiliary_log(self,data):
+    def handle_auxiliary_log(self, data):
         # implement if needed
         pass
 

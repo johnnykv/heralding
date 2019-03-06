@@ -73,7 +73,7 @@ class SSH(asyncssh.SSHServer, HandlerBase):
     def get_auxiliary_info(self):
         conn = self.connections_list[-1]
         data_fields = AuxiliaryData.get_data_fields('ssh')
-        data = {i:conn.get_extra_info(i) for i in data_fields}
+        data = {i: conn.get_extra_info(i) for i in data_fields}
         logger.debug("Auxiliary info: %s" % str(data))
         return data
 

@@ -39,7 +39,7 @@ class FileLogger(BaseLogger):
 
         logger.info('File logger started, using files: %s and %s', auth_logfile, session_logfile)
 
-        # SSH protocol's filehandler ,writer for auxiliary data 
+        # SSH protocol's filehandler ,writer for auxiliary data
         ssh_aux_field_names = AuxiliaryData.get_filelog_fields('ssh')
         ssh_logfile_name = AuxiliaryData.get_logfile_name('ssh')
         self.ssh_aux_log_filehandler, self.ssh_aux_log_writer = self.setup_file(
@@ -81,8 +81,8 @@ class FileLogger(BaseLogger):
             # double meh
             self.session_log_filehandler.flush()
 
-    def handle_auxiliary_log(self,data):
-        #check for protocol name
+    def handle_auxiliary_log(self, data):
+        # check for protocol name
         if data['protocol'] == 'ssh':
             self.ssh_aux_log_writer.writerow(data)
             self.ssh_aux_log_filehandler.flush()
