@@ -37,6 +37,7 @@ class SSH(asyncssh.SSHServer, HandlerBase):
         SSH.connections_list.append(conn)
         self.address = conn.get_extra_info('peername')
         self.dest_address = conn.get_extra_info('sockname')
+        self.connection = conn
         self.handle_connection()
         logger.debug('SSH connection received from %s.' % conn.get_extra_info('peername')[0])
 
@@ -71,10 +72,8 @@ class SSH(asyncssh.SSHServer, HandlerBase):
             self.session = self.create_session(self.address, self.dest_address)
 
     def get_auxiliary_info(self):
-        conn = self.connections_list[-1]
         data_fields = AuxiliaryData.get_data_fields('ssh')
-        data = {i: conn.get_extra_info(i) for i in data_fields}
-        logger.debug("Auxiliary info: %s" % str(data))
+        data = {f: self.connection.get_extra_info(f) for f in data_fields}
         return data
 
     @staticmethod

@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2019 Sudipta Pandit <realsdx@protonmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ class AuxiliaryData:
 
     @staticmethod
     def get_logfile_name(protocol_name):
-        return ('aux_'+protocol_name+'.log')
+        return 'aux_'+protocol_name+'.csv'
 
     @staticmethod
     def get_filelog_fields(protocol_name):
