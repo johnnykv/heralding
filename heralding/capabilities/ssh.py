@@ -18,7 +18,6 @@ import logging
 import functools
 
 from heralding.capabilities.handlerbase import HandlerBase
-from heralding.reporting.aux_data_fields import AuxiliaryData
 
 import asyncssh
 from Crypto.PublicKey import RSA
@@ -72,9 +71,13 @@ class SSH(asyncssh.SSHServer, HandlerBase):
             self.session = self.create_session(self.address, self.dest_address)
 
     def get_auxiliary_info(self):
-        data_fields = AuxiliaryData.get_data_fields('ssh')
+        data_fields = SSH.get_aux_fields()
         data = {f: self.connection.get_extra_info(f) for f in data_fields}
         return data
+
+    @staticmethod
+    def get_aux_fields():
+        return ['client_version', 'recv_cipher', 'recv_mac']
 
     @staticmethod
     def change_server_banner(banner):
