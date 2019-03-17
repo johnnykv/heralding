@@ -100,6 +100,14 @@ class Session:
                  }
         return entry
 
+    def add_auxiliary_info(self, aux_data):
+        entry = {'timestamp': self.timestamp,
+                 'session_id': self.id,
+                 'protocol': self.protocol
+                 }
+        entry.update(aux_data)
+        ReportingRelay.logAuxiliaryData(entry)
+
     def end_session(self):
         if not self.session_ended:
             self.session_ended = True
