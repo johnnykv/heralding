@@ -109,3 +109,8 @@ Pcaps
 Want a seperate pcap for each heralding session? Sure, take a look at the Curisoum_ project. Make sure to enable Curisoum in Heralding.yml!
 
 .. _Curisoum: https://github.com/johnnykv/curiosum
+
+
+.. image:: https://api.codacy.com/project/badge/Grade/dda3acd2f2f143e187edabbad70a20dd
+   :alt: Codacy Badge
+   :target: https://app.codacy.com/app/johnnykv/heralding?utm_source=github.com&utm_medium=referral&utm_content=johnnykv/heralding&utm_campaign=Badge_Grade_Settings
