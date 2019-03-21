@@ -3,11 +3,12 @@ Heralding |travis badge| |version badge| |codacy badge|
 
 .. |travis badge| image:: https://img.shields.io/travis/johnnykv/heralding/master.svg
    :target: https://travis-ci.org/johnnykv/heralding
-.. |codacy badge| image:: https://api.codacy.com/project/badge/Grade/cd64aa20bce5474ba565fa3691710773 
+.. |codacy badge| image:: https://api.codacy.com/project/badge/Grade/e9419eb118dc4741ae230aa6bcc8a015
    :target: https://www.codacy.com/app/johnnykv/heralding?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=johnnykv/heralding&amp;utm_campaign=Badge_Grade
 .. |version badge| image:: https://img.shields.io/pypi/v/heralding.svg
    :target: https://pypi.python.org/pypi/Heralding/
-
+   
+   
 About
 -----
 
