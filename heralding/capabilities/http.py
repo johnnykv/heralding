@@ -66,7 +66,7 @@ class HTTPHandler(AsyncBaseHTTPRequestHandler):
             self.wfile.write(headers_bytes)
             self.wfile.write(b'not authenticated')
             aux_data = self.get_auxiliary_info()
-            self._session.logAuxiliaryData(aux_data)
+            self._session.add_auxiliary_info(aux_data)
             # Disable logging provided by BaseHTTPServer
     def log_message(self, format_, *args):
         pass
