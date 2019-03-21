@@ -76,7 +76,6 @@ class FileLogger(BaseLogger):
     def handle_auth_log(self, data):
         # for now this logger only handles authentication attempts where we are able
         # to log both username and password
-        logging.error('Inside handle_auth_log function!')
         if 'username' in data and 'password' in data:
             logger.error('The data of data in handle_auth_log is %s', type(data))
             self.auth_log_writer.writerow(data)
