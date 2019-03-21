@@ -99,7 +99,6 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Logs debug messages.')
     parser.add_argument('-l', '--logfile', dest='logfile', default='heralding.log', help='Heralding log file')
     parser.add_argument('-c', '--config', dest='config', default='heralding.yml', help='Heralding config file')
-    parser.add_argument('-s', '--stat', action='store_true', default=False, help='Logs stat messages.')
     args = parser.parse_args()
 
     setup_logging(args.logfile, args.verbose)

@@ -19,7 +19,6 @@ activity_logging:
     enabled: false
     session_channel: "heralding.session"
     auth_channel: "heralding.auth"
-    stat_channel : "herlading.stat"
     host:
     port: 20000
     ident:
