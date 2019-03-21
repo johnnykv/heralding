@@ -38,7 +38,7 @@ class FileLogger(BaseLogger):
         self.session_log_filehandler, self.session_log_writer = self.setup_file(
             session_logfile, session_field_names)
 
-        logger.info('File logger started, using files: %s, %s and %s', auth_logfile, session_logfile)
+        logger.info('File logger started, using files: %s and %s', auth_logfile, session_logfile)
 
         self.aux_data_fields = {
             'ssh': heralding.capabilities.ssh.SSH.get_aux_fields(),
