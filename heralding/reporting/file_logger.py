@@ -42,6 +42,7 @@ class FileLogger(BaseLogger):
 
         self.aux_data_fields = {
             'ssh': heralding.capabilities.ssh.SSH.get_aux_fields(),
+            'http': heralding.capabilities.http.HTTPHandler.get_aux_fields()
         }
 
         # store all the auxiliary handlers and writers in a dict

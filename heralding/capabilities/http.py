@@ -70,6 +70,21 @@ class HTTPHandler(AsyncBaseHTTPRequestHandler):
     def log_message(self, format_, *args):
         pass
 
+    def get_auxiliary_info(self):
+          data_fields = HTTPHandler.get_aux_fields()
+          data_list = {}
+          for i in data_fields:
+              data_list.update({str(i) : str(self.headers[str(i)])})
+
+          data_list.update({'SessionID': str(self._session.id)})
+          data_list.update({'Timestamp': str(self._session.timestamp)})
+          return data_list
+
+
+    @staticmethod
+    def get_aux_fields():
+      return ['User-Agent', 'Host', 'Accept', 'Accept-Encoding']
+
 
 class Http(HandlerBase):
     def __init__(self, options, loop):
