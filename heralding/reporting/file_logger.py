@@ -19,12 +19,13 @@ import logging
 import json
 
 from heralding.reporting.base_logger import BaseLogger
+import heralding
 
 logger = logging.getLogger(__name__)
 
 
 class FileLogger(BaseLogger):
-    def __init__(self, session_logfile, auth_logfile, stat_logfile):
+    def __init__(self, session_logfile, auth_logfile):
         super().__init__()
 
         auth_field_names = ['timestamp', 'auth_id', 'session_id', 'source_ip', 'source_port', 'destination_ip',
@@ -37,9 +38,17 @@ class FileLogger(BaseLogger):
         self.session_log_filehandler, self.session_log_writer = self.setup_file(
             session_logfile, session_field_names)
 
-        stat_field_names = ['User-Agent', 'System_Version']
-        self.stat_log_filehandler, self.stat_log_writer = self.setup_file(stat_logfile, stat_field_names)
-        logger.info('File logger started, using files: %s, %s and %s', auth_logfile, session_logfile, stat_logfile)
+        logger.info('File logger started, using files: %s, %s and %s', auth_logfile, session_logfile)
+
+        self.aux_data_fields = {
+            'ssh': heralding.capabilities.ssh.SSH.get_aux_fields(),
+        }
+
+        # store all the auxiliary handlers and writers in a dict
+        self.aux_handlers_writers = {}
+        for p in self.aux_data_fields:
+            self.aux_handlers_writers[p] = self.setup_file(
+                self.get_logfile_name(p), self.get_filelog_fields(p))
 
     def setup_file(self, filename, field_names):
         handler = writer = None
@@ -79,9 +88,16 @@ class FileLogger(BaseLogger):
             # double meh
             self.session_log_filehandler.flush()
 
-    def handle_stat_log(self, data):
-        #logging.error('Inside handle_stat_log function!')
-        if 'User_Agent' in data and 'System_Version' in data:
-            logger.error(type(data))
-            self.stat_log_writer.writerow(data)
-            self.session_log_filehandler.flush()
+    def handle_auxiliary_log(self, data):
+        handler, writer = self.aux_handlers_writers.get(data['protocol'], (None, None))
+        if handler and writer:
+            writer.writerow(data)
+            handler.flush()
+
+    def get_logfile_name(self,protocol_name):
+        return 'aux_'+protocol_name+'.csv'
+
+    def get_filelog_fields(self,protocol_name):
+        default_fields = ['timestamp', 'session_id', 'protocol']
+        protocol_fields = self.aux_data_fields.get(protocol_name)
+        return default_fields+protocol_fields

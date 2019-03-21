@@ -36,10 +36,15 @@ class SSH(asyncssh.SSHServer, HandlerBase):
         SSH.connections_list.append(conn)
         self.address = conn.get_extra_info('peername')
         self.dest_address = conn.get_extra_info('sockname')
+        self.connection = conn
         self.handle_connection()
         logger.debug('SSH connection received from %s.' % conn.get_extra_info('peername')[0])
 
     def connection_lost(self, exc):
+        # log auxiliary info
+        aux_data = self.get_auxiliary_info()
+        self.session.add_auxiliary_info(aux_data)
+
         self.close_session(self.session)
         if exc:
             logger.debug('SSH connection error: ' + str(exc))
@@ -64,6 +69,15 @@ class SSH(asyncssh.SSHServer, HandlerBase):
                 'been reached'.format(protocol, self.port, *self.address))
         else:
             self.session = self.create_session(self.address, self.dest_address)
+
+    def get_auxiliary_info(self):
+        data_fields = SSH.get_aux_fields()
+        data = {f: self.connection.get_extra_info(f) for f in data_fields}
+        return data
+
+    @staticmethod
+    def get_aux_fields():
+        return ['client_version', 'recv_cipher', 'recv_mac']
 
     @staticmethod
     def change_server_banner(banner):

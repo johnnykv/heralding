@@ -100,13 +100,13 @@ class Session:
                  }
         return entry
 
-    def add_stat_log(self, User_Agent, System_Version):
-        user_agent_list = {
-                    'User_Agent' : User_Agent,
-                    'System_Version' : System_Version
-                }
-
-        ReportingRelay.logStatInfo(user_agent_list)
+    def add_auxiliary_info(self, aux_data):
+        entry = {'timestamp': self.timestamp,
+                 'session_id': self.id,
+                 'protocol': self.protocol
+                 }
+        entry.update(aux_data)
+        ReportingRelay.logAuxiliaryData(entry)
 
     def end_session(self):
         if not self.session_ended:
