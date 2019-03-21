@@ -10,7 +10,6 @@ activity_logging:
     enabled: true
     session_log_file: "log_session.csv"
     authentication_log_file: "log_auth.csv"
-    stat_log_file: "log_stat.csv"
 
   syslog:
     enabled: false
