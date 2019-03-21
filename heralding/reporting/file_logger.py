@@ -16,7 +16,6 @@
 import os
 import csv
 import logging
-import json
 
 from heralding.reporting.base_logger import BaseLogger
 import heralding
@@ -77,7 +76,6 @@ class FileLogger(BaseLogger):
         # for now this logger only handles authentication attempts where we are able
         # to log both username and password
         if 'username' in data and 'password' in data:
-            logger.error('The data of data in handle_auth_log is %s', type(data))
             self.auth_log_writer.writerow(data)
             # meh
             self.auth_log_filehandler.flush()
