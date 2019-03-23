@@ -28,7 +28,6 @@ class MySQL(HandlerBase):
         self.PROTO_VER = b'\x0a'
         self.SERVER_VER = b'5.7.16\x00'
         self.AUTH_PLUGIN = b'mysql_native_password\x00'
-        self.threadID = b'4321'
 
     def convert4To3Byte(self, num):
         return struct.pack("<I", num)[:3]
@@ -40,6 +39,7 @@ class MySQL(HandlerBase):
 
         payload_len = self.convert4To3Byte(packet_length - 0x04)
         seq_no = b'\x00'  # Always will be first packet
+        thread_id = struct.pack("<I", 4321)
         salt_1 = os.urandom(8)+b'\x00'
         server_cap = b'\xFF\xF7'
         server_lang = b'\x21'
@@ -49,7 +49,7 @@ class MySQL(HandlerBase):
         zeros = bytes(0x0A)
         salt_2 = os.urandom(12)+b'\x00'
 
-        packet = payload_len+seq_no+self.PROTO_VER+self.SERVER_VER+self.threadID +\
+        packet = payload_len+seq_no+self.PROTO_VER+self.SERVER_VER+thread_id +\
             salt_1+server_cap+server_lang+server_status+ext_server_cap+auth_plugin_len +\
             zeros+salt_2+self.AUTH_PLUGIN
 
@@ -102,28 +102,26 @@ class MySQL(HandlerBase):
         seq_no = 2  # if no auth_switch_request
         password_enc = ''
 
-        if (password_len > 0):
+        if password_len > 0:
             password_enc = data[plugin_offset:plugin_offset+password_len].hex()  # for logging coverted to printable hex
             plugin_offset = plugin_offset+password_len
 
         # check if schema(db) is present
-        if(caps & 0x00000008):
+        if caps & 0x00000008:
             schema_offset = plugin_offset  # start offset of db
             try:
                 schema_end_pos = data.index(b'\x00', schema_offset, max_size-schema_offset)
-                # storing the schema for aux use
-                schema = data[schema_offset:schema_end_pos]
                 plugin_offset = schema_end_pos+1
             except ValueError:
                 session.end_session()
 
         # check if plugin_auth enabled
-        if (caps & 0x00080000):
+        if caps & 0x00080000:
             try:
                 plugin_auth_offset = plugin_offset
                 plugin_auth_pos = data.index(b'\x00', plugin_auth_offset, max_size-plugin_auth_offset)
                 plugin_auth = data[plugin_auth_offset:plugin_auth_pos]
-            except ValueError as e:
+            except ValueError:
                 session.end_session()
 
             if "mysql_native_password" != str(plugin_auth, 'ascii'):
