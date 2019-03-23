@@ -4,7 +4,7 @@ public_ip_as_destination_ip: false
 # ip address to listen on
 bind_host: 0.0.0.0
 
-# logging of sessions and authentication attempts 
+# logging of sessions and authentication attempts
 activity_logging:
   file:
     enabled: true
@@ -18,7 +18,7 @@ activity_logging:
     enabled: false
     session_channel: "heralding.session"
     auth_channel: "heralding.auth"
-    host: 
+    host:
     port: 20000
     ident:
     secret:
