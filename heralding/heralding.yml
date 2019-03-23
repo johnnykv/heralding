@@ -155,3 +155,8 @@ capabilities:
     enabled: true
     port: 1080
     timeout: 30
+
+  mysql:
+    enabled: true
+    port: 3306
+    timeout: 30
