@@ -79,8 +79,6 @@ class HTTPHandler(AsyncBaseHTTPRequestHandler):
                  data_list.update({str(field) : str(self.headers[str(field)])})
              else:
                  data_list.update({str(field) : 'Header_Value_Not_Found.'})
-         data_list.update({'SessionID': str(self._session.id)})
-         data_list.update({'Timestamp': str(self._session.timestamp)})
          return data_list
 
 
