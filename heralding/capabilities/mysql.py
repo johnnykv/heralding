@@ -29,7 +29,8 @@ class MySQL(HandlerBase):
         self.SERVER_VER = b'5.7.16\x00'
         self.AUTH_PLUGIN = b'mysql_native_password\x00'
 
-    def convert4To3Byte(self, num):
+    @staticmethod
+    def convert4To3Byte(num):
         return struct.pack("<I", num)[:3]
 
     def server_greeting(self):
@@ -37,7 +38,7 @@ class MySQL(HandlerBase):
         packet_length = 0x3+0x1+0x1+len(self.SERVER_VER)+0x04+(0x08+0x01)+0x02+0x01 + \
             0x02+0x02+0x01+0x0A+0x0D+len(self.AUTH_PLUGIN)
 
-        payload_len = self.convert4To3Byte(packet_length - 0x04)
+        payload_len = MySQL.convert4To3Byte(packet_length - 0x04)
         seq_no = b'\x00'  # Always will be first packet
         thread_id = struct.pack("<I", 4321)
         salt_1 = os.urandom(8)+b'\x00'
@@ -57,7 +58,7 @@ class MySQL(HandlerBase):
 
     def auth_switch_request(self, seq_no):
         packet_length = 3+1+1+len(self.AUTH_PLUGIN)+20+1
-        payload_len = self.convert4To3Byte(packet_length-4)
+        payload_len = MySQL.convert4To3Byte(packet_length-4)
         seq_no = bytes([seq_no])
         auth_switch_req = b'\xFE'
         auth_data = os.urandom(20)+b'\x00'
@@ -67,11 +68,11 @@ class MySQL(HandlerBase):
         return packet
 
     def auth_failed(self, seq_no, user, server, using_password):
-        error_msg = bytes("Access denied for user {} @ {} (using password: {})".format(
+        error_msg = bytes("Access denied for user '{}'@'{}' (using password: {})".format(
             user, server, using_password), 'ascii')
         full_length = 3+1+1+2+6+len(error_msg)  # taking out null
 
-        payload_len = self.convert4To3Byte(full_length-4)
+        payload_len = MySQL.convert4To3Byte(full_length-4)
         seq_no = bytes([seq_no])
         error_packet = b'\xFF'  # Error Packet ID
         error_code = b'\x15\x04'  # Error code 1045 (0x0415)
@@ -88,7 +89,7 @@ class MySQL(HandlerBase):
             session.end_session()
 
     async def _handle_session(self, reader, writer, session):
-        address = writer.get_extra_info('peername')
+        address = writer.get_extra_info('peername')[0]
         writer.write(self.server_greeting())
         data = await reader.read(2048)
 
