@@ -48,7 +48,7 @@ class FileLogger(BaseLogger):
         self.aux_handlers_writers = {}
         for p in self.aux_data_fields:
             self.aux_handlers_writers[p] = self.setup_file(
-                self.get_logfile_name(p), self.get_filelog_fields(p))
+                self.get_auxiliary_logfile_name(p), self.get_filelog_fields(p))
 
     def setup_file(self, filename, field_names):
         handler = writer = None
@@ -92,8 +92,8 @@ class FileLogger(BaseLogger):
             writer.writerow(data)
             handler.flush()
 
-    def get_logfile_name(self,protocol_name):
-        return 'aux_'+protocol_name+'.csv'
+    def get_auxiliary_logfile_name(self,protocol_name):
+        return 'log_auxiliary_'+protocol_name+'.csv'
 
     def get_filelog_fields(self,protocol_name):
         default_fields = ['timestamp', 'session_id', 'protocol']
