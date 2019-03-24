@@ -32,6 +32,7 @@ class MySQLTests(unittest.TestCase):
         def mysql_login():
             try:
                 pymysql.connect(host="0.0.0.0",
+                                port=8306,
                                 user="tuser",
                                 password="tpass",
                                 db="testdb")
@@ -39,11 +40,11 @@ class MySQLTests(unittest.TestCase):
                 return e
             return None
 
-        options = {'enabled': 'True', 'port': 3306}
+        options = {'enabled': 'True', 'port': 8306}
         mysql_cap = mysql.MySQL(options, self.loop)
 
         server_coro = asyncio.start_server(
-            mysql_cap.handle_session, '0.0.0.0', 3306, loop=self.loop)
+            mysql_cap.handle_session, '0.0.0.0', 8306, loop=self.loop)
         self.server = self.loop.run_until_complete(server_coro)
 
         mysql_task = self.loop.run_in_executor(None, mysql_login)
