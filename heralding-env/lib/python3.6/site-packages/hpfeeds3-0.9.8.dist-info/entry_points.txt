@@ -1,0 +1,5 @@
+
+        [console_scripts]
+        hpfeeds = hpfeeds.scripts.cli:main
+        hpfeeds-broker = hpfeeds.scripts.broker:main
+    
