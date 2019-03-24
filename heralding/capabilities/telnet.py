@@ -49,6 +49,8 @@ class TelnetWrapper(TelnetHandlerBase):
         self.auth_count = 0
         self.username = None
         self.session = session
+        self.writer = writer
+        self.reader = reader
         address = writer.get_extra_info('address')
         super().__init__(reader, writer, address, loop)
 
@@ -63,6 +65,17 @@ class TelnetWrapper(TelnetHandlerBase):
             self.auth_count += 1
         self.writeline(b'Username: ')  # It fixes a problem with Hydra bruteforcer.
         return False
+
+    def get_auxiliary_info(self):
+        data_fields = TelnetWrapper.get_aux_fields()
+        data_reader = {f: self.reader.get_extra_info(f) for f in data_fields}
+        data_writer = {f: self.writer.get_extra_info(f) for f in data_fields}
+        data = {'data_reader': data_reader, 'data_writer': data_writer}
+        return data
+
+    @staticmethod
+    def get_aux_fields():
+        return ['status']
 
     def setterm(self, term):
         # Dummy file for the purpose of tests.
