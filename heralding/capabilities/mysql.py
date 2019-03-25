@@ -22,18 +22,39 @@ from heralding.capabilities.handlerbase import HandlerBase
 logger = logging.getLogger(__name__)
 
 
+# Implemented according to https://dev.mysql.com/doc/internals/en/connection-phase-packets.html
 class MySQL(HandlerBase):
     def __init__(self, options, loop):
         super().__init__(options, loop)
         self.PROTO_VER = b'\x0a'
         self.SERVER_VER = b'5.7.16\x00'
-        self.AUTH_PLUGIN = b'mysql_native_password\x00'
+        self.AUTH_PLUGIN = b'mysql_native_password\x00'  # SHA-1 hash of password
 
     @staticmethod
     def convert4To3Byte(num):
+        # MySQL protocol requires 3 byte integers for payload length
         return struct.pack("<I", num)[:3]
 
     def server_greeting(self):
+        # Server Greeting(HandshakeV10) Packet:
+
+        # 0x00 0x03    Payload length
+        # 0x03 0x01    Sequence No
+        # 0x04 0x01    Protocol version (0x0A)
+        # 0x05 0x07    MySQL version (5.7.16\0 in this case, variable length in general)
+        # 0x0C 0x04    Thread ID
+        # 0x10 0x09    Salt (8 random bytes + \0)
+        # 0x19 0x02    Server capabilities (0xFF 0x7F)
+        # 0x1B 0x01    Server language (0x21 = utf8 COLLATE utf8_general_ci)
+        # 0x1C 0x02    Server status (0x02 0x00)
+        # 0x1E 0x02    Extended server capabilities (0xFF 0x81)
+        # 0x20 0x01    Authentication plugin length
+        # 0x21 0x0A    Unused (zeros)
+        # 0x2B 0x0D    Salt (12 random bytes + \0)
+        # 0x38 0x16    Authentication plugin ('mysql_native_password\0')
+
+        # NB: actual payload without the first four bytes (Payload lenght + sequence no)
+
         # packet_length including payload_length+sequence_no
         packet_length = 0x3+0x1+0x1+len(self.SERVER_VER)+0x04+(0x08+0x01)+0x02+0x01 + \
             0x02+0x02+0x01+0x0A+0x0D+len(self.AUTH_PLUGIN)
@@ -57,6 +78,16 @@ class MySQL(HandlerBase):
         return packet
 
     def auth_switch_request(self, seq_no):
+        # Auth Switch Request Packet:
+
+        # 0x00 0x03    Payload length
+        # 0x03 0x01    Sequence No
+        # 0x04 0x01    Auth switch request (0xFE)
+        # 0x05 0x16    Auth method name (variable length, NUL-terminated)
+        # 0x1B 0x15    Auth method data (20 bytes of random salt + \0)
+
+        # Incase any client using other auth methods, request client to switch to 'mysql_native_password'
+
         packet_length = 3+1+1+len(self.AUTH_PLUGIN)+20+1
         payload_len = MySQL.convert4To3Byte(packet_length-4)
         seq_no = bytes([seq_no])
@@ -68,6 +99,15 @@ class MySQL(HandlerBase):
         return packet
 
     def auth_failed(self, seq_no, user, server, using_password):
+        # Auth Failed Packet(Error 1045):
+
+        # 0x00 0x03    Payload length
+        # 0x03 0x01    Sequence #
+        # 0x04 0x01    Error packet (0xFF)
+        # 0x05 0x02    Error code (1045, 0x0415)
+        # 0x07 0x06    SQL State (#28000)
+        # 0x0D  ??     Error message
+
         error_msg = bytes("Access denied for user '{}'@'{}' (using password: {})".format(
             user, server, using_password), 'ascii')
         full_length = 3+1+1+2+6+len(error_msg)  # taking out null
@@ -89,6 +129,21 @@ class MySQL(HandlerBase):
             session.end_session()
 
     async def _handle_session(self, reader, writer, session):
+        # HandshakeResponse41 Packet:
+
+        # 0x00 0x03    Payload length
+        # 0x03 0x01    Sequence No
+        # 0x04 0x04    Client capability flags
+        # 0x08 0x04    Max packet size
+        # 0x0C 0x01    Client character set
+        # 0x0D 0x17    Unused(zeros)
+        # 0x24 ??      User name (NUL-terminated)
+        # XX   0x01    Password length
+        # XX+1 ??      Password
+        # YY   ??      Schema (NUL-terminated)
+        # ZZ   ??      Client authentication plugin (NUL-terminated)
+        # RR   ??      Client connection attibutes
+
         address = writer.get_extra_info('peername')[0]
         writer.write(self.server_greeting())
         data = await reader.read(2048)
