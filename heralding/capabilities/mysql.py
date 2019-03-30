@@ -109,14 +109,14 @@ class MySQL(HandlerBase):
         # 0x0D  ??     Error message
 
         error_msg = bytes("Access denied for user '{}'@'{}' (using password: {})".format(
-            user, server, using_password), 'ascii')
+            user, server, using_password), 'utf-8')
         full_length = 3+1+1+2+6+len(error_msg)  # taking out null
 
         payload_len = MySQL.convert4To3Byte(full_length-4)
         seq_no = bytes([seq_no])
         error_packet = b'\xFF'  # Error Packet ID
         error_code = b'\x15\x04'  # Error code 1045 (0x0415)
-        sql_state = bytes("#28000", 'ascii')
+        sql_state = bytes("#28000", 'utf-8')
 
         packet = payload_len+seq_no+error_packet+error_code+sql_state+error_msg
         return packet
@@ -146,21 +146,45 @@ class MySQL(HandlerBase):
 
         address = writer.get_extra_info('peername')[0]
         writer.write(self.server_greeting())
+        await writer.drain()
         data = await reader.read(2048)
 
-        caps = int.from_bytes(data[0x04:0x08], byteorder='little')
-        max_size = int.from_bytes(data[0x08:0x0C], byteorder='little')
-        username_end_pos = data.index(b'\x00', 0x24, max_size-0x24)
-        username = str(data[0x24:username_end_pos], 'ascii')
-        password_len = data[username_end_pos+1]
-        using_password = "YES" if password_len > 0 else "NO"
-        plugin_offset = username_end_pos+1+1  # start offset of auth_plugin
-        seq_no = 2  # if no auth_switch_request
-        password_enc = ''
+        # Handle empty data and quit command
+        if not data:
+            logger.warning("Got no response from client. Ending the session")
+            session.end_session()
+            return
+        elif data == b'\x01\x00\x00\x00\x01':
+            logger.warning("Received COM_QUIT from client. Ending the session")
+            session.end_session()
+            return
 
-        if password_len > 0:
-            password_enc = data[plugin_offset:plugin_offset+password_len].hex()  # for logging coverted to printable hex
-            plugin_offset = plugin_offset+password_len
+        caps = int.from_bytes(data[0x04:0x08], byteorder='little')
+
+        # Check if client version is above 4.1 , if not terminate session
+        if not caps & 0x00000200:
+            logger.warning("Client vesrion should be 4.1 or above. Ending the session")
+            session.end_session()
+            return
+
+        try:
+            max_size = int.from_bytes(data[0x08:0x0C], byteorder='little')
+            username_end_pos = data.index(b'\x00', 0x24, max_size-0x24)
+            username = str(data[0x24:username_end_pos], 'utf-8')
+            password_len = data[username_end_pos+1]
+            using_password = "YES" if password_len > 0 else "NO"
+            plugin_offset = username_end_pos+1+1  # start offset of auth_plugin
+            seq_no = 2  # if no auth_switch_request
+            password_enc = ''
+
+            if password_len > 0:
+                # for logging coverted to printable hex
+                password_enc = data[plugin_offset:plugin_offset+password_len].hex()
+                plugin_offset = plugin_offset+password_len
+        except ValueError:
+            logger.warning("Malformed packet received. Ending the session")
+            session.end_session()
+            return
 
         # check if schema(db) is present
         if caps & 0x00000008:
@@ -169,7 +193,9 @@ class MySQL(HandlerBase):
                 schema_end_pos = data.index(b'\x00', schema_offset, max_size-schema_offset)
                 plugin_offset = schema_end_pos+1
             except ValueError:
+                logger.warning("Could not find the schema. Ending the session")
                 session.end_session()
+                return
 
         # check if plugin_auth enabled
         if caps & 0x00080000:
@@ -178,12 +204,16 @@ class MySQL(HandlerBase):
                 plugin_auth_pos = data.index(b'\x00', plugin_auth_offset, max_size-plugin_auth_offset)
                 plugin_auth = data[plugin_auth_offset:plugin_auth_pos]
             except ValueError:
+                logger.warning("Cloud not find the plugin_auth data. Ending the session")
                 session.end_session()
+                return
 
-            if "mysql_native_password" != str(plugin_auth, 'ascii'):
+            if "mysql_native_password" != str(plugin_auth, 'utf-8'):
                 writer.write(self.auth_switch_request(seq_no))
+                await writer.drain()
                 if(await reader.read(1024)):
                     seq_no = 4
 
         session.add_auth_attempt('encrypted', username=username, password=password_enc)
         writer.write(self.auth_failed(seq_no, username, address, using_password))
+        await writer.drain()
