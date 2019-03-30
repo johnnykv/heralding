@@ -48,13 +48,8 @@ class HpFeedsLogger(BaseLogger):
 
     def handle_auth_log(self, data):
         if self._initial_connection_happend:
-            data['timestamp'] = data['timestamp'].strftime('%Y-%m-%d %H:%M:%S.%f')
-            data['auth_id'] = str(data['auth_id'])
-            data['session_id'] = str(data['session_id'])
             self.hp_connection.publish(self.auth_channel, json.dumps(data).encode())
 
     def handle_session_log(self, data):
         if self._initial_connection_happend:
-            data['timestamp'] = data['timestamp'].strftime('%Y-%m-%d %H:%M:%S.%f')
-            data['session_id'] = str(data['session_id'])
             self.hp_connection.publish(self.session_channel, json.dumps(data).encode())

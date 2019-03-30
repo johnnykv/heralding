@@ -25,7 +25,8 @@ class EncodingTests(unittest.TestCase):
     def setUpClass(cls):
         cls.auth_log_filename = "test_auth_log.log"
         cls.session_log_filename = "test_session_log.log"
-        cls.flogger = FileLogger(cls.session_log_filename, cls.auth_log_filename)
+        cls.session_json_filename = "test_session_log.json"
+        cls.flogger = FileLogger(cls.session_log_filename, cls.session_json_filename, cls.auth_log_filename)
 
     def test_ascii(self):
         test_login = test_password = "girls_like_python".encode('ascii')
@@ -48,3 +49,4 @@ class EncodingTests(unittest.TestCase):
         cls.flogger.auth_log_filehandler.close()
         os.remove(cls.auth_log_filename)
         os.remove(cls.session_log_filename)
+        os.remove(cls.session_json_filename)

@@ -16,6 +16,7 @@
 import json
 import uuid
 import logging
+import pprint
 from datetime import datetime
 
 import heralding.honeypot
@@ -37,13 +38,17 @@ class Session:
             self.destination_ip = destination_ip
         self.destination_port = destination_port
         self.timestamp = datetime.utcnow()
-        self.login_attempts = 0
+        self.num_ = 0
         self.session_ended = False
+        # protocol specific data
+        self.auxiliary_data = {}
 
         self.connected = True
 
         # for session specific volatile data (will not get logged)
         self.vdata = {}
+        
+        self.auth_attempts = []
 
         self.last_activity = datetime.utcnow()
         self.log_start_session()
@@ -55,17 +60,21 @@ class Session:
     def activity(self):
         self.last_activity = datetime.utcnow()
 
-    def get_number_of_login_attempts(self):
-        return self.login_attempts
-
     def is_connected(self):
         return self.connected
 
+    def get_auxiliary_data(self):
+        return {}
+
+    def get_number_of_login_attempts(self):
+        return len(self.auth_attempts)
+
     def add_auth_attempt(self, _type, **kwargs):
-        self.login_attempts += 1
+        
+        # constructs dict to transmitted right away.
         entry = {'timestamp': datetime.utcnow(),
-                 'session_id': self.id,
-                 'auth_id': uuid.uuid4(),
+                 'session_id': str(self.id),
+                 'auth_id': str(uuid.uuid4()),
                  'source_ip': self.source_ip,
                  'source_port': self.source_port,
                  'destination_ip': self.destination_ip,
@@ -78,8 +87,14 @@ class Session:
             entry['username'] = kwargs['username']
         if 'password' in kwargs:
             entry['password'] = kwargs['password']
-
         ReportingRelay.logAuthAttempt(entry)
+
+        # add to internal dict used for reporting when the session ends
+        self.auth_attempts.append({
+            'timestamp': entry['timestamp'].strftime('%Y-%m-%d %H:%M:%S.%f'),
+            'username': entry['username'],
+            'password': entry['username'],
+        })
 
         self.activity()
         logger.debug('%s authentication attempt from %s:%s. Auth mechanism: %s, session id %s '
@@ -87,26 +102,23 @@ class Session:
                      self.source_port, _type, self.id, json.dumps(kwargs))
 
     def get_session_info(self, session_ended):
-        entry = {'timestamp': self.timestamp,
+        entry = {'timestamp': self.timestamp.strftime('%Y-%m-%d %H:%M:%S.%f'),
                  'duration': int((datetime.utcnow() - self.timestamp).total_seconds()),
-                 'session_id': self.id,
+                 'session_id': str(self.id),
                  'source_ip': self.source_ip,
                  'source_port': self.source_port,
                  'destination_ip': self.destination_ip,
                  'destination_port': self.destination_port,
                  'protocol': self.protocol,
-                 'auth_attempts': self.get_number_of_login_attempts(),
-                 'session_ended': session_ended
+                 'num_auth_attempts': len(self.auth_attempts),
+                 'auth_attempts': self.auth_attempts,
+                 'session_ended': session_ended,
+                 'auxiliary_data' : self.auxiliary_data
                  }
         return entry
 
-    def add_auxiliary_info(self, aux_data):
-        entry = {'timestamp': self.timestamp,
-                 'session_id': self.id,
-                 'protocol': self.protocol
-                 }
-        entry.update(aux_data)
-        ReportingRelay.logAuxiliaryData(entry)
+    def set_auxiliary_data(self, data):
+        self.auxiliary_data = data 
 
     def end_session(self):
         if not self.session_ended:
@@ -116,3 +128,4 @@ class Session:
 
             ReportingRelay.logSessionInfo(entry)
             logger.debug('Session with session id %s ended', self.id)
+

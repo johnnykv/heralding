@@ -66,26 +66,17 @@ class HTTPHandler(AsyncBaseHTTPRequestHandler):
             self.wfile.write(headers_bytes)
             self.wfile.write(b'not authenticated')
             aux_data = self.get_auxiliary_info()
-            self._session.add_auxiliary_info(aux_data)
+            self._session.set_auxiliary_data(aux_data)
             # Disable logging provided by BaseHTTPServer
     def log_message(self, format_, *args):
         pass
 
     def get_auxiliary_info(self):
-         data_fields = HTTPHandler.get_aux_fields()
-         data_list = {}
-         for field in data_fields:
-             if field in self.headers.keys():
-                 data_list.update({str(field) : str(self.headers[str(field)])})
-             else:
-                 data_list.update({str(field) : 'Header_Value_Not_Found.'})
-         return data_list
+        data = {}
+        for field in self.headers.keys():
+            data.update({str(field) : str(self.headers[str(field)])})
 
-
-    @staticmethod
-    def get_aux_fields():
-      return ['User-Agent', 'Host', 'Accept', 'Accept-Encoding']
-
+        return data
 
 class Http(HandlerBase):
     def __init__(self, options, loop):

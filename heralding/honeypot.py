@@ -69,8 +69,9 @@ class Honeypot:
         if 'activity_logging' in self.config:
             if 'file' in self.config['activity_logging'] and self.config['activity_logging']['file']['enabled']:
                 auth_log = self.config['activity_logging']['file']['authentication_log_file']
-                session_log = self.config['activity_logging']['file']['session_log_file']
-                file_logger = FileLogger(session_log, auth_log)
+                session_csv_log = self.config['activity_logging']['file']['session_csv_log_file']
+                session_json_log = self.config['activity_logging']['file']['session_json_log_file']
+                file_logger = FileLogger(session_csv_log, session_json_log, auth_log)
                 self.file_logger_task = self.loop.run_in_executor(None, file_logger.start)
                 self.file_logger_task.add_done_callback(common.on_unhandled_task_exception)
                 self._loggers.append(file_logger)

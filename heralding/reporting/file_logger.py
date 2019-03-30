@@ -16,6 +16,7 @@
 import os
 import csv
 import logging
+import json
 
 from heralding.reporting.base_logger import BaseLogger
 import heralding
@@ -24,36 +25,47 @@ logger = logging.getLogger(__name__)
 
 
 class FileLogger(BaseLogger):
-    def __init__(self, session_logfile, auth_logfile):
+    def __init__(self, session_csv_logfile, sessions_json_logfile, auth_logfile):
         super().__init__()
 
-        auth_field_names = ['timestamp', 'auth_id', 'session_id', 'source_ip', 'source_port', 'destination_ip',
-                            'destination_port', 'protocol', 'username', 'password']
-        self.auth_log_filehandler, self.auth_log_writer = self.setup_file(
-            auth_logfile, auth_field_names)
+        self.auth_log_filehandler = None
+        self.auth_log_writer = None
+        self.session_csv_log_filehandler = None 
+        self.session_csv_log_writer = None
+        self.session_json_log_filehandler = None
 
-        session_field_names = ['timestamp', 'duration', 'session_id', 'source_ip', 'source_port', 'destination_ip',
-                               'destination_port', 'protocol', 'auth_attempts']
-        self.session_log_filehandler, self.session_log_writer = self.setup_file(
-            session_logfile, session_field_names)
+        if auth_logfile != "":
+            # Setup CSV logging for auth attempts
+            auth_field_names = ['timestamp', 'auth_id', 'session_id', 'source_ip', 'source_port', 'destination_ip',
+                                'destination_port', 'protocol', 'username', 'password']
+            
+            self.auth_log_filehandler, self.auth_log_writer = self.setup_csv_files(
+                auth_logfile, auth_field_names)
 
-        logger.info('File logger: Using %s to log session data.', session_logfile)
-        logger.info('File logger: Using %s to log authentication attempts.', session_logfile)
+            logger.info(
+                'File logger: Using %s to log authentication attempts in CSV format.', session_csv_logfile)
 
+        if session_csv_logfile != "":
+            # Setup CSV logging for sessions
+            session_field_names = ['timestamp', 'duration', 'session_id', 'source_ip', 'source_port', 'destination_ip',
+                                'destination_port', 'protocol', 'num_auth_attempts']
+            self.session_csv_log_filehandler, self.session_csv_log_writer = self.setup_csv_files(
+                session_csv_logfile, session_field_names)
 
-        self.aux_data_fields = {
-            'ssh': heralding.capabilities.ssh.SSH.get_aux_fields(),
-            'http': heralding.capabilities.http.HTTPHandler.get_aux_fields()
-        }
+            logger.info('File logger: Using %s to log unified session data in CSV format.',
+                        session_csv_logfile)
 
-        # store all the auxiliary handlers and writers in a dict
-        self.aux_handlers_writers = {}
-        for p in self.aux_data_fields:
-            logger.info('File logger: Using %s to log auxiliary data from %s sessions.', self.get_auxiliary_logfile_name(p), p)
-            self.aux_handlers_writers[p] = self.setup_file(
-                self.get_auxiliary_logfile_name(p), self.get_filelog_fields(p))
+        if sessions_json_logfile != "":
+            # Setup json logging for logging complete sessions
+            if not os.path.isfile(sessions_json_logfile):
+                self.session_json_log_filehandler = open(sessions_json_logfile, 'w', encoding='utf-8')
+            else:
+                self.session_json_log_filehandler = open(sessions_json_logfile, 'a', encoding='utf-8')
+            
+            logger.info('File logger: Using %s to log complete session data in JSON format.',
+                        session_csv_logfile)
 
-    def setup_file(self, filename, field_names):
+    def setup_csv_files(self, filename, field_names):
         handler = writer = None
 
         if not os.path.isfile(filename):
@@ -72,33 +84,27 @@ class FileLogger(BaseLogger):
         return handler, writer
 
     def loggerStopped(self):
-        self.auth_log_filehandler.flush()
-        self.auth_log_filehandler.close()
+        for handler in [self.auth_log_filehandler, self.session_csv_log_filehandler, 
+                        self.session_json_log_filehandler]:
+            if handler != None:
+                handler.flush()
+                handler.close()
 
     def handle_auth_log(self, data):
         # for now this logger only handles authentication attempts where we are able
         # to log both username and password
-        if 'username' in data and 'password' in data:
-            self.auth_log_writer.writerow(data)
-            # meh
-            self.auth_log_filehandler.flush()
+        if self.auth_log_filehandler != None:
+            if 'username' in data and 'password' in data:
+                self.auth_log_writer.writerow(data)
+                # meh
+                self.auth_log_filehandler.flush()
 
     def handle_session_log(self, data):
         if data['session_ended']:
-            self.session_log_writer.writerow(data)
-            # double meh
-            self.session_log_filehandler.flush()
+            if self.session_csv_log_filehandler != None:
+                self.session_csv_log_writer.writerow(data)
+                self.session_csv_log_filehandler.flush()
+            if self.session_json_log_filehandler != None:
+                self.session_json_log_filehandler.write(json.dumps(data) + "\n")
+                self.session_json_log_filehandler.flush()
 
-    def handle_auxiliary_log(self, data):
-        handler, writer = self.aux_handlers_writers.get(data['protocol'], (None, None))
-        if handler and writer:
-            writer.writerow(data)
-            handler.flush()
-
-    def get_auxiliary_logfile_name(self,protocol_name):
-        return 'log_auxiliary_'+protocol_name+'.csv'
-
-    def get_filelog_fields(self,protocol_name):
-        default_fields = ['timestamp', 'session_id', 'protocol']
-        protocol_fields = self.aux_data_fields.get(protocol_name)
-        return default_fields+protocol_fields
