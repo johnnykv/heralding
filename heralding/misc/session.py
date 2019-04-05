@@ -93,7 +93,7 @@ class Session:
         self.auth_attempts.append({
             'timestamp': entry['timestamp'].strftime('%Y-%m-%d %H:%M:%S.%f'),
             'username': entry['username'],
-            'password': entry['username'],
+            'password': entry['password'],
         })
 
         self.activity()
