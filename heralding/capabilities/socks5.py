@@ -46,6 +46,7 @@ class Socks5(HandlerBase):
             else:
                 writer.write(SOCKS_VERSION + SOCKS_FAIL)
                 await writer.drain()
+            session.set_auxiliary_data(self.get_auxiliary_data(authmethods))
         else:
             logger.debug("Wrong socks version: %r" % version)
 
@@ -62,6 +63,25 @@ class Socks5(HandlerBase):
             await writer.drain()
         else:
             logger.debug("Wrong authentication data: %r" % auth_data)
+
+    def get_auxiliary_data(self, authmethods):
+        _methods = []
+        for m in authmethods:
+            if m == 2:
+                _methods.append("USERNAME/PASSWORD")
+            elif m == 0:
+                _methods.append("NO AUTHENTICATION REQUIRED")
+            elif m == 1:
+                _methods.append("GSSAPI")
+            elif 3 <= m <= 127:
+                _methods.append("IANA ASSIGNED(%s)" % hex(m))
+            elif 128 <= m <= 254:
+                _methods.append("PRIVATE METHOD(%s)" % hex(m))
+            elif m == 255:
+                _methods.append("NO ACCEPTABLE METHODS")
+
+        data = {"client_auth_methods": _methods}
+        return data
 
     @staticmethod
     def unpack_msg(data):
