@@ -45,7 +45,45 @@ Starting the honeypot
 Viewing the collected data
 --------------------------
 
-Heralding logs relevant data in two files, log_session.csv and log_auth.csv.
+Heralding logs relevant data in three files, log_session.json, log_auth.csv and log_session.json.
+
+**log_session.json**
+
+This log file contains all available information for a given activity to the honeypot. This included timestamp, authentication attempts and protocol specific information (auxiliary data) - and a bunch of other information. Be aware that the log entry for a specific session will appear in the log fil **after** the session has ended. The format is jsonlines.
+
+.. code-block:: json
+
+   {  
+     "timestamp":"2019-04-13 08:29:09.019394",
+     "duration":9,
+     "session_id":"4ba1fc0a-872c-46bb-a2f8-80c38453c74f",
+     "source_ip":"127.0.0.1",
+     "source_port":52192,
+     "destination_ip":"127.0.0.1",
+     "destination_port":2222,
+     "protocol":"ssh",
+     "num_auth_attempts":2,
+     "auth_attempts":[  
+       {  
+         "timestamp":"2019-04-13 08:29:12.732530",
+         "username":"rewt",
+         "password":"PASSWORD"
+       },
+       {  
+         "timestamp":"2019-04-13 08:29:15.686619",
+         "username":"rewt",
+         "password":"P@ssw0rd12345"
+       },
+     ],
+     "session_ended":true,
+     "auxiliary_data":{  
+       "client_version":"SSH-2.0-OpenSSH_7.7p1 Ubuntu-4ubuntu0.3",
+       "recv_cipher":"aes128-ctr",
+       "recv_mac":"umac-64-etm@openssh.com",
+       "recv_compression":"none"
+     }
+   }
+
 
 **log_session.csv**
 
