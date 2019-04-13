@@ -43,7 +43,7 @@ class FileLogger(BaseLogger):
                 auth_logfile, auth_field_names)
 
             logger.info(
-                'File logger: Using %s to log authentication attempts in CSV format.', session_csv_logfile)
+                'File logger: Using %s to log authentication attempts in CSV format.', auth_logfile)
 
         if session_csv_logfile != "":
             # Setup CSV logging for sessions
@@ -63,7 +63,7 @@ class FileLogger(BaseLogger):
                 self.session_json_log_filehandler = open(sessions_json_logfile, 'a', encoding='utf-8')
             
             logger.info('File logger: Using %s to log complete session data in JSON format.',
-                        session_csv_logfile)
+                        sessions_json_logfile)
 
     def setup_csv_files(self, filename, field_names):
         handler = writer = None
