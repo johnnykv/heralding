@@ -63,7 +63,15 @@ def setup_logging(logfile, verbose):
 
 class LogFilter(logging.Filter):
     def filter(self, rec):
-        """Disabling internal aiosmtpd logger"""
+        """Filtering internal logs of aiosmtpd, asyncssh"""
+        if rec.name == "asyncssh":
+            if logging.getLogger().level == logging.DEBUG:
+                return True
+            if rec.levelno <= 20:
+                return False
+            else:
+                return True
+
         if rec.name == 'mail.log':
             return False
         else:
