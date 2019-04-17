@@ -1,3 +1,6 @@
+1.0.5 (2019-04-18)
+- Fixed asynssh issue (#111)
+
 1.0.4 (2019-04-13)
 - Added logging for auxiliary data for socks5, http and ssh (#85, #93, #95, #100) 
 - Added mysql capability (#95)
