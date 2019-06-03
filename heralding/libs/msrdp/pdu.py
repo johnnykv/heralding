@@ -16,8 +16,8 @@
 # *** This file contains all the PDU required for RDP Protocol ***
 # each top tier PDU class will have a payload and generate method
 
-from packer import Uint16BE, Int16BE, Uint32LE, Uint32BE
-from parser import x224ConnectionRequestPDU
+from .packer import Uint16BE, Int16BE, Uint32LE, Uint32BE
+from .parser import x224ConnectionRequestPDU
 
 
 class tpktPDU:

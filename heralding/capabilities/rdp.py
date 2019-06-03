@@ -18,6 +18,7 @@ import logging
 
 from heralding.capabilities.handlerbase import HandlerBase
 from heralding.libs.msrdp.pdu import x224ConnectionConfirmPDU, MCSConnectResponsePDU
+from heralding.libs.msrdp.parser import x224ConnectionRequestPDU
 
 logger = logging.getLogger(__name__)
 
@@ -30,4 +31,34 @@ class RDP(HandlerBase):
             session.end_session()
 
     async def _handle_session(self, reader, writer, session):
-        pass
+        address = writer.get_extra_info('peername')[0]
+        data = await reader.read(2048)
+
+        # TODO: check if its really a x224CC Request packet
+        cr_pdu = x224ConnectionRequestPDU()
+        cr_pdu.parse(data)
+        logger.debug("CR_PDU: "+str(cr_pdu.pduType)+" "+str(cr_pdu.cookie.decode())+" "+str(cr_pdu.reqProtocols)+" ")
+
+        nego = False
+        if cr_pdu.reqProtocols:
+                nego = True
+        cc_pdu = x224ConnectionConfirmPDU(nego).getFullPacket()
+        writer.write(cc_pdu)
+        await writer.drain()
+        logger.debug("Sent CC_Confirm PDU")
+
+        data = await reader.read(2048)
+        logger.debug("Recvd data of size "+ str(len(data))+ " Client data")
+
+        mcs_cres = MCSConnectResponsePDU(3).getFullPacket()
+        writer.write(mcs_cres)
+        await writer.drain()
+        logger.debug("Sent MCS Connect RESponse PDU")
+
+        data = await reader.read(512)
+        logger.debug("REceived Attach USER req : "+repr(data))
+
+        session.end_session()
+        return
+
+
