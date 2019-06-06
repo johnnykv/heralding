@@ -17,10 +17,11 @@ import struct
 import logging
 
 from heralding.capabilities.handlerbase import HandlerBase
-from heralding.libs.msrdp.pdu import x224ConnectionConfirmPDU, MCSConnectResponsePDU
-from heralding.libs.msrdp.parser import x224ConnectionRequestPDU
-
+from heralding.libs.msrdp.pdu import x224ConnectionConfirmPDU, MCSConnectResponsePDU, MCSAttachUserConfirmPDU, MCSChannelJoinConfirmPDU
+from heralding.libs.msrdp.parser import x224ConnectionRequestPDU, MCSChannelJoinRequestPDU, ClientSecurityExcahngePDU, ClientInfoPDU
+from heralding.libs.msrdp.security import ServerSecurity
 logger = logging.getLogger(__name__)
+
 
 class RDP(HandlerBase):
     async def execute_capability(self, reader, writer, session):
@@ -32,8 +33,8 @@ class RDP(HandlerBase):
 
     async def _handle_session(self, reader, writer, session):
         address = writer.get_extra_info('peername')[0]
+        
         data = await reader.read(2048)
-
         # TODO: check if its really a x224CC Request packet
         cr_pdu = x224ConnectionRequestPDU()
         cr_pdu.parse(data)
@@ -41,24 +42,73 @@ class RDP(HandlerBase):
 
         nego = False
         if cr_pdu.reqProtocols:
-                nego = True
+            nego = True
         cc_pdu = x224ConnectionConfirmPDU(nego).getFullPacket()
         writer.write(cc_pdu)
         await writer.drain()
         logger.debug("Sent CC_Confirm PDU")
 
         data = await reader.read(2048)
-        logger.debug("Recvd data of size "+ str(len(data))+ " Client data")
+        logger.debug("Recvd data of size " + str(len(data)) + " Client data")
 
-        mcs_cres = MCSConnectResponsePDU(3).getFullPacket()
+        # This packet includes ServerSecurity data
+        server_sec = ServerSecurity()
+        mcs_cres = MCSConnectResponsePDU(3, server_sec).getFullPacket()
         writer.write(mcs_cres)
         await writer.drain()
-        logger.debug("Sent MCS Connect RESponse PDU")
+        logger.debug("Sent MCS Connect Response PDU")
 
         data = await reader.read(512)
-        logger.debug("REceived Attach USER req : "+repr(data))
+        # TODO: check if erect domain req
+        logger.debug("Received: ErectDomainRequest and AttactUserRequest : "+repr(data))
+
+        # data = await reader.read(512)
+        # # TODO: check if attach user req
+        # logger.debug("Received: Attach USER req : "+repr(data))
+
+        mcs_usrcnf =MCSAttachUserConfirmPDU().getFullPacket()
+        writer.write(mcs_usrcnf)
+        await writer.drain()
+        logger.debug("Sent: Attach User Confirm")
+
+        # Handle multiple Channel Join request PUDs
+        for req in range(7):
+            data = await reader.read(2048)
+            if not data:
+                logger.debug("Expected: Channel Join/Client Security Packet.Got Nothing.")
+                break
+            channel_req = MCSChannelJoinRequestPDU()
+            v = channel_req.parse(data)
+            if v < 0:
+                break
+            channel_id = channel_req.channelID
+            channel_init = channel_req.initiator
+            channel_cnf = MCSChannelJoinConfirmPDU(channel_init, channel_id).getFullPacket()
+
+            writer.write(channel_cnf)
+            await writer.drain()
+            logger.debug("Sent: MCS Channel Join Confirm of channel %s"%(channel_id))
+
+        # Handle Client Security Exchange PDU
+        if not data:
+            data = await reader.read(2048)
+        print("CLIENT SEC EX: ", repr(data))
+        client_sec = ClientSecurityExcahngePDU()
+        client_sec.parse(data)
+        self.encClientRandom = client_sec.encClientRandom
+        decRandom = server_sec.decryptClientRandom(self.encClientRandom)
+        print("DEC_CLIENT_RANDOM: ", decRandom)
+        # set client random to serverSec
+        server_sec._clientRandom = decRandom
+
+        # Handle Client Info PDU (contains credentials)
+        data = await reader.read(2048)
+        # print("CLIENT INFO: ", repr(data))
+        client_info = ClientInfoPDU()
+        client_info.parse(data)
+        print("CLIENT_INFO: sig: ", client_info.dataSig)
+        print("CLIENT_INFO: ENCADTA: ", client_info.encData)
+        decInfo = server_sec.decryptClientInfo(client_info.encData)
+        print("CLIENT_DEC_DATA: ", decInfo)
 
         session.end_session()
-        return
-
-

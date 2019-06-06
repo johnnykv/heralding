@@ -15,6 +15,11 @@
 
 import struct
 
+
+class InvalidExpectedData(Exception):
+    def __init__(self, message=""):
+        Exception.__init__(self, msg)
+
 class RawBytes():
     """ Read/Consume raw bytes """
 
@@ -62,7 +67,7 @@ class RawBytes():
         self.value = b''
         _data = self.data[self._pos:self._pos+len(until)+1]
         while _data[-len(until):] != until:
-            print(repr(_data))
+            # print(repr(_data))
             i = _data[0]
             self.value += i.to_bytes(1, byteorder='big')
             self._pos += 1
@@ -118,6 +123,14 @@ class tpktPDUParser():
         self.length, pos = UInt16Be(raw_data, pos).read()
         return pos
 
+class x224DataPDU():
+    @classmethod
+    def parse(cls, raw_data, pos):
+        """Returns the pos of the rest of the Payload"""
+        _, pos = RawBytes(raw_data, None, 3, pos).readRaw()
+        return pos
+
+
 
 class x224ConnectionRequestPDU():
     # length            1byte
@@ -138,9 +151,67 @@ class x224ConnectionRequestPDU():
         _, pos = RawBytes(raw_data, None, 5, pos).readRaw()  # consume 5bytes
         self.cookie, pos = RawBytes(raw_data, None, None, pos).readUntil(b"\x0d\x0a")
         # parse nego req if present
-        print(raw_data[pos:])
+        # print(raw_data[pos:])
         if raw_data[pos:] != b'':
             _, pos = RawBytes(raw_data, None, 4, pos).readRaw()
             self.reqProtocols, pos = UInt32Le(raw_data, pos).read()
 
+        return pos
+
+class MCSChannelJoinRequestPDU():
+    def __init__(self):
+        self.header = None
+        self.initiator = None
+        self.channelID = None
+
+    def parse(self,raw_data,pos=0):
+        pos = tpktPDUParser().parse(raw_data,0)
+        pos = x224DataPDU().parse(raw_data,pos)
+        self.header, pos = RawBytes(raw_data,None,1,pos).readRaw()
+        if self.header != b'\x38':
+            # raise InvalidExpectedData("Expected MCS Channel Join Request header. Got %s"%str(self.header))
+            return -1
+        
+        self.initiator, pos = UInt16Be(raw_data,pos).read()
+        self.channelID, pso = UInt16Be(raw_data,pos).read()
+        return pos
+        
+class ClientSecurityExcahngePDU():
+    def __init__(self):
+        self.secHeaderFlags = None
+        self.secPacketLen = None
+        self.encClientRandom = None
+
+    def parse(self,raw_data,pos=0):
+        pos = tpktPDUParser().parse(raw_data, 0)
+        pos = x224DataPDU().parse(raw_data, pos)
+        _, pos = RawBytes(raw_data,None,8,pos).readRaw() # 7 changed to 8
+        self.secHeaderFlags, pos = UInt16Le(raw_data,pos).read()
+        # print("SEC_HEADER_FLAGS: ", self.secHeaderFlags)
+        # +2 for skipkking bytes read
+        self.secPacketLen, pos = UInt32Le(raw_data,pos+2).read()
+        # print("SEC_PACK_LEN ", self.secPacketLen)
+        # not reading last 8byte padding
+        self.encClientRandom, pos = RawBytes(raw_data,None,self.secPacketLen-8,pos).readRaw()
+        return pos
+    
+class ClientInfoPDU():
+    def __init__(self):
+        self.secHeaderFlags = None
+        self.infoLen = None
+        self.dataSig = None
+        self.encData = None
+
+    def parse(self, raw_data, pos=0):
+        pos = tpktPDUParser().parse(raw_data, 0)
+        pos = x224DataPDU().parse(raw_data, pos)
+        _, pos = RawBytes(raw_data, None, 6, pos).readRaw()
+        # read length bytes (PER encoded)
+        _infoLen, pos = UInt16Be(raw_data,pos).read()
+        self.infoLen = _infoLen & 0x0fff
+        print("CLIENT_INFO_LEN: ", self.infoLen)
+        self.secHeaderFlags, pos = UInt16Le(raw_data, pos).read()
+        # ignore 2bytes of flagsHi
+        self.dataSig, pos = RawBytes(raw_data, None, 8,pos+2).readRaw()
+        self.encData, pos = RawBytes(raw_data, None, self.infoLen-12, pos).readRaw()
         return pos
