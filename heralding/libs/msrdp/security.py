@@ -19,7 +19,7 @@
 
 import rsa
 import hashlib
-# from . import rc4
+from . import rc4_dec as rc4
 from .rc4 import RC4
 
 
@@ -196,8 +196,8 @@ class ServerSecurity():
         return self._decClientRandom
 
     def decryptClientInfo(self, encInfo):
-        self._macKey, self._encKey, self._decKey = generateRC4Keys(self._clientRandom, ServerSecurity.SERVER_RANDOM)
-        # self._decryptRc4 = rc4.RC4Key(self._decKey)
-        # decrypted = rc4.crypt(self._decryptRc4, encInfo)
-        decrypted = RC4(self._decKey).crypt(encInfo)
+        self._macKey, self._encKey, self._decKey = generateRC4Keys(self._decClientRandom, ServerSecurity.SERVER_RANDOM)
+        self._decryptRc4 = rc4.RC4Key(self._decKey)
+        decrypted = rc4.crypt(self._decryptRc4, encInfo)
+        # decrypted = RC4(self._decKey).crypt(encInfo)
         return decrypted
