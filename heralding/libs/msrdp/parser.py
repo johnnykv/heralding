@@ -65,6 +65,7 @@ class RawBytes():
             else:
                 raise Exception("Bytes Stream is too small to read")
         self.value = b''
+        print("UNTIL_DATA: ", repr(self.data))
         _data = self.data[self._pos:self._pos+len(until)+1]
         while _data[-len(until):] != until:
             # print(repr(_data))
@@ -73,7 +74,7 @@ class RawBytes():
             self._pos += 1
             _data = self.data[self._pos:self._pos+len(until)+1]
 
-        # insert the char before mactching bytes
+        # insert the last char before mactching bytes
         i = _data[0]
         self.value += i.to_bytes(1, byteorder='big')
         self._pos += 1
@@ -187,10 +188,8 @@ class ClientSecurityExcahngePDU():
         pos = x224DataPDU().parse(raw_data, pos)
         _, pos = RawBytes(raw_data,None,8,pos).readRaw() # 7 changed to 8
         self.secHeaderFlags, pos = UInt16Le(raw_data,pos).read()
-        # print("SEC_HEADER_FLAGS: ", self.secHeaderFlags)
         # +2 for skipkking bytes read
         self.secPacketLen, pos = UInt32Le(raw_data,pos+2).read()
-        # print("SEC_PACK_LEN ", self.secPacketLen)
         # not reading last 8byte padding
         self.encClientRandom, pos = RawBytes(raw_data,None,self.secPacketLen-8,pos).readRaw()
         return pos

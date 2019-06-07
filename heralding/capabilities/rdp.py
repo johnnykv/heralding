@@ -92,10 +92,11 @@ class RDP(HandlerBase):
         # Handle Client Security Exchange PDU
         if not data:
             data = await reader.read(2048)
-        print("CLIENT SEC EX: ", repr(data))
+        # print("CLIENT SEC EX: ", repr(data))
         client_sec = ClientSecurityExcahngePDU()
         client_sec.parse(data)
         self.encClientRandom = client_sec.encClientRandom
+        print("ENC_CLIENT_RANDOM: ", self.encClientRandom)
         decRandom = server_sec.decryptClientRandom(self.encClientRandom)
         print("DEC_CLIENT_RANDOM: ", decRandom)
         # set client random to serverSec
@@ -109,6 +110,6 @@ class RDP(HandlerBase):
         print("CLIENT_INFO: sig: ", client_info.dataSig)
         print("CLIENT_INFO: ENCADTA: ", client_info.encData)
         decInfo = server_sec.decryptClientInfo(client_info.encData)
-        print("CLIENT_DEC_DATA: ", decInfo)
+        print("CLIENT_DEC_DATA: ", repr(decInfo))
 
         session.end_session()
