@@ -20,6 +20,7 @@ from heralding.capabilities.handlerbase import HandlerBase
 from heralding.libs.msrdp.pdu import x224ConnectionConfirmPDU, MCSConnectResponsePDU, MCSAttachUserConfirmPDU, MCSChannelJoinConfirmPDU
 from heralding.libs.msrdp.parser import x224ConnectionRequestPDU, MCSChannelJoinRequestPDU, ClientSecurityExcahngePDU, ClientInfoPDU
 from heralding.libs.msrdp.security import ServerSecurity
+from heralding.libs.msrdp.tls import TLS
 logger = logging.getLogger(__name__)
 
 
@@ -76,7 +77,7 @@ class RDP(HandlerBase):
             data = await reader.read(2048)
             if not data:
                 logger.debug("Expected: Channel Join/Client Security Packet.Got Nothing.")
-                break
+                return
             channel_req = MCSChannelJoinRequestPDU()
             v = channel_req.parse(data)
             if v < 0:
