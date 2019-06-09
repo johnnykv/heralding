@@ -65,7 +65,7 @@ class RawBytes():
             else:
                 raise Exception("Bytes Stream is too small to read")
         self.value = b''
-        print("UNTIL_DATA: ", repr(self.data))
+        # print("UNTIL_DATA: ", repr(self.data))
         _data = self.data[self._pos:self._pos+len(until)+1]
         while _data[-len(until):] != until:
             # print(repr(_data))

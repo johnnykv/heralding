@@ -137,6 +137,10 @@ class Honeypot:
                         server_coro = asyncssh.create_server(lambda: SshClass(ssh_options, self.loop),
                                                              bind_host, port, server_host_keys=[ssh_key_file],
                                                              login_timeout=cap.timeout, loop=self.loop)
+                    elif cap_name == 'rdp':
+                        pem_file = '{0}.pem'.format(cap_name)
+                        self.create_cert_if_not_exists(cap_name, pem_file)
+                        server_coro = asyncio.start_server(cap.handle_session, bind_host, port, loop=self.loop)
                     else:
                         server_coro = asyncio.start_server(cap.handle_session, bind_host, port, loop=self.loop)
 
