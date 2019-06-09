@@ -40,19 +40,23 @@ class x224DataPDU:
 
 
 class x224ConnectionConfirmPDU():
-    def __init__(self, nego=False):
+    def __init__(self, nego=False, tls=False):
         self.type = b'\xd0'
         self.dest_ref = b'\x00\x00'  # 0 bytes
         self.src_ref = b'\x12\x34'  # bogus value
         self.options = b'\x00'
         self.nego = nego
+        self.is_tls = tls
 
     def generate(self):
         data = self.type+self.dest_ref+self.src_ref+self.options
         len_indicator = len(data)  # 1byte length of PDU without indicator byte
 
         if self.nego:
-            nego_res = b'\x02\x00\x08\x00'+b'\x01' +bytes(3)  # RDP security for now
+            if self.is_tls:
+                nego_res = b'\x02\x00\x08\x00'+b'\x01' +bytes(3)  # TLS security
+            else:
+                nego_res = b'\x02\x00\x08\x00'+b'\x00' +bytes(3)  # RDP security
             len_indicator += len(nego_res)
             data += nego_res
 
@@ -64,7 +68,7 @@ class x224ConnectionConfirmPDU():
 
 class ServerData:
     @classmethod
-    def generate(cls, cReqproto, serverSec):
+    def generate(cls, cReqproto, serverSec, is_tls=False):
         # Servr Core data
         coreData_1 = b'\x01\x0c\x0c\x00\x04\x00\x08\x00'
         clientReqPro = Uint32LE.pack(cReqproto)
@@ -74,20 +78,13 @@ class ServerData:
 
         # ServerSec Data
         # here choosing encryption of 128bit by default method \x02\x00\x00\x00
-        part_1 = b'\x02\x0c\xec\x00\x02\x00\x00\x00\x03\x00\x00\x00 \x00\x00\x00\xb8\x00\x00\x00'
+        if is_tls:
+            part_1 = b'\x02\x0c\xec\x00\x00\x00\x00\x00\x00\x00\x00\x00\x20\x00\x00\x00\xb8\x00\x00\x00'
+        else:
+            part_1 = b'\x02\x0c\xec\x00\x02\x00\x00\x00\x03\x00\x00\x00\x20\x00\x00\x00\xb8\x00\x00\x00'
         # serverRandom = b'\xf9\xdf\xc4p\x8a\x08\xcds5Q:\xa3!_\x8f\xa1\xeeQ\xd6Nj\x95Zy0\x12\xbf\xf5&\xfb!('
         serverRandom = ServerSecurity.SERVER_RANDOM
 
-        ## ServerCert ##
-        # pubkeyProps_1 = b'\x01\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x06\x00\x5c\x00'
-        # pubkeyProps_1 = SecurityInfo.SERVER_PUBKEY_PROPS_1
-        # pubkeyProps_2 = SecurityInfo.SERVER_PUBKEY_PROPS_2
-        # pubExp = SecurityInfo.SERVER_PUBLIC_EXPONENT
-        # # modulus = b'g3\x9c\xd5\x94\xa0\tO\xbfrVt`\xab\x7f\xf1+\xf7J\x86\xa3(ZK\x12\xc44(\xcd\xec"E6a\xf3\x1d&\t\x8fL\xb6\xc8f\x9c\xd0\xa3\xaf8\xaa\xe1\xfb\xcb\\\r\xfc\xbb\xd8\x93\x1cZ\xce\x1b\x8f\x92\x00\x00\x00\x00\x00\x00\x00\x00'
-        # modulus = SecurityInfo.SERVER_MODULUS
-        # sigBlobProps = b'\x08\x00\x48\x00'
-        # sigBlob = b';U3\x0c8r\x91 \xa9b^l\xa4\x1f\xcd\n\x9c\x1b\xbb\x13\xcdge\x19\xd4\x1e\xc7\x89\x8e\x9a\x98\xb4z\x02\xf0\xdc]\x1dh\x8d\xfa\x01Ah\x9c\xda\xe9\xdf\xabw\xf2\xaf\x90\x02\xe7\xd1\xe4\xaa\xa1\x0e\xcc\x03\xd3B\x00\x00\x00\x00\x00\x00\x00\x00'
-        
         # an instance of ServerSecurity class required
         certData = serverSec.getServerCertBytes()
         # print("CERT_DATA: ", repr(certData))
@@ -103,12 +100,13 @@ class ServerData:
 class MCSConnectResponsePDU():
     """ Server MCS Connect Response PDU with GCC Conference Create Response """
 
-    def __init__(self, cReqproto, serverSec):
+    def __init__(self, cReqproto, serverSec, is_tls=False):
         self.cReqproto = cReqproto
         self.serverSec = serverSec
+        self.is_tls = is_tls
 
     def generate(self):
-        serverData = ServerData.generate(self.cReqproto, self.serverSec)
+        serverData = ServerData.generate(self.cReqproto, self.serverSec, self.is_tls)
         serverDataLen = Uint16BE.pack(len(serverData) | 0x8000)
         gccCreateRes = b'\x00\x05\x00\x14\x7c\x00\x01\x2a\x14\x76\x0a\x01\x01\x00\x01\xc0\x00\x4d\x63\x44\x6e'
         cc_userDataLen = Uint16BE.pack(len(serverData)+2+len(gccCreateRes))

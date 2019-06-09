@@ -57,16 +57,21 @@ class RDP(HandlerBase):
         logger.debug("CR_PDU: "+str(cr_pdu.pduType)+" "+str(cr_pdu.cookie.decode())+" "+str(cr_pdu.reqProtocols)+" ")
 
         nego = False
+        start_tls = True
         if cr_pdu.reqProtocols:
             nego = True
-        cc_pdu = x224ConnectionConfirmPDU(nego).getFullPacket()
+        cc_pdu = x224ConnectionConfirmPDU(nego, start_tls).getFullPacket()
         writer.write(cc_pdu)
         await writer.drain()
         logger.debug("Sent CC_Confirm PDU with TLS")
 
-        ## TLS start
-        tls_obj = TLS(writer, reader,'rdp.pem')
-        await tls_obj.do_tls_handshake()
+        tls_obj = None
+        if start_tls:
+            # TLS start
+            logger.debug("TLS initilization")
+            tls_obj = TLS(writer, reader,'rdp.pem')
+            await tls_obj.do_tls_handshake()
+
         ## Now use send_data and recv_data
 
         # data = await reader.read(2048) # DEP
@@ -76,7 +81,7 @@ class RDP(HandlerBase):
 
         # This packet includes ServerSecurity data
         server_sec = ServerSecurity()
-        mcs_cres = MCSConnectResponsePDU(3, server_sec).getFullPacket()
+        mcs_cres = MCSConnectResponsePDU(3, server_sec, start_tls).getFullPacket()
 
         # writer.write(mcs_cres)
         # await writer.drain()
@@ -84,16 +89,18 @@ class RDP(HandlerBase):
         logger.debug("Sent MCS Connect Response PDU")
 
         # data = await reader.read(512)
-        data = await self.recv_data(reader, 512, tls_obj)
+        data = await self.recv_data(reader, 1024, tls_obj)
+        er_len = len(data)
         # TODO: check if erect domain req
         # in tls attach use and erect domain comes differently
-        logger.debug("Received: ErectDomainRequest and AttactUserRequest : "+repr(data))
+        logger.debug("Received: ErectDomainRequest and AttactUserRequest(not always) : "+repr(data))
 
         # data = await reader.read(512)
-        # in tls two req are not sent together, so this workaround
-        if tls_obj:
+        # if only erectdomian len should be less than 13
+        if er_len < 13:
+            logger.debug("Waiting for Attach USer req")
             # await self.send_data(writer, b'AA', tls_obj) # don't know why
-            data = await self.recv_data(reader, 512, tls_obj)
+            data = await self.recv_data(reader, 1024, tls_obj)
             # # TODO: check if attach user req
             logger.debug("Received: Attach USER req : "+repr(data))
 
@@ -102,7 +109,7 @@ class RDP(HandlerBase):
         # await writer.drain()
         await self.send_data(writer, mcs_usrcnf, tls_obj)
         logger.debug("Sent: Attach User Confirm")
-
+    
         # Handle multiple Channel Join request PUDs
         for req in range(7):
             # data = await reader.read(2048)

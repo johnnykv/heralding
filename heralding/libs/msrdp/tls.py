@@ -40,6 +40,11 @@ class TLS:
 
     async def read_tls(self, size):
         _rData = await self.reader.read(size)
+        print("TLS_IN_BUFF DATA: ", _rData)
         self._tlsInBuff.write(_rData)
-        data = self._tlsObj.read()
+        try:
+            data = self._tlsObj.read()
+        except ssl.SSLWantReadError:
+            data = self._tlsObj.read()
+        print("TLS_OBJ_READ DATA: ", data)
         return data
