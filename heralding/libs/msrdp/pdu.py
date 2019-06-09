@@ -52,7 +52,7 @@ class x224ConnectionConfirmPDU():
         len_indicator = len(data)  # 1byte length of PDU without indicator byte
 
         if self.nego:
-            nego_res = b'\x02\x00\x08\x00'+bytes(4)  # RDP security for now
+            nego_res = b'\x02\x00\x08\x00'+b'\x01' +bytes(3)  # RDP security for now
             len_indicator += len(nego_res)
             data += nego_res
 
@@ -90,7 +90,7 @@ class ServerData:
         
         # an instance of ServerSecurity class required
         certData = serverSec.getServerCertBytes()
-        print("CERT_DATA: ", repr(certData))
+        # print("CERT_DATA: ", repr(certData))
         #ADD all
         serverCoreData = coreData_1+clientReqPro
         serverNetData = netData

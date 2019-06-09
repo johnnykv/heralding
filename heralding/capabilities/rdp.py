@@ -25,6 +25,21 @@ logger = logging.getLogger(__name__)
 
 
 class RDP(HandlerBase):
+    async def recv_data(self, reader, size, tlsObj=None):
+        if tlsObj:
+            data = await tlsObj.read_tls(size)
+            return data
+        data = await reader.read(size)
+        return data
+
+    async def send_data(self,writer, data, tlsObj=None):
+        if tlsObj:
+            await tlsObj.write_tls(data)
+            return
+        writer.write(data)
+        await writer.drain()
+        return       
+
     async def execute_capability(self, reader, writer, session):
         try:
             await self._handle_session(reader, writer, session)
@@ -47,34 +62,51 @@ class RDP(HandlerBase):
         cc_pdu = x224ConnectionConfirmPDU(nego).getFullPacket()
         writer.write(cc_pdu)
         await writer.drain()
-        logger.debug("Sent CC_Confirm PDU")
+        logger.debug("Sent CC_Confirm PDU with TLS")
 
-        data = await reader.read(2048)
+        ## TLS start
+        tls_obj = TLS(writer, reader,'rdp.pem')
+        await tls_obj.do_tls_handshake()
+        ## Now use send_data and recv_data
+
+        # data = await reader.read(2048) # DEP
+        data = await self.recv_data(reader, 2048, tls_obj)
         logger.debug("Recvd data of size " + str(len(data)) + " Client data")
+        # print("CLINET_TLS_DATA: ", repr(data))
 
         # This packet includes ServerSecurity data
         server_sec = ServerSecurity()
         mcs_cres = MCSConnectResponsePDU(3, server_sec).getFullPacket()
-        writer.write(mcs_cres)
-        await writer.drain()
+
+        # writer.write(mcs_cres)
+        # await writer.drain()
+        await self.send_data(writer, mcs_cres, tls_obj)
         logger.debug("Sent MCS Connect Response PDU")
 
-        data = await reader.read(512)
+        # data = await reader.read(512)
+        data = await self.recv_data(reader, 512, tls_obj)
         # TODO: check if erect domain req
+        # in tls attach use and erect domain comes differently
         logger.debug("Received: ErectDomainRequest and AttactUserRequest : "+repr(data))
 
         # data = await reader.read(512)
-        # # TODO: check if attach user req
-        # logger.debug("Received: Attach USER req : "+repr(data))
+        # in tls two req are not sent together, so this workaround
+        if tls_obj:
+            # await self.send_data(writer, b'AA', tls_obj) # don't know why
+            data = await self.recv_data(reader, 512, tls_obj)
+            # # TODO: check if attach user req
+            logger.debug("Received: Attach USER req : "+repr(data))
 
         mcs_usrcnf =MCSAttachUserConfirmPDU().getFullPacket()
-        writer.write(mcs_usrcnf)
-        await writer.drain()
+        # writer.write(mcs_usrcnf)
+        # await writer.drain()
+        await self.send_data(writer, mcs_usrcnf, tls_obj)
         logger.debug("Sent: Attach User Confirm")
 
         # Handle multiple Channel Join request PUDs
         for req in range(7):
-            data = await reader.read(2048)
+            # data = await reader.read(2048)
+            data = await self.recv_data(reader, 2048, tls_obj)
             if not data:
                 logger.debug("Expected: Channel Join/Client Security Packet.Got Nothing.")
                 return
@@ -86,14 +118,17 @@ class RDP(HandlerBase):
             channel_init = channel_req.initiator
             channel_cnf = MCSChannelJoinConfirmPDU(channel_init, channel_id).getFullPacket()
 
-            writer.write(channel_cnf)
-            await writer.drain()
+            # writer.write(channel_cnf)
+            # await writer.drain()
+            await self.send_data(writer, channel_cnf, tls_obj)
             logger.debug("Sent: MCS Channel Join Confirm of channel %s"%(channel_id))
 
         # Handle Client Security Exchange PDU
         if not data:
-            data = await reader.read(2048)
-        # print("CLIENT SEC EX: ", repr(data))
+            # data = await reader.read(2048)
+            data = await self.recv_data(reader, 2048, tls_obj)
+        
+        print("CLIENT SEC EX: ", repr(data))
         client_sec = ClientSecurityExcahngePDU()
         client_sec.parse(data)
         self.encClientRandom = client_sec.encClientRandom

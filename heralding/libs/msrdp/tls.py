@@ -2,12 +2,13 @@ import ssl
 
 class TLS:
     """ TLS implamentation using memory BIO """
-    def __init__(self, writer, reader, certFile, privKey):
+    def __init__(self, writer, reader, pem_file):
         """@param: writer and reader are asyncio stream writer and reader objects"""
         self._tlsInBuff = ssl.MemoryBIO()
         self._tlsOutBuff = ssl.MemoryBIO()
-        ctx = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-        ctx.load_cert_chain(certFile, privKey)
+        ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        ctx.check_hostname = False
+        ctx.load_cert_chain(pem_file)
         self._tlsObj = ctx.wrap_bio(self._tlsInBuff, self._tlsOutBuff, server_side=True)
         self.writer = writer
         self.reader = reader
@@ -31,7 +32,7 @@ class TLS:
         await self.writer.drain()
 
     async def write_tls(self,data):
-        self._tlsObj = write(data)
+        self._tlsObj.write(data)
         _data = self._tlsOutBuff.read()
         _res = self.writer.write(_data)
         await self.writer.drain()
