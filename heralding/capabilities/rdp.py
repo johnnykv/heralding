@@ -92,14 +92,14 @@ class RDP(HandlerBase):
         data = await self.recv_data(reader, 1024, tls_obj)
         er_len = len(data)
         # TODO: check if erect domain req
-        # in tls attach use and erect domain comes differently
-        logger.debug("Received: ErectDomainRequest and AttactUserRequest(not always) : "+repr(data))
+        # in tls attach user request and erect domain are not merged together
+        logger.debug("Received: ErectDomainRequest and AttactUserRequest(not in tls) : "+repr(data))
 
         # data = await reader.read(512)
-        # if only erectdomian len should be less than 13
+        # if we got only erectdomian req in previous read, len should be less than 13
         if er_len < 13:
             logger.debug("Waiting for Attach USer req")
-            # await self.send_data(writer, b'AA', tls_obj) # don't know why
+            # Here , this dosen't occur in rdp_security mode, but it tls mode it keeps waiting for data
             data = await self.recv_data(reader, 1024, tls_obj)
             # # TODO: check if attach user req
             logger.debug("Received: Attach USER req : "+repr(data))
