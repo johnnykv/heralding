@@ -6,7 +6,9 @@ class TLS:
         """@param: writer and reader are asyncio stream writer and reader objects"""
         self._tlsInBuff = ssl.MemoryBIO()
         self._tlsOutBuff = ssl.MemoryBIO()
-        ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        # ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+        ctx.set_ciphers('RSA:!aNULL')
         ctx.check_hostname = False
         ctx.load_cert_chain(pem_file)
         self._tlsObj = ctx.wrap_bio(self._tlsInBuff, self._tlsOutBuff, server_side=True)
@@ -40,11 +42,18 @@ class TLS:
 
     async def read_tls(self, size):
         _rData = await self.reader.read(size)
-        print("TLS_IN_BUFF DATA: ", _rData)
         self._tlsInBuff.write(_rData)
-        try:
-            data = self._tlsObj.read()
-        except ssl.SSLWantReadError:
-            data = self._tlsObj.read()
-        print("TLS_OBJ_READ DATA: ", data)
+        data = self._tlsObj.read(size)
         return data
+
+    async def read_two_tls(self, size):
+        """ CAUTION: Fragile function """
+        _rData = await self.reader.read(size)
+        _erDomain = _rData[:41]
+        _attUser = _rData[41:]
+        self._tlsInBuff.write(_erDomain)
+        _data1 = self._tlsObj.read()
+
+        self._tlsInBuff.write(_attUser)
+        _data2 = self._tlsObj.read()
+        return _data1, _data2

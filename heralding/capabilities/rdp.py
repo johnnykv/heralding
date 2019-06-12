@@ -15,6 +15,7 @@
 
 import struct
 import logging
+import asyncio
 
 from heralding.capabilities.handlerbase import HandlerBase
 from heralding.libs.msrdp.pdu import x224ConnectionConfirmPDU, MCSConnectResponsePDU, MCSAttachUserConfirmPDU, MCSChannelJoinConfirmPDU
@@ -68,7 +69,7 @@ class RDP(HandlerBase):
         tls_obj = None
         if start_tls:
             # TLS start
-            logger.debug("TLS initilization")
+            logger.debug("RDP TLS initilization")
             tls_obj = TLS(writer, reader,'rdp.pem')
             await tls_obj.do_tls_handshake()
 
@@ -77,7 +78,6 @@ class RDP(HandlerBase):
         # data = await reader.read(2048) # DEP
         data = await self.recv_data(reader, 2048, tls_obj)
         logger.debug("Recvd data of size " + str(len(data)) + " Client data")
-        # print("CLINET_TLS_DATA: ", repr(data))
 
         # This packet includes ServerSecurity data
         server_sec = ServerSecurity()
@@ -87,20 +87,19 @@ class RDP(HandlerBase):
         # await writer.drain()
         await self.send_data(writer, mcs_cres, tls_obj)
         logger.debug("Sent MCS Connect Response PDU")
-
-        # data = await reader.read(512)
-        data = await self.recv_data(reader, 1024, tls_obj)
-        er_len = len(data)
+   
+        data = await self.recv_data(reader, 41, tls_obj) 
+        # data1, data2 = await tls_obj.read_two_tls(1024)
         # TODO: check if erect domain req
+        # data = data1+data2
         # in tls attach user request and erect domain are not merged together
         logger.debug("Received: ErectDomainRequest and AttactUserRequest(not in tls) : "+repr(data))
 
-        # data = await reader.read(512)
+        er_len = len(data)
         # if we got only erectdomian req in previous read, len should be less than 13
         if er_len < 13:
-            logger.debug("Waiting for Attach USer req")
             # Here , this dosen't occur in rdp_security mode, but it tls mode it keeps waiting for data
-            data = await self.recv_data(reader, 1024, tls_obj)
+            data = await self.recv_data(reader, 50, tls_obj)
             # # TODO: check if attach user req
             logger.debug("Received: Attach USER req : "+repr(data))
 
@@ -135,24 +134,29 @@ class RDP(HandlerBase):
             # data = await reader.read(2048)
             data = await self.recv_data(reader, 2048, tls_obj)
         
-        print("CLIENT SEC EX: ", repr(data))
-        client_sec = ClientSecurityExcahngePDU()
-        client_sec.parse(data)
-        self.encClientRandom = client_sec.encClientRandom
-        print("ENC_CLIENT_RANDOM: ", self.encClientRandom)
-        decRandom = server_sec.decryptClientRandom(self.encClientRandom)
-        print("DEC_CLIENT_RANDOM: ", decRandom)
-        # set client random to serverSec
-        server_sec._clientRandom = decRandom
+        # There is no client security exchange in TLS Security
+        if tls_obj:
+            print("CLIENT INFO: ", str(data))
+            
+        else:
+            client_sec = ClientSecurityExcahngePDU()
+            client_sec.parse(data)
+            self.encClientRandom = client_sec.encClientRandom
+            print("ENC_CLIENT_RANDOM: ", self.encClientRandom)
+            decRandom = server_sec.decryptClientRandom(self.encClientRandom)
+            print("DEC_CLIENT_RANDOM: ", decRandom)
+            # set client random to serverSec
+            server_sec._clientRandom = decRandom
 
-        # Handle Client Info PDU (contains credentials)
-        data = await reader.read(2048)
-        # print("CLIENT INFO: ", repr(data))
-        client_info = ClientInfoPDU()
-        client_info.parse(data)
-        print("CLIENT_INFO: sig: ", client_info.dataSig)
-        print("CLIENT_INFO: ENCADTA: ", client_info.encData)
-        decInfo = server_sec.decryptClientInfo(client_info.encData)
-        print("CLIENT_DEC_DATA: ", repr(decInfo))
+            # Handle Client Info PDU (contains credentials)
+
+            data = await self.recv_data(reader, 2048, tls_obj)
+            print("CLIENT INFO: ", repr(data))
+            client_info = ClientInfoPDU()
+            client_info.parse(data)
+            print("CLIENT_INFO: sig: ", client_info.dataSig)
+            print("CLIENT_INFO: ENCADTA: ", client_info.encData)
+            decInfo = server_sec.decryptClientInfo(client_info.encData)
+            print("CLIENT_DEC_DATA: ", repr(decInfo))
 
         session.end_session()
