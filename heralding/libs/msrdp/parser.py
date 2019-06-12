@@ -208,9 +208,12 @@ class ClientInfoPDU():
         # read length bytes (PER encoded)
         _infoLen, pos = UInt16Be(raw_data,pos).read()
         self.infoLen = _infoLen & 0x0fff
-        print("CLIENT_INFO_LEN: ", self.infoLen)
         self.secHeaderFlags, pos = UInt16Le(raw_data, pos).read()
         # ignore 2bytes of flagsHi
         self.dataSig, pos = RawBytes(raw_data, None, 8,pos+2).readRaw()
         self.encData, pos = RawBytes(raw_data, None, self.infoLen-12, pos).readRaw()
         return pos
+
+    def parseTLS(self, raw_data, pos=0):
+        pos = tpktPDUParser().parse(raw_data, 0)
+        pos = x224DataPDU().parse(raw_data, pos)
