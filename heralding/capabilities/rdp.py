@@ -15,7 +15,6 @@
 
 import struct
 import logging
-import asyncio
 
 from heralding.capabilities.handlerbase import HandlerBase
 from heralding.libs.msrdp.pdu import x224ConnectionConfirmPDU, MCSConnectResponsePDU, MCSAttachUserConfirmPDU, MCSChannelJoinConfirmPDU
@@ -33,13 +32,13 @@ class RDP(HandlerBase):
         data = await reader.read(size)
         return data
 
-    async def send_data(self,writer, data, tlsObj=None):
+    async def send_data(self, writer, data, tlsObj=None):
         if tlsObj:
             await tlsObj.write_tls(data)
             return
         writer.write(data)
         await writer.drain()
-        return       
+        return
 
     async def execute_capability(self, reader, writer, session):
         try:
@@ -50,12 +49,12 @@ class RDP(HandlerBase):
 
     async def _handle_session(self, reader, writer, session):
         address = writer.get_extra_info('peername')[0]
-        
+
         data = await reader.read(2048)
         # TODO: check if its really a x224CC Request packet
         cr_pdu = x224ConnectionRequestPDU()
         cr_pdu.parse(data)
-        logger.debug("CR_PDU: "+str(cr_pdu.pduType)+" "+str(cr_pdu.cookie.decode())+" "+str(cr_pdu.reqProtocols)+" ")
+        logger.debug("CR_PDU: "+str(cr_pdu.cookie.decode())+" "+str(cr_pdu.reqProtocols)+" ")
 
         nego = False
         start_tls = True
@@ -70,12 +69,11 @@ class RDP(HandlerBase):
         if start_tls:
             # TLS start
             logger.debug("RDP TLS initilization")
-            tls_obj = TLS(writer, reader,'rdp.pem')
+            tls_obj = TLS(writer, reader, 'rdp.pem')
             await tls_obj.do_tls_handshake()
 
-        ## Now use send_data and recv_data
+        # Now use send_data and recv_data
 
-        # data = await reader.read(2048) # DEP
         data = await self.recv_data(reader, 2048, tls_obj)
         logger.debug("Recvd data of size " + str(len(data)) + " Client data")
 
@@ -83,15 +81,18 @@ class RDP(HandlerBase):
         server_sec = ServerSecurity()
         mcs_cres = MCSConnectResponsePDU(3, server_sec, start_tls).getFullPacket()
 
-        # writer.write(mcs_cres)
-        # await writer.drain()
         await self.send_data(writer, mcs_cres, tls_obj)
         logger.debug("Sent MCS Connect Response PDU")
-   
-        data = await self.recv_data(reader, 41, tls_obj) 
-        # data1, data2 = await tls_obj.read_two_tls(1024)
+
+        if tls_obj:
+            data = await self.recv_data(reader, 41, tls_obj)
+        else:
+            data = await self.recv_data(reader, 512, tls_obj)
+
+        if not data:
+            logger.debug("Expected ErectDomainRequest. Got Nothing.")
+            return
         # TODO: check if erect domain req
-        # data = data1+data2
         # in tls attach user request and erect domain are not merged together
         logger.debug("Received: ErectDomainRequest and AttactUserRequest(not in tls) : "+repr(data))
 
@@ -99,16 +100,14 @@ class RDP(HandlerBase):
         # if we got only erectdomian req in previous read, len should be less than 13
         if er_len < 13:
             # Here , this dosen't occur in rdp_security mode, but it tls mode it keeps waiting for data
-            data = await self.recv_data(reader, 50, tls_obj)
+            data = await self.recv_data(reader, 64, tls_obj)
             # # TODO: check if attach user req
             logger.debug("Received: Attach USER req : "+repr(data))
 
-        mcs_usrcnf =MCSAttachUserConfirmPDU().getFullPacket()
-        # writer.write(mcs_usrcnf)
-        # await writer.drain()
+        mcs_usrcnf = MCSAttachUserConfirmPDU().getFullPacket()
         await self.send_data(writer, mcs_usrcnf, tls_obj)
         logger.debug("Sent: Attach User Confirm")
-    
+
         # Handle multiple Channel Join request PUDs
         for req in range(7):
             # data = await reader.read(2048)
@@ -124,20 +123,22 @@ class RDP(HandlerBase):
             channel_init = channel_req.initiator
             channel_cnf = MCSChannelJoinConfirmPDU(channel_init, channel_id).getFullPacket()
 
-            # writer.write(channel_cnf)
-            # await writer.drain()
             await self.send_data(writer, channel_cnf, tls_obj)
-            logger.debug("Sent: MCS Channel Join Confirm of channel %s"%(channel_id))
+            logger.debug("Sent: MCS Channel Join Confirm of channel %s" % (channel_id))
 
         # Handle Client Security Exchange PDU
         if not data:
             # data = await reader.read(2048)
             data = await self.recv_data(reader, 2048, tls_obj)
-        
+
         # There is no client security exchange in TLS Security
         if tls_obj:
-            print("CLIENT INFO: ", str(data))
-            
+            client_info = ClientInfoPDU()
+            client_info.parseTLS(data)
+            username = client_info.rdpUsername
+            password = client_info.rdpPassword
+            session.add_auth_attempt('plaintext', username=username, password=password)
+
         else:
             client_sec = ClientSecurityExcahngePDU()
             client_sec.parse(data)
@@ -151,7 +152,6 @@ class RDP(HandlerBase):
             # Handle Client Info PDU (contains credentials)
 
             data = await self.recv_data(reader, 2048, tls_obj)
-            print("CLIENT INFO: ", repr(data))
             client_info = ClientInfoPDU()
             client_info.parse(data)
             print("CLIENT_INFO: sig: ", client_info.dataSig)

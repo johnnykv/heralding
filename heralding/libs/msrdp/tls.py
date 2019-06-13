@@ -1,7 +1,24 @@
+# Copyright (C) 2019 Sudipta Pandit <realsdx@protonmail.com>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import ssl
+
 
 class TLS:
     """ TLS implamentation using memory BIO """
+
     def __init__(self, writer, reader, pem_file):
         """@param: writer and reader are asyncio stream writer and reader objects"""
         self._tlsInBuff = ssl.MemoryBIO()
@@ -33,7 +50,7 @@ class TLS:
         self.writer.write(server_fin)
         await self.writer.drain()
 
-    async def write_tls(self,data):
+    async def write_tls(self, data):
         self._tlsObj.write(data)
         _data = self._tlsOutBuff.read()
         _res = self.writer.write(_data)
@@ -43,17 +60,12 @@ class TLS:
     async def read_tls(self, size):
         _rData = await self.reader.read(size)
         self._tlsInBuff.write(_rData)
-        data = self._tlsObj.read(size)
+        data = None
+        tries = 5
+        while not data and (tries > 0):
+            tries = tries-1
+            try:
+                data = self._tlsObj.read(size)
+            except ssl.SSLWantReadError:
+                pass
         return data
-
-    async def read_two_tls(self, size):
-        """ CAUTION: Fragile function """
-        _rData = await self.reader.read(size)
-        _erDomain = _rData[:41]
-        _attUser = _rData[41:]
-        self._tlsInBuff.write(_erDomain)
-        _data1 = self._tlsObj.read()
-
-        self._tlsInBuff.write(_attUser)
-        _data2 = self._tlsObj.read()
-        return _data1, _data2

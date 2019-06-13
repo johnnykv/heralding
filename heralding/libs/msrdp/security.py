@@ -1,7 +1,7 @@
 #
 # Copyright (c) 2014-2015 Sylvain Peyrefitte
 #
-# This file is part of rdpy.
+# Some contents of this file is part of rdpy.
 #
 # rdpy is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,8 +19,7 @@
 
 import rsa
 import hashlib
-from . import rc4_dec as rc4
-from .rc4 import RC4
+from . import rc4
 
 
 def saltedHash(inputData, salt, salt1, salt2):
@@ -199,5 +198,4 @@ class ServerSecurity():
         self._macKey, self._encKey, self._decKey = generateRC4Keys(self._decClientRandom, ServerSecurity.SERVER_RANDOM)
         self._decryptRc4 = rc4.RC4Key(self._decKey)
         decrypted = rc4.crypt(self._decryptRc4, encInfo)
-        # decrypted = RC4(self._decKey).crypt(encInfo)
         return decrypted
