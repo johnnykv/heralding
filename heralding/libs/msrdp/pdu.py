@@ -82,12 +82,10 @@ class ServerData:
             part_1 = b'\x02\x0c\xec\x00\x00\x00\x00\x00\x00\x00\x00\x00\x20\x00\x00\x00\xb8\x00\x00\x00'
         else:
             part_1 = b'\x02\x0c\xec\x00\x02\x00\x00\x00\x03\x00\x00\x00\x20\x00\x00\x00\xb8\x00\x00\x00'
-        # serverRandom = b'\xf9\xdf\xc4p\x8a\x08\xcds5Q:\xa3!_\x8f\xa1\xeeQ\xd6Nj\x95Zy0\x12\xbf\xf5&\xfb!('
         serverRandom = ServerSecurity.SERVER_RANDOM
 
         # an instance of ServerSecurity class required
         certData = serverSec.getServerCertBytes()
-        # print("CERT_DATA: ", repr(certData))
         #ADD all
         serverCoreData = coreData_1+clientReqPro
         serverNetData = netData

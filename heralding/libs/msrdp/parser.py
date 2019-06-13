@@ -201,6 +201,10 @@ class ClientInfoPDU():
         self.dataSig = None
         self.encData = None
 
+        # from decrypted data
+        self.rdpUsername = None
+        self.rdpPassword = None
+
     def parse(self, raw_data, pos=0):
         pos = tpktPDUParser().parse(raw_data, 0)
         pos = x224DataPDU().parse(raw_data, pos)
@@ -217,3 +221,26 @@ class ClientInfoPDU():
     def parseTLS(self, raw_data, pos=0):
         pos = tpktPDUParser().parse(raw_data, 0)
         pos = x224DataPDU().parse(raw_data, pos)
+        _, pos = RawBytes(raw_data, None, 6, pos).readRaw()
+        # read length bytes (PER encoded)
+        _infoLen, pos = UInt16Be(raw_data, pos).read()
+        self.infoLen = _infoLen & 0x0fff
+        # consume flags(2), flagsHi(2), CodePage(4), OptionalFlags(4)
+        _, pos = RawBytes(raw_data, None, 12, pos).readRaw()
+        #  cbParams(2+2+2+2+2)
+        cbDomain, pos = UInt16Le(raw_data, pos).read()
+        cbUsername, pos = UInt16Le(raw_data, pos).read()
+        cbPassword, pos = UInt16Le(raw_data, pos).read()
+        cbAltShell, pos = UInt16Le(raw_data, pos).read()
+        cbWorkDir, pos = UInt16Le(raw_data, pos).read()
+        # mandatory NULL terminator for all cbPrams is 2 bytes
+        Domain, pos = RawBytes(raw_data, None, cbDomain+2, pos).readRaw()
+        Username, pos = RawBytes(raw_data, None, cbUsername+2, pos).readRaw()
+        Password, pos = RawBytes(raw_data, None, cbPassword+2, pos).readRaw()
+        AltShell, pos = RawBytes(raw_data, None, cbAltShell+2, pos).readRaw()
+        WorkDir, pos = RawBytes(raw_data, None, cbWorkDir+2, pos).readRaw()
+
+        # strip the last two null bytes
+        self.rdpUsername =  Username.decode('utf-16','ignore')[:-2]
+        self.rdpPassword = Password.decode('utf-16', 'ignore')[:-2]
+        return pos
