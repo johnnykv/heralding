@@ -49,13 +49,10 @@ class RDP(HandlerBase):
             session.end_session()
 
     async def _handle_session(self, reader, writer, session):
-        address = writer.get_extra_info('peername')[0]
-
         data = await reader.read(2048)
         cr_pdu = x224ConnectionRequestPDU()
         cr_pdu.parse(data)
 
-        nego = False
         start_tls = True  # this forces tls security
         client_reqProto = 1  # set default to tls
         if cr_pdu.reqProtocols:
@@ -121,7 +118,7 @@ class RDP(HandlerBase):
         logger.debug("Sent: Attach User Confirm")
 
         # Handle multiple Channel Join request PUDs
-        for req in range(7):
+        for _ in range(7):
             # data = await reader.read(2048)
             data = await self.recv_data(reader, 2048, tls_obj)
             if not data:
