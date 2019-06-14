@@ -54,16 +54,25 @@ class RDP(HandlerBase):
         # TODO: check if its really a x224CC Request packet
         cr_pdu = x224ConnectionRequestPDU()
         cr_pdu.parse(data)
-        logger.debug("CR_PDU: "+str(cr_pdu.cookie.decode())+" "+str(cr_pdu.reqProtocols)+" ")
 
         nego = False
-        start_tls = True
+        start_tls = True # this forces tls security
+        client_reqProto = 1 # set default to tls
         if cr_pdu.reqProtocols:
-            nego = True
-        cc_pdu = x224ConnectionConfirmPDU(nego, start_tls).getFullPacket()
+            client_reqProto = cr_pdu.reqProtocols
+        else:
+            # if no nego request was made, then it is rdp security
+            client_reqProto = 0
+        
+        cc_pdu_obj = x224ConnectionConfirmPDU(client_reqProto, start_tls)
+        cc_pdu = cc_pdu_obj.getFullPacket()
         writer.write(cc_pdu)
         await writer.drain()
-        logger.debug("Sent CC_Confirm PDU with TLS")
+        if cc_pdu_obj.sentNegoFail:
+            logger.debug("Sent x224 RDP Negotiation Failure PDU")
+            session.end_session()
+            return
+        logger.debug("Sent x244CLinetConnectionConfirm PDU")
 
         tls_obj = None
         if start_tls:
@@ -79,7 +88,7 @@ class RDP(HandlerBase):
 
         # This packet includes ServerSecurity data
         server_sec = ServerSecurity()
-        mcs_cres = MCSConnectResponsePDU(3, server_sec, start_tls).getFullPacket()
+        mcs_cres = MCSConnectResponsePDU(client_reqProto, server_sec, start_tls).getFullPacket()
 
         await self.send_data(writer, mcs_cres, tls_obj)
         logger.debug("Sent MCS Connect Response PDU")
