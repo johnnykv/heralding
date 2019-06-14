@@ -19,6 +19,7 @@ import logging
 from heralding.capabilities.handlerbase import HandlerBase
 from heralding.libs.msrdp.pdu import x224ConnectionConfirmPDU, MCSConnectResponsePDU, MCSAttachUserConfirmPDU, MCSChannelJoinConfirmPDU
 from heralding.libs.msrdp.parser import x224ConnectionRequestPDU, MCSChannelJoinRequestPDU, ClientSecurityExcahngePDU, ClientInfoPDU
+from heralding.libs.msrdp.parser import ErectDomainRequestPDU
 from heralding.libs.msrdp.security import ServerSecurity
 from heralding.libs.msrdp.tls import TLS
 logger = logging.getLogger(__name__)
@@ -51,19 +52,18 @@ class RDP(HandlerBase):
         address = writer.get_extra_info('peername')[0]
 
         data = await reader.read(2048)
-        # TODO: check if its really a x224CC Request packet
         cr_pdu = x224ConnectionRequestPDU()
         cr_pdu.parse(data)
 
         nego = False
-        start_tls = True # this forces tls security
-        client_reqProto = 1 # set default to tls
+        start_tls = True  # this forces tls security
+        client_reqProto = 1  # set default to tls
         if cr_pdu.reqProtocols:
             client_reqProto = cr_pdu.reqProtocols
         else:
             # if no nego request was made, then it is rdp security
             client_reqProto = 0
-        
+
         cc_pdu_obj = x224ConnectionConfirmPDU(client_reqProto, start_tls)
         cc_pdu = cc_pdu_obj.getFullPacket()
         writer.write(cc_pdu)
@@ -76,13 +76,12 @@ class RDP(HandlerBase):
 
         tls_obj = None
         if start_tls:
-            # TLS start
+            # TLS Upgrade start
             logger.debug("RDP TLS initilization")
             tls_obj = TLS(writer, reader, 'rdp.pem')
             await tls_obj.do_tls_handshake()
 
-        # Now use send_data and recv_data
-
+        # Now using send_data and recv_data
         data = await self.recv_data(reader, 2048, tls_obj)
         logger.debug("Recvd data of size " + str(len(data)) + " Client data")
 
@@ -101,7 +100,11 @@ class RDP(HandlerBase):
         if not data:
             logger.debug("Expected ErectDomainRequest. Got Nothing.")
             return
-        # TODO: check if erect domain req
+        if not ErectDomainRequestPDU.checkPDU(data):
+            logger.debug("Malformed Packet Received. Expected ErectDomainRequest.")
+            session.end_session()
+            return
+
         # in tls attach user request and erect domain are not merged together
         logger.debug("Received: ErectDomainRequest and AttactUserRequest(not in tls) : "+repr(data))
 

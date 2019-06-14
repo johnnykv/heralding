@@ -20,6 +20,7 @@ class InvalidExpectedData(Exception):
     def __init__(self, message=""):
         Exception.__init__(self, msg)
 
+
 class RawBytes():
     """ Read/Consume raw bytes """
 
@@ -124,13 +125,13 @@ class tpktPDUParser():
         self.length, pos = UInt16Be(raw_data, pos).read()
         return pos
 
+
 class x224DataPDU():
     @classmethod
     def parse(cls, raw_data, pos):
         """Returns the pos of the rest of the Payload"""
         _, pos = RawBytes(raw_data, None, 3, pos).readRaw()
         return pos
-
 
 
 class x224ConnectionRequestPDU():
@@ -159,41 +160,76 @@ class x224ConnectionRequestPDU():
 
         return pos
 
+
 class MCSChannelJoinRequestPDU():
     def __init__(self):
         self.header = None
         self.initiator = None
         self.channelID = None
 
-    def parse(self,raw_data,pos=0):
-        pos = tpktPDUParser().parse(raw_data,0)
-        pos = x224DataPDU().parse(raw_data,pos)
-        self.header, pos = RawBytes(raw_data,None,1,pos).readRaw()
+    def parse(self, raw_data, pos=0):
+        pos = tpktPDUParser().parse(raw_data, 0)
+        pos = x224DataPDU().parse(raw_data, pos)
+        self.header, pos = RawBytes(raw_data, None, 1, pos).readRaw()
         if self.header != b'\x38':
             # raise InvalidExpectedData("Expected MCS Channel Join Request header. Got %s"%str(self.header))
             return -1
-        
-        self.initiator, pos = UInt16Be(raw_data,pos).read()
-        self.channelID, pso = UInt16Be(raw_data,pos).read()
+
+        self.initiator, pos = UInt16Be(raw_data, pos).read()
+        self.channelID, pso = UInt16Be(raw_data, pos).read()
         return pos
-        
+
+
+class ErectDomainRequestPDU():
+    @staticmethod
+    def checkPDU(raw_data, pos=0):
+        # Type constant of ErectDomainRequest
+        ERECT_DOMAIN_REQUEST = 1
+
+        pos = tpktPDUParser().parse(raw_data, 0)
+        pos = x224DataPDU().parse(raw_data, pos)
+        pdu_type, pos = UInt8(raw_data, pos).read()
+
+        if pdu_type == (ERECT_DOMAIN_REQUEST << 2):
+            return True
+
+        return False
+
+
+class AttachUserRequestPDU():
+    @staticmethod
+    def checkPDU(raw_data, pos=0):
+        # Type constant of AttachUserRequest
+        ATTACH_USER_REQUEST = 10
+
+        pos = tpktPDUParser().parse(raw_data, 0)
+        pos = x224DataPDU().parse(raw_data, pos)
+        pdu_type, pos = UInt8(raw_data, pos).read()
+
+        if pdu_type == (ATTACH_USER_REQUEST << 2):
+            return True
+
+        return False
+
+
 class ClientSecurityExcahngePDU():
     def __init__(self):
         self.secHeaderFlags = None
         self.secPacketLen = None
         self.encClientRandom = None
 
-    def parse(self,raw_data,pos=0):
+    def parse(self, raw_data, pos=0):
         pos = tpktPDUParser().parse(raw_data, 0)
         pos = x224DataPDU().parse(raw_data, pos)
-        _, pos = RawBytes(raw_data,None,8,pos).readRaw() # 7 changed to 8
-        self.secHeaderFlags, pos = UInt16Le(raw_data,pos).read()
+        _, pos = RawBytes(raw_data, None, 8, pos).readRaw()  # 7 changed to 8
+        self.secHeaderFlags, pos = UInt16Le(raw_data, pos).read()
         # +2 for skipkking bytes read
-        self.secPacketLen, pos = UInt32Le(raw_data,pos+2).read()
+        self.secPacketLen, pos = UInt32Le(raw_data, pos+2).read()
         # not reading last 8byte padding
-        self.encClientRandom, pos = RawBytes(raw_data,None,self.secPacketLen-8,pos).readRaw()
+        self.encClientRandom, pos = RawBytes(raw_data, None, self.secPacketLen-8, pos).readRaw()
         return pos
-    
+
+
 class ClientInfoPDU():
     def __init__(self):
         self.secHeaderFlags = None
@@ -210,11 +246,11 @@ class ClientInfoPDU():
         pos = x224DataPDU().parse(raw_data, pos)
         _, pos = RawBytes(raw_data, None, 6, pos).readRaw()
         # read length bytes (PER encoded)
-        _infoLen, pos = UInt16Be(raw_data,pos).read()
+        _infoLen, pos = UInt16Be(raw_data, pos).read()
         self.infoLen = _infoLen & 0x0fff
         self.secHeaderFlags, pos = UInt16Le(raw_data, pos).read()
         # ignore 2bytes of flagsHi
-        self.dataSig, pos = RawBytes(raw_data, None, 8,pos+2).readRaw()
+        self.dataSig, pos = RawBytes(raw_data, None, 8, pos+2).readRaw()
         self.encData, pos = RawBytes(raw_data, None, self.infoLen-12, pos).readRaw()
         return pos
 
@@ -241,6 +277,6 @@ class ClientInfoPDU():
         WorkDir, pos = RawBytes(raw_data, None, cbWorkDir+2, pos).readRaw()
 
         # strip the last two null bytes
-        self.rdpUsername =  Username.decode('utf-16','ignore')[:-2]
+        self.rdpUsername = Username.decode('utf-16', 'ignore')[:-2]
         self.rdpPassword = Password.decode('utf-16', 'ignore')[:-2]
         return pos
