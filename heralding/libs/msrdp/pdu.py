@@ -20,7 +20,7 @@ from .packer import Uint16BE, Int16BE, Uint32LE, Uint32BE
 from .parser import x224ConnectionRequestPDU
 from .security import ServerSecurity
 
-    
+
 class tpktPDU:
     def __init__(self, payload):
         self.version = 3
@@ -40,23 +40,36 @@ class x224DataPDU:
 
 
 class x224ConnectionConfirmPDU():
-    def __init__(self, nego=False, tls=False):
+    def __init__(self, reqProto=None, tls=False):
         self.type = b'\xd0'
         self.dest_ref = b'\x00\x00'  # 0 bytes
         self.src_ref = b'\x12\x34'  # bogus value
         self.options = b'\x00'
-        self.nego = nego
-        self.is_tls = tls
+        self.reqProto = reqProto
+        self.force_tls = tls
+        self.sentNegoFail = False
 
     def generate(self):
+        PROTOCOL_SSL = 0x00000001
+        PROTOCOL_RDP = 0x00000000
+
         data = self.type+self.dest_ref+self.src_ref+self.options
         len_indicator = len(data)  # 1byte length of PDU without indicator byte
 
-        if self.nego:
-            if self.is_tls:
-                nego_res = b'\x02\x00\x08\x00'+b'\x01' +bytes(3)  # TLS security
-            else:
-                nego_res = b'\x02\x00\x08\x00'+b'\x00' +bytes(3)  # RDP security
+        if self.reqProto:
+            selectedProto = self.reqProto & PROTOCOL_SSL  # for now only tls
+            proto_bytes = Uint32LE.pack(selectedProto)
+            nego_res = b'\x02\x00\x08\x00'+proto_bytes
+
+            if not (selectedProto == PROTOCOL_SSL) and self.force_tls:
+                self.sentNegoFail = True
+                nego_res = b'\x03\x00\x08\x00'+b'\x01' + bytes(3)  # SSL required by server
+            len_indicator += len(nego_res)
+            data += nego_res
+        else:
+            # RDP sec, if no proto requested. Currently not supported so send a Nego Fail
+            self.sentNegoFail = True
+            nego_res = b'\x03\x00\x08\x00'+b'\x01' + bytes(3)
             len_indicator += len(nego_res)
             data += nego_res
 
@@ -68,7 +81,7 @@ class x224ConnectionConfirmPDU():
 
 class ServerData:
     @classmethod
-    def generate(cls, cReqproto, serverSec, is_tls=False):
+    def generate(cls, cReqproto, serverSec, force_tls=False):
         # Servr Core data
         coreData_1 = b'\x01\x0c\x0c\x00\x04\x00\x08\x00'
         clientReqPro = Uint32LE.pack(cReqproto)
@@ -78,7 +91,7 @@ class ServerData:
 
         # ServerSec Data
         # here choosing encryption of 128bit by default method \x02\x00\x00\x00
-        if is_tls:
+        if force_tls:
             part_1 = b'\x02\x0c\xec\x00\x00\x00\x00\x00\x00\x00\x00\x00\x20\x00\x00\x00\xb8\x00\x00\x00'
         else:
             part_1 = b'\x02\x0c\xec\x00\x02\x00\x00\x00\x03\x00\x00\x00\x20\x00\x00\x00\xb8\x00\x00\x00'
@@ -86,7 +99,7 @@ class ServerData:
 
         # an instance of ServerSecurity class required
         certData = serverSec.getServerCertBytes()
-        #ADD all
+        # ADD all
         serverCoreData = coreData_1+clientReqPro
         serverNetData = netData
         # serverSecData = part_1+serverRandom+pubkeyProps_1+pubkeyProps_2+pubExp+modulus+sigBlobProps+sigBlob
@@ -98,13 +111,13 @@ class ServerData:
 class MCSConnectResponsePDU():
     """ Server MCS Connect Response PDU with GCC Conference Create Response """
 
-    def __init__(self, cReqproto, serverSec, is_tls=False):
+    def __init__(self, cReqproto, serverSec, force_tls=False):
         self.cReqproto = cReqproto
         self.serverSec = serverSec
-        self.is_tls = is_tls
+        self.force_tls = force_tls
 
     def generate(self):
-        serverData = ServerData.generate(self.cReqproto, self.serverSec, self.is_tls)
+        serverData = ServerData.generate(self.cReqproto, self.serverSec, self.force_tls)
         serverDataLen = Uint16BE.pack(len(serverData) | 0x8000)
         gccCreateRes = b'\x00\x05\x00\x14\x7c\x00\x01\x2a\x14\x76\x0a\x01\x01\x00\x01\xc0\x00\x4d\x63\x44\x6e'
         cc_userDataLen = Uint16BE.pack(len(serverData)+2+len(gccCreateRes))
@@ -140,4 +153,3 @@ class MCSChannelJoinConfirmPDU():
 
     def getFullPacket(self):
         return tpktPDU(x224DataPDU.generate()+self.generate()).generate()
-
