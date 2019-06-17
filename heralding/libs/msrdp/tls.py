@@ -67,5 +67,6 @@ class TLS:
             try:
                 data = self._tlsObj.read(size)
             except ssl.SSLWantReadError:
+                print("DEBUG: ssl.SSLWantReadError in tls.py")
                 pass
         return data
