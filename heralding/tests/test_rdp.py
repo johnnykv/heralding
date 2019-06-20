@@ -5,11 +5,19 @@ import shlex
 import os
 
 from heralding.capabilities import rdp
-from heralding.misc.common import cancel_all_pending_tasks
+from heralding.misc.common import cancel_all_pending_tasks, generate_self_signed_cert
 from heralding.reporting.reporting_relay import ReportingRelay
 
 
 class RDPTests(unittest.TestCase):
+    def create_cert_if_not_exists(self, pem_file):
+        if not os.path.isfile(pem_file):
+            cert, key = generate_self_signed_cert("US", "None", "None", "None",
+                                                  "None", "*", 365, 0)
+            with open(pem_file, 'wb') as _pem_file:
+                _pem_file.write(cert)
+                _pem_file.write(key)
+
     def rdp_connect(self, ip_addr, port):
         if not os.path.exists("/usr/bin/xfreerdp"):
             raise Exception("xfreeddp does't exists on the system")
@@ -71,7 +79,7 @@ class RDPTests(unittest.TestCase):
                    }
                    }
         rdp_cap = rdp.RDP(options, self.loop)
-
+        self.create_cert_if_not_exists('rdp.pem')
         server_coro = asyncio.start_server(
             rdp_cap.handle_session, '0.0.0.0', 8389, loop=self.loop)
         self.server = self.loop.run_until_complete(server_coro)
