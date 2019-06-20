@@ -66,10 +66,8 @@ class RawBytes():
             else:
                 raise Exception("Bytes Stream is too small to read")
         self.value = b''
-        # print("UNTIL_DATA: ", repr(self.data))
         _data = self.data[self._pos:self._pos+len(until)+1]
         while _data[-len(until):] != until:
-            # print(repr(_data))
             i = _data[0]
             self.value += i.to_bytes(1, byteorder='big')
             self._pos += 1
@@ -153,7 +151,6 @@ class x224ConnectionRequestPDU():
         _, pos = RawBytes(raw_data, None, 5, pos).readRaw()  # consume 5bytes
         self.cookie, pos = RawBytes(raw_data, None, None, pos).readUntil(b"\x0d\x0a")
         # parse nego req if present
-        # print(raw_data[pos:])
         if raw_data[pos:] != b'':
             _, pos = RawBytes(raw_data, None, 4, pos).readRaw()
             self.reqProtocols, pos = UInt32Le(raw_data, pos).read()
@@ -172,7 +169,6 @@ class MCSChannelJoinRequestPDU():
         pos = x224DataPDU().parse(raw_data, pos)
         self.header, pos = RawBytes(raw_data, None, 1, pos).readRaw()
         if self.header != b'\x38':
-            # raise InvalidExpectedData("Expected MCS Channel Join Request header. Got %s"%str(self.header))
             return -1
 
         self.initiator, pos = UInt16Be(raw_data, pos).read()
