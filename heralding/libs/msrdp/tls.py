@@ -23,7 +23,6 @@ class TLS:
         """@param: writer and reader are asyncio stream writer and reader objects"""
         self._tlsInBuff = ssl.MemoryBIO()
         self._tlsOutBuff = ssl.MemoryBIO()
-        # ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
         ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
         ctx.set_ciphers('RSA:!aNULL')
         ctx.check_hostname = False
