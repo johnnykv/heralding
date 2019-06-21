@@ -8,6 +8,7 @@ python:
 - 3.7.2
 before_install:
 - rvm install 2.2.5
+- sudo apt install -y freerdp-x11
 install:
 - pip3 install --upgrade setuptools
 - pip3 install coveralls
