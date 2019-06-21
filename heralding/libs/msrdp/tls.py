@@ -14,6 +14,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import ssl
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class TLS:
@@ -66,6 +69,6 @@ class TLS:
             try:
                 data = self._tlsObj.read(size)
             except ssl.SSLWantReadError:
-                print("DEBUG: ssl.SSLWantReadError in tls.py")
+                logger.debug("ssl.SSLWantReadError in tls.py")
                 pass
         return data

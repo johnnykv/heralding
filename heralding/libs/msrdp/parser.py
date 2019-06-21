@@ -14,6 +14,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import struct
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class InvalidExpectedData(Exception):
@@ -37,7 +40,7 @@ class RawBytes():
     def read(self):
         if self.dataLen() < self._typeSize:
             if self._optional:
-                print("No optional data present")
+                logger.debug("No optional data present in the PDU")
                 return (b'', self._pos)
             else:
                 raise Exception("Bytes Stream is too small to read")
@@ -49,7 +52,7 @@ class RawBytes():
     def readRaw(self):
         if self.dataLen() < self._typeSize:
             if self._optional:
-                print("No optional data present")
+                logger.debug("No optional data present in the PDU")
                 return (b'', self._pos)
             else:
                 raise Exception("Bytes Stream is too small to read")
@@ -61,7 +64,7 @@ class RawBytes():
     def readUntil(self, until):
         if self.dataLen() < len(until)+1:
             if self._optional:
-                print("No optional data present")
+                logger.debug("No optional data present in the PDU")
                 return (b'', self._pos)
             else:
                 raise Exception("Bytes Stream is too small to read")

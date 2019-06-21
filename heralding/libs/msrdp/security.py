@@ -107,18 +107,6 @@ def generateRSAKeys():
     return rsa.newkeys(512)
 
 
-# def PublicKey(e, n):
-#     """
-#     @param e: {long | str}public exponent
-#     @param n: {long | str}modulus
-#     """
-#     if isinstance(e, bytes):
-#         e = rsa.transform.bytes2int(e)
-#     if isinstance(n, bytes):
-#         n = rsa.transform.bytes2int(n)
-#     return {'e': e, 'n': n}
-
-
 def PrivateKey(d, n):
     """
     @param d: {long | str}private exponent
@@ -172,7 +160,7 @@ class ServerSecurity():
         self._modulusBytes = int2bytes(self._pubKey.n)
         # self._exponentBytes = int2bytes(self._pubKey.e)
         self._exponentBytes = ServerSecurity.SERVER_PUBLIC_EXPONENT
-        self._clientRandom = None # set it
+        self._clientRandom = None  # set it
 
     def getSignatureHash(self):
         # this is a signature of first 6 fields in ServerCert
