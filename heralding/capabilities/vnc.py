@@ -18,6 +18,7 @@ import logging
 import binascii
 
 from heralding.capabilities.handlerbase import HandlerBase
+from heralding.libs.decrypt.vnc import decrypt_hash
 
 # VNC constants
 RFB_VERSION = b'RFB 003.007\n'
@@ -57,6 +58,10 @@ class Vnc(HandlerBase):
         client_response = await reader.read(1024)
         session.add_auth_attempt('des_challenge', response=binascii.hexlify(client_response).decode(),
                                  challenge=binascii.hexlify(challenge).decode())
-
         writer.write(AUTH_FAILED)
+
+        #try to decrypt the hash
+        dkey = decrypt_hash(challenge, client_response)
+        if dkey:
+            session.add_auth_attempt('decrypted', password=dkey)
         session.end_session()
