@@ -44,10 +44,6 @@ def get_vnc_key(key):
 def vnc_hash_check(challenge, response, vnc_key):
     """ @param: all params in byte encoded
             @return: True if decrypted response matches with challenge"""
-    # challenge = binascii.unhexlify(challenge)
-    # response = binascii.unhexlify(response)
-    # vnc_key = get_vnc_key(key.encode('ascii'))
-
     cipher = DES.new(vnc_key, DES.MODE_ECB)
     drs = cipher.decrypt(response)
     if drs == challenge:
