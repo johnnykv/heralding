@@ -37,6 +37,12 @@ logger = logging.getLogger(__name__)
 
 class Honeypot:
     public_ip = ''
+    # load wordlist in memory
+    try:
+        with open('wordlist.txt', 'r') as f:
+            wordlist = f.read().splitlines()
+    except FileNotFoundError:
+        logger.error("Error: wordlist.txt file not found in path")
 
     def __init__(self, config, loop):
         """

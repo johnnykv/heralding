@@ -2,7 +2,7 @@ import binascii
 from Crypto.Cipher import DES
 
 
-from heralding.misc.wordlist import plist
+import heralding
 
 
 def get_vnc_key(key):
@@ -52,7 +52,9 @@ def vnc_hash_check(challenge, response, vnc_key):
         return False
 
 
-def decrypt_hash(challenge, response):
+def crack_hash(challenge, response):
+    # to overcome circular import
+    plist = heralding.honeypot.Honeypot.wordlist
     for key in plist:
         vnc_key = get_vnc_key(key.encode('ascii'))
         if (vnc_hash_check(challenge, response, vnc_key)):
