@@ -56,12 +56,15 @@ class Vnc(HandlerBase):
         writer.write(challenge)
 
         client_response = await reader.read(1024)
-        session.add_auth_attempt('des_challenge', response=binascii.hexlify(client_response).decode(),
-                                 challenge=binascii.hexlify(challenge).decode())
         writer.write(AUTH_FAILED)
 
-        #try to decrypt the hash
+        # try to decrypt the hash
         dkey = decrypt_hash(challenge, client_response)
         if dkey:
             session.add_auth_attempt('decrypted', password=dkey)
+        else:
+            hash_data = {'challenge': binascii.hexlify(challenge).decode(),
+                         'response': binascii.hexlify(client_response).decode()}
+            session.add_auth_attempt('des_challenge', password_hash=hash_data)
+
         session.end_session()

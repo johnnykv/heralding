@@ -37,7 +37,7 @@ class FileLogger(BaseLogger):
         if auth_logfile != "":
             # Setup CSV logging for auth attempts
             auth_field_names = ['timestamp', 'auth_id', 'session_id', 'source_ip', 'source_port', 'destination_ip',
-                                'destination_port', 'protocol', 'username', 'password']
+                                'destination_port', 'protocol', 'username', 'password', 'password_hash']
             
             self.auth_log_filehandler, self.auth_log_writer = self.setup_csv_files(
                 auth_logfile, auth_field_names)
