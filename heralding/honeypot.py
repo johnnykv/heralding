@@ -78,7 +78,7 @@ class Honeypot:
         # setup hash cracker's wordlist
         if self.config['hash_cracker']['enabled']:
             self.setup_wordlist()
-    
+
             # start activity logging
         if 'activity_logging' in self.config:
             if 'file' in self.config['activity_logging'] and self.config['activity_logging']['file']['enabled']:
