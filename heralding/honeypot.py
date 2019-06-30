@@ -62,12 +62,14 @@ class Honeypot:
 
     def setup_wordlist(self):
         # load wordlist in memory
-        try:
-            wordlist_file = self.config['hash_cracker']['wordlist_file']
-            with open(wordlist_file, 'r') as f:
-                Honeypot.wordlist = f.read().splitlines()
-        except FileNotFoundError:
-            logger.error("Error: "+wordlist_file+" file not found in path")
+        wordlist_file = self.config['hash_cracker']['wordlist_file']
+        if not os.path.isfile(wordlist_file):
+            package_directory = os.path.dirname(os.path.abspath(heralding.__file__))
+            wordlist_file = os.path.join(package_directory, wordlist_file)
+            logger.warning('Using default wordlist file: "{0}", if you want to customize values please '
+                    'copy this file to the current working directory'.format(wordlist_file))
+        with open(wordlist_file, 'r') as f:
+            Honeypot.wordlist = f.read().splitlines()
 
     def start(self):
         """ Starts services. """

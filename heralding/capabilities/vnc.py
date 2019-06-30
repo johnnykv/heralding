@@ -61,7 +61,7 @@ class Vnc(HandlerBase):
         # try to decrypt the hash
         dkey = crack_hash(challenge, client_response)
         if dkey:
-            session.add_auth_attempt('decrypted', password=dkey)
+            session.add_auth_attempt('cracked', password=dkey)
         else:
             hash_data = {'challenge': binascii.hexlify(challenge).decode(),
                          'response': binascii.hexlify(client_response).decode()}
