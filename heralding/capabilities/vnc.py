@@ -18,7 +18,7 @@ import logging
 import binascii
 
 from heralding.capabilities.handlerbase import HandlerBase
-from heralding.libs.decrypt.vnc import crack_hash
+from heralding.libs.cracker.vnc import crack_hash
 
 # VNC constants
 RFB_VERSION = b'RFB 003.007\n'

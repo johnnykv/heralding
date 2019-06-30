@@ -37,12 +37,7 @@ logger = logging.getLogger(__name__)
 
 class Honeypot:
     public_ip = ''
-    # load wordlist in memory
-    try:
-        with open('wordlist.txt', 'r') as f:
-            wordlist = f.read().splitlines()
-    except FileNotFoundError:
-        logger.error("Error: wordlist.txt file not found in path")
+    wordlist = None
 
     def __init__(self, config, loop):
         """
@@ -65,13 +60,26 @@ class Honeypot:
                 logger.warning('Could not request public ip from ipify, error: %s', ex)
             await asyncio.sleep(3600)
 
+    def setup_wordlist(self):
+        # load wordlist in memory
+        try:
+            wordlist_file = self.config['hash_cracker']['wordlist_file']
+            with open(wordlist_file, 'r') as f:
+                Honeypot.wordlist = f.read().splitlines()
+        except FileNotFoundError:
+            logger.error("Error: "+wordlist_file+" file not found in path")
+
     def start(self):
         """ Starts services. """
 
         if 'public_ip_as_destination_ip' in self.config and self.config['public_ip_as_destination_ip'] is True:
             asyncio.ensure_future(self._record_and_lookup_public_ip(), loop=self.loop)
 
-        # start activity logging
+        # setup hash cracker's wordlist
+        if self.config['hash_cracker']['enabled']:
+            self.setup_wordlist()
+    
+            # start activity logging
         if 'activity_logging' in self.config:
             if 'file' in self.config['activity_logging'] and self.config['activity_logging']['file']['enabled']:
                 auth_log = self.config['activity_logging']['file']['authentication_log_file']

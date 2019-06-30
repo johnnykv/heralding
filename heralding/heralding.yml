@@ -34,6 +34,10 @@ activity_logging:
     enabled: false
     port: 23400
 
+hash_cracker:
+  enabled: true
+  wordlist_file: 'wordlist.txt'
+
 # protocols to enable
 capabilities:
   ftp:
