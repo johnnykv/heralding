@@ -54,11 +54,11 @@ def vnc_hash_check(challenge, response, vnc_key):
 
 def crack_hash(challenge, response):
     # to overcome circular import
-    plist = heralding.honeypot.Honeypot.wordlist
+    password_list = heralding.honeypot.Honeypot.wordlist
     
-    if plist:
-        for key in plist:
-            vnc_key = get_vnc_key(key.encode('ascii'))
+    if password_list:
+        for potential_password in password_list:
+            vnc_key = get_vnc_key(potential_password.encode('ascii'))
             if (vnc_hash_check(challenge, response, vnc_key)):
-                return key
+                return potential_password
     return None
