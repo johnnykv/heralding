@@ -37,6 +37,7 @@ logger = logging.getLogger(__name__)
 
 class Honeypot:
     public_ip = ''
+    wordlist = None
 
     def __init__(self, config, loop):
         """
@@ -59,13 +60,28 @@ class Honeypot:
                 logger.warning('Could not request public ip from ipify, error: %s', ex)
             await asyncio.sleep(3600)
 
+    def setup_wordlist(self):
+        # load wordlist in memory
+        wordlist_file = self.config['hash_cracker']['wordlist_file']
+        if not os.path.isfile(wordlist_file):
+            package_directory = os.path.dirname(os.path.abspath(heralding.__file__))
+            wordlist_file = os.path.join(package_directory, wordlist_file)
+            logger.warning('Using default wordlist file: "{0}", if you want to customize values please '
+                    'copy this file to the current working directory'.format(wordlist_file))
+        with open(wordlist_file, 'r') as f:
+            Honeypot.wordlist = f.read().splitlines()
+
     def start(self):
         """ Starts services. """
 
         if 'public_ip_as_destination_ip' in self.config and self.config['public_ip_as_destination_ip'] is True:
             asyncio.ensure_future(self._record_and_lookup_public_ip(), loop=self.loop)
 
-        # start activity logging
+        # setup hash cracker's wordlist
+        if self.config['hash_cracker']['enabled']:
+            self.setup_wordlist()
+
+            # start activity logging
         if 'activity_logging' in self.config:
             if 'file' in self.config['activity_logging'] and self.config['activity_logging']['file']['enabled']:
                 auth_log = self.config['activity_logging']['file']['authentication_log_file']

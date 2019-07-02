@@ -81,12 +81,15 @@ class Session:
                  'destination_port': self.destination_port,
                  'protocol': self.protocol,
                  'username': None,
-                 'password': None
+                 'password': None,
+                 'password_hash': None
                  }
         if 'username' in kwargs:
             entry['username'] = kwargs['username']
         if 'password' in kwargs:
             entry['password'] = kwargs['password']
+        if 'password_hash' in kwargs:
+            entry['password_hash'] = kwargs['password_hash']
         ReportingRelay.logAuthAttempt(entry)
 
         # add to internal dict used for reporting when the session ends
