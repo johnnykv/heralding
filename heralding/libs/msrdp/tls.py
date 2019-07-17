@@ -26,7 +26,7 @@ class TLS:
         """@param: writer and reader are asyncio stream writer and reader objects"""
         self._tlsInBuff = ssl.MemoryBIO()
         self._tlsOutBuff = ssl.MemoryBIO()
-        ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1_1)
         ctx.set_ciphers('RSA:!aNULL')
         ctx.check_hostname = False
         ctx.load_cert_chain(pem_file)
