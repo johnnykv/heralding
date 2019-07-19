@@ -70,7 +70,7 @@ class RDPTests(unittest.TestCase):
         s.sendall(RDPClient.ConnectionRequestPDU())
         s.recv(1024)
 
-        tls = ssl.wrap_socket(s)
+        tls = ssl.wrap_socket(s, ssl_version=ssl.PROTOCOL_TLSv1_1)
         tls.sendall(RDPClient.ClientDataPDU())
         tls.recv(4096)
 
