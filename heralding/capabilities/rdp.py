@@ -90,7 +90,8 @@ class RDP(HandlerBase):
         logger.debug("Sent MCS Connect Response PDU")
 
         if tls_obj:
-            data = await self.recv_data(reader, 57, tls_obj)
+            # value should be less that 114(57+57).
+            data = await self.recv_data(reader,96, tls_obj)
         else:
             data = await self.recv_data(reader, 512, tls_obj)
 
@@ -109,7 +110,7 @@ class RDP(HandlerBase):
         # if we got only erectdomian req in previous read, len should be less than 13
         if er_len < 13:
             # Here , this dosen't occur in rdp_security mode, but in tls mode it keeps waiting for data
-            data = await self.recv_data(reader, 64, tls_obj)
+            data = await self.recv_data(reader, 128, tls_obj)
             # # TODO: check if attach user req
             logger.debug("Received: Attach USER req : "+repr(data))
 
