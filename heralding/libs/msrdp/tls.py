@@ -63,7 +63,7 @@ class TLS:
         _rData = await self.reader.read(size)
         self._tlsInBuff.write(_rData)
         data = None
-        tries = 5
+        tries = 500
         while not data and (tries > 0):
             tries = tries-1
             try:
