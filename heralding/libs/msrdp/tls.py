@@ -30,7 +30,8 @@ class TLS:
         ctx.set_ciphers('RSA:!aNULL')
         ctx.check_hostname = False
         ctx.load_cert_chain(pem_file)
-        self._tlsObj = ctx.wrap_bio(self._tlsInBuff, self._tlsOutBuff, server_side=True)
+        self._tlsObj = ctx.wrap_bio(
+            self._tlsInBuff, self._tlsOutBuff, server_side=True)
         self.writer = writer
         self.reader = reader
 
@@ -60,15 +61,24 @@ class TLS:
         return _res
 
     async def read_tls(self, size):
-        _rData = await self.reader.read(size)
-        self._tlsInBuff.write(_rData)
-        data = None
-        tries = 5
-        while not data and (tries > 0):
-            tries = tries-1
+        data = b""
+        # Check if we have any leftover data in the buffer
+        try:
+            data += self._tlsObj.read(size)
+        except ssl.SSLWantReadError:
+            pass
+
+        # iterate until we have all needed plaintext
+        while len(data) < size:
             try:
-                data = self._tlsObj.read(size)
+                # read ciphertext
+                _rData = await self.reader.read(1)
+                # put ciphertext into SSL machine
+                self._tlsInBuff.write(_rData)
+                # try to fill plaintext buffer
+                data += self._tlsObj.read(size)
             except ssl.SSLWantReadError:
-                logger.debug("ssl.SSLWantReadError in tls.py")
+                # TODO: Sleep here? nah?
                 pass
+
         return data

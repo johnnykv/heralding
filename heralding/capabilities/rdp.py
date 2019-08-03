@@ -21,6 +21,7 @@ from heralding.libs.msrdp.pdu import x224ConnectionConfirmPDU, MCSConnectRespons
 from heralding.libs.msrdp.parser import x224ConnectionRequestPDU, MCSChannelJoinRequestPDU, ClientSecurityExcahngePDU, ClientInfoPDU
 from heralding.libs.msrdp.parser import ErectDomainRequestPDU
 from heralding.libs.msrdp.security import ServerSecurity
+from heralding.libs.msrdp.parser import tpktPDUParser
 from heralding.libs.msrdp.tls import TLS
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,24 @@ class RDP(HandlerBase):
             data = await tlsObj.read_tls(size)
             return data
         data = await reader.read(size)
+        return data
+
+    # will parse the TPKT header and read the entire packet (TPKT + payload)
+    async def recv_next_tpkt(self, reader, tlsObj=None):
+        # data buffer
+        data = b""
+        if tlsObj:
+            # read TPKT header
+            data += await tlsObj.read_tls(4)
+            tpkt = tpktPDUParser()
+            tpkt.parse(data)
+            # calculate the remaining bytes we need to read
+            read_len = tpkt.length - 4
+            # read remaining byets
+            data += await tlsObj.read_tls(read_len)
+        else:
+            # TODO: Fix this, is it needed?
+            data = await reader.read(size)
         return data
 
     async def send_data(self, writer, data, tlsObj=None):
@@ -79,40 +98,40 @@ class RDP(HandlerBase):
             await tls_obj.do_tls_handshake()
 
         # Now using send_data and recv_data
-        data = await self.recv_data(reader, 2048, tls_obj)
-        logger.debug("Recvd data of size " + str(len(data)) + " Client data")
+        # data = await self.recv_data(reader, 512, tls_obj)
+        data = await self.recv_next_tpkt(reader, tls_obj)
 
         # This packet includes ServerSecurity data
         server_sec = ServerSecurity()
-        mcs_cres = MCSConnectResponsePDU(client_reqProto, server_sec, start_tls).getFullPacket()
+        mcs_cres = MCSConnectResponsePDU(
+            client_reqProto, server_sec, start_tls).getFullPacket()
 
         await self.send_data(writer, mcs_cres, tls_obj)
         logger.debug("Sent MCS Connect Response PDU")
 
         if tls_obj:
             # value should be less that 114(57+57).
-            data = await self.recv_data(reader,96, tls_obj)
+            # data = await self.recv_data(reader,12, tls_obj)
+            data = await self.recv_next_tpkt(reader, tls_obj)
         else:
+            # TODO: Fix this, is it needed?
             data = await self.recv_data(reader, 512, tls_obj)
 
         if not data:
             logger.debug("Expected ErectDomainRequest. Got Nothing.")
             return
         if not ErectDomainRequestPDU.checkPDU(data):
-            logger.debug("Malformed Packet Received. Expected ErectDomainRequest.")
+            logger.debug(
+                "Malformed Packet Received. Expected ErectDomainRequest.")
             session.end_session()
             return
 
         # in tls attach user request and erect domain are not merged together
-        logger.debug("Received: ErectDomainRequest and AttactUserRequest(not in tls) : "+repr(data))
+        logger.debug(
+            "Received: ErectDomainRequest and AttactUserRequest(not in tls) : "+repr(data))
 
-        er_len = len(data)
-        # if we got only erectdomian req in previous read, len should be less than 13
-        if er_len < 13:
-            # Here , this dosen't occur in rdp_security mode, but in tls mode it keeps waiting for data
-            data = await self.recv_data(reader, 128, tls_obj)
-            # # TODO: check if attach user req
-            logger.debug("Received: Attach USER req : "+repr(data))
+        data = await self.recv_next_tpkt(reader, tls_obj)
+        logger.debug("Received: Attach USER req : "+repr(data))
 
         mcs_usrcnf = MCSAttachUserConfirmPDU().getFullPacket()
         await self.send_data(writer, mcs_usrcnf, tls_obj)
@@ -121,25 +140,28 @@ class RDP(HandlerBase):
         # Handle multiple Channel Join request PUDs
         for _ in range(7):
             # data = await reader.read(2048)
-            data = await self.recv_data(reader, 2048, tls_obj)
+            data = await self.recv_next_tpkt(reader, tls_obj)
             if not data:
-                logger.debug("Expected: Channel Join/Client Security Packet.Got Nothing.")
+                logger.debug(
+                    "Expected: Channel Join/Client Security Packet.Got Nothing.")
                 return
+            logger.debug("Parsing channel join request")
             channel_req = MCSChannelJoinRequestPDU()
             v = channel_req.parse(data)
             if v < 0:
                 break
             channel_id = channel_req.channelID
             channel_init = channel_req.initiator
-            channel_cnf = MCSChannelJoinConfirmPDU(channel_init, channel_id).getFullPacket()
+            channel_cnf = MCSChannelJoinConfirmPDU(
+                channel_init, channel_id).getFullPacket()
 
             await self.send_data(writer, channel_cnf, tls_obj)
-            logger.debug("Sent: MCS Channel Join Confirm of channel %s" % (channel_id))
+            logger.debug(
+                "Sent: MCS Channel Join Confirm of channel %s" % (channel_id))
 
         # Handle Client Security Exchange PDU
         if not data:
-            # data = await reader.read(2048)
-            data = await self.recv_data(reader, 2048, tls_obj)
+            data = await self.recv_next_tpkt(reader, tls_obj)
 
         # There is no client security exchange in TLS Security
         if tls_obj:
@@ -147,7 +169,8 @@ class RDP(HandlerBase):
             client_info.parseTLS(data)
             username = client_info.rdpUsername
             password = client_info.rdpPassword
-            session.add_auth_attempt('plaintext', username=username, password=password)
+            session.add_auth_attempt(
+                'plaintext', username=username, password=password)
 
         else:
             client_sec = ClientSecurityExcahngePDU()
@@ -158,8 +181,7 @@ class RDP(HandlerBase):
             server_sec._clientRandom = decRandom
 
             # Handle Client Info PDU (contains credentials)
-
-            data = await self.recv_data(reader, 2048, tls_obj)
+            data = await self.recv_next_tpkt(reader, tls_obj)
             client_info = ClientInfoPDU()
             client_info.parse(data)
             decInfo = server_sec.decryptClientInfo(client_info.encData)
