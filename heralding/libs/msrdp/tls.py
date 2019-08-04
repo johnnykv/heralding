@@ -78,7 +78,6 @@ class TLS:
                 # try to fill plaintext buffer
                 data += self._tlsObj.read(size)
             except ssl.SSLWantReadError:
-                # TODO: Sleep here? nah?
                 pass
 
         return data

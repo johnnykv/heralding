@@ -27,37 +27,23 @@ logger = logging.getLogger(__name__)
 
 
 class RDP(HandlerBase):
-    async def recv_data(self, reader, size, tlsObj=None):
-        if tlsObj:
-            data = await tlsObj.read_tls(size)
-            return data
-        data = await reader.read(size)
-        return data
-
     # will parse the TPKT header and read the entire packet (TPKT + payload)
     async def recv_next_tpkt(self, reader, tlsObj=None):
         # data buffer
         data = b""
-        if tlsObj:
-            # read TPKT header
-            data += await tlsObj.read_tls(4)
-            tpkt = tpktPDUParser()
-            tpkt.parse(data)
-            # calculate the remaining bytes we need to read
-            read_len = tpkt.length - 4
-            # read remaining byets
-            data += await tlsObj.read_tls(read_len)
-        else:
-            # TODO: Fix this, is it needed?
-            data = await reader.read(size)
+        # read TPKT header
+        data += await tlsObj.read_tls(4)
+        tpkt = tpktPDUParser()
+        tpkt.parse(data)
+        # calculate the remaining bytes we need to read
+        read_len = tpkt.length - 4
+        # read remaining byets
+        data += await tlsObj.read_tls(read_len)
+
         return data
 
     async def send_data(self, writer, data, tlsObj=None):
-        if tlsObj:
-            await tlsObj.write_tls(data)
-            return
-        writer.write(data)
-        await writer.drain()
+        await tlsObj.write_tls(data)
         return
 
     async def execute_capability(self, reader, writer, session):
@@ -72,7 +58,6 @@ class RDP(HandlerBase):
         cr_pdu = x224ConnectionRequestPDU()
         cr_pdu.parse(data)
 
-        start_tls = True  # this forces tls security
         client_reqProto = 1  # set default to tls
         if cr_pdu.reqProtocols:
             client_reqProto = cr_pdu.reqProtocols
@@ -80,7 +65,7 @@ class RDP(HandlerBase):
             # if no nego request was made, then it is rdp security
             client_reqProto = 0
 
-        cc_pdu_obj = x224ConnectionConfirmPDU(client_reqProto, start_tls)
+        cc_pdu_obj = x224ConnectionConfirmPDU(client_reqProto)
         cc_pdu = cc_pdu_obj.getFullPacket()
         writer.write(cc_pdu)
         await writer.drain()
@@ -90,32 +75,23 @@ class RDP(HandlerBase):
             return
         logger.debug("Sent x244CLinetConnectionConfirm PDU")
 
-        tls_obj = None
-        if start_tls:
-            # TLS Upgrade start
-            logger.debug("RDP TLS initilization")
-            tls_obj = TLS(writer, reader, 'rdp.pem')
-            await tls_obj.do_tls_handshake()
+        # TLS Upgrade start
+        logger.debug("RDP TLS initilization")
+        tls_obj = TLS(writer, reader, 'rdp.pem')
+        await tls_obj.do_tls_handshake()
 
-        # Now using send_data and recv_data
-        # data = await self.recv_data(reader, 512, tls_obj)
+        # Now using send_data and recv_next_tpkt
         data = await self.recv_next_tpkt(reader, tls_obj)
 
         # This packet includes ServerSecurity data
         server_sec = ServerSecurity()
         mcs_cres = MCSConnectResponsePDU(
-            client_reqProto, server_sec, start_tls).getFullPacket()
+            client_reqProto, server_sec).getFullPacket()
 
         await self.send_data(writer, mcs_cres, tls_obj)
         logger.debug("Sent MCS Connect Response PDU")
 
-        if tls_obj:
-            # value should be less that 114(57+57).
-            # data = await self.recv_data(reader,12, tls_obj)
-            data = await self.recv_next_tpkt(reader, tls_obj)
-        else:
-            # TODO: Fix this, is it needed?
-            data = await self.recv_data(reader, 512, tls_obj)
+        data = await self.recv_next_tpkt(reader, tls_obj)
 
         if not data:
             logger.debug("Expected ErectDomainRequest. Got Nothing.")
@@ -164,26 +140,12 @@ class RDP(HandlerBase):
             data = await self.recv_next_tpkt(reader, tls_obj)
 
         # There is no client security exchange in TLS Security
-        if tls_obj:
-            client_info = ClientInfoPDU()
-            client_info.parseTLS(data)
-            username = client_info.rdpUsername
-            password = client_info.rdpPassword
-            session.add_auth_attempt(
-                'plaintext', username=username, password=password)
+        client_info = ClientInfoPDU()
+        client_info.parseTLS(data)
+        username = client_info.rdpUsername
+        password = client_info.rdpPassword
+        session.add_auth_attempt(
+            'plaintext', username=username, password=password)
 
-        else:
-            client_sec = ClientSecurityExcahngePDU()
-            client_sec.parse(data)
-            self.encClientRandom = client_sec.encClientRandom
-            decRandom = server_sec.decryptClientRandom(self.encClientRandom)
-            # set client random to serverSec
-            server_sec._clientRandom = decRandom
-
-            # Handle Client Info PDU (contains credentials)
-            data = await self.recv_next_tpkt(reader, tls_obj)
-            client_info = ClientInfoPDU()
-            client_info.parse(data)
-            decInfo = server_sec.decryptClientInfo(client_info.encData)
 
         session.end_session()

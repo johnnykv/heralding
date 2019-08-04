@@ -19,87 +19,6 @@
 
 import rsa
 import hashlib
-from . import rc4
-
-
-def saltedHash(inputData, salt, salt1, salt2):
-    """
-    @summary: Generate particular signature from combination of sha1 and md5
-    @see: http://msdn.microsoft.com/en-us/library/cc241992.aspx
-    @param inputData: strange input (see doc)
-    @param salt: salt for context call
-    @param salt1: another salt (ex : client random)
-    @param salt2: another another salt (ex: server random)
-    @return : MD5(Salt + SHA1(Input + Salt + Salt1 + Salt2))
-    """
-    sha1Digest = hashlib.sha1()
-    md5Digest = hashlib.md5()
-
-    sha1Digest.update(inputData)
-    sha1Digest.update(salt[:48])
-    sha1Digest.update(salt1)
-    sha1Digest.update(salt2)
-    sha1Sig = sha1Digest.digest()
-
-    md5Digest.update(salt[:48])
-    md5Digest.update(sha1Sig)
-
-    return md5Digest.digest()
-
-
-def finalHash(key, random1, random2):
-    """
-    @summary: MD5(in0[:16] + in1[:32] + in2[:32])
-    @param key: in 16
-    @param random1: in 32
-    @param random2: in 32
-    @return MD5(in0[:16] + in1[:32] + in2[:32])
-    """
-    md5Digest = hashlib.md5()
-    md5Digest.update(key)
-    md5Digest.update(random1)
-    md5Digest.update(random2)
-    return md5Digest.digest()
-
-
-def masterSecret(secret, random1, random2):
-    """
-    @summary: Generate master secret
-    @param secret: {str} secret
-    @param clientRandom : {str} client random
-    @param serverRandom : {str} server random
-    @see: http://msdn.microsoft.com/en-us/library/cc241992.aspx
-    """
-    return saltedHash(b"A", secret, random1, random2) + saltedHash(b"BB", secret, random1, random2) + saltedHash(b"CCC", secret, random1, random2)
-
-
-def sessionKeyBlob(secret, random1, random2):
-    """
-    @summary: Generate master secret
-    @param secret: secret
-    @param clientRandom : client random
-    @param serverRandom : server random
-    """
-    return saltedHash(b"X", secret, random1, random2) + saltedHash(b"YY", secret, random1, random2) + saltedHash(b"ZZZ", secret, random1, random2)
-
-
-def generateRC4Keys(clientRandom, serverRandom):
-    """
-    @param method: removed as 128bit is deafult
-    @param clientRandom: {str[32]} client random
-    @param serverRandom: {str[32]} server random
-    @see: http://msdn.microsoft.com/en-us/library/cc240785.aspx
-    @return: MACKey, initialFirstKey128(ClientdecryptKey, serverEncryptKey), initialSecondKey128(ServerDecryptKey, ClientEncryptKey)
-    """
-    preMasterHash = clientRandom[:24] + serverRandom[:24]
-    masterHash = masterSecret(preMasterHash, clientRandom, serverRandom)
-    sessionKey = sessionKeyBlob(masterHash, clientRandom, serverRandom)
-    macKey128 = sessionKey[:16]
-    initialFirstKey128 = finalHash(sessionKey[16:32], clientRandom, serverRandom)
-    initialSecondKey128 = finalHash(sessionKey[32:48], clientRandom, serverRandom)
-
-    # only 128bit key generated as it was set default in ServerSecurityDataPDU
-    return macKey128, initialFirstKey128, initialSecondKey128
 
 
 def generateRSAKeys():
@@ -181,9 +100,3 @@ class ServerSecurity():
     def decryptClientRandom(self, encRandom):
         self._decClientRandom = decryptRSA(encRandom[::-1], self._privKey)[::-1]
         return self._decClientRandom
-
-    def decryptClientInfo(self, encInfo):
-        self._macKey, self._encKey, self._decKey = generateRC4Keys(self._decClientRandom, ServerSecurity.SERVER_RANDOM)
-        self._decryptRc4 = rc4.RC4Key(self._decKey)
-        decrypted = rc4.crypt(self._decryptRc4, encInfo)
-        return decrypted
