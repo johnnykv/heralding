@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 class RDP(HandlerBase):
     # will parse the TPKT header and read the entire packet (TPKT + payload)
-    async def recv_next_tpkt(self, reader, tlsObj=None):
+    async def recv_next_tpkt(self, tlsObj=None):
         # data buffer
         data = b""
         # read TPKT header
@@ -42,7 +42,7 @@ class RDP(HandlerBase):
 
         return data
 
-    async def send_data(self, writer, data, tlsObj=None):
+    async def send_data(self, data, tlsObj=None):
         await tlsObj.write_tls(data)
         return
 
@@ -81,17 +81,17 @@ class RDP(HandlerBase):
         await tls_obj.do_tls_handshake()
 
         # Now using send_data and recv_next_tpkt
-        data = await self.recv_next_tpkt(reader, tls_obj)
+        data = await self.recv_next_tpkt(tls_obj)
 
         # This packet includes ServerSecurity data
         server_sec = ServerSecurity()
         mcs_cres = MCSConnectResponsePDU(
             client_reqProto, server_sec).getFullPacket()
 
-        await self.send_data(writer, mcs_cres, tls_obj)
+        await self.send_data(mcs_cres, tls_obj)
         logger.debug("Sent MCS Connect Response PDU")
 
-        data = await self.recv_next_tpkt(reader, tls_obj)
+        data = await self.recv_next_tpkt(tls_obj)
 
         if not data:
             logger.debug("Expected ErectDomainRequest. Got Nothing.")
@@ -106,17 +106,17 @@ class RDP(HandlerBase):
         logger.debug(
             "Received: ErectDomainRequest and AttactUserRequest(not in tls) : "+repr(data))
 
-        data = await self.recv_next_tpkt(reader, tls_obj)
+        data = await self.recv_next_tpkt(tls_obj)
         logger.debug("Received: Attach USER req : "+repr(data))
 
         mcs_usrcnf = MCSAttachUserConfirmPDU().getFullPacket()
-        await self.send_data(writer, mcs_usrcnf, tls_obj)
+        await self.send_data(mcs_usrcnf, tls_obj)
         logger.debug("Sent: Attach User Confirm")
 
         # Handle multiple Channel Join request PUDs
         for _ in range(7):
             # data = await reader.read(2048)
-            data = await self.recv_next_tpkt(reader, tls_obj)
+            data = await self.recv_next_tpkt(tls_obj)
             if not data:
                 logger.debug(
                     "Expected: Channel Join/Client Security Packet.Got Nothing.")
@@ -131,13 +131,13 @@ class RDP(HandlerBase):
             channel_cnf = MCSChannelJoinConfirmPDU(
                 channel_init, channel_id).getFullPacket()
 
-            await self.send_data(writer, channel_cnf, tls_obj)
+            await self.send_data(channel_cnf, tls_obj)
             logger.debug(
                 "Sent: MCS Channel Join Confirm of channel %s" % (channel_id))
 
         # Handle Client Security Exchange PDU
         if not data:
-            data = await self.recv_next_tpkt(reader, tls_obj)
+            data = await self.recv_next_tpkt(tls_obj)
 
         # There is no client security exchange in TLS Security
         client_info = ClientInfoPDU()
@@ -146,6 +146,5 @@ class RDP(HandlerBase):
         password = client_info.rdpPassword
         session.add_auth_attempt(
             'plaintext', username=username, password=password)
-
 
         session.end_session()
