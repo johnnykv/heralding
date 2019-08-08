@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 class InvalidExpectedData(Exception):
     def __init__(self, message=""):
-        Exception.__init__(self, msg)
+        Exception.__init__(self, message)
 
 
 class RawBytes():
@@ -43,7 +43,7 @@ class RawBytes():
                 logger.debug("No optional data present in the PDU")
                 return (b'', self._pos)
             else:
-                raise Exception("Bytes Stream is too small to read")
+                raise InvalidExpectedData("Bytes Stream is too small to read")
         self.value = struct.unpack(self._structFormat, self.data[self._pos:self._pos+self._typeSize])[0]
         self._pos += self._typeSize
 
@@ -55,7 +55,7 @@ class RawBytes():
                 logger.debug("No optional data present in the PDU")
                 return (b'', self._pos)
             else:
-                raise Exception("Bytes Stream is too small to read")
+                raise InvalidExpectedData("Bytes Stream is too small to read")
         self.value = self.data[self._pos:self._pos+self._typeSize]
         self._pos += self._typeSize
 
@@ -67,7 +67,7 @@ class RawBytes():
                 logger.debug("No optional data present in the PDU")
                 return (b'', self._pos)
             else:
-                raise Exception("Bytes Stream is too small to read")
+                raise InvalidExpectedData("Bytes Stream is too small to read")
         self.value = b''
         _data = self.data[self._pos:self._pos+len(until)+1]
         while _data[-len(until):] != until:

@@ -70,6 +70,8 @@ class TLS:
 
         # iterate until we have all needed plaintext
         while len(data) < size:
+            if self.reader.at_eof():
+                break
             try:
                 # read ciphertext
                 _rData = await self.reader.read(1)
