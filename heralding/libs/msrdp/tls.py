@@ -19,6 +19,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+class TLSHandshakeError(Exception):
+    def __init__(self, message=""):
+        Exception.__init__(self, message)
+
 class TLS:
     """ TLS implamentation using memory BIO """
 
@@ -47,7 +51,10 @@ class TLS:
 
         client_fin = await self.reader.read(4096)
         self._tlsInBuff.write(client_fin)
-        self._tlsObj.do_handshake()
+        try:
+            self._tlsObj.do_handshake()
+        except ssl.SSLWantReadError:
+            raise TLSHandshakeError("Expected more data in Clinet FIN")
 
         server_fin = self._tlsOutBuff.read()
         self.writer.write(server_fin)

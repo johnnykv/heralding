@@ -22,7 +22,7 @@ from heralding.libs.msrdp.parser import x224ConnectionRequestPDU, MCSChannelJoin
 from heralding.libs.msrdp.parser import ErectDomainRequestPDU, tpktPDUParser
 from heralding.libs.msrdp.security import ServerSecurity
 from heralding.libs.msrdp.parser import InvalidExpectedData
-from heralding.libs.msrdp.tls import TLS
+from heralding.libs.msrdp.tls import TLS, TLSHandshakeError
 logger = logging.getLogger(__name__)
 
 
@@ -149,7 +149,7 @@ class RDP(HandlerBase):
                 'plaintext', username=username, password=password)
 
             session.end_session()
-        except InvalidExpectedData:
+        except (InvalidExpectedData, TLSHandshakeError):
             logger.debug("Malformed packet detected. Closing session.")
             session.end_session()
             return
