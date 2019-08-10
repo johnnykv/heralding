@@ -23,6 +23,7 @@ class TLSHandshakeError(Exception):
     def __init__(self, message=""):
         Exception.__init__(self, message)
 
+
 class TLS:
     """ TLS implamentation using memory BIO """
 
