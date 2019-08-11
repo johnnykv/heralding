@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 class InvalidExpectedData(Exception):
     def __init__(self, message=""):
-        Exception.__init__(self, msg)
+        Exception.__init__(self, message)
 
 
 class RawBytes():
@@ -43,7 +43,7 @@ class RawBytes():
                 logger.debug("No optional data present in the PDU")
                 return (b'', self._pos)
             else:
-                raise Exception("Bytes Stream is too small to read")
+                raise InvalidExpectedData("Bytes Stream is too small to read")
         self.value = struct.unpack(self._structFormat, self.data[self._pos:self._pos+self._typeSize])[0]
         self._pos += self._typeSize
 
@@ -55,7 +55,7 @@ class RawBytes():
                 logger.debug("No optional data present in the PDU")
                 return (b'', self._pos)
             else:
-                raise Exception("Bytes Stream is too small to read")
+                raise InvalidExpectedData("Bytes Stream is too small to read")
         self.value = self.data[self._pos:self._pos+self._typeSize]
         self._pos += self._typeSize
 
@@ -67,7 +67,7 @@ class RawBytes():
                 logger.debug("No optional data present in the PDU")
                 return (b'', self._pos)
             else:
-                raise Exception("Bytes Stream is too small to read")
+                raise InvalidExpectedData("Bytes Stream is too small to read")
         self.value = b''
         _data = self.data[self._pos:self._pos+len(until)+1]
         while _data[-len(until):] != until:
@@ -239,19 +239,6 @@ class ClientInfoPDU():
         # from decrypted data
         self.rdpUsername = None
         self.rdpPassword = None
-
-    def parse(self, raw_data, pos=0):
-        pos = tpktPDUParser().parse(raw_data, 0)
-        pos = x224DataPDU().parse(raw_data, pos)
-        _, pos = RawBytes(raw_data, None, 6, pos).readRaw()
-        # read length bytes (PER encoded)
-        _infoLen, pos = UInt16Be(raw_data, pos).read()
-        self.infoLen = _infoLen & 0x0fff
-        self.secHeaderFlags, pos = UInt16Le(raw_data, pos).read()
-        # ignore 2bytes of flagsHi
-        self.dataSig, pos = RawBytes(raw_data, None, 8, pos+2).readRaw()
-        self.encData, pos = RawBytes(raw_data, None, self.infoLen-12, pos).readRaw()
-        return pos
 
     def parseTLS(self, raw_data, pos=0):
         pos = tpktPDUParser().parse(raw_data, 0)
