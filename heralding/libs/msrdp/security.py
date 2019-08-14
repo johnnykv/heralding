@@ -20,10 +20,12 @@
 import rsa
 import hashlib
 
+# Generate New RSA Keys
+rsa_key = rsa.newkeys(512)
 
-def generateRSAKeys():
-    """Generates new 512-Bit RSA keys"""
-    return rsa.newkeys(512)
+def getRSAKeys():
+    """Returns a 512-Bit RSA keys"""
+    return rsa_key
 
 
 def PrivateKey(d, n):
@@ -75,7 +77,7 @@ class ServerSecurity():
     # SERVER_MODULUS = b'g3\x9c\xd5\x94\xa0\tO\xbfrVt`\xab\x7f\xf1+\xf7J\x86\xa3(ZK\x12\xc44(\xcd\xec"E6a\xf3\x1d&\t\x8fL\xb6\xc8f\x9c\xd0\xa3\xaf8\xaa\xe1\xfb\xcb\\\r\xfc\xbb\xd8\x93\x1cZ\xce\x1b\x8f\x92\x00\x00\x00\x00\x00\x00\x00\x00'
 
     def __init__(self):
-        self._pubKey, self._privKey = generateRSAKeys()
+        self._pubKey, self._privKey = getRSAKeys()
         self._modulusBytes = int2bytes(self._pubKey.n)
         # self._exponentBytes = int2bytes(self._pubKey.e)
         self._exponentBytes = ServerSecurity.SERVER_PUBLIC_EXPONENT
