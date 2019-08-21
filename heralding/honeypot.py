@@ -27,6 +27,7 @@ from heralding.reporting.file_logger import FileLogger
 from heralding.reporting.syslog_logger import SyslogLogger
 from heralding.reporting.hpfeeds_logger import HpFeedsLogger
 from heralding.reporting.curiosum_integration import CuriosumIntegration
+from heralding.reporting.plugin_manager import PluginManager
 
 import asyncssh
 
@@ -114,6 +115,11 @@ class Honeypot:
                 curiosum_integration = CuriosumIntegration(port)
                 self.hpfeeds_logger_task = self.loop.run_in_executor(None, curiosum_integration.start)
                 self.hpfeeds_logger_task.add_done_callback(common.on_unhandled_task_exception)
+
+        #start plugin manager
+        plug_mngr = PluginManager()
+        self.plug_mngr_task = self.loop.run_in_executor(None, plug_mngr.start)
+        self.plug_mngr_task.add_done_callback(common.on_unhandled_task_exception)
 
         bind_host = self.config['bind_host']
         listen_ports = []
