@@ -12,7 +12,7 @@ class PluginManager(BaseLogger):
     def __init__(self):
         super().__init__()
     path = os.path.dirname(os.path.realpath(__file__)) + '/plugins'
-        logger.debug('Plugin manager started')
+    logger.debug('Plugin manager started')
     if not os.path.exists(path):
             os.makedirs(path)
         for filename in os.listdir(path):
