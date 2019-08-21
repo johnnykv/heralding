@@ -11,18 +11,18 @@ class PluginManager(BaseLogger):
 
     def __init__(self):
         super().__init__()
-    path = os.path.dirname(os.path.realpath(__file__)) + '/plugins'
-    logger.debug('Plugin manager started')
-    if not os.path.exists(path):
-        os.makedirs(path)
-    for filename in os.listdir(path):
-        if filename.endswith(".py"):
-            moduleName = filename.split('.')[0]
-            spec = importlib.util.spec_from_file_location(moduleName, os.path.dirname(os.path.realpath(__file__)) + '/plugins/' + filename)
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
-            module.loaded()
-            moduleList.append(module)
+        path = os.path.dirname(os.path.realpath(__file__)) + '/plugins'
+        logger.debug('Plugin manager started')
+        if not os.path.exists(path):
+            os.makedirs(path)
+        for filename in os.listdir(path):
+            if filename.endswith(".py"):
+                moduleName = filename.split('.')[0]
+                spec = importlib.util.spec_from_file_location(moduleName, os.path.dirname(os.path.realpath(__file__)) + '/plugins/' + filename)
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                module.loaded()
+                moduleList.append(module)
 
     def propagateData(self, data):
         for module in moduleList:
