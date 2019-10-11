@@ -94,7 +94,7 @@ class Session:
 
         # add to internal dict used for reporting when the session ends
         self.auth_attempts.append({
-            'timestamp': entry['timestamp'].strftime('%Y-%m-%d %H:%M:%S.%f'),
+            'timestamp': entry['timestamp'],
             'username': entry['username'],
             'password': entry['password'],
         })
