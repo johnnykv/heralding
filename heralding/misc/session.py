@@ -72,7 +72,7 @@ class Session:
     def add_auth_attempt(self, _type, **kwargs):
         
         # constructs dict to transmitted right away.
-        entry = {'timestamp': datetime.utcnow(),
+        entry = {'timestamp': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f'),
                  'session_id': str(self.id),
                  'auth_id': str(uuid.uuid4()),
                  'source_ip': self.source_ip,
