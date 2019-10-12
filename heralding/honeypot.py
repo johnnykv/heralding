@@ -81,7 +81,7 @@ class Honeypot:
         if self.config['hash_cracker']['enabled']:
             self.setup_wordlist()
 
-            # start activity logging
+        # start activity logging
         if 'activity_logging' in self.config:
             if 'file' in self.config['activity_logging'] and self.config['activity_logging']['file']['enabled']:
                 auth_log = self.config['activity_logging']['file']['authentication_log_file']
@@ -128,7 +128,6 @@ class Honeypot:
                 options = self.config['capabilities'][cap_name]
                 # capabilities are only allowed to append to the session list
                 cap = c(options, self.loop)
-
                 try:
                     # # Convention: All capability names which end in 's' will be wrapped in ssl.
                     if cap_name.endswith('s'):
@@ -166,15 +165,14 @@ class Honeypot:
                 except Exception as ex:
                     error_message = "Could not start {0} server on port {1}. Error: {2}".format(c.__name__, port, ex)
                     logger.error(error_message)
-                    self.loop.run_until_complete(common.cancel_all_pending_tasks(self.loop))
-                    sys.exit(error_message)
+                    raise ex
                 else:
                     logger.info('Started %s capability listening on port %s', c.__name__, port)
         ReportingRelay.logListenPorts(listen_ports)
 
     def stop(self):
         """Stops services"""
-        if self.config['capabilities']['ssh']['enabled']:
+        if self.config['capabilities']['ssh']['enabled'] and self.SshClass != None:
             for conn in self.SshClass.connections_list:
                 conn.close()
                 self.loop.run_until_complete(conn.wait_closed())

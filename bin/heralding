@@ -130,9 +130,18 @@ if __name__ == '__main__':
     reporting_relay_task.add_done_callback(on_unhandled_task_exception)
 
     honeypot = heralding.honeypot.Honeypot(config, loop)
-    honeypot.start()
+    try:
+        honeypot.start()
+    except Exception as ex:
+        honeypot.stop()
+        reporting_relay.stop()
+        # We give reporting_relay a chance to be finished.
+        loop.run_until_complete(asyncio.sleep(0.5))
+        loop.close()
+        sys.exit(ex)
 
     drop_privileges()
+
     try:
         loop.run_forever()
     except KeyboardInterrupt:

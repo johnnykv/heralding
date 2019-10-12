@@ -38,11 +38,12 @@ async def cancel_all_pending_tasks(loop=None):
     pending.remove(asyncio.Task.current_task(loop=loop))
     for task in pending:
         # We give task only 1 second to die.
-        task.cancel()
-        try:
-            await asyncio.wait_for(task, timeout=1, loop=loop)
-        except (asyncio.CancelledError, KeyboardInterrupt, ConnectionResetError):
-            pass
+        if not task.done():
+            task.cancel()
+            try:
+                await asyncio.wait_for(task, timeout=5, loop=loop)
+            except (asyncio.CancelledError, KeyboardInterrupt, ConnectionResetError):
+                pass
 
 
 def generate_self_signed_cert(cert_country, cert_state, cert_organization, cert_locality, cert_organizational_unit,
