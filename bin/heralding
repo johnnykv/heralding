@@ -45,7 +45,6 @@ def setup_logging(logfile, verbose):
     root_logger.setLevel(loglevel)
 
     console_log = logging.StreamHandler()
-    console_log.addFilter(LogFilter())
     console_log.setFormatter(default_formatter)
     console_log.setLevel(loglevel)
     root_logger.addHandler(console_log)
@@ -59,6 +58,11 @@ def setup_logging(logfile, verbose):
         file_log.setFormatter(default_formatter)
     file_log.setLevel(loglevel)
     root_logger.addHandler(file_log)
+
+    # ensure the filer is applied to all handlers
+    for handler in root_logger.handlers:
+        handler.addFilter(LogFilter())
+
 
 
 class LogFilter(logging.Filter):
