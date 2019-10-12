@@ -59,7 +59,8 @@ class HTTPHandler(AsyncBaseHTTPRequestHandler):
             hdr = self.headers['Authorization']
             _, enc_uname_pwd = hdr.split(' ')
             dec_uname_pwd = str(base64.b64decode(enc_uname_pwd), 'utf-8')
-            uname, pwd = dec_uname_pwd.split(':')
+            pos = dec_uname_pwd.find(':')
+            uname, pwd = dec_uname_pwd[:pos], dec_uname_pwd[pos+1:len(dec_uname_pwd)]
             self._session.add_auth_attempt('plaintext', username=uname, password=pwd)
             self.do_AUTHHEAD()
             headers_bytes = bytes(self.headers['Authorization'], 'utf-8')
