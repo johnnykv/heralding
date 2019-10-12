@@ -120,8 +120,13 @@ if __name__ == '__main__':
         logger.warning('Using default config file: "{0}", if you want to customize values please '
                        'copy this file to the current working directory'.format(config_file))
 
-    with open(config_file, "r") as _file:
-        config = yaml.safe_load(_file.read())
+    try:
+        with open(config_file, "r") as _file:
+            config = yaml.safe_load(_file.read())
+    except Exception as ex:
+        error_message = "Error while reading config file {0}: {1}.".format(config_file, ex)
+        logger.error(error_message)
+        sys.exit(error_message)
 
     loop = asyncio.get_event_loop()
     # startup reporting relay
