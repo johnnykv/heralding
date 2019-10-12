@@ -1,5 +1,5 @@
 Heralding |travis badge| |version badge| |codacy badge|
-=======================
+=======================================================
 
 .. |travis badge| image:: https://img.shields.io/travis/johnnykv/heralding/master.svg
    :target: https://travis-ci.org/johnnykv/heralding
