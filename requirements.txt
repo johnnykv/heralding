@@ -1,4 +1,4 @@
-pycrypto>=2.6.0
+pycryptodome
 nose
 aiosmtpd
 asyncssh>=2.0.0
