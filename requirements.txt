@@ -1,7 +1,7 @@
 pycrypto>=2.6.0
 nose
 aiosmtpd
-asyncssh
+asyncssh>=2.0.0
 pyOpenSSL
 pyaml
 pyzmq

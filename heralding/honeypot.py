@@ -149,7 +149,7 @@ class Honeypot:
 
                         server_coro = asyncssh.create_server(lambda: SshClass(ssh_options, self.loop),
                                                              bind_host, port, server_host_keys=[ssh_key_file],
-                                                             login_timeout=cap.timeout, loop=self.loop)
+                                                             login_timeout=cap.timeout)
                     elif cap_name == 'rdp':
                         pem_file = '{0}.pem'.format(cap_name)
                         self.create_cert_if_not_exists(cap_name, pem_file)
