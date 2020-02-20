@@ -142,6 +142,7 @@ if __name__ == '__main__':
     try:
         honeypot.start()
     except Exception as ex:
+        logger.exception(ex)
         honeypot.stop()
         reporting_relay.stop()
         # We give reporting_relay a chance to be finished.
