@@ -44,7 +44,7 @@ class SshTests(unittest.TestCase):
         async def run_client():
             async with asyncssh.connect('localhost', port=8888,
                                         username='johnny', password='secretpw',
-                                        known_hosts=None, loop=self.loop) as _:
+                                        known_hosts=None) as _:
                 pass
 
         ssh_key_file = 'ssh.key'
@@ -52,10 +52,10 @@ class SshTests(unittest.TestCase):
 
         options = {'enabled': 'True', 'port': 8888}
         server_coro = asyncssh.create_server(lambda: SSH(options, self.loop), '0.0.0.0', 8888,
-                                             server_host_keys=['ssh.key'], loop=self.loop)
+                                             server_host_keys=['ssh.key'])
         self.server = self.loop.run_until_complete(server_coro)
 
         try:
             self.loop.run_until_complete(run_client())
-        except asyncssh.Error:
+        except asyncssh.misc.PermissionDenied:
             pass
