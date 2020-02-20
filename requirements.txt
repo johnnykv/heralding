@@ -9,3 +9,4 @@ psycopg2
 hpfeeds3
 rsa
 requests
+pymysql

@@ -72,7 +72,7 @@ class SmtpTests(unittest.TestCase):
         """
         def encode_cram_md5(challenge, user, password):
             challenge = base64.decodebytes(challenge)
-            response = user + b' ' + bytes(hmac.HMAC(password, challenge).hexdigest(), 'utf-8')
+            response = user + b' ' + bytes(hmac.HMAC(password, challenge, digestmod="md5").hexdigest(), 'utf-8')
             return str(base64.b64encode(response), 'utf-8')
 
         def smtp_auth_cram_md5():
