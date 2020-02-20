@@ -16,6 +16,7 @@
 import os
 import logging
 import asyncio
+import requests
 
 from OpenSSL import crypto
 from Crypto.PublicKey import RSA
@@ -74,3 +75,9 @@ def generate_self_signed_cert(cert_country, cert_state, cert_organization, cert_
     priv_key_text = rsa_key.exportKey('PEM', pkcs=1)
 
     return cert_text, priv_key_text
+
+def get_public_ip():
+    r = requests.get('https://api.ipify.org')
+    r.raise_for_status()
+    return r.text
+        

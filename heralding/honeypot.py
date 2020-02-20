@@ -30,8 +30,6 @@ from heralding.reporting.curiosum_integration import CuriosumIntegration
 
 import asyncssh
 
-from ipify import get_ip
-
 logger = logging.getLogger(__name__)
 
 
@@ -53,7 +51,7 @@ class Honeypot:
     async def _record_and_lookup_public_ip(self):
         while True:
             try:
-                Honeypot.public_ip = get_ip()
+                Honeypot.public_ip = common.get_public_ip()
                 logger.warning('Found public ip: %s', Honeypot.public_ip)
             except Exception as ex:
                 Honeypot.public_ip = ''
