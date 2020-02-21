@@ -17,5 +17,5 @@ from enum import Enum
 
 
 class SocketNames(Enum):
-    # when relay receives messages it will publish them on INTERNAL_REPORTING
-    INTERNAL_REPORTING = 'inproc://internalReporting'
+  # when relay receives messages it will publish them on INTERNAL_REPORTING
+  INTERNAL_REPORTING = 'inproc://internalReporting'

@@ -18,9 +18,10 @@ import yaml
 
 
 class ConfigFileTests(unittest.TestCase):
-    def test_config_file(self):
-        """Tests that the yaml config file is valid YAML"""
-        with open("heralding/heralding.yml", "r") as f:
-            file_content = f.read()
-        # excepts if not valid
-        yaml.safe_load(file_content)
+
+  def test_config_file(self):
+    """Tests that the yaml config file is valid YAML"""
+    with open("heralding/heralding.yml", "r") as f:
+      file_content = f.read()
+    # excepts if not valid
+    yaml.safe_load(file_content)

@@ -13,7 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
 import logging
 
 from heralding.capabilities.handlerbase import HandlerBase
@@ -23,6 +22,6 @@ logger = logging.getLogger(__name__)
 
 
 class Imaps(Imap, HandlerBase):
-    """
+  """
     This class will get wrapped in SSL. This is possible because we by convention  wrap
     all capabilities that ends with the letter 's' in SSL."""

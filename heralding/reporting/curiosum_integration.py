@@ -26,43 +26,44 @@ logger = logging.getLogger(__name__)
 
 
 class CuriosumIntegration(BaseLogger):
-    def __init__(self, port):
-        super().__init__()
 
-        zmq_socket = 'tcp://127.0.0.1:{0}'.format(port)
+  def __init__(self, port):
+    super().__init__()
 
-        context = heralding.misc.zmq_context
-        self.socket = context.socket(zmq.PUSH)
-        self.socket.bind(zmq_socket)
-        self.listen_ports = []
-        self.last_listen_ports_transmit = datetime.now()
+    zmq_socket = 'tcp://127.0.0.1:{0}'.format(port)
 
-        logger.info(
-            'Curiosum logger started using files: %s', zmq_socket)
+    context = heralding.misc.zmq_context
+    self.socket = context.socket(zmq.PUSH)
+    self.socket.bind(zmq_socket)
+    self.listen_ports = []
+    self.last_listen_ports_transmit = datetime.now()
 
-    def loggerStopped(self):
-        self.socket.close()
+    logger.info('Curiosum logger started using files: %s', zmq_socket)
 
-    def _no_block_send(self, topic, data):
-        try:
-            self.socket.send_string('{0} {1}'.format(
-                topic, json.dumps(data)), zmq.NOBLOCK)
-        except zmq.ZMQError as e:
-            logger.warning('Error while sending: %s', e)
+  def loggerStopped(self):
+    self.socket.close()
 
-    def handle_session_log(self, data):
-        message = {
-            'SessionID': str(data['session_id']),
-            'DstPort': data['destination_port'],
-            'SrcIP': data['source_ip'],
-            'SrcPort': data['source_port'],
-            'SessionEnded': data['session_ended']}
-        self._no_block_send('session_ended', message)
+  def _no_block_send(self, topic, data):
+    try:
+      self.socket.send_string('{0} {1}'.format(topic, json.dumps(data)),
+                              zmq.NOBLOCK)
+    except zmq.ZMQError as e:
+      logger.warning('Error while sending: %s', e)
 
-    def _execute_regulary(self):
-        if (datetime.now() - self.last_listen_ports_transmit).total_seconds() > 5:
-            self._no_block_send('listen_ports', self.listen_ports)
-            self.last_listen_ports_transmit = datetime.now()
+  def handle_session_log(self, data):
+    message = {
+        'SessionID': str(data['session_id']),
+        'DstPort': data['destination_port'],
+        'SrcIP': data['source_ip'],
+        'SrcPort': data['source_port'],
+        'SessionEnded': data['session_ended']
+    }
+    self._no_block_send('session_ended', message)
 
-    def handle_listen_ports(self, data):
-        self.listen_ports = data
+  def _execute_regulary(self):
+    if (datetime.now() - self.last_listen_ports_transmit).total_seconds() > 5:
+      self._no_block_send('listen_ports', self.listen_ports)
+      self.last_listen_ports_transmit = datetime.now()
+
+  def handle_listen_ports(self, data):
+    self.listen_ports = data

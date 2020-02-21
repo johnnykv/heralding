@@ -23,33 +23,36 @@ logger = logging.getLogger(__name__)
 
 
 class HpFeedsLogger(BaseLogger):
-    def __init__(self, session_channel, auth_channel, host, port, ident, secret):
-        super().__init__()
-        self.session_channel = session_channel
-        self.auth_channel = auth_channel
-        self.host = host
-        self.port = port
-        self.ident = ident
-        self.secret = secret
-        self._initial_connection_happend = False
-        logger.info('HpFeeds logger started.')
 
-    def start(self):
-        if not self._initial_connection_happend:
-            self.hp_connection = hpfeeds.new(self.host, self.port, self.ident, self.secret, True)
-            self._initial_connection_happend = True
-            logger.info('HpFeeds logger connected to %s:%s.', self.host, self.port)
-        # after we established that we can connect enter the subscribe and enter the polling loop
-        super().start()
+  def __init__(self, session_channel, auth_channel, host, port, ident, secret):
+    super().__init__()
+    self.session_channel = session_channel
+    self.auth_channel = auth_channel
+    self.host = host
+    self.port = port
+    self.ident = ident
+    self.secret = secret
+    self._initial_connection_happend = False
+    logger.info('HpFeeds logger started.')
 
-    def loggerStopped(self):
-        self.stop()
-        self.close()
+  def start(self):
+    if not self._initial_connection_happend:
+      self.hp_connection = hpfeeds.new(self.host, self.port, self.ident,
+                                       self.secret, True)
+      self._initial_connection_happend = True
+      logger.info('HpFeeds logger connected to %s:%s.', self.host, self.port)
+    # after we established that we can connect enter the subscribe and enter the polling loop
+    super().start()
 
-    def handle_auth_log(self, data):
-        if self._initial_connection_happend:
-            self.hp_connection.publish(self.auth_channel, json.dumps(data).encode())
+  def loggerStopped(self):
+    self.stop()
+    self.close()
 
-    def handle_session_log(self, data):
-        if self._initial_connection_happend:
-            self.hp_connection.publish(self.session_channel, json.dumps(data).encode())
+  def handle_auth_log(self, data):
+    if self._initial_connection_happend:
+      self.hp_connection.publish(self.auth_channel, json.dumps(data).encode())
+
+  def handle_session_log(self, data):
+    if self._initial_connection_happend:
+      self.hp_connection.publish(self.session_channel,
+                                 json.dumps(data).encode())

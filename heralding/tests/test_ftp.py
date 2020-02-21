@@ -24,43 +24,57 @@ from heralding.reporting.reporting_relay import ReportingRelay
 
 
 class FtpTests(unittest.TestCase):
-    def setUp(self):
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(None)
 
-        self.reporting_relay = ReportingRelay()
-        self.reporting_relay_task = self.loop.run_in_executor(None, self.reporting_relay.start)
+  def setUp(self):
+    self.loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(None)
 
-    def tearDown(self):
-        self.reporting_relay.stop()
-        # We give reporting_relay a chance to be finished
-        self.loop.run_until_complete(self.reporting_relay_task)
+    self.reporting_relay = ReportingRelay()
+    self.reporting_relay_task = self.loop.run_in_executor(
+        None, self.reporting_relay.start)
 
-        self.server.close()
-        self.loop.run_until_complete(self.server.wait_closed())
+  def tearDown(self):
+    self.reporting_relay.stop()
+    # We give reporting_relay a chance to be finished
+    self.loop.run_until_complete(self.reporting_relay_task)
 
-        self.loop.close()
+    self.server.close()
+    self.loop.run_until_complete(self.server.wait_closed())
 
-    def test_login(self):
-        """Testing different login combinations"""
+    self.loop.close()
 
-        def ftp_login():
-            ftp_client = FTP()
-            ftp_client.connect('127.0.0.1', 8888, 1)
-            # expect perm exception
-            try:
-                ftp_client.login('james', 'bond')
-                _ = ftp_client.getresp()  # NOQA
-            except ftplib.error_perm:
-                ftp_client.quit()
+  def test_login(self):
+    """Testing different login combinations"""
 
-        options = {'enabled': 'True', 'port': 0, 'banner': 'Test Banner', 'users': {'test': 'test'},
-                   'protocol_specific_data': {'max_attempts': 3, 'banner': 'test banner', 'syst_type': 'Test Type'}}
+    def ftp_login():
+      ftp_client = FTP()
+      ftp_client.connect('127.0.0.1', 8888, 1)
+      # expect perm exception
+      try:
+        ftp_client.login('james', 'bond')
+        _ = ftp_client.getresp()  # NOQA
+      except ftplib.error_perm:
+        ftp_client.quit()
 
-        ftp_capability = ftp.ftp(options, self.loop)
+    options = {
+        'enabled': 'True',
+        'port': 0,
+        'banner': 'Test Banner',
+        'users': {
+            'test': 'test'
+        },
+        'protocol_specific_data': {
+            'max_attempts': 3,
+            'banner': 'test banner',
+            'syst_type': 'Test Type'
+        }
+    }
 
-        server_coro = asyncio.start_server(ftp_capability.handle_session, '0.0.0.0', 8888, loop=self.loop)
-        self.server = self.loop.run_until_complete(server_coro)
+    ftp_capability = ftp.ftp(options, self.loop)
 
-        ftp_task = self.loop.run_in_executor(None, ftp_login)
-        self.loop.run_until_complete(ftp_task)
+    server_coro = asyncio.start_server(
+        ftp_capability.handle_session, '0.0.0.0', 8888, loop=self.loop)
+    self.server = self.loop.run_until_complete(server_coro)
+
+    ftp_task = self.loop.run_in_executor(None, ftp_login)
+    self.loop.run_until_complete(ftp_task)

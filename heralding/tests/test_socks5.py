@@ -21,48 +21,51 @@ from heralding.reporting.reporting_relay import ReportingRelay
 
 
 class Socks5Tests(unittest.TestCase):
-    def setUp(self):
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(None)
 
-        self.reporting_relay = ReportingRelay()
-        self.reporting_relay_task = self.loop.run_in_executor(None, self.reporting_relay.start)
+  def setUp(self):
+    self.loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(None)
 
-    def tearDown(self):
-        self.reporting_relay.stop()
-        # We give reporting_relay a chance to be finished
-        self.loop.run_until_complete(self.reporting_relay_task)
+    self.reporting_relay = ReportingRelay()
+    self.reporting_relay_task = self.loop.run_in_executor(
+        None, self.reporting_relay.start)
 
-        self.server.close()
-        self.loop.run_until_complete(self.server.wait_closed())
+  def tearDown(self):
+    self.reporting_relay.stop()
+    # We give reporting_relay a chance to be finished
+    self.loop.run_until_complete(self.reporting_relay_task)
 
-        self.loop.close()
+    self.server.close()
+    self.loop.run_until_complete(self.server.wait_closed())
 
-    def test_socks_authentication(self):
-        async def socks_auth():
-            reader, writer = await asyncio.open_connection('127.0.0.1', 8888,
-                                                           loop=self.loop)
+    self.loop.close()
 
-            # Greeting to the server. version+authmethod number+authmethod
-            client_greeting = socks.SOCKS_VERSION + b"\x01" + socks.AUTH_METHOD
-            writer.write(client_greeting)
+  def test_socks_authentication(self):
 
-            # Receive version+chosen authmethod
-            _ = await reader.read(2)
+    async def socks_auth():
+      reader, writer = await asyncio.open_connection(
+          '127.0.0.1', 8888, loop=self.loop)
 
-            # Send credentials.
-            # version+username len+username+password len+password
-            credentials = b"\x05\x08username\x08password"
-            writer.write(credentials)
+      # Greeting to the server. version+authmethod number+authmethod
+      client_greeting = socks.SOCKS_VERSION + b"\x01" + socks.AUTH_METHOD
+      writer.write(client_greeting)
 
-            # Receive authmethod+\xff
-            res = await reader.read(2)
-            self.assertEqual(res, socks.AUTH_METHOD + socks.SOCKS_FAIL)
+      # Receive version+chosen authmethod
+      _ = await reader.read(2)
 
-        options = {'enabled': 'True', 'port': 8888, 'timeout': 30}
-        capability = socks.Socks5(options, self.loop)
+      # Send credentials.
+      # version+username len+username+password len+password
+      credentials = b"\x05\x08username\x08password"
+      writer.write(credentials)
 
-        server_coro = asyncio.start_server(capability.handle_session, '127.0.0.1',
-                                           8888, loop=self.loop)
-        self.server = self.loop.run_until_complete(server_coro)
-        self.loop.run_until_complete(socks_auth())
+      # Receive authmethod+\xff
+      res = await reader.read(2)
+      self.assertEqual(res, socks.AUTH_METHOD + socks.SOCKS_FAIL)
+
+    options = {'enabled': 'True', 'port': 8888, 'timeout': 30}
+    capability = socks.Socks5(options, self.loop)
+
+    server_coro = asyncio.start_server(
+        capability.handle_session, '127.0.0.1', 8888, loop=self.loop)
+    self.server = self.loop.run_until_complete(server_coro)
+    self.loop.run_until_complete(socks_auth())

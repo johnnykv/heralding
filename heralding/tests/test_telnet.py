@@ -24,57 +24,68 @@ from heralding.reporting.reporting_relay import ReportingRelay
 
 
 class TelnetTests(unittest.TestCase):
-    def setUp(self):
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(None)
 
-        self.reporting_relay = ReportingRelay()
-        self.reporting_relay_task = self.loop.run_in_executor(None, self.reporting_relay.start)
+  def setUp(self):
+    self.loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(None)
 
-    def tearDown(self):
-        self.reporting_relay.stop()
-        # We give reporting_relay a chance to be finished
-        self.loop.run_until_complete(self.reporting_relay_task)
+    self.reporting_relay = ReportingRelay()
+    self.reporting_relay_task = self.loop.run_in_executor(
+        None, self.reporting_relay.start)
 
-        self.server.close()
-        self.loop.run_until_complete(self.server.wait_closed())
+  def tearDown(self):
+    self.reporting_relay.stop()
+    # We give reporting_relay a chance to be finished
+    self.loop.run_until_complete(self.reporting_relay_task)
 
-        self.loop.run_until_complete(cancel_all_pending_tasks(self.loop))
-        self.loop.close()
+    self.server.close()
+    self.loop.run_until_complete(self.server.wait_closed())
 
-    def test_invalid_login(self):
-        """Tests if telnet server responds correctly to a invalid login attempt."""
+    self.loop.run_until_complete(cancel_all_pending_tasks(self.loop))
+    self.loop.close()
 
-        def telnet_login():
-            client = telnetlib.Telnet('localhost', 2503)
-            # set this to 1 if having problems with this test
-            client.set_debuglevel(0)
-            # this disables all command negotiation.
-            client.set_option_negotiation_callback(self.cb)
-            # Expect username as first output
+  def test_invalid_login(self):
+    """Tests if telnet server responds correctly to a invalid login attempt."""
 
-            reply = client.read_until(b'Username: ', 1)
-            self.assertEqual(b'Username: ', reply)
+    def telnet_login():
+      client = telnetlib.Telnet('localhost', 2503)
+      # set this to 1 if having problems with this test
+      client.set_debuglevel(0)
+      # this disables all command negotiation.
+      client.set_option_negotiation_callback(self.cb)
+      # Expect username as first output
 
-            client.write(b'someuser' + b'\r\n')
-            reply = client.read_until(b'Password: ', 5)
-            self.assertTrue(reply.endswith(b'Password: '))
+      reply = client.read_until(b'Username: ', 1)
+      self.assertEqual(b'Username: ', reply)
 
-            client.write(b'somepass' + b'\r\n')
-            reply = client.read_until(b'\n', 5)
-            self.assertTrue(b'\n' in reply)
+      client.write(b'someuser' + b'\r\n')
+      reply = client.read_until(b'Password: ', 5)
+      self.assertTrue(reply.endswith(b'Password: '))
 
-            client.close()
+      client.write(b'somepass' + b'\r\n')
+      reply = client.read_until(b'\n', 5)
+      self.assertTrue(b'\n' in reply)
 
-        options = {'enabled': 'True', 'port': 2503, 'protocol_specific_data': {'max_attempts': 3},
-                   'users': {'test': 'test'}}
-        telnet_cap = telnet.Telnet(options, self.loop)
+      client.close()
 
-        server_coro = asyncio.start_server(telnet_cap.handle_session, '0.0.0.0', 2503, loop=self.loop)
-        self.server = self.loop.run_until_complete(server_coro)
+    options = {
+        'enabled': 'True',
+        'port': 2503,
+        'protocol_specific_data': {
+            'max_attempts': 3
+        },
+        'users': {
+            'test': 'test'
+        }
+    }
+    telnet_cap = telnet.Telnet(options, self.loop)
 
-        telnet_task = self.loop.run_in_executor(None, telnet_login)
-        self.loop.run_until_complete(telnet_task)
+    server_coro = asyncio.start_server(
+        telnet_cap.handle_session, '0.0.0.0', 2503, loop=self.loop)
+    self.server = self.loop.run_until_complete(server_coro)
 
-    def cb(self, socket, command, option):
-        return
+    telnet_task = self.loop.run_in_executor(None, telnet_login)
+    self.loop.run_until_complete(telnet_task)
+
+  def cb(self, socket, command, option):
+    return

@@ -30,41 +30,44 @@ logger = logging.getLogger(__name__)
 
 
 class Vnc(HandlerBase):
-    async def execute_capability(self, reader, writer, session):
-        await self._handle_session(reader, writer, session)
 
-    async def _handle_session(self, reader, writer, session):
-        writer.write(RFB_VERSION)
-        client_version = await reader.read(1024)
+  async def execute_capability(self, reader, writer, session):
+    await self._handle_session(reader, writer, session)
 
-        if client_version == RFB_VERSION:
-            await self.security_handshake(reader, writer, session)
-        else:
-            session.end_session()
+  async def _handle_session(self, reader, writer, session):
+    writer.write(RFB_VERSION)
+    client_version = await reader.read(1024)
 
-    async def security_handshake(self, reader, writer, session):
-        writer.write(AUTH_METHODS)
-        sec_method = await reader.read(1024)
+    if client_version == RFB_VERSION:
+      await self.security_handshake(reader, writer, session)
+    else:
+      session.end_session()
 
-        if sec_method == VNC_AUTH:
-            await self.do_vnc_authentication(reader, writer, session)
-        else:
-            session.end_session()
+  async def security_handshake(self, reader, writer, session):
+    writer.write(AUTH_METHODS)
+    sec_method = await reader.read(1024)
 
-    async def do_vnc_authentication(self, reader, writer, session):
-        challenge = os.urandom(16)
-        writer.write(challenge)
+    if sec_method == VNC_AUTH:
+      await self.do_vnc_authentication(reader, writer, session)
+    else:
+      session.end_session()
 
-        client_response = await reader.read(1024)
-        writer.write(AUTH_FAILED)
+  async def do_vnc_authentication(self, reader, writer, session):
+    challenge = os.urandom(16)
+    writer.write(challenge)
 
-        # try to decrypt the hash
-        dkey = crack_hash(challenge, client_response)
-        if dkey:
-            session.add_auth_attempt('cracked', password=dkey)
-        else:
-            hash_data = {'challenge': binascii.hexlify(challenge).decode(),
-                         'response': binascii.hexlify(client_response).decode()}
-            session.add_auth_attempt('des_challenge', password_hash=hash_data)
+    client_response = await reader.read(1024)
+    writer.write(AUTH_FAILED)
 
-        session.end_session()
+    # try to decrypt the hash
+    dkey = crack_hash(challenge, client_response)
+    if dkey:
+      session.add_auth_attempt('cracked', password=dkey)
+    else:
+      hash_data = {
+          'challenge': binascii.hexlify(challenge).decode(),
+          'response': binascii.hexlify(client_response).decode()
+      }
+      session.add_auth_attempt('des_challenge', password_hash=hash_data)
+
+    session.end_session()

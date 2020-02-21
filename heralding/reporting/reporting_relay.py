@@ -24,57 +24,62 @@ logger = logging.getLogger(__name__)
 
 
 class ReportingRelay:
-    _logQueue = None
+  _logQueue = None
 
-    def __init__(self):
-        # we are singleton
-        assert ReportingRelay._logQueue is None
-        ReportingRelay._logQueue = queue.Queue(maxsize=10000)
+  def __init__(self):
+    # we are singleton
+    assert ReportingRelay._logQueue is None
+    ReportingRelay._logQueue = queue.Queue(maxsize=10000)
 
-        self.enabled = True
+    self.enabled = True
 
-        context = heralding.misc.zmq_context
-        self.internalReportingPublisher = context.socket(zmq.PUB)
+    context = heralding.misc.zmq_context
+    self.internalReportingPublisher = context.socket(zmq.PUB)
 
-    @staticmethod
-    def logAuthAttempt(data):
-        ReportingRelay._logQueue.put({'message_type': 'auth',
-                                      'content': data})
+  @staticmethod
+  def logAuthAttempt(data):
+    ReportingRelay._logQueue.put({'message_type': 'auth', 'content': data})
 
-    @staticmethod
-    def logSessionInfo(data):
-        if ReportingRelay._logQueue is not None:
-            ReportingRelay._logQueue.put({'message_type': 'session_info',
-                                          'content': data})
+  @staticmethod
+  def logSessionInfo(data):
+    if ReportingRelay._logQueue is not None:
+      ReportingRelay._logQueue.put({
+          'message_type': 'session_info',
+          'content': data
+      })
 
-    @staticmethod
-    def logListenPorts(data):
-        if ReportingRelay._logQueue is not None:
-            ReportingRelay._logQueue.put({'message_type': 'listen_ports',
-                                          'content': data})
+  @staticmethod
+  def logListenPorts(data):
+    if ReportingRelay._logQueue is not None:
+      ReportingRelay._logQueue.put({
+          'message_type': 'listen_ports',
+          'content': data
+      })
 
-    @staticmethod
-    def logAuxiliaryData(data):
-        if ReportingRelay._logQueue is not None:
-            ReportingRelay._logQueue.put({'message_type': 'aux_info',
-                                          'content': data})
+  @staticmethod
+  def logAuxiliaryData(data):
+    if ReportingRelay._logQueue is not None:
+      ReportingRelay._logQueue.put({
+          'message_type': 'aux_info',
+          'content': data
+      })
 
-    def start(self):
-        self.internalReportingPublisher.bind(SocketNames.INTERNAL_REPORTING.value)
+  def start(self):
+    self.internalReportingPublisher.bind(SocketNames.INTERNAL_REPORTING.value)
 
-        while self.enabled or ReportingRelay._logQueue.qsize() > 0:
-                try:
-                    data = ReportingRelay._logQueue.get(timeout=0.5)
-                    self.internalReportingPublisher.send_pyobj(data)
-                except queue.Empty:
-                    pass
+    while self.enabled or ReportingRelay._logQueue.qsize() > 0:
+      try:
+        data = ReportingRelay._logQueue.get(timeout=0.5)
+        self.internalReportingPublisher.send_pyobj(data)
+      except queue.Empty:
+        pass
 
-        # None signals 'going down' to listeners
-        self.internalReportingPublisher.send_pyobj(None)
-        self.internalReportingPublisher.close()
+    # None signals 'going down' to listeners
+    self.internalReportingPublisher.send_pyobj(None)
+    self.internalReportingPublisher.close()
 
-        # None is also used to signal we are all done
-        ReportingRelay._logQueue = None
+    # None is also used to signal we are all done
+    ReportingRelay._logQueue = None
 
-    def stop(self):
-        self.enabled = False
+  def stop(self):
+    self.enabled = False

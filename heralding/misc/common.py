@@ -25,59 +25,61 @@ logger = logging.getLogger(__name__)
 
 
 def on_unhandled_task_exception(task):
-    if not task.cancelled():
-        task_exc = task.exception()
-        if task_exc:
-            logger.exception('Stopping because %s died: %s', task, task_exc)
-            os._exit(1)
+  if not task.cancelled():
+    task_exc = task.exception()
+    if task_exc:
+      logger.exception('Stopping because %s died: %s', task, task_exc)
+      os._exit(1)
 
 
 async def cancel_all_pending_tasks(loop=None):
-    if loop is None:
-        loop = asyncio.get_event_loop()
-    pending = asyncio.Task.all_tasks(loop=loop)
-    pending.remove(asyncio.Task.current_task(loop=loop))
-    for task in pending:
-        # We give task only 1 second to die.
-        if not task.done():
-            task.cancel()
-            try:
-                await asyncio.wait_for(task, timeout=5, loop=loop)
-            except (asyncio.CancelledError, KeyboardInterrupt, ConnectionResetError):
-                pass
+  if loop is None:
+    loop = asyncio.get_event_loop()
+  pending = asyncio.Task.all_tasks(loop=loop)
+  pending.remove(asyncio.Task.current_task(loop=loop))
+  for task in pending:
+    # We give task only 1 second to die.
+    if not task.done():
+      task.cancel()
+      try:
+        await asyncio.wait_for(task, timeout=5, loop=loop)
+      except (asyncio.CancelledError, KeyboardInterrupt, ConnectionResetError):
+        pass
 
 
-def generate_self_signed_cert(cert_country, cert_state, cert_organization, cert_locality, cert_organizational_unit,
+def generate_self_signed_cert(cert_country, cert_state, cert_organization,
+                              cert_locality, cert_organizational_unit,
                               cert_common_name, valid_days, serial_number):
-    rsa_key = RSA.generate(2048)
+  rsa_key = RSA.generate(2048)
 
-    pk = crypto.load_privatekey(crypto.FILETYPE_PEM, rsa_key.exportKey('PEM', pkcs=1))
-    cert = crypto.X509()
-    sub = cert.get_subject()
-    sub.CN = cert_common_name
-    sub.C = cert_country
-    sub.ST = cert_state
-    sub.L = cert_locality
-    sub.O = cert_organization
+  pk = crypto.load_privatekey(crypto.FILETYPE_PEM,
+                              rsa_key.exportKey('PEM', pkcs=1))
+  cert = crypto.X509()
+  sub = cert.get_subject()
+  sub.CN = cert_common_name
+  sub.C = cert_country
+  sub.ST = cert_state
+  sub.L = cert_locality
+  sub.O = cert_organization
 
-    # optional
-    if cert_organizational_unit:
-        sub.OU = cert_organizational_unit
+  # optional
+  if cert_organizational_unit:
+    sub.OU = cert_organizational_unit
 
-    cert.set_serial_number(serial_number)
-    cert.gmtime_adj_notBefore(0)
-    cert.gmtime_adj_notAfter(valid_days * 24 * 60 * 60)  # Valid for a year
-    cert.set_issuer(sub)
-    cert.set_pubkey(pk)
-    cert.sign(pk, 'sha1')
+  cert.set_serial_number(serial_number)
+  cert.gmtime_adj_notBefore(0)
+  cert.gmtime_adj_notAfter(valid_days * 24 * 60 * 60)  # Valid for a year
+  cert.set_issuer(sub)
+  cert.set_pubkey(pk)
+  cert.sign(pk, 'sha1')
 
-    cert_text = crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
-    priv_key_text = rsa_key.exportKey('PEM', pkcs=1)
+  cert_text = crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
+  priv_key_text = rsa_key.exportKey('PEM', pkcs=1)
 
-    return cert_text, priv_key_text
+  return cert_text, priv_key_text
+
 
 def get_public_ip():
-    r = requests.get('https://api.ipify.org')
-    r.raise_for_status()
-    return r.text
-        
+  r = requests.get('https://api.ipify.org')
+  r.raise_for_status()
+  return r.text

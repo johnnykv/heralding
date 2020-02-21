@@ -19,14 +19,15 @@ from heralding.reporting.hpfeeds_logger import HpFeedsLogger
 
 
 class FtpTests(unittest.TestCase):
-    def test_hpfeeds(self):
-        """Basic test for hpfeeds reporter"""
 
-        session_channel = "heralding.session"
-        auth_channel = "heraldign.auth"
-        host = "127.0.0.1"
-        port = 12345
-        ident = "atzqøl"
-        secret = "toosecret"
+  def test_hpfeeds(self):
+    """Basic test for hpfeeds reporter"""
 
-        HpFeedsLogger(session_channel, auth_channel, host, port, ident, secret)
+    session_channel = "heralding.session"
+    auth_channel = "heraldign.auth"
+    host = "127.0.0.1"
+    port = 12345
+    ident = "atzqøl"
+    secret = "toosecret"
+
+    HpFeedsLogger(session_channel, auth_channel, host, port, ident, secret)

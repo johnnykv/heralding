@@ -6,45 +6,55 @@
 
 import struct
 
+
 class Integer:
-    FORMAT = ""
+  FORMAT = ""
 
-    @classmethod
-    def pack(cls, value):
-        data_bytes = struct.pack(cls.FORMAT, value)
+  @classmethod
+  def pack(cls, value):
+    data_bytes = struct.pack(cls.FORMAT, value)
 
-        return data_bytes
+    return data_bytes
+
 
 # 8 bits
 class Int8(Integer):
-    FORMAT = "<b"
+  FORMAT = "<b"
+
 
 class Uint8(Integer):
-    FORMAT = "<B"
+  FORMAT = "<B"
+
 
 # 16 bits
 class Int16LE(Integer):
-    FORMAT = "<h"
+  FORMAT = "<h"
+
 
 class Int16BE(Integer):
-    FORMAT = ">h"
+  FORMAT = ">h"
+
 
 class Uint16LE(Integer):
-    FORMAT = "<H"
+  FORMAT = "<H"
+
 
 class Uint16BE(Integer):
-    FORMAT = ">H"
+  FORMAT = ">H"
+
 
 # 32 bits
 class Int32LE(Integer):
-    FORMAT = "<i"
+  FORMAT = "<i"
+
 
 class Int32BE(Integer):
-    FORMAT = ">i"
+  FORMAT = ">i"
+
 
 class Uint32LE(Integer):
-    FORMAT = "<I"
+  FORMAT = "<I"
+
 
 class Uint32BE(Integer):
-    FORMAT = ">I"
-
+  FORMAT = ">I"
