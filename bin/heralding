@@ -84,9 +84,9 @@ class LogFilter(logging.Filter):
 
 
 def break_if_python_not_supported():
-  if sys.version_info[0:2] < (3, 5):
+  if sys.version_info[0:2] < (3, 6):
     raise Exception(
-        "Wrong python version! Your Python interpreter must be 3.5.0 or above!")
+        "Wrong python version! Your Python interpreter must be 3.6.0 or above!")
 
 
 def drop_privileges(uid_name='nobody', gid_name='nogroup'):
