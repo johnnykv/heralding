@@ -153,3 +153,11 @@ Pcaps
 Want a seperate pcap for each heralding session? Sure, take a look at the Curisoum_ project. Make sure to enable Curisoum in Heralding.yml!
 
 .. _Curisoum: https://github.com/johnnykv/curiosum
+
+
+Submitting code
+---------------
+
+The project uses Chromium_ code style, please make sure to follow this before submitting. You can use tools liek yapf to autoformat - the config file can be found at the root of the repo (.style.yapf).
+
+.. _Chromium: https://chromium.googlesource.com/chromiumos/docs/+/master/styleguide/python.md
