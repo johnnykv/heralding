@@ -158,6 +158,6 @@ Want a seperate pcap for each heralding session? Sure, take a look at the Curiso
 Submitting code
 ---------------
 
-The project uses Chromium_ code style, please make sure to follow this before submitting. You can use tools liek yapf to autoformat - the config file can be found at the root of the repo (.style.yapf).
+The project uses Chromium_ code style, please make sure to follow this before submitting. You can use tools like yapf to autoformat - the config file can be found at the root of the repo (.style.yapf).
 
 .. _Chromium: https://chromium.googlesource.com/chromiumos/docs/+/master/styleguide/python.md
