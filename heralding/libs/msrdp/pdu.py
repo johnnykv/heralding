@@ -148,7 +148,7 @@ class MCSChannelJoinConfirmPDU():
 
   def __init__(self, initiator, channelID):
     self.initiator = Uint16BE.pack(initiator)
-    self.channelID = Uint32BE.pack(channelID)
+    self.channelID = Uint16BE.pack(channelID)
 
   def generate(self):
     res = b'\x3e\x00'

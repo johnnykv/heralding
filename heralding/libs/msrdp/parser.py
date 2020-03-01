@@ -163,8 +163,10 @@ class x224ConnectionRequestPDU():
     pos = tpktPDUParser().parse(raw_data, 0)
     self.pduType, pos = UInt8(raw_data, pos + 1).read()  # ignore lenght byte
     _, pos = RawBytes(raw_data, None, 5, pos).readRaw()  # consume 5bytes
-    self.cookie, pos = RawBytes(raw_data, None, None,
-                                pos).readUntil(b"\x0d\x0a")
+    # cookie is optional
+    if b"Cookie: mstshash=" in raw_data:
+      self.cookie, pos = RawBytes(raw_data, None, None,
+                                  pos).readUntil(b"\x0d\x0a")
     # parse nego req if present
     if raw_data[pos:] != b'':
       _, pos = RawBytes(raw_data, None, 4, pos).readRaw()
