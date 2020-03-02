@@ -283,6 +283,6 @@ class ClientInfoPDU():
     WorkDir, pos = RawBytes(raw_data, None, cbWorkDir + 2, pos).readRaw()
 
     # strip the last two null bytes
-    self.rdpUsername = Username.decode('utf-16', 'ignore')[:-2]
-    self.rdpPassword = Password.decode('utf-16', 'ignore')[:-2]
+    self.rdpUsername = Username.decode('utf-16', 'ignore')[:-1]
+    self.rdpPassword = Password.decode('utf-16', 'ignore')[:-1]
     return pos
