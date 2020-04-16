@@ -13,7 +13,7 @@ This guide is a more comprehensive version of the [README](https://github.com/jo
 ## Step 1: Install dependencies
 First, we install support for Python virtual environments and other dependencies. The actual Python packages are installed later.
 ```
-$ sudo apt-get install python3-pip python3-dev python3-venv build-essential libssl-dev libffi-dev
+$ sudo apt-get install python3-pip python3-dev python3-venv build-essential libssl-dev libffi-dev libpq-dev
 ```
 
 ## Step 2: Checkout the code
