@@ -16,7 +16,6 @@
 import json
 import uuid
 import logging
-import pprint
 from datetime import datetime
 
 import heralding.honeypot

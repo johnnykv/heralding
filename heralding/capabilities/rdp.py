@@ -18,7 +18,7 @@ import logging
 
 from heralding.capabilities.handlerbase import HandlerBase
 from heralding.libs.msrdp.pdu import x224ConnectionConfirmPDU, MCSConnectResponsePDU, MCSAttachUserConfirmPDU, MCSChannelJoinConfirmPDU
-from heralding.libs.msrdp.parser import x224ConnectionRequestPDU, MCSChannelJoinRequestPDU, ClientSecurityExcahngePDU, ClientInfoPDU
+from heralding.libs.msrdp.parser import x224ConnectionRequestPDU, MCSChannelJoinRequestPDU, ClientInfoPDU
 from heralding.libs.msrdp.parser import ErectDomainRequestPDU, tpktPDUParser
 from heralding.libs.msrdp.security import ServerSecurity
 from heralding.libs.msrdp.parser import InvalidExpectedData

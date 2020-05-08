@@ -19,7 +19,6 @@ import logging
 import json
 
 from heralding.reporting.base_logger import BaseLogger
-import heralding
 
 logger = logging.getLogger(__name__)
 
