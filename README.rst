@@ -147,6 +147,47 @@ And finally start the honeypot:
   cd tmp
   sudo heralding
   
+Docker Build
+-------------
+1.Checkout the code:
+
+.. code-block:: shell
+
+  cd ~
+  git clone https://github.com/johnnykv/heralding.git
+  cd heralding
+
+2.Build new Docker image and run it (Http localhost expose example of port 80 to localhost:8080):
+
+.. code-block:: shell
+
+  sudo docker build -t heralding .
+
+  sudo docker run -p 8080:80 heralding
+
+Visit your application in a browser at http://localhost:8080
+
+3.Check the log files:
+
+.. code-block:: shell
+
+  sudo docker ps
+
+
+We need to copy the CONTAINER ID of our heralding image. Looking like 0beb67f1e92c.
+
+.. code-block:: shell
+
+  sudo docker exec -it 0beb67f1e92c bash
+
+
+And now you are in the work directory, you can read the log files by typing cat and the name of the file. Example:
+
+.. code-block:: shell
+
+  cat log_auth.csv
+
+
 Pcaps
 -----
 
