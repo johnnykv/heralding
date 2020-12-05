@@ -46,6 +46,11 @@ class TLS:
     self._tlsInBuff.write(client_hello)
     try:
       self._tlsObj.do_handshake()
+    except ssl.SSLError as e:
+      if "WRONG_VERSION_NUMBER" in e.args[1]:
+        logger.debug("Client tried to connect with wrong SSL version")
+      else:
+        logger.debug(e.args[1])
     except ssl.SSLWantReadError:
       server_hello = self._tlsOutBuff.read()
       self.writer.write(server_hello)
