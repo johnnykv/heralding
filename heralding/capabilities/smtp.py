@@ -186,7 +186,8 @@ class SMTPHandler(SMTP):
       return line
 
   def stop(self):
-    self.transport.close()
+    if self.transport is not None:
+       self.transport.close()
     self.transport = None
 
   def _timeout_cb(self):
