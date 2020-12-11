@@ -46,11 +46,11 @@ Starting the honeypot
 Viewing the collected data
 --------------------------
 
-Heralding logs relevant data in three files, log_session.json, log_auth.csv and log_session.json.
+Heralding logs relevant data in three files, log_session.json, log_auth.csv and log_session.csv.
 
 **log_session.json**
 
-This log file contains all available information for a given activity to the honeypot. This included timestamp, authentication attempts and protocol specific information (auxiliary data) - and a bunch of other information. Be aware that the log entry for a specific session will appear in the log fil **after** the session has ended. The format is jsonlines.
+This log file contains all available information for a given activity to the honeypot. This included timestamp, authentication attempts and protocol specific information (auxiliary data) - and a bunch of other information. Be aware that the log entry for a specific session will appear in the log file **after** the session has ended. The format is jsonlines.
 
 .. code-block:: json
 
@@ -88,7 +88,7 @@ This log file contains all available information for a given activity to the hon
 
 **log_session.csv**
 
-This log file contains entries for all connections to the honeypot. The data includes timestamp, duration, IP information and the number of authentication attempts. Be aware that the log entry for a specific session will appear in the log fil **after** the session has ended. 
+This log file contains entries for all connections to the honeypot. The data includes timestamp, duration, IP information and the number of authentication attempts. Be aware that the log entry for a specific session will appear in the log file **after** the session has ended. 
 
 .. code-block:: shell
 
