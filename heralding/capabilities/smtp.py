@@ -189,6 +189,9 @@ class SMTPHandler(SMTP):
     self.transport.close()
     self.transport = None
 
+  def _timeout_cb(self):
+    if self.transport is not None:
+       super()._timeout_cb()
 
 class smtp(HandlerBase):
 
