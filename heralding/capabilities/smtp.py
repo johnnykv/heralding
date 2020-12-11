@@ -62,6 +62,8 @@ class SMTPHandler(SMTP):
       await self._writer.drain()
     except ConnectionResetError:
       self.stop()
+    if self._reader.at_eof():
+      self.stop()
 
   @syntax('EHLO hostname')
   async def smtp_EHLO(self, hostname):
