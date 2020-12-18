@@ -62,6 +62,8 @@ class SMTPHandler(SMTP):
       await self._writer.drain()
     except ConnectionResetError:
       self.stop()
+    if self._reader.at_eof():
+      self.stop()
 
   @syntax('EHLO hostname')
   async def smtp_EHLO(self, hostname):
@@ -184,9 +186,13 @@ class SMTPHandler(SMTP):
       return line
 
   def stop(self):
-    self.transport.close()
+    if self.transport is not None:
+       self.transport.close()
     self.transport = None
 
+  def _timeout_cb(self):
+    if self.transport is not None:
+       super()._timeout_cb()
 
 class smtp(HandlerBase):
 

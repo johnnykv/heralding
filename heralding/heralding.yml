@@ -157,6 +157,25 @@ capabilities:
       # If the fqdn option is commented out or empty, then fqdn of the host will be used
       fqdn: ""
 
+  smtps:
+    enabled: true
+    port: 465
+    timeout: 30
+    protocol_specific_data:
+      banner: "Microsoft ESMTP MAIL service ready"
+      # If the fqdn option is commented out or empty, then fqdn of the host will be used
+      fqdn: ""
+      cert:
+        common_name: "*"
+        country: "US"
+        state: None
+        locality: None
+        organization: None
+        organizational_unit: None
+        # how many days should the certificate be valid for
+        valid_days: 365
+        serial_number: 0
+
   vnc:
     enabled: true
     port: 5900
