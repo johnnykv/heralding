@@ -62,6 +62,7 @@ capabilities:
     timeout: 30
     protocol_specific_data:
       max_attempts: 3
+      banner: "+OK POP3 server ready"
 
   pop3s:
     enabled: true
