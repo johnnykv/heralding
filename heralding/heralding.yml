@@ -70,6 +70,7 @@ capabilities:
     timeout: 30
     protocol_specific_data:
       max_attempts: 3
+      banner: "+OK POP3 server ready"
       # if a .pem file is not found in work dir, a new pem file will be created
       # using these values
       cert:
