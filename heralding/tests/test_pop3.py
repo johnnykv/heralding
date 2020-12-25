@@ -72,7 +72,8 @@ class Pop3Tests(unittest.TestCase):
     options = {
         'port': 110,
         'protocol_specific_data': {
-            'max_attempts': 3
+          'banner': '+OK POP3 server ready',
+          'max_attempts': 3
         },
         'users': {
             'james': 'bond'
