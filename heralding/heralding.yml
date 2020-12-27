@@ -192,22 +192,23 @@ capabilities:
     enabled: true
     port: 3306
     timeout: 30
-
-  rdp:
-    enabled: true
-    port: 3389
-    timeout: 30
-    protocol_specific_data:
-      banner: ""
-      # if a .pem file is not found in work dir, a new pem file will be created
-      # using these values
-      cert:
-        common_name: "*"
-        country: "US"
-        state: None
-        locality: None
-        organization: None
-        organizational_unit: None
-        # how many days should the certificate be valid for
-        valid_days: 365
-        serial_number: 0
+    
+### WARNINIG: RDP IS BROKEN - ENABLE AT OWN RISK ###
+  #rdp:
+  #  enabled: true
+  #  port: 3389
+  #  timeout: 30
+  #  protocol_specific_data:
+  #    banner: ""
+  #    # if a .pem file is not found in work dir, a new pem file will be created
+  #    # using these values
+  #    cert:
+  #      common_name: "*"
+  #      country: "US"
+  #      state: None
+  #      locality: None
+  #      organization: None
+  #      organizational_unit: None
+  #      # how many days should the certificate be valid for
+  #      valid_days: 365
+  #      serial_number: 0
