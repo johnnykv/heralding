@@ -1,3 +1,8 @@
+1.0.7 (2020-12-27)
+- Added custom POP3 banner (#143)
+- Disabled RDP until we have an stable implementation.
+- Various minor fixes and improvements  
+
 1.0.6 (2019-10-12)
 - Added RDP capability (#25)
 - Added MySQL capability (#76)
