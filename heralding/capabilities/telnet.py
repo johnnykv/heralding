@@ -31,7 +31,7 @@ class Telnet(HandlerBase):
         self.options['protocol_specific_data']['max_attempts'])
 
   async def execute_capability(self, reader, writer, session):
-    telnet_cap = TelnetWrapper(reader, writer, session, self.loop)
+    telnet_cap = TelnetWrapper(reader, writer, session)
     await telnet_cap.run()
 
 
@@ -46,12 +46,12 @@ class TelnetWrapper(TelnetHandlerBase):
   authNeedUser = True
   authNeedPass = True
 
-  def __init__(self, reader, writer, session, loop):
+  def __init__(self, reader, writer, session):
     self.auth_count = 0
     self.username = None
     self.session = session
     address = writer.get_extra_info('address')
-    super().__init__(reader, writer, address, loop)
+    super().__init__(reader, writer, address)
 
   async def authentication_ok(self):
     while self.auth_count < TelnetWrapper.max_tries:
