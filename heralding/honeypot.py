@@ -144,7 +144,7 @@ class Honeypot:
         # carve out the options for this specific service
         options = self.config['capabilities'][cap_name]
         # capabilities are only allowed to append to the session list
-        cap = c(options, self.loop)
+        cap = c(options)
         try:
           # # Convention: All capability names which end in 's' will be wrapped in ssl.
           if cap_name.endswith('s'):
