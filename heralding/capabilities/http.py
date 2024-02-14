@@ -83,8 +83,8 @@ class HTTPHandler(AsyncBaseHTTPRequestHandler):
 
 class Http(HandlerBase):
 
-  def __init__(self, options, loop):
-    super().__init__(options, loop)
+  def __init__(self, options):
+    super().__init__(options)
     self._options = options
 
   async def execute_capability(self, reader, writer, session):
