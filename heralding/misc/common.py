@@ -42,7 +42,7 @@ async def cancel_all_pending_tasks(loop=None):
     if not task.done():
       task.cancel()
       try:
-        await asyncio.wait_for(task, timeout=5, loop=loop)
+        await asyncio.wait_for(task, timeout=5)
       except (asyncio.CancelledError, KeyboardInterrupt, ConnectionResetError):
         pass
 
