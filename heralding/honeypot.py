@@ -155,7 +155,6 @@ class Honeypot:
                 cap.handle_session,
                 bind_host,
                 port,
-                loop=self.loop,
                 ssl=ssl_context)
           elif cap_name == 'ssh':
             # Since dicts and user-defined classes are mutable, we have
