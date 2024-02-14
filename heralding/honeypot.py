@@ -75,7 +75,7 @@ class Honeypot:
 
     if 'public_ip_as_destination_ip' in self.config and self.config[
         'public_ip_as_destination_ip'] is True:
-      asyncio.ensure_future(self._record_and_lookup_public_ip(), loop=self.loop)
+      asyncio.ensure_future(self._record_and_lookup_public_ip())
 
     # setup hash cracker's wordlist
     if self.config['hash_cracker']['enabled']:
@@ -179,10 +179,10 @@ class Honeypot:
             pem_file = '{0}.pem'.format(cap_name)
             self.create_cert_if_not_exists(cap_name, pem_file)
             server_coro = asyncio.start_server(
-                cap.handle_session, bind_host, port, loop=self.loop)
+                cap.handle_session, bind_host, port)
           else:
             server_coro = asyncio.start_server(
-                cap.handle_session, bind_host, port, loop=self.loop)
+                cap.handle_session, bind_host, port)
 
           server = self.loop.run_until_complete(server_coro)
           logger.debug('Adding %s capability with options: %s', cap_name,
