@@ -38,9 +38,9 @@ log = logging.getLogger(__name__)
 class SMTPHandler(SMTP):
   fqdn = ''
 
-  def __init__(self, reader, writer, session, options, loop):
+  def __init__(self, reader, writer, session, options):
     self.banner = options['protocol_specific_data']['banner']
-    super().__init__(None, hostname=self.banner, loop=loop)
+    super().__init__(None, hostname=self.banner)
     # Reset standard banner.
     self.__ident__ = ""
     self._reader = reader
@@ -196,16 +196,15 @@ class SMTPHandler(SMTP):
 
 class smtp(HandlerBase):
 
-  def __init__(self, options, loop):
-    super().__init__(options, loop)
-    self.loop = loop
+  def __init__(self, options):
+    super().__init__(options)
     self._options = options
 
   async def execute_capability(self, reader, writer, session):
-    fqdn_task = asyncio.ensure_future(self.setfqdn(), loop=self.loop)
+    fqdn_task = asyncio.ensure_future(self.setfqdn())
 
-    smtp_cap = SMTPHandler(reader, writer, session, self._options, self.loop)
-    smtp_task = asyncio.ensure_future(smtp_cap._handle_client(), loop=self.loop)
+    smtp_cap = SMTPHandler(reader, writer, session, self._options)
+    smtp_task = asyncio.ensure_future(smtp_cap._handle_client())
 
     await smtp_task
 
@@ -223,4 +222,4 @@ class smtp(HandlerBase):
       while True:
         fqdn = await self.loop.run_in_executor(None, socket.getfqdn)
         SMTPHandler.fqdn = fqdn
-        await asyncio.sleep(1800, loop=self.loop)
+        await asyncio.sleep(1800)

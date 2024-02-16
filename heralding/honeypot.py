@@ -75,7 +75,7 @@ class Honeypot:
 
     if 'public_ip_as_destination_ip' in self.config and self.config[
         'public_ip_as_destination_ip'] is True:
-      asyncio.ensure_future(self._record_and_lookup_public_ip(), loop=self.loop)
+      asyncio.ensure_future(self._record_and_lookup_public_ip())
 
     # setup hash cracker's wordlist
     if self.config['hash_cracker']['enabled']:
@@ -144,7 +144,7 @@ class Honeypot:
         # carve out the options for this specific service
         options = self.config['capabilities'][cap_name]
         # capabilities are only allowed to append to the session list
-        cap = c(options, self.loop)
+        cap = c(options)
         try:
           # # Convention: All capability names which end in 's' will be wrapped in ssl.
           if cap_name.endswith('s'):
@@ -155,7 +155,6 @@ class Honeypot:
                 cap.handle_session,
                 bind_host,
                 port,
-                loop=self.loop,
                 ssl=ssl_context)
           elif cap_name == 'ssh':
             # Since dicts and user-defined classes are mutable, we have
@@ -180,10 +179,10 @@ class Honeypot:
             pem_file = '{0}.pem'.format(cap_name)
             self.create_cert_if_not_exists(cap_name, pem_file)
             server_coro = asyncio.start_server(
-                cap.handle_session, bind_host, port, loop=self.loop)
+                cap.handle_session, bind_host, port)
           else:
             server_coro = asyncio.start_server(
-                cap.handle_session, bind_host, port, loop=self.loop)
+                cap.handle_session, bind_host, port)
 
           server = self.loop.run_until_complete(server_coro)
           logger.debug('Adding %s capability with options: %s', cap_name,

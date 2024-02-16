@@ -24,8 +24,8 @@ class Pop3(HandlerBase):
   max_tries = 10
   cmds = {}
 
-  def __init__(self, options, loop):
-    super().__init__(options, loop)
+  def __init__(self, options):
+    super().__init__(options)
     Pop3.max_tries = int(self.options['protocol_specific_data']['max_attempts'])
     self.banner = self.options['protocol_specific_data']['banner']
 

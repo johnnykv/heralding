@@ -28,9 +28,9 @@ logger = logging.getLogger(__name__)
 class SSH(asyncssh.SSHServer, HandlerBase):
   connections_list = []
 
-  def __init__(self, options, loop):
+  def __init__(self, options):
     asyncssh.SSHServer.__init__(self)
-    HandlerBase.__init__(self, options, loop)
+    HandlerBase.__init__(self, options)
 
   def connection_made(self, conn):
     SSH.connections_list.append(conn)

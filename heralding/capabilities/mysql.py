@@ -25,8 +25,8 @@ logger = logging.getLogger(__name__)
 # Implemented according to https://dev.mysql.com/doc/internals/en/connection-phase-packets.html
 class MySQL(HandlerBase):
 
-  def __init__(self, options, loop):
-    super().__init__(options, loop)
+  def __init__(self, options):
+    super().__init__(options)
     self.PROTO_VER = b'\x0a'
     self.SERVER_VER = b'5.7.16\x00'
     self.AUTH_PLUGIN = b'mysql_native_password\x00'  # SHA-1 hash of password
