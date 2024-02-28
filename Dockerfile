@@ -1,13 +1,19 @@
-FROM python:3.7-slim-stretch as base
+FROM python:3.9-slim-bullseye as base
 
-COPY . .
+FROM base as build
+
+# Install dependencies
+COPY requirements.txt requirements.txt
 RUN apt-get update && apt-get install -y libpq-dev gcc \
-    && pip install --user --no-cache-dir -r requirements.txt
+    && pip install --user --no-cache-dir -r requirements.txt \
+    && rm -rf /var/lib/apt/lists/*
 
+# Install Heralding
+COPY . .
 RUN python setup.py install --user
 
-FROM python:3.7-slim-stretch
-COPY --from=base /root/.local /root/.local
+FROM base
+COPY --from=build /root/.local /root/.local
 
 ENV PATH=/root/.local/bin:$PATH
 
