@@ -51,7 +51,8 @@ class TelnetWrapper(TelnetHandlerBase):
     self.username = None
     self.session = session
     address = writer.get_extra_info('address')
-    super().__init__(reader, writer, address)
+    loop = asyncio.get_running_loop()
+    super().__init__(reader, writer, address, loop=loop)
 
   async def authentication_ok(self):
     while self.auth_count < TelnetWrapper.max_tries:
