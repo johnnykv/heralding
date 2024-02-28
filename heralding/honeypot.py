@@ -170,7 +170,7 @@ class Honeypot:
             SshClass.change_server_banner(banner)
 
             server_coro = asyncssh.create_server(
-                lambda: SshClass(ssh_options, self.loop),
+                lambda: SshClass(ssh_options),
                 bind_host,
                 port,
                 server_host_keys=[ssh_key_file],

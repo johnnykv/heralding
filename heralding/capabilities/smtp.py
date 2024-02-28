@@ -215,11 +215,12 @@ class smtp(HandlerBase):
       pass
 
   async def setfqdn(self):
+    loop = asyncio.get_running_loop()
     if 'fqdn' in self._options['protocol_specific_data'] and self._options[
         'protocol_specific_data']['fqdn']:
       SMTPHandler.fqdn = self._options['protocol_specific_data']['fqdn']
     else:
       while True:
-        fqdn = await self.loop.run_in_executor(None, socket.getfqdn)
+        fqdn = await loop.run_in_executor(None, socket.getfqdn)
         SMTPHandler.fqdn = fqdn
         await asyncio.sleep(1800)
