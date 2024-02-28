@@ -50,10 +50,6 @@ class TLS:
       server_hello = self._tlsOutBuff.read()
       self.writer.write(server_hello)
       await self.writer.drain()
-    except ssl.SSLSyscallError as e:
-      logger.error(f"SSL syscall error during handshake: {e}")
-      self.writer.close()
-      return
     except ssl.SSLError as e:
       if "WRONG_VERSION_NUMBER" in e.args[1]:
         logger.debug("Client tried to connect with wrong SSL version")
