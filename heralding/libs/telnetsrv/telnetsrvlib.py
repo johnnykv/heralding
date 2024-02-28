@@ -114,7 +114,7 @@ class TelnetHandlerBase(AsyncBaseRequestHandler):
     self.iacseq = b''  # Buffer for IAC sequence.
     self.sb = 0  # Flag for SB and SE sequence.
     self.history = []  # Command history
-    self.cookedq = asyncio.Queue(loop=self.loop)
+    self.cookedq = asyncio.Queue()
     super().__init__(reader, writer, client_address)
 
   def setterm(self, term):
