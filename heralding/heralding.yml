@@ -129,14 +129,14 @@ capabilities:
     port: 80
     timeout: 30
     protocol_specific_data:
-      banner: ""
+      banner: "Microsoft-IIS/5.0"
 
   https:
     enabled: true
     port: 443
     timeout: 30
     protocol_specific_data:
-      banner: ""
+      banner: "Microsoft-IIS/5.0"
       # if a .pem file is not found in work dir, a new pem file will be created
       # using these values
       cert:

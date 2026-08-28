@@ -32,13 +32,18 @@ class HTTPHandler(AsyncBaseHTTPRequestHandler):
 
   def __init__(self, reader, writer, httpsession, options):
     self._options = options
-    if 'banner' in self._options:
-      self._banner = self._options['banner']
-    else:
-      self._banner = 'Microsoft-IIS/5.0'
+    proto = self._options.get('protocol_specific_data') or {}
+    banner = self._options.get('banner') or proto.get('banner') or ''
+    self._banner = str(banner).strip() or 'Microsoft-IIS/5.0'
+    # send_response() would otherwise append sys_version ("Python/x.y")
+    self.server_version = self._banner
+    self.sys_version = ''
     self._session = httpsession
     address = writer.get_extra_info('address')
     super().__init__(reader, writer, address)
+
+  def version_string(self):
+    return self._banner
 
   def do_HEAD(self):
     self.send_response(200)

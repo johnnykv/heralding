@@ -68,3 +68,42 @@ class HttpTests(unittest.TestCase):
 
     http_task = self.loop.run_in_executor(None, http_request)
     self.loop.run_until_complete(http_task)
+
+  def test_http_banner(self):
+    """HEAD/GET must send the configured banner, not Python's Server string."""
+
+    def http_request():
+      client = httpclient.HTTPConnection('127.0.0.1', 8888, timeout=2)
+      client.request('HEAD', '/')
+      response = client.getresponse()
+      response.read()
+      server = response.getheader('Server')
+      self.assertIsNotNone(server)
+      self.assertEqual(server, 'Microsoft-IIS/7.5')
+      self.assertNotIn('Python', server)
+      self.assertNotIn('BaseHTTP', server)
+
+      client.request('GET', '/')
+      response = client.getresponse()
+      response.read()
+      self.assertEqual(response.status, 401)
+      self.assertEqual(response.getheader('Server'), 'Microsoft-IIS/7.5')
+
+    options = {
+        'enabled': 'True',
+        'port': 8888,
+        'users': {
+            'test': 'test'
+        },
+        'protocol_specific_data': {
+            'banner': 'Microsoft-IIS/7.5'
+        }
+    }
+    http_cap = http.Http(options)
+
+    server_coro = asyncio.start_server(http_cap.handle_session, '127.0.0.1',
+                                       8888)
+    self.server = self.loop.run_until_complete(server_coro)
+
+    http_task = self.loop.run_in_executor(None, http_request)
+    self.loop.run_until_complete(http_task)
